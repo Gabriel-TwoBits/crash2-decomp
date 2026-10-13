@@ -1,0 +1,23 @@
+# The game's own files, which aren't ours to share: the player's disc image and what comes out of it
+/orig/*/*
+!/orig/*/.gitkeep
+# What splat makes from the retail executable (its code and data as assembly and binary)
+/asm/
+/assets/
+
+# Build output and the downloaded toolchain (tools/setup_toolchain.py)
+/build/
+/expected/
+/tools/toolchain/
+/objdiff.json
+
+# Python
+/.venv/
+__pycache__/
+*.py[cod]
+
+# Editors and systems
+/.vscode/
+.cache/
+.idea/
+.DS_Store
