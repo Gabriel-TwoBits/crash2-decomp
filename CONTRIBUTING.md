@@ -1,0 +1,49 @@
+# Contributing
+
+## Setup
+
+Linux (x86-64) with Python 3.12 or later and git. You need your own copy of the game (docs/TARGET.md): a disc image of the
+North American release, SCUS-94154.
+
+1. The assembler and linker for little-endian MIPS (Debian and Ubuntu):
+
+   ```sh
+   sudo apt install binutils-mipsel-linux-gnu
+   ```
+
+2. The Python environment:
+
+   ```sh
+   python3 -m venv .venv
+   .venv/bin/python -m pip install -r requirements.txt
+   ```
+
+3. The toolchain (the PSX GCC versions, objdiff, maspsx, m2c, decomp-permuter) into `tools/toolchain/`, each checked:
+
+   ```sh
+   .venv/bin/python tools/setup_toolchain.py
+   ```
+
+4. The game's executable, out of your disc image and checked against the retail SHA-1:
+
+   ```sh
+   .venv/bin/python tools/extract_disc.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue"
+   ```
+
+The split and the build come with milestone 1 (docs/ROADMAP.md).
+
+## Rules
+
+- **No game data in the repository**: not the disc image, not the executable, not what splat makes of it (`asm/`,
+  `assets/`), not the NSF files. `.gitignore` keeps them out; check `git status` before a commit anyway.
+- **Matched means matched**: objdiff at 100% and the executable's SHA-1 unchanged (docs/WORKFLOW.md).
+- **Commits**: one Conventional Commit subject line in English (`feat: match Gool_Interpret`), no body. One function or one
+  coherent change per commit.
+- **Docs follow findings**: a fact learned about the compiler goes into docs/COMPILER.md, about the game into the docs, with
+  the evidence, not only into a commit message.
+
+## Licence
+
+The code in this repository is under the GNU General Public License, version 3 or (at your option) any later version
+(`LICENSE`). It covers the C, the tools and the docs written here, not the game: Crash Bandicoot 2 and everything on its disc
+belong to their owners.
