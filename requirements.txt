@@ -1,0 +1,8 @@
+# The split: splat and the disassembler it uses
+splat64[mips]==0.50.1
+spimdisasm==1.42.4
+rabbitizer==1.16.2
+# m2c's (the C drafts) and decomp-permuter's own dependencies; tools/setup_toolchain.py fetches the tools themselves
+graphviz==0.20.3
+toml==0.10.2
+Levenshtein==0.27.5
