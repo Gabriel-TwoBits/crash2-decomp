@@ -64,7 +64,11 @@ s32 func_80035A94(void) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035AB8);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035B3C);
+void func_80035B3C(void) {
+    do {
+
+    } while (func_80035AB8() == -1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035B70);
 
