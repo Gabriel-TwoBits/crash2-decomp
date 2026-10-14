@@ -151,7 +151,12 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018D28);
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018DD0);
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018E48);
+void *func_80018E48(void *arg0, s32 arg1) {
+    if (*(s32 *)((u8 *)arg0 + 0xB8) == arg1) {
+        return arg0;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018E68);
 
