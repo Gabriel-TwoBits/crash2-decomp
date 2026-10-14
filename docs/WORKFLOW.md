@@ -13,15 +13,15 @@ The unit of work is one function: its C written until, compiled with the origina
    three quarters of functions matched, most of them in the first three attempts; later attempts rarely did.
 4. **Permute** a near miss with decomp-permuter, which tries random rewrites and keeps those that score better. It often
    closes the last register swap.
-5. **Check** with objdiff: the function's score must be 100% with relocations masked, and the whole executable's SHA-1 still
-   the retail one.
+5. **Check** with `tools/probe_compiler.py`: no word of the function may differ (relocated fields masked), and once it is in
+   `src/` the whole executable's SHA-1 must still be the retail one (`ninja`).
 6. **Record** it: the C replaces the function's `INCLUDE_ASM` line in `src/game.c`, with names (below) for what became
    clear and its declarations (the SDK's in `include/sdk.h`). `configure.py` splits again (splat leaves out the assembly of
    a function written in C), then `ninja` must pass. A function that can't be matched yet stays as assembly in the build.
 
 ## What counts as matched
 
-Only objdiff's 100% and the unchanged SHA-1. "Equivalent" code that compiles to other bytes is not matched, however
+Only the probe's zero differing words and the unchanged SHA-1. "Equivalent" code that compiles to other bytes is not matched, however
 obviously equivalent. The assembly is never edited to fit the C, and the build never swaps a function's object for the retail
 one.
 
@@ -56,7 +56,7 @@ functions keep their PsyQ names (`LoadImage`, `CdRead`).
 | splat (`splat64`) | Splits the executable into assembly and data by `config/SCUS_941.54.yaml` |
 | PsyQ GCC (`tools/toolchain/gcc-*-psx`) | The original compiler, in each candidate version |
 | maspsx | Rewrites GCC's assembly the way Sony's ASPSX assembled it, then runs GNU `as` |
-| objdiff (`objdiff-cli`) | Compares built objects with the retail ones, per function, and reports progress |
+| objdiff (`objdiff-cli`) | Compares built objects with the retail ones, per function. Fetched, not wired in yet: `tools/probe_compiler.py` and the SHA-1 check do its job for now |
 | m2c | Drafts C from a function's assembly |
 | decomp-permuter | Random rewrites of a near miss, scored against the target |
 | decomp.me | The same compilers online, to share a function's attempt (scratches) |

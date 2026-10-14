@@ -42,7 +42,8 @@ North American release, SCUS-94154.
 
 - **No game data in the repository**: not the disc image, not the executable, not what splat makes of it (`asm/`,
   `assets/`), not the NSF files. `.gitignore` keeps them out; check `git status` before a commit anyway.
-- **Matched means matched**: objdiff at 100% and the executable's SHA-1 unchanged (docs/WORKFLOW.md).
+- **Matched means matched**: `tools/probe_compiler.py` reports no differing word and the build's SHA-1 check passes
+  (docs/WORKFLOW.md).
 - **Commits**: one Conventional Commit subject line in English (`feat: match Gool_Interpret`), no body. One function or one
   coherent change per commit.
 - **Docs follow findings**: a fact learned about the compiler goes into docs/COMPILER.md, about the game into the docs, with

@@ -9,8 +9,8 @@ matched), docs/COMPILER.md (what is proven about the toolchain), docs/TARGET.md 
 - **Never commit game data.** Not `orig/`, not `asm/` or `assets/` (splat's output is the retail code and data), not NSF/NSD
   files, not excerpts of the executable's bytes or disassembly pasted into docs, commits or issues beyond a few instructions
   needed to explain a finding. Run `git status` before every commit and look at what is staged.
-- **Matched means proven.** A function is matched only when objdiff reports 100% for it and the whole executable's SHA-1 is
-  still the retail one, both run in this session. Never report a match from reading the code, from "equivalent" logic, or from
+- **Matched means proven.** A function is matched only when `tools/probe_compiler.py` reports no differing word for it and
+  the build's SHA-1 check passes with it in `src/`, both run in this session. Never report a match from reading the code, from "equivalent" logic, or from
   a partial diff.
 - **Never bend the target.** Don't edit the assembly, the expected objects or the linker script to make C match, and don't
   link a retail object in place of a compiled one.
@@ -32,7 +32,7 @@ committed.
   (one side by side); `tools/permute.py FILE.c FUNCTION --minutes N` runs decomp-permuter on it. Drafts live in
   `build/` (ignored), never in `src/` until they match.
 
-- Follow docs/WORKFLOW.md's loop: m2c draft, refine against the diff, decomp-permuter on near misses, objdiff to check.
+- Follow docs/WORKFLOW.md's loop: m2c draft, refine against the diff, decomp-permuter on near misses, the probe and the build's SHA-1 to check.
 - Most matches come in the first few attempts. After about three attempts with no progress in the diff, stop, leave the
   function as assembly, and note what was tried (the closest score and what differed) rather than looping.
 - Matching C keeps the original's shape even where it breaks the usual style (a missing `else`, an odd temporary): output
