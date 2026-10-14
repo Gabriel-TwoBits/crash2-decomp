@@ -1,19 +1,10 @@
 #include "common.h"
 #include "sdk.h"
-#include "m2c_macros.h"
+#include "game.h"
 
-M2C_UNK CdControl(M2C_UNK, M2C_UNK, M2C_UNK);       /* extern */
-M2C_UNK CloseEvent(s32);                            /* extern */
-M2C_UNK DisableEvent(s32);                          /* extern */
-M2C_UNK EnterCriticalSection();                     /* extern */
-M2C_UNK ExitCriticalSection();                      /* extern */
-M2C_UNK ResetGraph(M2C_UNK);                        /* extern */
-M2C_UNK StopCallback();                             /* extern */
-M2C_UNK StopPAD();                                  /* extern */
-M2C_UNK StopRCnt(M2C_UNK);                          /* extern */
-M2C_UNK func_80036304();                            /* extern */
+s32 func_80036304(void);
 extern s32 D_8005F1A4;
-s32 D_8005F3DC = 1;
+s32 D_8005F3DC;
 
 s32 func_800157A0(void) {
     if (D_8005F1A4 != 0) {

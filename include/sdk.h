@@ -9,10 +9,27 @@ typedef struct {
     short w, h;
 } RECT;
 
+/* libapi */
+long StopRCnt(unsigned long spec);
+long CloseEvent(long event);
+long DisableEvent(long event);
+void EnterCriticalSection(void);
+void ExitCriticalSection(void);
+void StopPAD(void);
+
 /* libc */
 int sprintf(char *buffer, const char *format, ...);
 
+/* libcd */
+int CdControl(unsigned char com, unsigned char *param, unsigned char *result);
+
+/* libetc */
+int StopCallback(void);
+
 /* libgte */
 long ratan2(long y, long x);
+
+/* libgpu */
+int ResetGraph(int mode);
 
 #endif /* SDK_H */

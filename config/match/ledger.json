@@ -283,8 +283,8 @@
     ]
   },
   "func_800157A0": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-14 00:42",
+    "outcome": "landed",
+    "time": "2026-10-14 09:21",
     "summary": "0 of 34 words differ",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
@@ -301,8 +301,7 @@
         "turns": 24,
         "minutes": 1.1
       }
-    ],
-    "reason": "uses m2c's M2C_UNK: real types needed"
+    ]
   },
   "func_80024268": {
     "outcome": "landed",
