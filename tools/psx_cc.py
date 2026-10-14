@@ -20,6 +20,12 @@ CPP_DEFINES = ["-undef", "-D__GNUC__=2", "-Dmips", "-D__mips__", "-D__mips", "-D
 DEFAULT_GCC = "2.7.2"
 DEFAULT_ASPSX = "2.34"
 DEFAULT_CFLAGS = "-O2 -G8"
+# maspsx addresses through $gp what the file defines in .sdata/.sbss (or as a common) and nothing else, as ASPSX did
+# (docs/COMPILER.md); commons stay commons, so a tentative definition resolves to the split's symbol
+MASPSX_FLAGS = ["--expand-div", "-G8", "--use-comm-section"]
+# A C file's data ends on a word: each file's data starts on one in the original layout, and the linker script's
+# SUBALIGN(2) would pack the next file's against a section of odd size
+DATA_END = "".join(f"\t.section {section}\n\t.align 2\n" for section in (".rodata", ".data", ".sdata"))
 
 
 def compiler(version):
@@ -40,7 +46,7 @@ def compile_c(gcc, aspsx, source, cflags, obj):
         steps = [
             ([str(gcc / "cpp"), *CPP_DEFINES, f"-I{HERE / 'include'}", str(source), str(preprocessed)], None, None),
             ([str(gcc / "cc1"), "-quiet", *cflags.split(), str(preprocessed), "-o", str(assembly)], None, None),
-            ([sys.executable, str(MASPSX), f"--aspsx-version={aspsx}", "--expand-div"], assembly, rewritten),
+            ([sys.executable, str(MASPSX), f"--aspsx-version={aspsx}", *MASPSX_FLAGS], assembly, rewritten),
             ([AS, *ASFLAGS, "-o", str(obj), str(rewritten)], None, None),
         ]
         for command, stdin, stdout in steps:
@@ -53,8 +59,13 @@ def compile_c(gcc, aspsx, source, cflags, obj):
             if result.returncode != 0:
                 message = result.stderr.strip().splitlines()
                 return message[-1] if message else f"{Path(command[0]).name} failed"
-            if stdout is not None:
+            if stdout == rewritten:
+                rewritten.write_text(result.stdout + DATA_END)
+            elif stdout is not None:
                 stdout.write_text(result.stdout)
+            else:
+                # The step wrote its own output file
+                pass
     return None
 
 

@@ -1,0 +1,76 @@
+#include "common.h"
+#include "sdk.h"
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026CA0);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026EF4);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_8002706C);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800270C4);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_8002719C);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800271D8);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800272A4);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027420);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027500);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027600);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027664);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800277A8);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800278F8);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027980);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027A38);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027B9C);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027C00);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027CD0);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027DEC);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027F3C);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80028750);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_8002890C);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80028968);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800289C4);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80028A28);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80028C48);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80028FE0);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800294B4);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80029538);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_8002973C);
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80029768);
+
+extern void func_800116C0(s32);
+extern s32 D_8005F398;
+extern s32 D_8005F3D0;
+
+s32 func_800297C8(void) {
+    func_800116C0(D_8005F3D0);
+    func_800116C0(D_8005F398);
+    return -0xFF;
+}
+
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80029800);

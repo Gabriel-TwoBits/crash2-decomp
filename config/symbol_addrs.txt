@@ -354,3 +354,17 @@ InitCARD2 = 0x8005B0E8; // type:func
 StartCARD2 = 0x8005B0F8; // type:func
 StopCARD2 = 0x8005B108; // type:func
 _ExitCard = 0x8005B118; // type:func
+
+// Small data read at an offset (a RECT's y, the third character of "..", the fifth of "EMPTY"): with a size, splat writes
+// the access as symbol + offset, so the C definition is the only symbol
+D_8005F1B0 = 0x8005F1B0; // size:0x8
+D_8005F23C = 0x8005F23C; // size:0x3
+D_8005F288 = 0x8005F288; // size:0x6
+
+// Entries into handwritten code that other files reach: a counter word between two functions, and the GTE routine
+// func_80042420's entry points, which func_80011E24 stores as function pointers
+D_8003BEA4 = 0x8003BEA4; // type:s32
+func_80042420 = 0x80042420; // type:func
+func_80042548 = 0x80042548; // type:func
+func_800426A0 = 0x800426A0; // type:func
+func_80042818 = 0x80042818; // type:func

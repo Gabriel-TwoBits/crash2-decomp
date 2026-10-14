@@ -28,7 +28,7 @@ options:
   generate_asm_macros_files: False
   use_legacy_include_asm: False
 
-  section_order: [".rodata", ".text", ".data", ".bss"]
+  section_order: [".rodata", ".text", ".data", ".sdata", ".sbss", ".bss"]
 
   symbol_addrs_path:
     - config/symbol_addrs.txt
@@ -55,7 +55,40 @@ segments:
     bss_size: 0xFF4C
     subsegments:
       - [0x800, rodata, rodata]
-      - [0x19B0, c, game]
+      # The game's code, one C file per original source file as far as the data shows, named by its first function
+      # (docs/TARGET.md, "The game's source files")
+      - [0x19B0, c, game/800111B0]
+      - [0x2624, c, game/80011E24]
+      - [0x2810, c, game/80012010]
+      - [0x2BF0, c, game/800123F0]
+      - [0x5E14, c, game/80015614]
+      - [0x60E0, c, game/800158E0]
+      - [0x9898, c, game/80019098]
+      - [0xA814, c, game/8001A014]
+      - [0xC7DC, c, game/8001BFDC]
+      - [0xD6DC, c, game/8001CEDC]
+      - [0xDE3C, c, game/8001D63C]
+      - [0x101C4, c, game/8001F9C4]
+      - [0x108A8, c, game/800200A8]
+      - [0x11224, c, game/80020A24]
+      - [0x14304, c, game/80023B04]
+      - [0x16C8C, c, game/8002648C]
+      - [0x174A0, c, game/80026CA0]
+      - [0x1A084, c, game/80029884]
+      - [0x1F084, c, game/8002E884]
+      - [0x20384, c, game/8002FB84]
+      - [0x20658, c, game/8002FE58]
+      - [0x21C7C, c, game/8003147C]
+      - [0x21D78, c, game/80031578]
+      - [0x21EEC, c, game/800316EC]
+      - [0x222E8, c, game/80031AE8]
+      - [0x22CA8, c, game/800324A8]
+      - [0x24DC8, c, game/800345C8]
+      - [0x2750C, c, game/80036D0C]
+      - [0x27630, c, game/80036E30]
+      - [0x27E98, c, game/80037698]
+      - [0x28F00, c, game/80038700]
+      - [0x29700, c, game/80038F00]
       # PsyQ 4.0's libraries, object by object (tools/find_psyq.py --version 400 --subsegments); unknown_ parts are
       # between identified objects, not identified yet
       - [0x37084, asm, sdk/libcd/event]
@@ -235,6 +268,25 @@ segments:
       - [0x4B918, asm, sdk/libcard/end]
       # The data starts with func_80011E98's 64-character table at 0x8005B198
       - [0x4B998, data, data]
+      # From $gp on, each game file's .sdata, defined in its C file
+      - [0x4F97C, .sdata, game/800111B0]
+      - [0x4F998, .sdata, game/80011E24]
+      - [0x4F9A4, .sdata, game/800123F0]
+      - [0x4F9D4, .sdata, game/800158E0]
+      - [0x4F9EC, .sdata, game/8001D63C]
+      - [0x4F9F4, .sdata, game/8001F9C4]
+      - [0x4F9FC, .sdata, game/80020A24]
+      - [0x4FA04, .sdata, game/80029884]
+      - [0x4FA08, .sdata, game/8002E884]
+      - [0x4FA10, .sdata, game/8002FB84]
+      - [0x4FA18, .sdata, game/8002FE58]
+      - [0x4FA20, .sdata, game/8003147C]
+      - [0x4FA24, .sdata, game/80031578]
+      - [0x4FA28, .sdata, game/800316EC]
+      - [0x4FA44, .sdata, game/800324A8]
+      - [0x4FA64, .sdata, game/800345C8]
+      - [0x4FA90, .sdata, game/80036D0C]
+      - [0x4FA94, .sdata, game/80036E30]
       - { start: 0x4FAA4, type: bss, vram: 0x8005F2A4, name: bss }
   # The file goes on to 0x50000 with zeros (a whole 2048-byte sector), over the start of .bss: the build pads it
   - [0x4FAA4]
