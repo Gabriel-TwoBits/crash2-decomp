@@ -177,7 +177,12 @@ s32 func_80036304(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036324);
+void func_80036324(s32 arg0) {
+    func_80036028(0);
+    func_800360CC(0);
+    func_800360AC(0xDF);
+    func_80036084(arg0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036368);
 

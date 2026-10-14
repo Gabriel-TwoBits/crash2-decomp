@@ -32,6 +32,7 @@ void func_80034394(void);
 s32 func_80035AB8();
 s32 func_80035BB8();
 s32 func_80036084(s32);
+s32 func_800360CC(s32);
 s32 func_80036150();
 s32 func_80036304(void);
 void func_80036324(s32);
