@@ -9,6 +9,7 @@
 /* A structure func_80032F18 reads (0x100) and func_80038D08 decodes operands into */
 struct Obj;
 
+s32 func_8001148C(s32);
 void func_800116C0(s32);
 void func_80012ED0(s32);
 void func_80013F28(void *);

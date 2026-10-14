@@ -142,7 +142,15 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014B44);
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014B90);
 
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014C08);
+s32 func_80014C08(void) {
+    s32 temp_v0;
+
+    temp_v0 = func_8001148C(4);
+    if (temp_v0 != 0) {
+        func_800116C0(temp_v0);
+    }
+    return temp_v0;
+}
 
 extern s32 D_8005F184;
 extern s32 D_8005F188;
