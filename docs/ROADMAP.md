@@ -73,16 +73,19 @@ in the brief, and `land` drops a prototype the header has and moves a new one th
 from the callees' assembly: `func_80019E28`, `func_800163B4` and `func_80013F28` take a pointer the matched callers had
 left out (it was still in `$a0`, so the bytes are the same), and `func_80032F18`'s fourth argument is a pointer.
 
+The near misses, by hand: `func_800157A0` landed once its m2c placeholder types became PsyQ's declarations
+(`include/sdk.h`), `func_8001FDDC` once decomp-permuter (30 minutes) and a separate statement for its `/ 3` closed the
+last 7 words. `func_80038C14` (2 of 61) and `func_800171E8` (6 of 92) did not move; what was tried is in their notes,
+and they wait for more of their files in C.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The near misses** in `tools/match.py report`, with Opus and a longer limit, or by hand: what keeps them apart says
-   something about the compiler.
-2. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
+1. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
    unconditional branch. It may be the per-file profile the build needs (docs/COMPILER.md): its file may not be built
    with GCC 2.7.2.
-3. **More batches**, a few hundred functions in all, between the steps above.
+2. **More batches**, a few hundred functions in all, between the steps above.
 
 ## 4. The engine in C
 
