@@ -1,0 +1,60 @@
+name: SCUS_941.54
+sha1: aabdade44a4ca863f71224daef51c45f34fb1bf8
+options:
+  basename: SCUS_941.54
+  base_path: ..
+  target_path: orig/USA/SCUS_941.54
+  elf_path: build/SCUS_941.54.elf
+  platform: psx
+  compiler: PSYQ
+
+  asm_path: asm
+  src_path: src
+  build_path: build
+  asset_path: assets
+  ld_script_path: build/SCUS_941.54.ld
+  ld_dependencies: True
+  # The sections follow each other with no padding between them
+  ld_align_section_vram_end: False
+  ld_align_segment_vram_end: False
+  ld_bss_is_noload: True
+
+  find_file_boundaries: False
+  # Set by the startup code at 0x80049BA8 (docs/TARGET.md)
+  gp_value: 0x8005F17C
+
+  o_as_suffix: True
+  use_legacy_include_asm: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+
+  symbol_addrs_path:
+    - config/symbol_addrs.txt
+  undefined_funcs_auto_path: build/undefined_funcs_auto.txt
+  undefined_syms_auto_path: build/undefined_syms_auto.txt
+
+  subalign: 2
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+segments:
+  - name: header
+    type: header
+    start: 0x0
+
+  - name: main
+    type: code
+    start: 0x800
+    vram: 0x80010000
+    # The startup code clears 0x8005F2A4 to 0x8006F1F0
+    bss_size: 0xFF4C
+    subsegments:
+      - [0x800, rodata, rodata]
+      - [0x19B0, asm, text]
+      - [0x4B9A0, data, data]
+      - { start: 0x4FAA4, type: bss, vram: 0x8005F2A4, name: bss }
+  # The file goes on to 0x50000 with zeros (a whole 2048-byte sector), over the start of .bss: the build pads it
+  - [0x4FAA4]
