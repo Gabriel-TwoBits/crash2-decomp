@@ -22,4 +22,15 @@ INCLUDE_ASM("asm/nonmatchings/game/80012010", func_80012294);
 
 INCLUDE_ASM("asm/nonmatchings/game/80012010", func_8001232C);
 
-INCLUDE_ASM("asm/nonmatchings/game/80012010", func_800123BC);
+s32 func_800123BC(s32 *arg0, s32 arg1) {
+    s32 *p;
+    s32 r;
+
+    if (arg0[3] == 0) {
+        r = 0;
+    } else {
+        p = arg0 + arg1;
+        r = p[5] - p[4];
+    }
+    return r;
+}
