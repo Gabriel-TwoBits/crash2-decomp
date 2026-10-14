@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 INCLUDE_ASM("asm/nonmatchings/game/80012010", func_80012010);
 

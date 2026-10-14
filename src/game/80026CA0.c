@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026CA0);
 
@@ -63,7 +64,6 @@ INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_8002973C);
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80029768);
 
-extern void func_800116C0(s32);
 extern s32 D_8005F398;
 extern s32 D_8005F3D0;
 

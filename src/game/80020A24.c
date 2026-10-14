@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 char D_8005F1FC[] = "DirnD";
 

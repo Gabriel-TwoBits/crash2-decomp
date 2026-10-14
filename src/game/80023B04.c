@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023B04);
 
@@ -12,8 +13,6 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023E60);
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80024188);
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800241A8);
-
-s32 func_800322C0(s32, s32, s32, s32);
 
 s32 func_80024268(s32 *p, s32 d, s32 *out) {
     s32 v;

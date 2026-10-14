@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 char D_8005F218[] = "pb??B";
 
@@ -50,9 +51,6 @@ INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_800310EC);
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_8003118C);
 
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80031208);
-
-/* libgte */
-long ratan2(long y, long x);
 
 /* Angle (12-bit, 0x1000 per turn) from arg0 to arg1 on the plane of words 0 and 2 */
 s32 func_80031264(s32 *arg0, s32 *arg1) {

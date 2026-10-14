@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038700);
 
@@ -7,16 +8,13 @@ INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038AFC);
 
 INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038C14);
 
-typedef struct {
+typedef struct Obj {
     u8 pad0[0x40];
     s32 regs[(0xBC - 0x40) / 4];
     s32 *sp;
     u8 padC0[0xD4 - 0xC0];
     s32 result;
 } Obj;
-
-s32 func_80032F18(s32, s32, s32 *, Obj *);
-s32 *func_80036D0C(Obj *, s32);
 
 /* 0xE1F pops the stack, 0xE00-0xFFF name a register, anything else is resolved by func_80036D0C. */
 static inline s32 *operand_address(Obj *obj, s32 idx) {

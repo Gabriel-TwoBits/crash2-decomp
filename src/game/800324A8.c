@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 s32 D_8005F244 = 0x1E;
 s32 D_8005F248 = 0;
@@ -24,17 +25,16 @@ typedef struct {
     s32 a;
     s32 flags;
     s32 pad8;
-    s32 key;
+    struct Obj *key;
     u8 pad10[0xD];
     u8 b;
     u8 pad1E[0x32];
 } Ent;
 
-extern s32 func_80032F18(s32, s32, s32 *, s32);
 s32 D_8005F304;
 extern Ent D_8005F4EC[];
 
-void func_80032808(s32 arg0) {
+void func_80032808(struct Obj *arg0) {
     s32 sp10;
     s32 i;
     Ent *p;

@@ -12,4 +12,7 @@ typedef struct {
 /* libc */
 int sprintf(char *buffer, const char *format, ...);
 
+/* libgte */
+long ratan2(long y, long x);
+
 #endif /* SDK_H */

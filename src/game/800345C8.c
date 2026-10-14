@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 s32 D_8005F264 = 0;
 s32 D_8005F268 = 1;

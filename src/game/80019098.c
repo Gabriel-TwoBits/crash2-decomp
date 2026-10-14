@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019098);
 
@@ -26,9 +27,6 @@ typedef struct {
     Unk19E5C *unk10;
 } Unk608CC;
 
-s32 func_80014260(void *, s32, s32);
-s32 func_800143C0(void *, s32);
-void func_80019E28(s32);
 /* volatile: the retail code reloads it after the null check. */
 extern Unk608CC *volatile D_800608CC;
 

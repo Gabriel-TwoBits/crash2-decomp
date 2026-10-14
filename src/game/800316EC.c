@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 char D_8005F228[] = "CD001";
 char D_8005F230[] = "rfs\n";

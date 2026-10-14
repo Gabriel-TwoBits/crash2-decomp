@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 s32 D_8005F1A4 = 1;
 char D_8005F1A8[] = "hde\n";
@@ -75,7 +76,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80013BD8);
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80013C98);
 
-void func_80013F28(void);
 extern s32 D_80067FB0[];
 
 void func_80013E10(void *arg0) {
@@ -87,7 +87,7 @@ void func_80013E10(void *arg0) {
         temp_v0_2 = temp_v0 - 1;
         *(s8 *)((char *)arg0 + 0xF) = temp_v0_2;
         if (((temp_v0_2 << 0x18) <= 0) && (*(s16 *)((char *)arg0 + 6) == 0)) {
-            func_80013F28();
+            func_80013F28(arg0);
             D_80067FB0[0] -= 1;
         }
     }
@@ -147,11 +147,6 @@ s32 func_80014C48(void) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014C68);
 
-extern void func_80012ED0(int);
-extern void func_800155E0(void *, int);
-extern void func_800116C0(int);
-extern void func_80032588();
-extern void func_80034394();
 extern void func_80051328(int);
 typedef struct { void (*fn)(); char pad[24]; } Entry;
 extern Entry D_8005B1F0[];
