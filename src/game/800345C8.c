@@ -92,7 +92,12 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036150);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036164);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036304);
+void StopCARD(void);
+
+s32 func_80036304(void) {
+    StopCARD();
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036324);
 

@@ -756,5 +756,52 @@
         "minutes": 0.2
       }
     ]
+  },
+  "func_800360AC": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-14 10:37",
+    "summary": "0 of 8 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.1263396,
+    "turns": 7,
+    "minutes": 0.4,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 8 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.1263396,
+        "turns": 7,
+        "minutes": 0.4
+      }
+    ],
+    "reason": "[27/215] cc src/game/800345C8.c\nFAILED: [code=1] build/src/game/800345C8.o \n.venv/bin/python tools/psx_cc.py src/game/800345C8.c -o build/src/game/800345C8.o\nsrc/game/800345C8.c:86: subscripted value is neither array nor pointer\n[28/215] cc src/game/80031AE8.c\n[29/215] cc src/game/800324A8.c\n[30/215] cc src/game/80036D0C.c\n[31/215] cc src/game/80036E30.c\n[32/215] cc src/game/80038700.c\n[33/215] cc src/game/80037698.c\n[34/215] cc src/game/80038F00.c\nninja: build stopped: subcommand failed."
+  },
+  "func_80036304": {
+    "outcome": "landed",
+    "time": "2026-10-14 10:38",
+    "summary": "0 of 8 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.2,
+    "cost_usd": 0.1045968,
+    "turns": 3,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 8 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.2,
+        "cost_usd": 0.1045968,
+        "turns": 3,
+        "minutes": 0.2
+      }
+    ]
   }
 }
