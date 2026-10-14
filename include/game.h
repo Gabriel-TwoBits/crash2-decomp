@@ -38,5 +38,6 @@ s32 func_80036150();
 s32 func_80036304(void);
 void func_80036324(s32);
 s32 *func_80036D0C(struct Obj *, s32);
+void func_8003CBE4(void);
 
 #endif /* GAME_H */

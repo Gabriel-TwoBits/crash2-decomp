@@ -2153,5 +2153,52 @@
         "minutes": 0.2
       }
     ]
+  },
+  "func_8001D1E0": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-14 16:42",
+    "summary": "0 of 19 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.3,
+    "cost_usd": 0.126889,
+    "turns": 4,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 19 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.126889,
+        "turns": 4,
+        "minutes": 0.2
+      }
+    ],
+    "reason": "[11/215] cc src/game/8001CEDC.c\nFAILED: [code=1] build/src/game/8001CEDC.o \n.venv/bin/python tools/psx_cc.py src/game/8001CEDC.c -o build/src/game/8001CEDC.o\nsrc/game/8001CEDC.c:34: warning: passing arg 2 of `func_80018D28' makes pointer from integer without a cast\n[12/215] cc src/game/8001BFDC.c\n[13/215] cc src/game/8001F9C4.c\n[14/215] cc src/game/800200A8.c\n[15/215] cc src/game/8001D63C.c\n[16/215] cc src/game/8002648C.c\n[17/215] cc src/game/80023B04.c\n[18/215] cc src/game/80020A24.c\nninja: build stopped: subcommand failed."
+  },
+  "func_8002CB1C": {
+    "outcome": "landed",
+    "time": "2026-10-14 16:44",
+    "summary": "0 of 19 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 1.3,
+    "cost_usd": 0.25892639999999995,
+    "turns": 18,
+    "minutes": 1.3,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 19 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 1.3,
+        "cost_usd": 0.25892639999999995,
+        "turns": 18,
+        "minutes": 1.3
+      }
+    ]
   }
 }
