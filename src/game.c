@@ -646,7 +646,15 @@ INCLUDE_ASM("asm/nonmatchings/game", func_8002973C);
 
 INCLUDE_ASM("asm/nonmatchings/game", func_80029768);
 
-INCLUDE_ASM("asm/nonmatchings/game", func_800297C8);
+extern void func_800116C0(s32);
+extern s32 D_8005F398;
+extern s32 D_8005F3D0;
+
+s32 func_800297C8(void) {
+    func_800116C0(D_8005F3D0);
+    func_800116C0(D_8005F398);
+    return -0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game", func_80029800);
 
