@@ -71,7 +71,11 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035D48);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035E7C);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035F00);
+extern char D_8001069C[];
+
+s32 func_80035F00(char *arg0) {
+    return strncmp(D_8001069C, arg0, 12) == 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035F2C);
 
