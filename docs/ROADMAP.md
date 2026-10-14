@@ -39,9 +39,22 @@ agent's instructions), headless Claude Code working in it with only those tools,
 landed in `src/game.c` by the script, committed only when the build's SHA-1 holds. Outcomes go to
 `build/match/ledger.json`.
 
-Done: the first function matched and landed this way (`func_80014C48`, 2 minutes). Left: a fixed set of functions run
-through it to measure the match rate before it is trusted on the rest, and what the runs teach folded back into
-`tools/match/CLAUDE.md`.
+Done: the first function matched and landed this way (`func_80014C48`, 2 minutes), then a first batch of 10 spread
+over sizes 0x24 to 0x17C, five each with Claude Sonnet 5.5 and Opus 5.5, 20 minutes at most each:
+
+| | Sonnet 5.5 | Opus 5.5 |
+| --- | --- | --- |
+| Matched and landed | 4 of 5 | 3 of 5 |
+| Cost (API prices) | $1.00 | $3.91, plus one run stopped at 20 minutes |
+| Time | 3.5 minutes | 33.7 minutes |
+
+The misses: a handwritten GTE routine (no C can give it; `next` now skips the 58 functions splat marks handwritten), a
+0x140-byte function left at 16 of 80 words (instruction scheduling around two `mult`s), and a 0x17C one stopped by the time
+limit. The batch also showed decomp-permuter's score leaves out `nop`s (`tools/permute.py` now scores its candidates with
+the probe) and that a stopped run lost its progress (the script now keeps the best attempt).
+
+Left: more batches to see where the match rate falls with size, Sonnet for the bulk and Opus on what Sonnet leaves, and
+their lessons folded back into `tools/match/CLAUDE.md`.
 
 ## 4. The engine in C
 
