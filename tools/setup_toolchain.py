@@ -4,7 +4,8 @@ checked out at its commit:
 
 - the PSX builds of GCC (decompals/old-gcc): every version the game may have been built with (docs/COMPILER.md);
 - objdiff-cli, which compares the built objects with the retail ones;
-- maspsx (stands in for Sony's ASPSX assembler), m2c (the C drafts) and decomp-permuter (random rewrites until one matches).
+- maspsx (stands in for Sony's ASPSX assembler), m2c (the C drafts) and decomp-permuter (random rewrites until one matches);
+- PsyQ's library signatures, which tools/find_psyq.py looks for in the executable.
 
     python tools/setup_toolchain.py
 
@@ -37,6 +38,8 @@ REPOSITORIES = {
     "maspsx": ("https://github.com/mkst/maspsx", "e85ecb373828aabea96d7e6400974d4f91ce8c74"),
     "m2c": ("https://github.com/matt-kempster/m2c", "708d2d2cb2698f091a92492b328f73b24209f72d"),
     "decomp-permuter": ("https://github.com/simonlindholm/decomp-permuter", "8556c81d80d1c1af98a858c8f4dc951357f29139"),
+    # Byte signatures of PsyQ's library objects, per SDK version (tools/find_psyq.py); no licence, so fetched, never vendored
+    "psx_psyq_signatures": ("https://github.com/lab313ru/psx_psyq_signatures", "e9e46e7e133ef275a79bfce650924f98edb086bc"),
 }
 BINUTILS_PREFIX = "mipsel-linux-gnu-"
 BINUTILS_TOOLS = ("as", "ld", "objcopy", "objdump")
