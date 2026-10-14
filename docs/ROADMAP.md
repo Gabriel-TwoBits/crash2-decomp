@@ -31,11 +31,17 @@ Left:
   that stay within a group). It is one unit, `game`, until then.
 - Per-file compiler profiles, once a file needs one other than the default.
 
-## 3. The working loop
+## 3. The working loop (in progress)
 
-The per-function loop of docs/WORKFLOW.md automated: a function's assembly and context to m2c, the draft to an agent, the
-result compiled and diffed, decomp-permuter on near misses, the outcome recorded. Measured on a fixed set of functions
-before it is trusted on the rest.
+`tools/match.py`: a scratch directory per function (`build/match/<function>/`: the target, m2c's draft with the project's
+declarations, a brief of its callers, callees and data, `score.sh`, `permute.sh`, and `tools/match/CLAUDE.md` as the
+agent's instructions), headless Claude Code working in it with only those tools, then the result checked by the probe and
+landed in `src/game.c` by the script, committed only when the build's SHA-1 holds. Outcomes go to
+`build/match/ledger.json`.
+
+Done: the first function matched and landed this way (`func_80014C48`, 2 minutes). Left: a fixed set of functions run
+through it to measure the match rate before it is trusted on the rest, and what the runs teach folded back into
+`tools/match/CLAUDE.md`.
 
 ## 4. The engine in C
 

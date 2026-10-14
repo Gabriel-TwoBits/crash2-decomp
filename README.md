@@ -17,7 +17,7 @@ unmatched functions included from the split. The milestones are in [docs/ROADMAP
 | Target | `SCUS_941.54`, SHA-1 `aabdade44a4ca863f71224daef51c45f34fb1bf8` ([docs/TARGET.md](docs/TARGET.md)) |
 | SDK | PsyQ 4.0, its libraries identified and split apart |
 | Compiler | PsyQ GCC 2.6.0 to 2.7.2, `-O2 -G8`, ASPSX 2.30 to 2.49 ([docs/COMPILER.md](docs/COMPILER.md)) |
-| Game code in C | 16 of 561 functions, 252 of 218,836 bytes (0.12%): `tools/progress.py` |
+| Game code in C | 17 of 561 functions, 284 of 218,836 bytes (0.13%): `tools/progress.py` |
 
 ## Why
 

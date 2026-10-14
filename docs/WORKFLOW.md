@@ -4,6 +4,10 @@ The unit of work is one function: its C written until, compiled with the origina
 
 ## The loop
 
+`tools/match.py` runs this loop with an agent: `next` picks a function, `run` prepares its scratch directory and lets
+headless Claude Code work in it, `land` puts a verified match into `src/game.c` and commits it, `loop --count N` repeats.
+By hand, the steps are:
+
 1. **Pick** a function from the split (`asm/`). Smaller ones and ones whose callees are already in C go
    first; a function's callers and callees give its meaning.
 2. **Draft** it with m2c from its assembly, with the context the project already has (`include/`'s types and declarations).

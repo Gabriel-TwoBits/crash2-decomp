@@ -28,6 +28,8 @@ committed.
 
 ## Working on functions
 
+- `tools/match.py` runs the per-function loop with a headless agent (docs/WORKFLOW.md); a run costs the user's Claude
+  usage, so batches of more than a few functions need their go-ahead.
 - Probe a draft with `tools/probe_compiler.py FILE.c FUNCTION` (every compiler and assembler version) or `--diff 2.7.2`
   (one side by side); `tools/permute.py FILE.c FUNCTION --minutes N` runs decomp-permuter on it. Drafts live in
   `build/` (ignored), never in `src/` until they match.
