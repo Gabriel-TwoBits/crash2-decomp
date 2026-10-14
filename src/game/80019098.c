@@ -16,7 +16,12 @@ void func_80019E08(s32 a0) {
     func_80019BBC(a0, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019E28);
+extern char func_80018D28[];
+extern char func_80019D30[];
+
+void func_80019E28(void *arg0) {
+    func_80018DD0(func_80018D28, func_80019D30, arg0);
+}
 
 typedef struct {
     u8 pad[0x190];
