@@ -66,7 +66,9 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016F44);
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800170B4);
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80017198);
+void func_80017198(s32 arg0) {
+    func_80016F44(arg0, 1, 0x6396347F);
+}
 
 void func_800171C0(int a0) {
     func_80016F44(a0, 0, 0x6396347F);
