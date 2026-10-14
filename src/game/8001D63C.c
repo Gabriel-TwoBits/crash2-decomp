@@ -31,7 +31,15 @@ INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001ED60);
 
 INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001EE64);
 
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001EFD8);
+extern s32 D_8005F38C;
+extern s32 D_8006CB10;
+extern s32 D_8006CB14;
+
+void func_8001EFD8(void) {
+    func_800116C0(D_8006CB14);
+    D_8005F38C = 0;
+    func_800116C0(D_8006CB10);
+}
 
 extern void *D_8006759C;
 extern s32 D_8006CB70;
