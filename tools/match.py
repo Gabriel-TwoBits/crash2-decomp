@@ -79,11 +79,13 @@ def portable(text):
 
 
 def record(name, outcome, **details):
-    """The function's latest outcome, keeping what earlier steps recorded (the run's model and cost when it lands); each
-    agent run's own details also go into its list of runs, so a retry with another model doesn't hide the first"""
+    """The function's latest outcome, keeping what earlier steps recorded (the run's model and cost when it lands) but not
+    an earlier outcome's reason; each agent run's own details also go into its list of runs, so a retry with another
+    model doesn't hide the first"""
     ledger = load_ledger()
     details = {key: portable(value) if isinstance(value, str) else value for key, value in details.items()}
-    entry = {**ledger.get(name, {}), "outcome": outcome, "time": time.strftime("%Y-%m-%d %H:%M"), **details}
+    earlier = {key: value for key, value in ledger.get(name, {}).items() if key != "reason"}
+    entry = {**earlier, "outcome": outcome, "time": time.strftime("%Y-%m-%d %H:%M"), **details}
     if "model" in details:
         entry["runs"] = entry.get("runs", []) + [{"outcome": outcome, **details}]
     ledger[name] = entry

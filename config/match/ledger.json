@@ -410,8 +410,7 @@
         "turns": 37,
         "minutes": 1.8
       }
-    ],
-    "reason": "defines D_8005F304, which src/game/800324A8.c doesn't"
+    ]
   },
   "func_80022E74": {
     "outcome": "gave up",
@@ -530,8 +529,7 @@
         "turns": 47,
         "minutes": 2.2
       }
-    ],
-    "reason": "defines D_8005F1A4: needs its file's data in C"
+    ]
   },
   "func_8001FDDC": {
     "outcome": "gave up",
