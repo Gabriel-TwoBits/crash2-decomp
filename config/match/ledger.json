@@ -1044,5 +1044,28 @@
         "minutes": 0.1
       }
     ]
+  },
+  "func_8002973C": {
+    "outcome": "landed",
+    "time": "2026-10-14 10:42",
+    "summary": "0 of 11 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.3,
+    "cost_usd": 0.1189527,
+    "turns": 6,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 11 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.1189527,
+        "turns": 6,
+        "minutes": 0.2
+      }
+    ]
   }
 }

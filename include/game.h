@@ -20,6 +20,7 @@ void func_80016F44(s32, s32, s32);
 void func_80019BBC();
 void func_80019E28(void *);
 void func_800241A8(void);
+void func_80029538(s32, s32, s32);
 s32 func_800322C0(s32, s32, s32, s32);
 void func_80032588(void);
 s32 func_80032F18(s32, s32, s32 *, struct Obj *);
