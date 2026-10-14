@@ -93,6 +93,11 @@ against the callee's definition (`func_8001FF30`), a structure two functions of 
 (`func_800163E8`). `land` now refuses a data definition whose type differs from its file's, with both in the reason, and
 counts only declarations above the function as already there.
 
+A fourth batch of 20 (0x30 to 0x40 bytes): all 20 matched (19 by Sonnet), at $2.73 for Sonnet and $0.52 for Opus, 13
+minutes of runs. 19 landed by themselves; `func_80014220` named its structure `Entry`, which `func_8001521C` in the same
+file defines otherwise, and landed once renamed. The agent's instructions now ask for structures named after their
+function or data.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
