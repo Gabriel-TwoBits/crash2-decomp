@@ -18,7 +18,9 @@ matched), docs/COMPILER.md (what is proven about the toolchain), docs/TARGET.md 
   hold one.
 - **Never commit game data.** Not `orig/`, not `asm/` or `assets/` (splat's output is the retail code and data), not NSF/NSD
   files, not excerpts of the executable's bytes or disassembly pasted into docs, commits or issues beyond a few instructions
-  needed to explain a finding. Run `git status` before every commit and look at what is staged.
+  needed to explain a finding. A file's variables defined in C with their retail values are code, not game data;
+  the game's content transcribed into arrays is (CONTRIBUTING.md). Run `git status` before every commit and look at what
+  is staged.
 - **Matched means proven.** A function is matched only when `tools/probe_compiler.py` reports no differing word for it and
   the build's SHA-1 check passes with it in `src/`, both run in this session. Never report a match from reading the code,
   from "equivalent" logic, or from a partial diff.

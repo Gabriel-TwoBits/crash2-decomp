@@ -42,6 +42,10 @@ North American release, SCUS-94154.
 
 - **No game data in the repository**: not the disc image, not the executable, not what splat makes of it (`asm/`,
   `assets/`), not the NSF files. `.gitignore` keeps them out; check `git status` before a commit anyway.
+- **Data the code defines is code**: a matched file defines its variables in C with their retail values (counters, flags,
+  pointers, short strings, small tables such as a sine table), as any matching decompilation does; the bytes can't match
+  without them. What stays out, in C as anywhere else, is the game's content: graphics, sound, models, levels. Transcribing a
+  block of it into an array is committing game data.
 - **Matched means matched**: `tools/probe_compiler.py` reports no differing word and the build's SHA-1 check passes
   (docs/WORKFLOW.md).
 - **Commits**: one Conventional Commit subject line in English (`feat: match Gool_Interpret`), no body. One function or one
