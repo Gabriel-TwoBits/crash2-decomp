@@ -35,8 +35,13 @@ what restores the original's register.
 
 ## When you stop
 
-- Matched: copy the matching file to `match.c`. It must compile on its own with `./score.sh match.c`: `#include
-  "common.h"` (and `"sdk.h"` for PsyQ's functions), then any types and `extern` declarations the function needs, then the
-  function. Name nothing beyond what the code makes clear; keep splat's `func_`/`D_` names otherwise.
+- Matched: copy the matching file to `match.c`. It goes into `src/game.c` as it is, so:
+  - `#include "common.h"` (and `"sdk.h"` for PsyQ's functions), then the types and declarations the function needs,
+    then the function. No `m2c_macros.h`: replace every `M2C_` type or macro with a real type.
+  - A prototype for a function src/game.c already declares must be the same one (BRIEF.md lists them).
+  - Data is `extern`, except a variable the retail code reads through `$gp`: this compiler only does that for a variable
+    defined in the same file, so define it, with the value it has in `asm/data/data.data.s`, and say so in NOTES.md.
+    Such a match waits to land until its file's data is in C.
+  - Name nothing beyond what the code makes clear; keep splat's `func_`/`D_` names otherwise.
 - Not matched: copy the best attempt to `best.c`.
 - Either way, write `NOTES.md`: what the function does, what was tried, the final count, and what still differs. Short.

@@ -6,10 +6,13 @@ and the result checked and landed by this script, never taken on the agent's wor
     python tools/match.py prepare FUNCTION         build/match/FUNCTION/: target, m2c draft, brief, scripts, CLAUDE.md
     python tools/match.py run FUNCTION [--minutes 30] [--model MODEL]
     python tools/match.py land FUNCTION            match.c into src/game.c, build, commit when the SHA-1 holds
-    python tools/match.py loop [--count N] [--minutes 30] [--model MODEL]
+    python tools/match.py loop [--count N] [--minutes 30] [--model MODEL] [--retry-model MODEL]
+    python tools/match.py report                   outcomes, models, costs, near misses
 
-Each outcome goes into build/match/ledger.json. The agent may only read, edit inside its scratch directory and run its
-scratch's score.sh and permute.sh (tools/match/CLAUDE.md has its instructions).
+Each outcome goes into config/match/ledger.json, and each run's notes and C into config/match/notes/ (in git: what was
+learned about a function outlives its scratch directory). config/match/skip.txt lists functions not to try, with why.
+The agent may only read, edit inside its scratch directory and run its scratch's score.sh and permute.sh
+(tools/match/CLAUDE.md has its instructions).
 """
 import argparse
 import json
@@ -26,7 +29,10 @@ from probe_compiler import retail_assembly
 from psx_cc import AS, ASFLAGS, HERE
 
 SCRATCH = HERE / "build" / "match"
-LEDGER = SCRATCH / "ledger.json"
+RECORDS = HERE / "config" / "match"
+LEDGER = RECORDS / "ledger.json"
+NOTES = RECORDS / "notes"
+SKIP = RECORDS / "skip.txt"
 TEMPLATE = HERE / "tools" / "match" / "CLAUDE.md"
 GAME_C = HERE / "src" / "game.c"
 NONMATCHINGS = HERE / "asm" / "nonmatchings" / "game"
@@ -41,6 +47,12 @@ MATCHED = re.compile(r"^0 of \d+ words differ$", re.MULTILINE)
 INLINE_ASSEMBLY = re.compile(r"\b(__asm__|asm)\s*\(")
 HANDWRITTEN = "/* Handwritten function */"
 DIFFERING = re.compile(r"^(\d+) of (\d+) words differ$", re.MULTILINE)
+M2C_MACRO = re.compile(r"\bM2C_\w+")
+# A top-level definition of a split data symbol (not an extern declaration): data the build takes from the split already
+DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D_[0-9A-F]{8})\b[^(;]*;", re.MULTILINE)
+ERROR_LINES = 12
+# A near miss for the report: at most this share of the words differ
+NEAR_MISS = 0.1
 SECONDS_PER_MINUTE = 60
 MILLISECONDS_PER_MINUTE = 60000
 DEFAULT_MINUTES = 30
@@ -59,10 +71,20 @@ def load_ledger():
     return {}
 
 
+def portable(text):
+    """Text with this checkout's absolute path taken out: the records are in git, and paths of a machine mean nothing there"""
+    return text.replace(f"{HERE}/", "").replace(str(HERE), ".")
+
+
 def record(name, outcome, **details):
-    """The function's latest outcome, keeping what earlier steps recorded (the run's model and cost when it lands)"""
+    """The function's latest outcome, keeping what earlier steps recorded (the run's model and cost when it lands); each
+    agent run's own details also go into its list of runs, so a retry with another model doesn't hide the first"""
     ledger = load_ledger()
-    ledger[name] = {**ledger.get(name, {}), "outcome": outcome, "time": time.strftime("%Y-%m-%d %H:%M"), **details}
+    details = {key: portable(value) if isinstance(value, str) else value for key, value in details.items()}
+    entry = {**ledger.get(name, {}), "outcome": outcome, "time": time.strftime("%Y-%m-%d %H:%M"), **details}
+    if "model" in details:
+        entry["runs"] = entry.get("runs", []) + [{"outcome": outcome, **details}]
+    ledger[name] = entry
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
     LEDGER.write_text(json.dumps(ledger, indent=2) + "\n")
 
@@ -84,11 +106,19 @@ def handwritten(name):
     return HANDWRITTEN in (NONMATCHINGS / f"{name}.s").read_text()
 
 
+def skipped():
+    """The names in config/match/skip.txt: one function per line, then why"""
+    if not SKIP.exists():
+        return set()
+    return {line.split()[0] for line in SKIP.read_text().splitlines() if line.strip() and not line.startswith("#")}
+
+
 def next_function():
-    """The smallest unmatched function of MIN_SIZE or more not tried yet, handwritten ones left out"""
+    """The smallest unmatched function of MIN_SIZE or more not tried yet, handwritten and skipped ones left out"""
     tried = load_ledger()
+    skip = skipped()
     candidates = sorted((size, name) for name, size in unmatched().items()
-                        if size >= MIN_SIZE and name not in tried and not handwritten(name))
+                        if size >= MIN_SIZE and name not in tried and name not in skip and not handwritten(name))
     if not candidates:
         return None
     return candidates[0][1]
@@ -131,6 +161,9 @@ def prepare(name):
     size = len(re.findall(r"/\* [0-9A-F]+ [0-9A-F]{8} [0-9A-F]{8} \*/", assembly)) * 4
     calls = sorted(set(CALL.findall(assembly)))
     symbols = sorted(set(SYMBOL.findall(assembly)))
+    # The prototypes src/game.c already gives its callees: match.c has to agree with them
+    declared = [line.strip() for line in context.read_text().splitlines()
+                if any(re.search(rf"\b{callee}\s*\(", line) for callee in calls) and line.rstrip().endswith(";")]
     brief = [
         f"# {name}",
         "",
@@ -138,6 +171,12 @@ def prepare(name):
         f"- Called by: {', '.join(callers(name)) or 'nothing found (a callback or a table entry, maybe)'}",
         f"- Calls: {', '.join(calls) or 'nothing'}",
         f"- Data: {', '.join(symbols) or 'none by name'}",
+        "",
+        "## Prototypes src/game.c already has for its callees",
+        "",
+        "```c",
+        "\n".join(declared) or "(none)",
+        "```",
         "",
         "## m2c's draft (base.c)",
         "",
@@ -203,6 +242,15 @@ def best_attempt(folder):
     return best
 
 
+def keep_notes(name, folder, source):
+    """The run's NOTES.md and its C (the match or the best attempt) into config/match/notes/"""
+    NOTES.mkdir(parents=True, exist_ok=True)
+    if (folder / "NOTES.md").exists():
+        (NOTES / f"{name}.md").write_text(portable((folder / "NOTES.md").read_text()))
+    if source is not None and (folder / source).exists():
+        (NOTES / f"{name}.c").write_text(portable((folder / source).read_text()))
+
+
 def run(name, minutes, model):
     folder = prepare(name)
     command = ["claude", "-p", PROMPT.format(minutes=minutes), "--permission-mode", "acceptEdits", "--allowedTools", *AGENT_TOOLS,
@@ -210,6 +258,7 @@ def run(name, minutes, model):
     if model:
         command += ["--model", model]
     timed_out = False
+    started = time.monotonic()
     with open(folder / "session.jsonl", "w") as log:
         # Its own process group, so a time limit stops the agent and whatever it started
         agent = subprocess.Popen(command, cwd=folder, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -219,10 +268,12 @@ def run(name, minutes, model):
             os.killpg(agent.pid, signal.SIGTERM)
             agent.wait()
             timed_out = True
-    session = {"model": model or "default", "timed_out": timed_out, **session_result(folder)}
+    wall = round((time.monotonic() - started) / SECONDS_PER_MINUTE, 1)
+    session = {"model": model or "default", "timed_out": timed_out, "wall_minutes": wall, **session_result(folder)}
 
     candidate = folder / "match.c"
     if candidate.exists():
+        keep_notes(name, folder, "match.c")
         if INLINE_ASSEMBLY.search(candidate.read_text()):
             record(name, "rejected", reason="inline assembly in match.c", **session)
             return False
@@ -233,6 +284,7 @@ def run(name, minutes, model):
         record(name, "rejected", reason=f"match.c doesn't match: {summary}", **session)
         return False
     best, summary = best_attempt(folder)
+    keep_notes(name, folder, best)
     record(name, "gave up", summary=summary, best=best, **session)
     return False
 
@@ -241,14 +293,27 @@ def land(name):
     """match.c's declarations and function in place of the INCLUDE_ASM line; kept only when the build's SHA-1 holds"""
     candidate = SCRATCH / name / "match.c"
     if not candidate.exists():
-        sys.exit(f"{candidate} is missing")
+        candidate = NOTES / f"{name}.c"
+    if not candidate.exists():
+        sys.exit(f"no match.c for {name}")
+    text = candidate.read_text()
+    macro = M2C_MACRO.search(text)
+    if macro is not None:
+        record(name, "matched, not landed", reason=f"uses m2c's {macro.group(0)}: real types needed")
+        return False
+    definition = DATA_DEFINITION.search(text)
+    if definition is not None:
+        # The original compiler addresses a variable through $gp only in the file that defines it: this one has to wait
+        # until its file's data is in C (docs/ROADMAP.md)
+        record(name, "matched, blocked", reason=f"defines {definition.group(1)}: needs its file's data in C")
+        return False
     original = GAME_C.read_text()
     include = INCLUDE_LINE.format(name=name)
     if include not in original:
         sys.exit(f"{name} isn't included from the split in {GAME_C}")
     # Its #include lines are game.c's already; a declaration game.c already has isn't repeated
     present = set(line.strip() for line in original.splitlines())
-    kept = [line for line in candidate.read_text().splitlines()
+    kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line.strip().startswith("extern") and line.strip() in present)]
     GAME_C.write_text(original.replace(include, "\n".join(kept).strip() + "\n"))
 
@@ -258,33 +323,94 @@ def land(name):
         if result.returncode != 0:
             GAME_C.write_text(original)
             subprocess.run([sys.executable, "configure.py"], cwd=HERE, capture_output=True)
-            record(name, "matched, not landed", reason=(result.stdout + result.stderr).strip().splitlines()[-1])
+            error = "\n".join((result.stdout + result.stderr).strip().splitlines()[-ERROR_LINES:])
+            record(name, "matched, not landed", reason=error)
             return False
-    subprocess.run(["git", "add", "src/game.c"], cwd=HERE, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", f"feat: match {name}"], cwd=HERE, check=True)
     record(name, "landed")
+    subprocess.run(["git", "add", "src/game.c", str(RECORDS)], cwd=HERE, check=True)
+    commit(f"feat: match {name}")
     return True
+
+
+def commit(message):
+    """A commit of what is staged, refused if any of it holds this checkout's absolute path"""
+    staged = subprocess.run(["git", "diff", "--cached"], cwd=HERE, capture_output=True, text=True, check=True).stdout
+    if str(HERE) in staged:
+        sys.exit(f"the staged changes hold {HERE}: not committed (git diff --cached)")
+    subprocess.run(["git", "commit", "-q", "-m", message], cwd=HERE, check=True)
+
+
+def commit_records():
+    """The ledger and notes of runs that didn't land, committed together"""
+    subprocess.run(["git", "add", str(RECORDS)], cwd=HERE, check=True)
+    staged = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=HERE)
+    if staged.returncode != 0:
+        commit("chore: record the matching runs")
+
+
+def report():
+    ledger = load_ledger()
+    outcomes = {}
+    models = {}
+    near = []
+    for name, entry in sorted(ledger.items()):
+        outcomes[entry["outcome"]] = outcomes.get(entry["outcome"], 0) + 1
+        for attempt in entry.get("runs", []):
+            stats = models.setdefault(attempt["model"], {"runs": 0, "matched": 0, "cost_usd": 0.0})
+            stats["runs"] += 1
+            stats["matched"] += attempt["outcome"] == "matched"
+            stats["cost_usd"] += attempt.get("cost_usd") or 0
+        counted = DIFFERING.search(entry.get("summary", ""))
+        if entry["outcome"] == "gave up" and counted is not None:
+            if int(counted.group(1)) <= NEAR_MISS * int(counted.group(2)):
+                near.append(f"{name} ({entry['summary']})")
+        elif entry["outcome"] in ("matched, blocked", "matched, not landed"):
+            # The reason's first compiler error says more than ninja's closing line
+            lines = entry.get("reason", "").splitlines()
+            errors = [line for line in lines if "game.c:" in line]
+            if errors:
+                reason = errors[0]
+            elif lines:
+                reason = lines[0]
+            else:
+                reason = ""
+            near.append(f"{name} ({entry['outcome']}: {reason})")
+        else:
+            continue
+    print("outcomes: " + ", ".join(f"{outcome} {count}" for outcome, count in sorted(outcomes.items())))
+    for model, stats in sorted(models.items()):
+        print(f"{model}: {stats['matched']} matched of {stats['runs']} runs, ${stats['cost_usd']:.2f}")
+    print("near misses and matches waiting to land:")
+    for line in near:
+        print(f"  {line}")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "prepare", "run", "land", "loop"])
+    parser.add_argument("command", choices=["next", "prepare", "run", "land", "loop", "report"])
     parser.add_argument("function", nargs="?")
     parser.add_argument("--minutes", type=float, default=DEFAULT_MINUTES, help="the agent's time limit per function")
     parser.add_argument("--model", help="the agent's model (default: Claude Code's)")
     parser.add_argument("--count", type=int, default=1, help="loop: how many functions")
+    parser.add_argument("--retry-model", help="loop: a second model for what the first doesn't match")
     arguments = parser.parse_args()
 
     if arguments.command == "next":
         print(next_function() or "nothing left to try")
+    elif arguments.command == "report":
+        report()
     elif arguments.command == "loop":
         for _ in range(arguments.count):
             name = next_function()
             if name is None:
                 print("nothing left to try")
                 break
-            print(f"{name}: matched and landed" if run(name, arguments.minutes, arguments.model) and land(name)
-                  else f"{name}: {load_ledger()[name]['outcome']}", flush=True)
+            matched = run(name, arguments.minutes, arguments.model)
+            if not matched and arguments.retry_model:
+                matched = run(name, arguments.minutes, arguments.retry_model)
+            landed = matched and land(name)
+            print(f"{name}: {'landed' if landed else load_ledger()[name]['outcome']}", flush=True)
+        commit_records()
     elif arguments.function is None:
         sys.exit(f"{arguments.command} needs a FUNCTION")
     elif arguments.command == "prepare":

@@ -1,0 +1,5 @@
+# Functions tools/match.py doesn't try, one per line: the name, then why (docs/TARGET.md, "What the code holds")
+func_80042FD0 handwritten GTE routine: inputs in $t0-$t4, falls through into func_80043074
+func_80043074 handwritten GTE routine, func_80042FD0's tail
+func_800436C8 handwritten: inputs in $v1 and the caller's stack, returns through jr $t8
+func_8003A680 handwritten: an entry of the GOOL interpreter around func_8003A014, operands on the $s6 stack
