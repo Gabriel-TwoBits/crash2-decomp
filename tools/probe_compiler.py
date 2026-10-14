@@ -108,6 +108,7 @@ def show_diff(gcc, aspsx, source, cflags, function, target):
         mask = ~masks.get(index, 0) & 0xFFFFFFFF
         same = index < len(target) and index < len(words) and target[index] & mask == words[index] & mask
         print(f"{'  ' if same else '! '}{index * INSTRUCTION_SIZE:4X}  {expected:40} {actual}")
+    print(f"{score(target, words, masks)} of {len(target)} words differ")
 
 
 def main():
