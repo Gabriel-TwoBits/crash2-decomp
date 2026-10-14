@@ -42,6 +42,7 @@ side), `tools/psx_cc.py` (the compile path they share), `tools/permute.py` (deco
 
 | `func_8001521C` (0x128 bytes) | Tears down a state object: callbacks, frees, a `$gp` variable of its file | **Matches** with GCC 2.7.2 only, ASPSX 2.34. GCC 2.6.0 and 2.6.3: 36 of 74 words differ, a loop's increment moved into a delay slot. ASPSX 2.21: 43 differ; 2.56 and later: 3 |
 | `func_80032808` (0xCC bytes) | Releases a table's entries owned by a key; a `.sdata` and a `.sbss` variable through `$gp` | **Matches** with GCC 2.7.2 only, ASPSX 2.21 and 2.34. GCC 2.6.0 and 2.6.3: 17 of 51 differ |
+| `func_8003D2EC` (0x74 bytes) | A sine lookup in a quarter-wave table | **Not compiled**: 8 of 29 words differ under GCC 2.5.7 to 2.7.2 and every ASPSX, 18 under 2.8.1; the same 8 at `-O1`, `-O3`, `-g`, `-fno-thread-jumps`, `-fno-cse-follow-jumps -fno-cse-skip-blocks`, `-fno-rerun-cse-after-loop`; 30 at `-fno-delayed-branch`, 82 at `-O0`. What differs is its `b` jumps (each `cc1`'s `jump` pattern is `%*j %l0` only) and a `b` to the next instruction: the assembly part of the game (docs/TARGET.md, "What the code holds") |
 
 The first functions scored the same under 2.6.0, 2.6.3 and 2.7.2; `func_8001521C` and `func_80032808`, with more calls and
 loops, separate them.

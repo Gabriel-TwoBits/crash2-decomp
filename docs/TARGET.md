@@ -40,17 +40,24 @@ retail executable, and no build of the game with them is known.
 
 Found by the matching runs (each run's notes are in `config/match/notes/<function>.md`; summed up here):
 
-- **Handwritten assembly in the game's code.** splat marks 58 functions handwritten. More are, unmarked:
-  - The GOOL interpreter around `func_8003A014` keeps its operand stack in `$s6` and has entries reached from its dispatch
-    (`func_8003A680` is one: it pops operands off `$s6` and branches back into `func_8003A014`).
-  - From `0x80042FD0` on, GTE routines with their own register conventions: inputs in `$t0`-`$t4` or `$v1`, returns through
+- **The game's code ends in assembly.** From `0x80039D2C` to the SDK (`0x80046884`) the code is assembly source, not
+  compiled C:
+  - Its first functions (`0x80039D2C` to `0x80039F9C`) take the GOOL interpreter's registers as inputs (`$s0`, `$s3`,
+    `$s4`, `$s6`, `$s7`, `$fp`), set by nobody they could be compiled with. The interpreter around `func_8003A014` keeps
+    its operand stack in `$s6` and has entries reached from its dispatch (`func_8003A680` pops operands off `$s6` and
+    branches back into `func_8003A014`).
+  - From `0x80042FD0` on, GTE routines with their own conventions: inputs in `$t0`-`$t4` or `$v1`, returns through
     `jr $t8`, one falling through into the next (`func_80042FD0`, `func_800436C8`).
+  - Its unconditional branches are all `b` (`bgez $zero`): 49 of its 97 functions have one and none has a `j`, while
+    before it 242 of 466 functions have a `j` and none a `b`. No GCC from 2.5.7 to 2.8.1 writes `b` for one (their
+    `jump` pattern is `j` only), at any of the flags tried (docs/COMPILER.md).
+  - `func_8003D2EC`, a sine lookup with the shape of PsyQ libgte's `rsin` (a quarter-wave table of 0x401 `s16` at
+    `D_8005BCB0`), looks compiled but is part of it: besides its `b`s, it keeps a branch to the very next instruction,
+    which GCC removes at `-O1` and up, and `-O0` code looks nothing like it.
 
-  None of these can match from C. A native port rewrites them in C that does the same work; the matching decomp keeps
-  them as assembly.
-- **`func_8003D2EC`** is a sine lookup with the shape of PsyQ libgte's `rsin` (a quarter-wave table of 0x401 `s16` at
-  `D_8005BCB0`). Its unconditional branches are `b` where GCC 2.7.2 here writes `j`: another compiler or assembler setting
-  for that part of the code, not settled (docs/COMPILER.md).
+  splat marks 57 of its 97 functions handwritten, and none of the other 40 shows the compiler that built the rest. splat
+  marks two before it too (`func_8001856C`, `func_800186D8`). None of these can match from C: the matching decomp keeps
+  them as assembly, and a native port rewrites them in C that does the same work.
 
 ## The game's source files
 
@@ -105,7 +112,7 @@ Handwritten code (from `0x8003A014` on, mostly) reads any variable through `$gp`
 | `80036E30` | 5 | `80036E30` | .sdata F294-F2A0 | `80036E30` |
 | `80037698` | 2 | `80037698`-`8003817C` | rodata 0x80010804-0x800108F8 | `80036FAC` |
 | `80038700` | 5 | `80038700` | rodata 0x80010918 | `80038700` |
-| `80038F00` | 107 | `80038F00` | rodata 0x80010938; then the GOOL interpreter and the GTE routines, handwritten | `80038AFC` |
+| `80038F00` | 107 | `80038F00` | rodata 0x80010938; from `80039D2C` on, the game's assembly part (above) | `80038AFC` |
 
 F-numbers are addresses `0x8005Fxxx`. Functions with no evidence between two files go with the earlier one, and so does
 small data no function reads through `$gp`: a file starts at its first function with evidence, and could start as early as

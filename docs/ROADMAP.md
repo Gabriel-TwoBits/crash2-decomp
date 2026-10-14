@@ -78,14 +78,18 @@ The near misses, by hand: `func_800157A0` landed once its m2c placeholder types 
 last 7 words. `func_80038C14` (2 of 61) and `func_800171E8` (6 of 92) did not move; what was tried is in their notes,
 and they wait for more of their files in C.
 
+`func_8003D2EC`'s `b` against `j` is no compiler setting: no GCC writes `b` for a jump, and from `0x80039D2C` to the SDK
+every unconditional branch is one. That part of the game is assembly source, `func_8003D2EC` included (docs/TARGET.md,
+"What the code holds"); it starts after `func_80039C08`, the last function using `j`.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
-   unconditional branch. It may be the per-file profile the build needs (docs/COMPILER.md): its file may not be built
-   with GCC 2.7.2.
-2. **More batches**, a few hundred functions in all, between the steps above.
+1. **The assembly part as assembly in the build**: `0x80039D2C` to `0x80046884` as splat `asm` subsegments instead of
+   `INCLUDE_ASM` lines in `src/game/80038F00.c`, so `tools/match.py next` stops offering its 40 functions splat doesn't
+   mark handwritten, and `tools/progress.py` measures compiled code only.
+2. **More batches**, a few hundred functions in all.
 
 ## 4. The engine in C
 
