@@ -35,6 +35,7 @@ NOTES = RECORDS / "notes"
 SKIP = RECORDS / "skip.txt"
 TEMPLATE = HERE / "tools" / "match" / "CLAUDE.md"
 SOURCES = HERE / "src" / "game"
+GAME_H = HERE / "include" / "game.h"
 NONMATCHINGS = HERE / "asm" / "nonmatchings" / "game"
 M2C = HERE / "tools" / "toolchain" / "m2c" / "m2c.py"
 M2C_MACROS = HERE / "tools" / "toolchain" / "m2c" / "m2c_macros.h"
@@ -52,6 +53,17 @@ M2C_MACRO = re.compile(r"\bM2C_\w+")
 # A top-level definition of a split data symbol (not an extern declaration), with its initialiser if it has one
 DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D_[0-9A-F]{8})\b[^(;=]*(=[^;]*)?;\n?",
                              re.MULTILINE)
+# A one-line declaration of a game function (not its definition): return type, name, parameters
+PROTOTYPE = re.compile(r"^(?:extern[ \t]+)?(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{\n]*\))"
+                       r"[ \t]*;[ \t]*\n?", re.MULTILINE)
+IDENTIFIER = re.compile(r"[A-Za-z_]\w*")
+# PsyQ's libraries start here (config/SCUS_941.54.yaml): a func_ name from there is the SDK's, not the game's
+SDK_START = 0x80046884
+FUNCTION_ADDRESS_START = len("func_")
+HEXADECIMAL = 16
+# What a prototype in include/game.h may be written with: one using a structure of its file stays in the file
+BASIC_TYPES = {"void", "char", "short", "int", "long", "unsigned", "signed", "const",
+               "s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64"}
 ERROR_LINES = 12
 # A near miss for the report: at most this share of the words differ
 NEAR_MISS = 0.1
@@ -189,12 +201,13 @@ def prepare(name):
     draft = subprocess.run([sys.executable, str(M2C), "--target", "mipsel-gcc-c", "--valid-syntax", "--context",
                             str(context), str(target)], capture_output=True, text=True)
     shutil.copy2(M2C_MACROS, folder / "m2c_macros.h")
-    (folder / "base.c").write_text('#include "common.h"\n#include "sdk.h"\n#include "m2c_macros.h"\n\n' + draft.stdout)
+    (folder / "base.c").write_text('#include "common.h"\n#include "sdk.h"\n#include "game.h"\n#include "m2c_macros.h"\n\n'
+                                   + draft.stdout)
 
     size = len(re.findall(r"/\* [0-9A-F]+ [0-9A-F]{8} [0-9A-F]{8} \*/", assembly)) * 4
     calls = sorted(set(CALL.findall(assembly)))
     symbols = sorted(set(SYMBOL.findall(assembly)))
-    # The prototypes its file already gives its callees: match.c has to agree with them
+    # The prototypes include/game.h and its file already give its callees: match.c has to agree with them
     declared = [line.strip() for line in context.read_text().splitlines()
                 if any(re.search(rf"\b{callee}\s*\(", line) for callee in calls) and line.rstrip().endswith(";")]
     brief = [
@@ -206,7 +219,7 @@ def prepare(name):
         f"- Calls: {', '.join(calls) or 'nothing'}",
         f"- Data: {', '.join(symbols) or 'none by name'}",
         "",
-        f"## Prototypes {source} already has for its callees",
+        f"## Prototypes include/game.h and {source} already have for its callees",
         "",
         "```c",
         "\n".join(declared) or "(none)",
@@ -323,6 +336,19 @@ def run(name, minutes, model):
     return False
 
 
+def with_prototypes(header, added):
+    """include/game.h with these prototypes added to its list, which stays in address order"""
+    prototypes = list(PROTOTYPE.finditer(header))
+    if not prototypes:
+        sys.exit(f"{GAME_H} has no list of prototypes to add to")
+    start, end = prototypes[0].start(), prototypes[-1].end()
+    if PROTOTYPE.sub("", header[start:end]).strip():
+        sys.exit(f"{GAME_H}: something other than prototypes inside its list; add {added} by hand")
+    lines = sorted([prototype.group("declaration") + ";" for prototype in prototypes] + added,
+                   key=lambda line: PROTOTYPE.match(line).group("name"))
+    return header[:start] + "\n".join(lines) + "\n" + header[end:]
+
+
 def land(name):
     """match.c's declarations and function in place of the INCLUDE_ASM line; kept only when the build's SHA-1 holds"""
     candidate = SCRATCH / name / "match.c"
@@ -351,23 +377,46 @@ def land(name):
         else:
             # A common: the split's symbol is the definition
             continue
+    # One prototype per game function, in include/game.h: one it has goes, a new one of basic types moves there
+    header = GAME_H.read_text()
+    declared = {prototype.group("name") for prototype in PROTOTYPE.finditer(header)}
+    added = []
+    for prototype in PROTOTYPE.finditer(text):
+        callee = prototype.group("name")
+        if callee == name:
+            # The function's own forward declaration stays with it
+            continue
+        elif callee in declared:
+            text = text.replace(prototype.group(0), "")
+        elif int(callee[FUNCTION_ADDRESS_START:], HEXADECIMAL) >= SDK_START:
+            # An SDK function not identified yet: include/sdk.h's once it is
+            continue
+        elif set(IDENTIFIER.findall(prototype.group("declaration"))) - {callee} <= BASIC_TYPES:
+            added.append(prototype.group("declaration") + ";")
+            text = text.replace(prototype.group(0), "")
+        else:
+            # A structure of its file in the prototype: it stays in the file
+            continue
+    updated_header = with_prototypes(header, added) if added else header
     # Its #include lines are the file's already; a declaration the file already has isn't repeated
     present = set(line.strip() for line in original.splitlines())
     kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line.strip().startswith("extern") and line.strip() in present)]
     source.write_text(original.replace(include, "\n".join(kept).strip() + "\n"))
+    GAME_H.write_text(updated_header)
 
     steps = [[sys.executable, "configure.py"], [str(HERE / ".venv" / "bin" / "ninja")]]
     for step in steps:
         result = subprocess.run(step, cwd=HERE, capture_output=True, text=True)
         if result.returncode != 0:
             source.write_text(original)
+            GAME_H.write_text(header)
             subprocess.run([sys.executable, "configure.py"], cwd=HERE, capture_output=True)
             error = "\n".join((result.stdout + result.stderr).strip().splitlines()[-ERROR_LINES:])
             record(name, "matched, not landed", reason=error)
             return False
     record(name, "landed")
-    subprocess.run(["git", "add", str(source), str(RECORDS)], cwd=HERE, check=True)
+    subprocess.run(["git", "add", str(source), str(GAME_H), str(RECORDS)], cwd=HERE, check=True)
     commit(f"feat: match {name}")
     return True
 

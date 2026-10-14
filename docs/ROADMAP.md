@@ -66,21 +66,23 @@ file), one still used m2c's placeholder types, one declared a prototype another 
 (docs/WORKFLOW.md, "Running the loop unattended").
 
 With the game split into its files and their small data in C, `func_8001521C` and `func_80032808` landed, and so did
-`func_80019E5C`: its prototype of `func_80019E28` contradicts `func_8002001C`'s, but the two are now in different files.
+`func_80019E5C`, whose prototype of `func_80019E28` contradicted `func_8002001C`'s.
+
+The game's functions are declared once, in `include/game.h`, which every file includes: `prepare` lists its prototypes
+in the brief, and `land` drops a prototype the header has and moves a new one there. Writing it settled four signatures
+from the callees' assembly: `func_80019E28`, `func_800163B4` and `func_80013F28` take a pointer the matched callers had
+left out (it was still in `$a0`, so the bytes are the same), and `func_80032F18`'s fourth argument is a pointer.
 
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **One header of the game's prototypes** (`include/game.h`), so matched functions agree with each other across files:
-   `func_80019E5C` and `func_8002001C` declare `func_80019E28` differently, and a landing fails when two functions of one
-   file do. `tools/match.py prepare` would put it in the agent's context and `land` would add new prototypes to it.
-2. **The near misses** in `tools/match.py report`, with Opus and a longer limit, or by hand: what keeps them apart says
+1. **The near misses** in `tools/match.py report`, with Opus and a longer limit, or by hand: what keeps them apart says
    something about the compiler.
-3. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
+2. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
    unconditional branch. It may be the per-file profile the build needs (docs/COMPILER.md): its file may not be built
    with GCC 2.7.2.
-4. **More batches**, a few hundred functions in all, between the steps above.
+3. **More batches**, a few hundred functions in all, between the steps above.
 
 ## 4. The engine in C
 

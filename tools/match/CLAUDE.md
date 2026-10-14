@@ -36,9 +36,11 @@ what restores the original's register.
 ## When you stop
 
 - Matched: copy the matching file to `match.c`. It goes into its file (BRIEF.md's "File") as it is, so:
-  - `#include "common.h"` (and `"sdk.h"` for PsyQ's functions), then the types and declarations the function needs,
-    then the function. No `m2c_macros.h`: replace every `M2C_` type or macro with a real type.
-  - A prototype for a function its file already declares must be the same one (BRIEF.md lists them).
+  - `#include "common.h"`, `"sdk.h"` (PsyQ's functions) and `"game.h"` (the game's), then the types and declarations
+    the function needs, then the function. No `m2c_macros.h`: replace every `M2C_` type or macro with a real type.
+  - A function `include/game.h` or its file declares is called through that prototype, not declared again (BRIEF.md
+    lists them). A callee neither declares gets a prototype in `match.c`; landing moves it into `game.h` when it uses
+    only basic types (`s32`, `void *`, ...), so make it the callee's true signature, from the callee's assembly.
   - Data is `extern`, except a variable the retail code reads through `$gp`: this compiler only does that for a variable
     defined in the same file, so define it. One in `.sdata` is defined at the top of the function's file already: copy
     that definition as it is. One in `.sbss` (`asm/data/bss.bss.s`) is defined without a value (`s32 D_8005F304;`).
