@@ -93,7 +93,17 @@ s32 func_80035F00(char *arg0) {
     return strncmp(D_8001069C, arg0, 12) == 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035F2C);
+s32 close(s32);
+
+void func_80035F2C(s32 *arg0) {
+    s32 temp_a0;
+
+    temp_a0 = *arg0;
+    if (temp_a0 >= 0) {
+        close(temp_a0);
+    }
+    *arg0 = -1;
+}
 
 extern volatile u32 D_8003BEA4;
 
