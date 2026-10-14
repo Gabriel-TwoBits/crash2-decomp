@@ -74,7 +74,10 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035B70);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035BB8);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035C40);
+void func_80035C40(void) {
+    do {
+    } while (func_80035BB8() == -1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035C74);
 
