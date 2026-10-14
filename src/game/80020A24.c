@@ -14,7 +14,18 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80021A08);
 
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80021F4C);
 
-INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_800221DC);
+extern s8 D_8005B99B;
+extern s32 D_8005B9C4;
+extern s32 D_800608F8;
+
+void func_800221DC(void) {
+    D_800608F8 = 0;
+    if (D_8005B99B != 0) {
+        D_8005B9C4 = 0;
+        return;
+    }
+    func_80023154();
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022224);
 
