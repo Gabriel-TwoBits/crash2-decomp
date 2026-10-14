@@ -120,7 +120,23 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014078);
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014148);
 
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014220);
+typedef struct {
+    s32 value;
+    s16 pad;
+    s16 kind;
+} Unk80014148;
+
+Unk80014148 *func_80014148();
+
+s32 func_80014220(void) {
+    Unk80014148 *e;
+
+    e = func_80014148();
+    if (e && e->kind == 1) {
+        return e->value;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014260);
 

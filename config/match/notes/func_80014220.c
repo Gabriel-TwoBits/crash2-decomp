@@ -6,12 +6,12 @@ typedef struct {
     s32 value;
     s16 pad;
     s16 kind;
-} Entry;
+} Unk80014148;
 
-Entry *func_80014148();
+Unk80014148 *func_80014148();
 
 s32 func_80014220(void) {
-    Entry *e;
+    Unk80014148 *e;
 
     e = func_80014148();
     if (e && e->kind == 1) {
