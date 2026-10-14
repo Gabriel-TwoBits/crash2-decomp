@@ -8,7 +8,11 @@ INCLUDE_ASM("asm/nonmatchings/game/80012010", func_800120EC);
 
 INCLUDE_ASM("asm/nonmatchings/game/80012010", func_80012100);
 
-INCLUDE_ASM("asm/nonmatchings/game/80012010", func_8001214C);
+void func_80012170(s32 a0, s32 a1, s32 a2, s32 a3);
+
+void func_8001214C(s32 a0, s32 a1) {
+    func_80012170(a0, a1, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/80012010", func_80012170);
 
