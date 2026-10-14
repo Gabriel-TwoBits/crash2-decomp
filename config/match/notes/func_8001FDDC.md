@@ -27,3 +27,9 @@ set and `func_8001FF50(D_800608CC, obj)` returns non-zero, `func_8001FFCC(obj)` 
 
 The empty blocks are scheduling barriers found by the permuter, probably standing for something else in the original
 (a macro, an inline helper). Next: permuter on attempt7, or other ways to split those basic blocks.
+
+## Matched (by hand, after the loop)
+
+0 of 85 words differ. decomp-permuter (30 minutes on attempt7) moved the inner empty block before `j = 1`: 5 left, the
+count and the `/ 3` constant in swapped registers. Loading the count into its own variable and dividing in a separate
+statement (`n = count / 3`) gives the original's registers. Both empty blocks are still needed (62 to 79 words without).
