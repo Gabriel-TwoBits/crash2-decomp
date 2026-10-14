@@ -24,6 +24,8 @@ options:
   gp_value: 0x8005F17C
 
   o_as_suffix: True
+  # include/'s macro files are kept in git: splat would write them with this machine's absolute paths
+  generate_asm_macros_files: False
   use_legacy_include_asm: False
 
   section_order: [".rodata", ".text", ".data", ".bss"]
