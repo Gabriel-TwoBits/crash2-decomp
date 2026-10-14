@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Splits the executable with splat (config/SCUS_941.54.yaml) and writes build.ninja, which assembles the split, links it with
-splat's linker script into build/SCUS_941.54.exe and checks that file's SHA-1 against the retail one.
+"""Splits the executable with splat (config/SCUS_941.54.yaml) and writes build.ninja, which compiles src/'s C
+(tools/psx_cc.py: the original compiler, its INCLUDE_ASM functions taken from asm/nonmatchings/) and assembles the rest of the
+split, links it with splat's linker script into build/SCUS_941.54.exe and checks that file's SHA-1 against the retail one.
 
     .venv/bin/python configure.py
     .venv/bin/ninja
@@ -40,15 +41,28 @@ def split():
 
 
 def objects():
-    """(object, source) of every object the linker script names, in its order"""
+    """(object, source) of every object the linker script names, in its order; the source is C or assembly"""
     found = []
     for name in dict.fromkeys(LINKED_OBJECT.findall((HERE / LINKER_SCRIPT).read_text())):
         # Not with_suffix: the stems have dots of their own (asm/data/rodata.rodata)
-        source = Path(f"{Path(name).relative_to(BUILD)}.s")
-        if not (HERE / source).exists():
-            sys.exit(f"{LINKER_SCRIPT} links {name}.o, but there's no {source}")
-        found.append((Path(f"{name}.o"), source))
+        stem = Path(name).relative_to(BUILD)
+        c_source = Path(f"{stem}.c")
+        asm_source = Path(f"{stem}.s")
+        if (HERE / c_source).exists():
+            found.append((Path(f"{name}.o"), c_source))
+        elif (HERE / asm_source).exists():
+            found.append((Path(f"{name}.o"), asm_source))
+        else:
+            sys.exit(f"{LINKER_SCRIPT} links {name}.o, but there's neither {c_source} nor {asm_source}")
     return found
+
+
+def c_dependencies(source):
+    """What a C file's object depends on besides the file: the headers, its INCLUDE_ASM functions, the compile path"""
+    unit = source.relative_to("src").with_suffix("")
+    included = sorted((HERE / "asm" / "nonmatchings" / unit).glob("*.s"))
+    headers = sorted((HERE / "include").glob("*"))
+    return [path.relative_to(HERE) for path in included + headers] + [Path("tools") / "psx_cc.py"]
 
 
 def write_ninja(linked):
@@ -69,6 +83,10 @@ def write_ninja(linked):
         f"  command = {binutils['as']} $asflags -o $out $in",
         "  description = as $in",
         "",
+        "rule cc",
+        f"  command = {sys.executable} tools/psx_cc.py $in -o $out",
+        "  description = cc $in",
+        "",
         "rule ld",
         f"  command = {binutils['ld']} -nostdlib --no-check-sections --no-warn-rwx-segments -T {LINKER_SCRIPT} "
         + " ".join(f"-T {path}" for path in UNDEFINED_SYMBOLS)
@@ -87,7 +105,10 @@ def write_ninja(linked):
         "",
     ]
     for obj, source in linked:
-        lines.append(f"build {obj}: as {source}")
+        if source.suffix == ".c":
+            lines.append(f"build {obj}: cc {source} | {' '.join(str(path) for path in c_dependencies(source))}")
+        else:
+            lines.append(f"build {obj}: as {source}")
     lines += [
         "",
         f"build {ELF}: ld {' '.join(str(obj) for obj, _ in linked)} | {LINKER_SCRIPT} "

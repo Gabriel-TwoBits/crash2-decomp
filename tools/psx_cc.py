@@ -44,11 +44,12 @@ def compile_c(gcc, aspsx, source, cflags, obj):
             ([AS, *ASFLAGS, "-o", str(obj), str(rewritten)], None, None),
         ]
         for command, stdin, stdout in steps:
+            # From the repository's root: INCLUDE_ASM's paths (asm/nonmatchings/...) are relative to it
             if stdin is None:
-                result = subprocess.run(command, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+                result = subprocess.run(command, capture_output=True, text=True, stdin=subprocess.DEVNULL, cwd=HERE)
             else:
                 with open(stdin) as feed:
-                    result = subprocess.run(command, capture_output=True, text=True, stdin=feed)
+                    result = subprocess.run(command, capture_output=True, text=True, stdin=feed, cwd=HERE)
             if result.returncode != 0:
                 message = result.stderr.strip().splitlines()
                 return message[-1] if message else f"{Path(command[0]).name} failed"

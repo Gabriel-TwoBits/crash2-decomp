@@ -55,7 +55,7 @@ segments:
     bss_size: 0xFF4C
     subsegments:
       - [0x800, rodata, rodata]
-      - [0x19B0, asm, game]
+      - [0x19B0, c, game]
       # PsyQ 4.0's libraries, object by object (tools/find_psyq.py --version 400 --subsegments); unknown_ parts are
       # between identified objects, not identified yet
       - [0x37084, asm, sdk/libcd/event]
