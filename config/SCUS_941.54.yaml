@@ -233,8 +233,8 @@ segments:
       - [0x4B8F8, asm, sdk/libcard/a75]
       - [0x4B908, asm, sdk/libcard/a76]
       - [0x4B918, asm, sdk/libcard/end]
-      - [0x4B998, asm, sdk/unknown_8005B198]
-      - [0x4B9A0, data, data]
+      # The data starts with func_80011E98's 64-character table at 0x8005B198
+      - [0x4B998, data, data]
       - { start: 0x4FAA4, type: bss, vram: 0x8005F2A4, name: bss }
   # The file goes on to 0x50000 with zeros (a whole 2048-byte sector), over the start of .bss: the build pads it
   - [0x4FAA4]
