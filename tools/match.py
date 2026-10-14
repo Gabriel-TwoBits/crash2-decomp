@@ -40,6 +40,7 @@ SYMBOL = re.compile(r"%(?:hi|lo|gp_rel)\((\w+)\)")
 MATCHED = re.compile(r"^0 of \d+ words differ$", re.MULTILINE)
 INLINE_ASSEMBLY = re.compile(r"\b(__asm__|asm)\s*\(")
 SECONDS_PER_MINUTE = 60
+MILLISECONDS_PER_MINUTE = 60000
 DEFAULT_MINUTES = 30
 # Below this a function is a stub or a thunk: nothing to learn, and splat already writes the empty ones
 MIN_SIZE = 0x20
@@ -56,8 +57,9 @@ def load_ledger():
 
 
 def record(name, outcome, **details):
+    """The function's latest outcome, keeping what earlier steps recorded (the run's model and cost when it lands)"""
     ledger = load_ledger()
-    ledger[name] = {"outcome": outcome, "time": time.strftime("%Y-%m-%d %H:%M"), **details}
+    ledger[name] = {**ledger.get(name, {}), "outcome": outcome, "time": time.strftime("%Y-%m-%d %H:%M"), **details}
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
     LEDGER.write_text(json.dumps(ledger, indent=2) + "\n")
 
@@ -163,6 +165,20 @@ def score(folder, source):
     return MATCHED.search(result.stdout) is not None, summary
 
 
+def session_result(folder):
+    """The agent session's own summary from its log: cost, turns, duration (an empty dict if it never finished)"""
+    found = {}
+    for line in (folder / "session.jsonl").read_text().splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") == "result":
+            found = {"cost_usd": event.get("total_cost_usd"), "turns": event.get("num_turns"),
+                     "minutes": round(event.get("duration_ms", 0) / MILLISECONDS_PER_MINUTE, 1)}
+    return found
+
+
 def run(name, minutes, model):
     folder = prepare(name)
     command = ["claude", "-p", PROMPT, "--permission-mode", "acceptEdits", "--allowedTools", *AGENT_TOOLS,
@@ -177,21 +193,22 @@ def run(name, minutes, model):
         except subprocess.TimeoutExpired:
             os.killpg(agent.pid, signal.SIGTERM)
             agent.wait()
+    session = {"model": model or "default", **session_result(folder)}
 
     candidate = folder / "match.c"
     if candidate.exists():
         if INLINE_ASSEMBLY.search(candidate.read_text()):
-            record(name, "rejected", reason="inline assembly in match.c")
+            record(name, "rejected", reason="inline assembly in match.c", **session)
             return False
         matched, summary = score(folder, candidate)
         if matched:
-            record(name, "matched", summary=summary)
+            record(name, "matched", summary=summary, **session)
             return True
-        record(name, "rejected", reason=f"match.c doesn't match: {summary}")
+        record(name, "rejected", reason=f"match.c doesn't match: {summary}", **session)
         return False
     best = folder / "best.c"
     summary = score(folder, best)[1] if best.exists() else "no attempt left"
-    record(name, "gave up", summary=summary)
+    record(name, "gave up", summary=summary, **session)
     return False
 
 
