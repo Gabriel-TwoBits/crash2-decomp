@@ -14,7 +14,8 @@ The compiler is PsyQ's GCC (2.7.2 here; 2.6.0 and 2.6.3 build the same code so f
   (`register ... asm("$s0")`). A match has to come from plain C.
 - `./score.sh FILE.c` is the only judge: it compiles the file and prints the retail and compiled instructions side by side,
   `!` on each differing word, then how many differ. Matched means `0 of N words differ`.
-- `./permute.sh FILE.c MINUTES` runs decomp-permuter on a near miss and prints where its best candidate is.
+- `./permute.sh FILE.c MINUTES` runs decomp-permuter on a near miss and prints its best candidates with their real count
+  from the probe. The permuter's own score ignores `nop`s, so a permuter "0" is not a match until `./score.sh` says so.
 
 ## The loop
 
@@ -22,7 +23,8 @@ The compiler is PsyQ's GCC (2.7.2 here; 2.6.0 and 2.6.3 build the same code so f
    make only those before the first score.
 2. Work out what the function does from the draft, its callers and callees (BRIEF.md), then write that C plainly. Fix the
    control flow first (the branches and loops line up), then the register and scheduling differences.
-3. Score after every change. Keep each attempt in its own file (`attempt1.c`, `attempt2.c`, ...) so the best one survives.
+3. Score after every change. Keep each attempt in its own file (`attempt1.c`, `attempt2.c`, ...), and copy the best so far
+   to `best.c` each time the count drops: the session has a time limit, and what isn't in a file when it ends is lost.
 4. Stop when it matches, or after about three attempts that don't lower the count, or when the remaining difference is a
    register swap the permuter can't close in 5 minutes.
 

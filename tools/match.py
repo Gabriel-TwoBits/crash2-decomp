@@ -39,6 +39,8 @@ CALL = re.compile(r"\bjal\s+(\w+)")
 SYMBOL = re.compile(r"%(?:hi|lo|gp_rel)\((\w+)\)")
 MATCHED = re.compile(r"^0 of \d+ words differ$", re.MULTILINE)
 INLINE_ASSEMBLY = re.compile(r"\b(__asm__|asm)\s*\(")
+HANDWRITTEN = "/* Handwritten function */"
+DIFFERING = re.compile(r"^(\d+) of (\d+) words differ$", re.MULTILINE)
 SECONDS_PER_MINUTE = 60
 MILLISECONDS_PER_MINUTE = 60000
 DEFAULT_MINUTES = 30
@@ -47,6 +49,7 @@ MIN_SIZE = 0x20
 EXECUTABLE_MODE = 0o755
 AGENT_TOOLS = ["Read", "Edit", "Write", "Glob", "Grep", "Bash(./score.sh:*)", "Bash(./permute.sh:*)"]
 PROMPT = ("Match the function described in CLAUDE.md and BRIEF.md in this directory, following CLAUDE.md's loop and rules. "
+          "You have {minutes:g} minutes; past them the session is stopped, so keep best.c current. "
           "When you stop, leave match.c or best.c and NOTES.md as CLAUDE.md says.")
 
 
@@ -76,10 +79,16 @@ def unmatched():
     return sizes
 
 
+def handwritten(name):
+    """splat marks a function its disassembler finds not compiled (GTE code, register calling conventions)"""
+    return HANDWRITTEN in (NONMATCHINGS / f"{name}.s").read_text()
+
+
 def next_function():
-    """The smallest unmatched function of MIN_SIZE or more not tried yet"""
+    """The smallest unmatched function of MIN_SIZE or more not tried yet, handwritten ones left out"""
     tried = load_ledger()
-    candidates = sorted((size, name) for name, size in unmatched().items() if size >= MIN_SIZE and name not in tried)
+    candidates = sorted((size, name) for name, size in unmatched().items()
+                        if size >= MIN_SIZE and name not in tried and not handwritten(name))
     if not candidates:
         return None
     return candidates[0][1]
@@ -179,12 +188,28 @@ def session_result(folder):
     return found
 
 
+def best_attempt(folder):
+    """(file, its probe summary) of the scratch's C file with the fewest differing words, kept even if the agent was stopped"""
+    best = (None, "no attempt compiled")
+    fewest = None
+    for source in sorted(folder.glob("*.c")):
+        if source.name == "context.c":
+            continue
+        summary = score(folder, source)[1]
+        counted = DIFFERING.search(summary)
+        if counted is not None and (fewest is None or int(counted.group(1)) < fewest):
+            fewest = int(counted.group(1))
+            best = (source.name, summary)
+    return best
+
+
 def run(name, minutes, model):
     folder = prepare(name)
-    command = ["claude", "-p", PROMPT, "--permission-mode", "acceptEdits", "--allowedTools", *AGENT_TOOLS,
+    command = ["claude", "-p", PROMPT.format(minutes=minutes), "--permission-mode", "acceptEdits", "--allowedTools", *AGENT_TOOLS,
                "--output-format", "stream-json", "--verbose", "--no-session-persistence"]
     if model:
         command += ["--model", model]
+    timed_out = False
     with open(folder / "session.jsonl", "w") as log:
         # Its own process group, so a time limit stops the agent and whatever it started
         agent = subprocess.Popen(command, cwd=folder, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -193,7 +218,8 @@ def run(name, minutes, model):
         except subprocess.TimeoutExpired:
             os.killpg(agent.pid, signal.SIGTERM)
             agent.wait()
-    session = {"model": model or "default", **session_result(folder)}
+            timed_out = True
+    session = {"model": model or "default", "timed_out": timed_out, **session_result(folder)}
 
     candidate = folder / "match.c"
     if candidate.exists():
@@ -206,9 +232,8 @@ def run(name, minutes, model):
             return True
         record(name, "rejected", reason=f"match.c doesn't match: {summary}", **session)
         return False
-    best = folder / "best.c"
-    summary = score(folder, best)[1] if best.exists() else "no attempt left"
-    record(name, "gave up", summary=summary, **session)
+    best, summary = best_attempt(folder)
+    record(name, "gave up", summary=summary, best=best, **session)
     return False
 
 
