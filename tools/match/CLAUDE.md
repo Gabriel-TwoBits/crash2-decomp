@@ -44,6 +44,8 @@ what restores the original's register.
   - Data is `extern`, except a variable the retail code reads through `$gp`: this compiler only does that for a variable
     defined in the same file, so define it. One in `.sdata` is defined at the top of the function's file already: copy
     that definition as it is. One in `.sbss` (`asm/data/bss.bss.s`) is defined without a value (`s32 D_8005F304;`).
-  - Name nothing beyond what the code makes clear; keep splat's `func_`/`D_` names otherwise.
+  - Name nothing beyond what the code makes clear; keep splat's `func_`/`D_` names otherwise. A structure of unknown
+    purpose is named after the function or data it belongs to (`Unk80014148`), not `Entry` or `Obj`: it lands in a file
+    beside other functions' types, and one name defined twice fails the build.
 - Not matched: copy the best attempt to `best.c`.
 - Either way, write `NOTES.md`: what the function does, what was tried, the final count, and what still differs. Short.
