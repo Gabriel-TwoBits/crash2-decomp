@@ -392,8 +392,8 @@
     "reason": "[123/183] cc src/game.c\nFAILED: [code=1] build/src/game.o \n.venv/bin/python tools/psx_cc.py src/game.c -o build/src/game.o\nsrc/game.c:534: too few arguments to function `func_80019E28'\n[124/183] as asm/sdk/libsnd/miditime.s\n[125/183] as asm/sdk/libsnd/sepinit.s\n[126/183] as asm/sdk/libsnd/sspause.s\n[127/183] as asm/sdk/libsnd/ssplay.s\n[128/183] as asm/sdk/libsnd/ssreplay.s\n[129/183] as asm/sdk/unknown_80054A60.s\n[130/183] as asm/sdk/libsnd/sssmv.s\nninja: build stopped: subcommand failed."
   },
   "func_80032808": {
-    "outcome": "matched, blocked",
-    "time": "2026-10-14 00:42",
+    "outcome": "landed",
+    "time": "2026-10-14 09:03",
     "summary": "0 of 51 words differ",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
@@ -411,7 +411,7 @@
         "minutes": 1.8
       }
     ],
-    "reason": "defines D_8005F244: needs its file's data in C"
+    "reason": "defines D_8005F304, which src/game/800324A8.c doesn't"
   },
   "func_80022E74": {
     "outcome": "gave up",

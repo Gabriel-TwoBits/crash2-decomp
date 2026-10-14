@@ -13,7 +13,7 @@ typedef struct {
 
 extern s32 func_80032F18(s32, s32, s32 *, s32);
 s32 D_8005F244 = 1;
-s32 D_8005F304 = 1;
+s32 D_8005F304;
 extern Ent D_8005F4EC[];
 
 void func_80032808(s32 arg0) {
