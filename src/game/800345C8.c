@@ -204,7 +204,21 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800369F4);
 void func_80036A84(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036A8C);
+s32 func_80036A8C(s32 *arg0, s32 arg1) {
+    s32 sum;
+    s32 i;
+    s32 pad[2];
+
+    sum = 0x12345678;
+    i = arg1 - 1;
+    if (arg1 != 0) {
+        do {
+            sum += *arg0++;
+            i--;
+        } while (i != -1);
+    }
+    return sum;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036AC8);
 
