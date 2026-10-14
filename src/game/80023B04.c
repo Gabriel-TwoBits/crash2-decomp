@@ -45,7 +45,18 @@ s32 func_80024268(s32 *p, s32 d, s32 *out) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800242F8);
+s32 func_800242F8(s32 arg0) {
+    switch (arg0) {
+    case 0:
+        return 4;
+    case 3:
+        return 1;
+    case 8:
+        return 2;
+    default:
+        return 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_8002433C);
 
