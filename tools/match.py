@@ -5,7 +5,7 @@ and the result checked and landed by this script, never taken on the agent's wor
     python tools/match.py next                     the next function to try
     python tools/match.py prepare FUNCTION         build/match/FUNCTION/: target, m2c draft, brief, scripts, CLAUDE.md
     python tools/match.py run FUNCTION [--minutes 30] [--model MODEL]
-    python tools/match.py land FUNCTION            match.c into src/game.c, build, commit when the SHA-1 holds
+    python tools/match.py land FUNCTION            match.c into its file in src/game/, build, commit when the SHA-1 holds
     python tools/match.py loop [--count N] [--minutes 30] [--model MODEL] [--retry-model MODEL]
     python tools/match.py report                   outcomes, models, costs, near misses
 
@@ -34,22 +34,24 @@ LEDGER = RECORDS / "ledger.json"
 NOTES = RECORDS / "notes"
 SKIP = RECORDS / "skip.txt"
 TEMPLATE = HERE / "tools" / "match" / "CLAUDE.md"
-GAME_C = HERE / "src" / "game.c"
+SOURCES = HERE / "src" / "game"
 NONMATCHINGS = HERE / "asm" / "nonmatchings" / "game"
 M2C = HERE / "tools" / "toolchain" / "m2c" / "m2c.py"
 M2C_MACROS = HERE / "tools" / "toolchain" / "m2c" / "m2c_macros.h"
 ASSEMBLY_PREAMBLE = '.include "macro.inc"\n.set noat\n.set noreorder\n.section .text\n'
-INCLUDE_LINE = 'INCLUDE_ASM("asm/nonmatchings/game", {name});\n'
+# An unmatched function in its C file: INCLUDE_ASM("asm/nonmatchings/game/<file>", <function>);
+INCLUDED = re.compile(r'^INCLUDE_ASM\("asm/nonmatchings/game/\w+", (\w+)\);\n', re.MULTILINE)
 NONMATCHING = re.compile(r"^nonmatching (\w+), (0x[0-9A-Fa-f]+)$", re.MULTILINE)
 CALL = re.compile(r"\bjal\s+(\w+)")
-SYMBOL = re.compile(r"%(?:hi|lo|gp_rel)\((\w+)\)")
+SYMBOL = re.compile(r"%(?:hi|lo|gp_rel)\((\w+)")
 MATCHED = re.compile(r"^0 of \d+ words differ$", re.MULTILINE)
 INLINE_ASSEMBLY = re.compile(r"\b(__asm__|asm)\s*\(")
 HANDWRITTEN = "/* Handwritten function */"
 DIFFERING = re.compile(r"^(\d+) of (\d+) words differ$", re.MULTILINE)
 M2C_MACRO = re.compile(r"\bM2C_\w+")
-# A top-level definition of a split data symbol (not an extern declaration): data the build takes from the split already
-DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D_[0-9A-F]{8})\b[^(;]*;", re.MULTILINE)
+# A top-level definition of a split data symbol (not an extern declaration), with its initialiser if it has one
+DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D_[0-9A-F]{8})\b[^(;=]*(=[^;]*)?;\n?",
+                             re.MULTILINE)
 ERROR_LINES = 12
 # A near miss for the report: at most this share of the words differ
 NEAR_MISS = 0.1
@@ -89,12 +91,38 @@ def record(name, outcome, **details):
     LEDGER.write_text(json.dumps(ledger, indent=2) + "\n")
 
 
+def sources():
+    """The game's C files, in address order"""
+    return sorted(SOURCES.glob("*.c"))
+
+
+def source_of(name):
+    """(C file, INCLUDE_ASM line) of a function still included from the split"""
+    for source in sources():
+        for match in INCLUDED.finditer(source.read_text()):
+            if match.group(1) == name:
+                return source, match.group(0)
+    sys.exit(f"{name} isn't included from the split in {SOURCES}")
+
+
+def assembly_of(name):
+    """The function's file in the split, asm/nonmatchings/game/<C file>/<function>.s"""
+    found = sorted(NONMATCHINGS.glob(f"*/{name}.s"))
+    if len(found) != 1:
+        sys.exit(f"{len(found)} files for {name} in {NONMATCHINGS}: configure.py splits the executable")
+    return found[0]
+
+
 def unmatched():
     """{name: size} of the game's functions still included from the split"""
-    included = re.findall(r'INCLUDE_ASM\("asm/nonmatchings/game", (\w+)\);', GAME_C.read_text())
+    included = [name for source in sources() for name in INCLUDED.findall(source.read_text())]
     sizes = {}
     for name in included:
-        match = NONMATCHING.search((NONMATCHINGS / f"{name}.s").read_text())
+        assembly = assembly_of(name).read_text()
+        if f"glabel {name}\n" not in assembly:
+            # Data between two functions (a counter in .text): nothing to match
+            continue
+        match = NONMATCHING.search(assembly)
         if match is None:
             sys.exit(f"{name}.s has no nonmatching line: configure.py splits the executable")
         sizes[name] = int(match.group(2), 16)
@@ -103,7 +131,7 @@ def unmatched():
 
 def handwritten(name):
     """splat marks a function its disassembler finds not compiled (GTE code, register calling conventions)"""
-    return HANDWRITTEN in (NONMATCHINGS / f"{name}.s").read_text()
+    return HANDWRITTEN in assembly_of(name).read_text()
 
 
 def skipped():
@@ -126,16 +154,18 @@ def next_function():
 
 def callers(name):
     """The functions whose assembly calls this one, in the split and in src/"""
-    found = [path.stem for path in sorted(NONMATCHINGS.glob("*.s")) if re.search(rf"\bjal\s+{name}\b", path.read_text())]
-    if re.search(rf"\b{name}\s*\(", GAME_C.read_text().replace(INCLUDE_LINE.format(name=name), "")):
-        found.append("(called from C in src/game.c)")
+    found = [path.stem for path in sorted(NONMATCHINGS.glob("*/*.s")) if re.search(rf"\bjal\s+{name}\b", path.read_text())]
+    for source in sources():
+        text = INCLUDED.sub("", source.read_text())
+        if re.search(rf"\b{name}\s*\(", text):
+            found.append(f"(called from C in {source.relative_to(HERE)})")
     return found
 
 
-def m2c_context(folder):
-    """The project's declarations for m2c: src/game.c preprocessed with INCLUDE_ASM left out"""
+def m2c_context(folder, source):
+    """The declarations the function's C file has, for m2c: the file preprocessed with INCLUDE_ASM left out"""
     context = folder / "context.c"
-    result = subprocess.run(["cpp", "-P", "-DM2CTX", f"-I{HERE / 'include'}", str(GAME_C)], capture_output=True, text=True)
+    result = subprocess.run(["cpp", "-P", "-DM2CTX", f"-I{HERE / 'include'}", str(source)], capture_output=True, text=True)
     if result.returncode != 0:
         sys.exit(result.stderr)
     context.write_text(result.stdout)
@@ -152,7 +182,8 @@ def prepare(name):
     target.write_text(ASSEMBLY_PREAMBLE + assembly)
     subprocess.run([AS, *ASFLAGS, "-o", str(folder / "target.o"), str(target)], check=True, cwd=HERE)
 
-    context = m2c_context(folder)
+    source = source_of(name)[0].relative_to(HERE)
+    context = m2c_context(folder, HERE / source)
     draft = subprocess.run([sys.executable, str(M2C), "--target", "mipsel-gcc-c", "--valid-syntax", "--context",
                             str(context), str(target)], capture_output=True, text=True)
     shutil.copy2(M2C_MACROS, folder / "m2c_macros.h")
@@ -161,18 +192,19 @@ def prepare(name):
     size = len(re.findall(r"/\* [0-9A-F]+ [0-9A-F]{8} [0-9A-F]{8} \*/", assembly)) * 4
     calls = sorted(set(CALL.findall(assembly)))
     symbols = sorted(set(SYMBOL.findall(assembly)))
-    # The prototypes src/game.c already gives its callees: match.c has to agree with them
+    # The prototypes its file already gives its callees: match.c has to agree with them
     declared = [line.strip() for line in context.read_text().splitlines()
                 if any(re.search(rf"\b{callee}\s*\(", line) for callee in calls) and line.rstrip().endswith(";")]
     brief = [
         f"# {name}",
         "",
         f"- Size: {size:#x} bytes",
+        f"- File: {source}",
         f"- Called by: {', '.join(callers(name)) or 'nothing found (a callback or a table entry, maybe)'}",
         f"- Calls: {', '.join(calls) or 'nothing'}",
         f"- Data: {', '.join(symbols) or 'none by name'}",
         "",
-        "## Prototypes src/game.c already has for its callees",
+        f"## Prototypes {source} already has for its callees",
         "",
         "```c",
         "\n".join(declared) or "(none)",
@@ -301,33 +333,39 @@ def land(name):
     if macro is not None:
         record(name, "matched, not landed", reason=f"uses m2c's {macro.group(0)}: real types needed")
         return False
-    definition = DATA_DEFINITION.search(text)
-    if definition is not None:
-        # The original compiler addresses a variable through $gp only in the file that defines it: this one has to wait
-        # until its file's data is in C (docs/ROADMAP.md)
-        record(name, "matched, blocked", reason=f"defines {definition.group(1)}: needs its file's data in C")
-        return False
-    original = GAME_C.read_text()
-    include = INCLUDE_LINE.format(name=name)
-    if include not in original:
-        sys.exit(f"{name} isn't included from the split in {GAME_C}")
-    # Its #include lines are game.c's already; a declaration game.c already has isn't repeated
+    source, include = source_of(name)
+    original = source.read_text()
+    # The original compiler addresses a variable through $gp only in the file that defines it (docs/COMPILER.md). A
+    # definition the file already has goes; an uninitialised one stays, a common the split's symbol resolves; an
+    # initialised one the file doesn't have is data of another file, which can't be read through $gp from this one
+    defined = {match.group(1) for match in DATA_DEFINITION.finditer(original)}
+    for definition in DATA_DEFINITION.finditer(text):
+        symbol, initialiser = definition.group(1), definition.group(2)
+        if symbol in defined:
+            text = text.replace(definition.group(0), "")
+        elif initialiser is not None:
+            record(name, "matched, blocked", reason=f"defines {symbol}, which {source.relative_to(HERE)} doesn't")
+            return False
+        else:
+            # A common: the split's symbol is the definition
+            continue
+    # Its #include lines are the file's already; a declaration the file already has isn't repeated
     present = set(line.strip() for line in original.splitlines())
     kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line.strip().startswith("extern") and line.strip() in present)]
-    GAME_C.write_text(original.replace(include, "\n".join(kept).strip() + "\n"))
+    source.write_text(original.replace(include, "\n".join(kept).strip() + "\n"))
 
     steps = [[sys.executable, "configure.py"], [str(HERE / ".venv" / "bin" / "ninja")]]
     for step in steps:
         result = subprocess.run(step, cwd=HERE, capture_output=True, text=True)
         if result.returncode != 0:
-            GAME_C.write_text(original)
+            source.write_text(original)
             subprocess.run([sys.executable, "configure.py"], cwd=HERE, capture_output=True)
             error = "\n".join((result.stdout + result.stderr).strip().splitlines()[-ERROR_LINES:])
             record(name, "matched, not landed", reason=error)
             return False
     record(name, "landed")
-    subprocess.run(["git", "add", "src/game.c", str(RECORDS)], cwd=HERE, check=True)
+    subprocess.run(["git", "add", str(source), str(RECORDS)], cwd=HERE, check=True)
     commit(f"feat: match {name}")
     return True
 
@@ -367,7 +405,7 @@ def report():
         elif entry["outcome"] in ("matched, blocked", "matched, not landed"):
             # The reason's first compiler error says more than ninja's closing line
             lines = entry.get("reason", "").splitlines()
-            errors = [line for line in lines if "game.c:" in line]
+            errors = [line for line in lines if re.search(r"\.c:\d+", line)]
             if errors:
                 reason = errors[0]
             elif lines:
