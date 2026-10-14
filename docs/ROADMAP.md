@@ -37,7 +37,7 @@ Left:
 declarations, a brief of its callers, callees and data, `score.sh`, `permute.sh`, and `tools/match/CLAUDE.md` as the
 agent's instructions), headless Claude Code working in it with only those tools, then the result checked by the probe and
 landed in `src/game.c` by the script, committed only when the build's SHA-1 holds. Outcomes go to
-`build/match/ledger.json`.
+`config/match/ledger.json`, each run's notes and C to `config/match/notes/`; `tools/match.py report` sums them up.
 
 Done: the first function matched and landed this way (`func_80014C48`, 2 minutes), then a first batch of 10 spread
 over sizes 0x24 to 0x17C, five each with Claude Sonnet 5.5 and Opus 5.5, 20 minutes at most each:
@@ -53,8 +53,33 @@ The misses: a handwritten GTE routine (no C can give it; `next` now skips the 58
 limit. The batch also showed decomp-permuter's score leaves out `nop`s (`tools/permute.py` now scores its candidates with
 the probe) and that a stopped run lost its progress (the script now keeps the best attempt).
 
-Left: more batches to see where the match rate falls with size, Sonnet for the bulk and Opus on what Sonnet leaves, and
-their lessons folded back into `tools/match/CLAUDE.md`.
+A second batch of 20 (0x20 to 0x19C), Sonnet first and Opus on what it left: 12 matched (8 by Sonnet, 4 by Opus on
+retry), 8 of them landed, at $4.63 for Sonnet's 19 runs and $10.80 for Opus's 11. Two of the misses were handwritten code
+splat doesn't mark (now in `config/match/skip.txt`); three were left within 2 to 7 words. Four matches didn't land, and
+why is the next work below: two define a variable the original reads through `$gp` (blocked until the data is split by
+file), one still used m2c's placeholder types, one declared a prototype another C function contradicts.
+
+`tools/match.py loop --model claude-sonnet-5-5 --retry-model claude-opus-5-5` now runs this unattended
+(docs/WORKFLOW.md, "Running the loop unattended").
+
+## Next
+
+In order; each is a session's worth of work, and its result goes back here:
+
+1. **The game's data in C, file by file.** The original compiler addresses a variable through `$gp` only in the file that
+   defines it (docs/COMPILER.md), and 413 retail instructions do: every function using one can only land once its file's
+   `.sdata`/`.data` is defined in C. That needs `game.c` split into its original files (their boundaries from the data each
+   function uses, its rodata and its calls) and splat's data subsegments split with them. Then land `func_8001521C` and
+   `func_80032808` (their C is in `config/match/notes/`).
+2. **One header of the game's prototypes** (`include/game.h`), so matched functions agree with each other: a landing
+   now fails when two of them declare a callee differently (`func_80019E5C`). `tools/match.py prepare` would put it in the
+   agent's context and `land` would add new prototypes to it.
+3. **The near misses** in `tools/match.py report`, with Opus and a longer limit, or by hand: what keeps them apart says
+   something about the compiler.
+4. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
+   unconditional branch. It may be the per-file profile the build needs (docs/COMPILER.md), and it may separate GCC 2.6.x
+   from 2.7.2.
+5. **More batches**, a few hundred functions in all, between the steps above.
 
 ## 4. The engine in C
 

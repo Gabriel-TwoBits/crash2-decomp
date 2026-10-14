@@ -36,6 +36,22 @@ Strings left in it:
 About 1,000 `jr $ra` instructions: on the order of a thousand functions, the SDK's included. No symbols survive in the
 retail executable, and no build of the game with them is known.
 
+## What the code holds
+
+Found by the matching runs (each run's notes are in `config/match/notes/<function>.md`; summed up here):
+
+- **Handwritten assembly in the game's code.** splat marks 58 functions handwritten. More are, unmarked:
+  - The GOOL interpreter around `func_8003A014` keeps its operand stack in `$s6` and has entries reached from its dispatch
+    (`func_8003A680` is one: it pops operands off `$s6` and branches back into `func_8003A014`).
+  - From `0x80042FD0` on, GTE routines with their own register conventions: inputs in `$t0`-`$t4` or `$v1`, returns through
+    `jr $t8`, one falling through into the next (`func_80042FD0`, `func_800436C8`).
+
+  None of these can match from C. A native port rewrites them in C that does the same work; the matching decomp keeps
+  them as assembly.
+- **`func_8003D2EC`** is a sine lookup with the shape of PsyQ libgte's `rsin` (a quarter-wave table of 0x401 `s16` at
+  `D_8005BCB0`). Its unconditional branches are `b` where GCC 2.7.2 here writes `j`: another compiler or assembler setting
+  for that part of the code, not settled (docs/COMPILER.md).
+
 ## The rest of the disc
 
 Most of the game is data, not code. The `S0` to `S3` folders hold 38 levels' and other areas' `.NSF` files (the entries:

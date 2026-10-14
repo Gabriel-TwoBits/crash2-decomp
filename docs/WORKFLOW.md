@@ -6,7 +6,19 @@ The unit of work is one function: its C written until, compiled with the origina
 
 `tools/match.py` runs this loop with an agent: `next` picks a function, `run` prepares its scratch directory and lets
 headless Claude Code work in it, `land` puts a verified match into `src/game.c` and commits it, `loop --count N` repeats.
-By hand, the steps are:
+By hand, the steps are below.
+
+### Running the loop unattended
+
+From the repository's root, in a terminal that stays open (tmux, screen, or `nohup ... &`):
+
+    .venv/bin/python tools/match.py loop --count 50 --minutes 15 --model claude-sonnet-5-5 --retry-model claude-opus-5-5
+
+Each function gets Sonnet, then Opus if Sonnet doesn't match it. A match lands and is committed (`feat: match NAME`) only
+when the build's SHA-1 holds; the other runs' notes are committed at the end (`chore: record the matching runs`). Nothing
+is pushed. Afterwards, `tools/match.py report` sums it up, and `git log` shows what landed. Runs use the user's Claude
+usage: a function costs between $0.10 and a few dollars at API prices. `config/match/skip.txt` lists functions not to
+try, with why.
 
 1. **Pick** a function from the split (`asm/`). Smaller ones and ones whose callees are already in C go
    first; a function's callers and callees give its meaning.

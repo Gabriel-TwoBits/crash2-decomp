@@ -1,11 +1,21 @@
 # CLAUDE.md
 
+## Starting a session
+
+Where the project stands and what comes next: docs/ROADMAP.md (its "Next" list, in order). What the loop has done:
+`.venv/bin/python tools/match.py report`, and `git log --oneline`. Build first (`.venv/bin/python configure.py`, then
+`.venv/bin/ninja`) to see the check pass before changing anything. A session takes one item of the "Next" list, or runs
+the loop (docs/WORKFLOW.md, "Running the loop unattended"), and updates docs/ROADMAP.md with what it did.
+
 A matching decompilation of Crash Bandicoot 2 (PlayStation, USA, SCUS-94154): C that compiles to the retail executable byte
 for byte. Read before working: README.md, docs/ROADMAP.md (where the project is), docs/WORKFLOW.md (how a function gets
 matched), docs/COMPILER.md (what is proven about the toolchain), docs/TARGET.md (the executable's facts).
 
 ## Hard rules
 
+- **Never commit a path of this machine** (an absolute path, a home folder): not in code, docs, notes or the ledger.
+  Run `git grep -nF "$PWD"` from the root before every push; `tools/match.py` refuses to commit staged changes that
+  hold one.
 - **Never commit game data.** Not `orig/`, not `asm/` or `assets/` (splat's output is the retail code and data), not NSF/NSD
   files, not excerpts of the executable's bytes or disassembly pasted into docs, commits or issues beyond a few instructions
   needed to explain a finding. Run `git status` before every commit and look at what is staged.
