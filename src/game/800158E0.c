@@ -160,4 +160,11 @@ void *func_80018E48(void *arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018E68);
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80019074);
+typedef struct { char pad[0x100]; s32 flags; } T;
+
+T *func_80019074(T *a, s32 m) {
+    if (a->flags & m) {
+        return a;
+    }
+    return 0;
+}
