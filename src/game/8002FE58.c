@@ -63,7 +63,9 @@ s32 func_80031264(s32 *arg0, s32 *arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80031298);
 
-INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_800312CC);
+s32 func_800312CC(s32 arg0, s32 arg1, s32 arg2) {
+    return (arg0 + ((s32) (arg2 * ((s32) ((arg1 - arg0) << 0x14) >> 0x14)) >> 8)) & 0xFFF;
+}
 
 s32 func_800312F0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 d;
