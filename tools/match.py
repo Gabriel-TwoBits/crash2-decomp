@@ -344,6 +344,11 @@ def run(name, minutes, model):
     return False
 
 
+def declarator(definition):
+    """A data definition's type and name, its initialiser left out: `s32 *D_8005F264`"""
+    return " ".join(definition.group(0).split("=")[0].rstrip("; \n").split())
+
+
 def with_prototypes(header, added):
     """include/game.h with these prototypes added to its list, which stays in address order"""
     prototypes = list(PROTOTYPE.finditer(header))
@@ -374,10 +379,14 @@ def land(name):
     # The original compiler addresses a variable through $gp only in the file that defines it (docs/COMPILER.md). A
     # definition the file already has goes; an uninitialised one stays, a common the split's symbol resolves; an
     # initialised one the file doesn't have is data of another file, which can't be read through $gp from this one
-    defined = {match.group(1) for match in DATA_DEFINITION.finditer(original)}
+    defined = {match.group(1): declarator(match) for match in DATA_DEFINITION.finditer(original)}
     for definition in DATA_DEFINITION.finditer(text):
         symbol, initialiser = definition.group(1), definition.group(2)
-        if symbol in defined:
+        if symbol in defined and defined[symbol] != declarator(definition):
+            record(name, "matched, not landed", reason=f"declares {symbol} as `{declarator(definition)}`, "
+                                                        f"{source.relative_to(HERE)} as `{defined[symbol]}`")
+            return False
+        elif symbol in defined:
             text = text.replace(definition.group(0), "")
         elif initialiser is not None:
             record(name, "matched, blocked", reason=f"defines {symbol}, which {source.relative_to(HERE)} doesn't")
@@ -406,8 +415,8 @@ def land(name):
             # A structure of its file in the prototype: it stays in the file
             continue
     updated_header = with_prototypes(header, added) if added else header
-    # Its #include lines are the file's already; a declaration the file already has isn't repeated
-    present = set(line.strip() for line in original.splitlines())
+    # Its #include lines are the file's already; a declaration the file has above it isn't repeated
+    present = set(line.strip() for line in original[:original.index(include)].splitlines())
     kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line.strip().startswith("extern") and line.strip() in present)]
     source.write_text(original.replace(include, "\n".join(kept).strip() + "\n"))
