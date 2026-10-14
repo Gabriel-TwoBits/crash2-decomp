@@ -10,7 +10,10 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023DC4);
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023E60);
 
-INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80024188);
+s32 func_80024188(void) {
+    func_800241A8();
+    return -0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800241A8);
 
