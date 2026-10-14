@@ -1781,5 +1781,40 @@
         "minutes": 0.3
       }
     ]
+  },
+  "func_8001E5FC": {
+    "outcome": "landed",
+    "time": "2026-10-14 16:10",
+    "summary": "0 of 17 words differ",
+    "best": "attempt6.c",
+    "model": "claude-opus-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.342652,
+    "turns": 9,
+    "minutes": 0.5,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "6 of 17 words differ",
+        "best": "attempt6.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 5.3,
+        "cost_usd": 0.30944409999999994,
+        "turns": 14,
+        "minutes": 0.7
+      },
+      {
+        "outcome": "matched",
+        "summary": "0 of 17 words differ",
+        "model": "claude-opus-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.342652,
+        "turns": 9,
+        "minutes": 0.5
+      }
+    ]
   }
 }
