@@ -80,22 +80,22 @@ and they wait for more of their files in C.
 
 `func_8003D2EC`'s `b` against `j` is no compiler setting: no GCC writes `b` for a jump, and from `0x80039D2C` to the SDK
 every unconditional branch is one. That part of the game is assembly source, `func_8003D2EC` included (docs/TARGET.md,
-"What the code holds"); it starts after `func_80039C08`, the last function using `j`.
+"What the code holds"); it starts after `func_80039C08`, the last function using `j`. The build now assembles it as one
+splat `asm` subsegment (`asm/game/80039D2C.s`): `tools/match.py next` no longer offers its functions, and
+`tools/progress.py` measures the compiled code, 166,780 bytes (`func_8003DD0C`, an empty function in it, went back to
+assembly).
 
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The assembly part as assembly in the build**: `0x80039D2C` to `0x80046884` as splat `asm` subsegments instead of
-   `INCLUDE_ASM` lines in `src/game/80038F00.c`, so `tools/match.py next` stops offering its 40 functions splat doesn't
-   mark handwritten, and `tools/progress.py` measures compiled code only.
-2. **More batches**, a few hundred functions in all.
+1. **More batches**, a few hundred functions in all.
 
 ## 4. The engine in C
 
 Function by function, by subsystem: the startup and main loop, the NSF paging, the GOOL interpreter, objects, collision,
-rendering, audio. Names and types come with understanding (docs/WORKFLOW.md, "Naming"). Progress is the share of code bytes
-matching.
+rendering, audio. Names and types come with understanding (docs/WORKFLOW.md, "Naming"). Progress is the share of the
+compiled code's bytes matching (`tools/progress.py`); the assembly part stays assembly.
 
 ## 5. Beyond matching
 

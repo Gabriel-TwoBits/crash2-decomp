@@ -55,9 +55,10 @@ Found by the matching runs (each run's notes are in `config/match/notes/<functio
     `D_8005BCB0`), looks compiled but is part of it: besides its `b`s, it keeps a branch to the very next instruction,
     which GCC removes at `-O1` and up, and `-O0` code looks nothing like it.
 
-  splat marks 57 of its 97 functions handwritten, and none of the other 40 shows the compiler that built the rest. splat
-  marks two before it too (`func_8001856C`, `func_800186D8`). None of these can match from C: the matching decomp keeps
-  them as assembly, and a native port rewrites them in C that does the same work.
+  splat marks 57 of its 97 functions handwritten, and none of the other 40 shows the compiler that built the rest. The
+  build assembles it as it is (`asm/game/80039D2C.s`). splat marks two functions before it handwritten too
+  (`func_8001856C`, `func_800186D8`). None of these can match from C: the matching decomp keeps them as assembly, and a
+  native port rewrites them in C that does the same work.
 
 ## The game's source files
 
@@ -112,7 +113,7 @@ Handwritten code (from `0x8003A014` on, mostly) reads any variable through `$gp`
 | `80036E30` | 5 | `80036E30` | .sdata F294-F2A0 | `80036E30` |
 | `80037698` | 2 | `80037698`-`8003817C` | rodata 0x80010804-0x800108F8 | `80036FAC` |
 | `80038700` | 5 | `80038700` | rodata 0x80010918 | `80038700` |
-| `80038F00` | 107 | `80038F00` | rodata 0x80010938; from `80039D2C` on, the game's assembly part (above) | `80038AFC` |
+| `80038F00` | 12 | `80038F00` | rodata 0x80010938; ends where the game's assembly part starts (above) | `80038AFC` |
 
 F-numbers are addresses `0x8005Fxxx`. Functions with no evidence between two files go with the earlier one, and so does
 small data no function reads through `$gp`: a file starts at its first function with evidence, and could start as early as

@@ -37,6 +37,9 @@ TEMPLATE = HERE / "tools" / "match" / "CLAUDE.md"
 SOURCES = HERE / "src" / "game"
 GAME_H = HERE / "include" / "game.h"
 NONMATCHINGS = HERE / "asm" / "nonmatchings" / "game"
+# The game's assembly part, one file of many functions (docs/TARGET.md, "What the code holds")
+GAME_ASSEMBLY = HERE / "asm" / "game"
+GLABEL = re.compile(r"^glabel (\w+)$", re.MULTILINE)
 M2C = HERE / "tools" / "toolchain" / "m2c" / "m2c.py"
 M2C_MACROS = HERE / "tools" / "toolchain" / "m2c" / "m2c_macros.h"
 ASSEMBLY_PREAMBLE = '.include "macro.inc"\n.set noat\n.set noreorder\n.section .text\n'
@@ -168,7 +171,12 @@ def next_function():
 
 def callers(name):
     """The functions whose assembly calls this one, in the split and in src/"""
-    found = [path.stem for path in sorted(NONMATCHINGS.glob("*/*.s")) if re.search(rf"\bjal\s+{name}\b", path.read_text())]
+    call = re.compile(rf"\bjal\s+{name}\b")
+    found = [path.stem for path in sorted(NONMATCHINGS.glob("*/*.s")) if call.search(path.read_text())]
+    for path in sorted(GAME_ASSEMBLY.glob("*.s")):
+        # Each function of the file runs from its glabel to the next one
+        pieces = GLABEL.split(path.read_text())[1:]
+        found += [function for function, body in zip(pieces[::2], pieces[1::2]) if call.search(body)]
     for source in sources():
         text = INCLUDED.sub("", source.read_text())
         if re.search(rf"\b{name}\s*\(", text):

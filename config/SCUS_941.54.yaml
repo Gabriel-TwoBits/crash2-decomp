@@ -89,6 +89,8 @@ segments:
       - [0x27E98, c, game/80037698]
       - [0x28F00, c, game/80038700]
       - [0x29700, c, game/80038F00]
+      # The game's assembly part, up to the SDK (docs/TARGET.md, "What the code holds")
+      - [0x2A52C, asm, game/80039D2C]
       # PsyQ 4.0's libraries, object by object (tools/find_psyq.py --version 400 --subsegments); unknown_ parts are
       # between identified objects, not identified yet
       - [0x37084, asm, sdk/libcd/event]
