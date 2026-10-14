@@ -4,7 +4,7 @@ The unit of work is one function: its C written until, compiled with the origina
 
 ## The loop
 
-1. **Pick** a function from the split (`asm/.../nonmatchings/`). Smaller ones and ones whose callees are already in C go
+1. **Pick** a function from the split (`asm/`). Smaller ones and ones whose callees are already in C go
    first; a function's callers and callees give its meaning.
 2. **Draft** it with m2c from its assembly, with the context the project already has (`include/`'s types and declarations).
 3. **Refine** the draft until it compiles and matches: types, control flow, the order of statements, temporaries. This is

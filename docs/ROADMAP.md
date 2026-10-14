@@ -7,22 +7,20 @@ Each milestone ends with something checkable. A later one never starts by loosen
 The repository, its licence, the docs, `tools/extract_disc.py` (the executable out of the disc image, checked) and
 `tools/setup_toolchain.py` (the compilers, objdiff, maspsx, m2c and decomp-permuter at fixed versions).
 
-## 1. The split rebuilt byte for byte
+## 1. The split rebuilt byte for byte (done)
 
-splat splits `SCUS_941.54` into assembly and data (`config/SCUS_941.54.yaml`), the build assembles and links it, makes a
-PS-X EXE of it, and the result's SHA-1 is the retail one with 0% of the code in C. From then on every change is checked
-against that hash.
-
-- splat's configuration: the segments (the game's code, the SDK's libraries, data, rodata, bss), `gp`, the entry point.
-- The build (assemble, link, the PS-X EXE header) and a `check` that compares the SHA-1.
-- Per-file compiler profiles (docs/COMPILER.md), even though only one is used at first.
-- objdiff's configuration, so each unit's progress is measured.
+splat splits `SCUS_941.54` (`config/SCUS_941.54.yaml`: rodata, text, data and bss as one segment each), `configure.py`
+writes `build.ninja`, and ninja assembles, links and pads it into `build/SCUS_941.54.exe`, whose SHA-1 is checked against
+the retail one (`config/SCUS_941.54.sha1`) on every build. A changed instruction fails the check.
 
 ## 2. The compiler proven
 
-A function that matches under one GCC version and no other (docs/COMPILER.md, "How a version is proven"), its flags and the
-assembler's version with it. Then the SDK's: PsyQ's libraries come from Sony's prebuilt archives, so their functions are
-identified (by signature) and kept apart from the game's.
+- The code split into its source files (splat's subsegments): the game's units and the SDK's libraries apart. PsyQ's
+  libraries come from Sony's prebuilt archives, so their functions are identified by signature.
+- A function that matches under one GCC version and no other (docs/COMPILER.md, "How a version is proven"), its flags and
+  the assembler's version with it.
+- The build compiling C: per-file compiler profiles (a source file naming its GCC version and flags), maspsx, and objdiff's
+  configuration so each unit's progress is measured.
 
 ## 3. The working loop
 

@@ -26,7 +26,7 @@ established by a function that matches under it and under no other:
 
 The game's code and the SDK's may use different versions: the SDK's libraries were prebuilt by Sony. Crash Bandicoot 1's
 decomp needed gcc 2.5.7 for its allocator and 2.6.3 for its engine, set per source file. The build is to allow the same
-(docs/ROADMAP.md, milestone 1): a source file naming its compiler version and flags.
+(docs/ROADMAP.md, milestone 2): a source file naming its compiler version and flags.
 
 ## Results
 

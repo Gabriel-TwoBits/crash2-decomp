@@ -30,7 +30,13 @@ North American release, SCUS-94154.
    .venv/bin/python tools/extract_disc.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue"
    ```
 
-The split and the build come with milestone 1 (docs/ROADMAP.md).
+5. Split it and build. `configure.py` runs splat and writes `build.ninja`; ninja assembles and links
+   `build/SCUS_941.54.exe` and checks its SHA-1 against the retail one:
+
+   ```sh
+   .venv/bin/python configure.py
+   .venv/bin/ninja
+   ```
 
 ## Rules
 

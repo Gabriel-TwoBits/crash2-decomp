@@ -20,6 +20,12 @@ matched), docs/COMPILER.md (what is proven about the toolchain), docs/TARGET.md 
 - **Compiler facts need proof.** A claim about the compiler version, flags or assembler goes into docs/COMPILER.md with the
   function that proves it and what was tried, never as an assumption.
 
+## Building
+
+`.venv/bin/python configure.py` (splits with splat, writes `build.ninja`), then `.venv/bin/ninja`, which builds
+`build/SCUS_941.54.exe` and fails unless its SHA-1 is the retail one. Run it after every change; a red check is never
+committed.
+
 ## Working on functions
 
 - Follow docs/WORKFLOW.md's loop: m2c draft, refine against the diff, decomp-permuter on near misses, objdiff to check.

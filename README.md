@@ -9,7 +9,7 @@ executable rewritten in C that, built with the original compiler, gives the reta
 
 ## Status
 
-Setting up: the repository, its docs and its tools. Nothing is split or matched yet. The milestones are in
+The executable is split and rebuilt byte for byte from its assembly; no function is in C yet. The milestones are in
 [docs/ROADMAP.md](docs/ROADMAP.md).
 
 | | |
