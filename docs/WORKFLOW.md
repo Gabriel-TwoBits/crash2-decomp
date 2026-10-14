@@ -15,8 +15,9 @@ The unit of work is one function: its C written until, compiled with the origina
    closes the last register swap.
 5. **Check** with objdiff: the function's score must be 100% with relocations masked, and the whole executable's SHA-1 still
    the retail one.
-6. **Record** it: the C goes into its source file in place of the assembly include, with names (below) for what became
-   clear. A function that can't be matched yet stays as assembly in the build.
+6. **Record** it: the C replaces the function's `INCLUDE_ASM` line in `src/game.c`, with names (below) for what became
+   clear and its declarations (the SDK's in `include/sdk.h`). `configure.py` splits again (splat leaves out the assembly of
+   a function written in C), then `ninja` must pass. A function that can't be matched yet stays as assembly in the build.
 
 ## What counts as matched
 

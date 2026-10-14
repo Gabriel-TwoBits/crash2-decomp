@@ -13,14 +13,23 @@ splat splits `SCUS_941.54` (`config/SCUS_941.54.yaml`: rodata, text, data and bs
 writes `build.ninja`, and ninja assembles, links and pads it into `build/SCUS_941.54.exe`, whose SHA-1 is checked against
 the retail one (`config/SCUS_941.54.sha1`) on every build. A changed instruction fails the check.
 
-## 2. The compiler proven
+## 2. The compiler proven (in progress)
 
-- The code split into its source files (splat's subsegments): the game's units and the SDK's libraries apart. PsyQ's
-  libraries come from Sony's prebuilt archives, so their functions are identified by signature.
-- A function that matches under one GCC version and no other (docs/COMPILER.md, "How a version is proven"), its flags and
-  the assembler's version with it.
-- The build compiling C: per-file compiler profiles (a source file naming its GCC version and flags), maspsx, and objdiff's
-  configuration so each unit's progress is measured.
+Done:
+
+- The SDK apart: PsyQ 4.0's library objects found by signature (`tools/find_psyq.py`), each its own subsegment under
+  `asm/sdk/`, their 355 functions named in `config/symbol_addrs.txt`.
+- The assembler proven (ASPSX 2.30 to 2.49) and the compiler narrowed to GCC 2.6.0 to 2.7.2 at `-O2 -G8`
+  (docs/COMPILER.md).
+- The build compiling C: `src/game.c` through `tools/psx_cc.py`, its unmatched functions included from the split
+  (`INCLUDE_ASM`), the first match in it, and `tools/progress.py` measuring what is in C.
+
+Left:
+
+- A function that matches under one of GCC 2.6.0, 2.6.3 and 2.7.2 only.
+- The game's code split into its original source files, as their boundaries become clear (rodata grouped by file, calls
+  that stay within a group). It is one unit, `game`, until then.
+- Per-file compiler profiles, once a file needs one other than the default.
 
 ## 3. The working loop
 

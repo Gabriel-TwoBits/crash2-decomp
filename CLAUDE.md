@@ -28,6 +28,10 @@ committed.
 
 ## Working on functions
 
+- Probe a draft with `tools/probe_compiler.py FILE.c FUNCTION` (every compiler and assembler version) or `--diff 2.7.2`
+  (one side by side); `tools/permute.py FILE.c FUNCTION --minutes N` runs decomp-permuter on it. Drafts live in
+  `build/` (ignored), never in `src/` until they match.
+
 - Follow docs/WORKFLOW.md's loop: m2c draft, refine against the diff, decomp-permuter on near misses, objdiff to check.
 - Most matches come in the first few attempts. After about three attempts with no progress in the diff, stop, leave the
   function as assembly, and note what was tried (the closest score and what differed) rather than looping.

@@ -9,14 +9,15 @@ executable rewritten in C that, built with the original compiler, gives the reta
 
 ## Status
 
-The executable is split and rebuilt byte for byte from its assembly; no function is in C yet. The milestones are in
-[docs/ROADMAP.md](docs/ROADMAP.md).
+The executable is split and rebuilt byte for byte, the game's code compiled as C with the original compiler, its
+unmatched functions included from the split. The milestones are in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 | | |
 | --- | --- |
 | Target | `SCUS_941.54`, SHA-1 `aabdade44a4ca863f71224daef51c45f34fb1bf8` ([docs/TARGET.md](docs/TARGET.md)) |
-| Compiler | PsyQ GCC, version to be proven ([docs/COMPILER.md](docs/COMPILER.md)) |
-| Code matched | 0% |
+| SDK | PsyQ 4.0, its libraries identified and split apart |
+| Compiler | PsyQ GCC 2.6.0 to 2.7.2, `-O2 -G8`, ASPSX 2.30 to 2.49 ([docs/COMPILER.md](docs/COMPILER.md)) |
+| Game code in C | 16 of 561 functions, 252 of 218,836 bytes (0.12%): `tools/progress.py` |
 
 ## Why
 
