@@ -21,15 +21,18 @@ Done:
   `asm/sdk/`, their 355 functions named in `config/symbol_addrs.txt`.
 - The assembler proven (ASPSX 2.30 to 2.49) and the compiler narrowed to GCC 2.6.0 to 2.7.2 at `-O2 -G8`
   (docs/COMPILER.md).
-- The build compiling C: `src/game.c` through `tools/psx_cc.py`, its unmatched functions included from the split
-  (`INCLUDE_ASM`), the first match in it, and `tools/progress.py` measuring what is in C.
+- The build compiling C through `tools/psx_cc.py`, its unmatched functions included from the split (`INCLUDE_ASM`), and
+  `tools/progress.py` measuring what is in C.
+- The game's code split into 32 source files, `src/game/<first function>.c`, by the small data and rodata each function
+  uses (docs/TARGET.md, "The game's source files"), each file's `.sdata` defined in it. The small data's addressing
+  proven: through `$gp` only what the file defines (docs/COMPILER.md, "Small data").
+- GCC 2.7.2 proven: `func_8001521C` and `func_80032808` match under it and under no other.
 
 Left:
 
-- A function that matches under one of GCC 2.6.0, 2.6.3 and 2.7.2 only.
-- The game's code split into its original source files, as their boundaries become clear (rodata grouped by file, calls
-  that stay within a group). It is one unit, `game`, until then.
 - Per-file compiler profiles, once a file needs one other than the default.
+- The files' boundaries where nothing fixes them yet (docs/TARGET.md's last column), and their `.sbss` statics, `.data`
+  and `.rodata` in C once a function needs them.
 
 ## 3. The working loop (in progress)
 
@@ -62,24 +65,22 @@ file), one still used m2c's placeholder types, one declared a prototype another 
 `tools/match.py loop --model claude-sonnet-5-5 --retry-model claude-opus-5-5` now runs this unattended
 (docs/WORKFLOW.md, "Running the loop unattended").
 
+With the game split into its files and their small data in C, `func_8001521C` and `func_80032808` landed, and so did
+`func_80019E5C`: its prototype of `func_80019E28` contradicts `func_8002001C`'s, but the two are now in different files.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The game's data in C, file by file.** The original compiler addresses a variable through `$gp` only in the file that
-   defines it (docs/COMPILER.md), and 413 retail instructions do: every function using one can only land once its file's
-   `.sdata`/`.data` is defined in C. That needs `game.c` split into its original files (their boundaries from the data each
-   function uses, its rodata and its calls) and splat's data subsegments split with them. Then land `func_8001521C` and
-   `func_80032808` (their C is in `config/match/notes/`).
-2. **One header of the game's prototypes** (`include/game.h`), so matched functions agree with each other: a landing
-   now fails when two of them declare a callee differently (`func_80019E5C`). `tools/match.py prepare` would put it in the
-   agent's context and `land` would add new prototypes to it.
-3. **The near misses** in `tools/match.py report`, with Opus and a longer limit, or by hand: what keeps them apart says
+1. **One header of the game's prototypes** (`include/game.h`), so matched functions agree with each other across files:
+   `func_80019E5C` and `func_8002001C` declare `func_80019E28` differently, and a landing fails when two functions of one
+   file do. `tools/match.py prepare` would put it in the agent's context and `land` would add new prototypes to it.
+2. **The near misses** in `tools/match.py report`, with Opus and a longer limit, or by hand: what keeps them apart says
    something about the compiler.
-4. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
-   unconditional branch. It may be the per-file profile the build needs (docs/COMPILER.md), and it may separate GCC 2.6.x
-   from 2.7.2.
-5. **More batches**, a few hundred functions in all, between the steps above.
+3. **`func_8003D2EC`'s `b` against `j`** (docs/TARGET.md): which compiler or assembler setting writes `b` for an
+   unconditional branch. It may be the per-file profile the build needs (docs/COMPILER.md): its file may not be built
+   with GCC 2.7.2.
+4. **More batches**, a few hundred functions in all, between the steps above.
 
 ## 4. The engine in C
 
