@@ -6,7 +6,15 @@ INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_80031AE8);
 
 INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_800321D4);
 
-INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_800322C0);
+s32 func_800322C0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    s32 sp28[4];
+    s32 sp38;
+
+    if (func_80031AE8(arg0, arg1, arg2, 0, &sp38, arg3, sp28, 1, 0) != 0) {
+        return sp38;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_8003230C);
 
