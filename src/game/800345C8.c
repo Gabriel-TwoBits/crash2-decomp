@@ -2,7 +2,7 @@
 #include "sdk.h"
 #include "game.h"
 
-s32 D_8005F264 = 0;
+s32 *D_8005F264 = 0;
 s32 D_8005F268 = 1;
 s32 D_8005F26C = -1;
 s32 D_8005F270 = -1;
@@ -47,7 +47,7 @@ void func_80035A74(void) {
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035A7C);
 
 s32 func_80035A94(void) {
-    s32 *p = (s32 *)D_8005F264;
+    s32 *p = D_8005F264;
     s32 n = p[5];
     p[5] = n + 1;
     return n >= p[4];
@@ -93,20 +93,31 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035F9C);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035FD8);
 
-s32 func_80036028(void) {
-    s32 *p = (s32 *)D_8005F264;
+s32 func_80036028(s32 arg0) {
+    s32 *p = D_8005F264;
 
     p[2] = 0;
     p[5] = 0;
-    func_80036084();
+    func_80036084(arg0);
     return 0;
 }
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036050);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036084);
+extern s32 D_8006CC5C;
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800360AC);
+s32 func_80036084(s32 a0) {
+    s32 *p = D_8005F264;
+    s32 v = p[1] | a0;
+    p[1] = v;
+    D_8006CC5C = v;
+    return 0;
+}
+
+s32 func_800360AC(s32 arg0) {
+    D_8005F264[1] &= ~arg0;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800360CC);
 

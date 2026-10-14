@@ -26,18 +26,30 @@ void func_800163C4(s32 *arg0) {
     func_800163B4(arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800163E8);
-
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016408);
-
 typedef struct {
-    u8 pad[0x2088];
+    u8 pad0[0x8];
+    s32 unk8;
+    u8 padC[0x2088 - 0xC];
     void *unk2088;
-    u8 pad2[4];
+    u8 pad208C[0x2090 - 0x208C];
     char *unk2090;
 } Unk80063458;
 
 extern Unk80063458 *D_80063458[];
+
+void func_800163E8(s32 arg0) {
+    s32 sum;
+
+    sum = D_80063458[0]->unk8 + arg0;
+    /* Both branches store the same value; the branch is what puts the sum in $a0. */
+    if (D_80063458[0]->unk8) {
+        D_80063458[0]->unk8 = sum;
+    } else {
+        D_80063458[0]->unk8 = sum;
+    }
+}
+
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016408);
 
 void *func_80016418(s32 arg0) {
     void **temp;

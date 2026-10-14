@@ -85,6 +85,14 @@ splat `asm` subsegment (`asm/game/80039D2C.s`): `tools/match.py next` no longer 
 `tools/progress.py` measures the compiled code, 166,780 bytes (`func_8003DD0C`, an empty function in it, went back to
 assembly).
 
+A third batch of 20 (the smallest left, 0x20 to 0x5C bytes), Sonnet first and Opus on what it left: all 20 matched (18
+by Sonnet), at $2.50 for Sonnet and $0.90 for Opus, 15 minutes of runs in all. 16 landed by themselves; 4 needed a hand
+where landing met the rest of their file: a variable this project had typed `s32` used as a pointer (`D_8005F264`), a
+prototype an earlier landing had put in `include/game.h` with the wrong signature (`func_80036084`), a parameter type
+against the callee's definition (`func_8001FF30`), a structure two functions of one file defined apart
+(`func_800163E8`). `land` now refuses a data definition whose type differs from its file's, with both in the reason, and
+counts only declarations above the function as already there.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:

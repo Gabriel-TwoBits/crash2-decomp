@@ -64,7 +64,10 @@ s32 func_8001FDDC(Unk8001FDDC *obj) {
     return -0xFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/8001F9C4", func_8001FF30);
+s32 func_8001FF30(char *arg0) {
+    func_8002001C(arg0);
+    return -0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/8001F9C4", func_8001FF50);
 
