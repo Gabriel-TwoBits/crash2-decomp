@@ -3331,5 +3331,250 @@
         "minutes": 0.4
       }
     ]
+  },
+  "func_8001F94C": {
+    "outcome": "gave up",
+    "time": "2026-10-15 16:51",
+    "summary": "13 of 30 words differ",
+    "best": "attempt1.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 1.1,
+    "cost_usd": 0.25665030000000005,
+    "turns": 16,
+    "minutes": 1.1,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "13 of 30 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 1.1,
+        "cost_usd": 0.25665030000000005,
+        "turns": 16,
+        "minutes": 1.1
+      }
+    ]
+  },
+  "func_80013F5C": {
+    "outcome": "gave up",
+    "time": "2026-10-15 16:56",
+    "summary": "4 of 31 words differ",
+    "best": "attempt7.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 5.3,
+    "cost_usd": 0.31432219999999994,
+    "turns": 27,
+    "minutes": 5.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "4 of 31 words differ",
+        "best": "attempt7.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 5.3,
+        "cost_usd": 0.31432219999999994,
+        "turns": 27,
+        "minutes": 5.2
+      }
+    ]
+  },
+  "func_80018CAC": {
+    "outcome": "gave up",
+    "time": "2026-10-15 17:01",
+    "summary": "6 of 31 words differ",
+    "best": "a1.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 4.6,
+    "cost_usd": 0.18040959999999998,
+    "turns": 9,
+    "minutes": 4.5,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "6 of 31 words differ",
+        "best": "a1.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 4.6,
+        "cost_usd": 0.18040959999999998,
+        "turns": 9,
+        "minutes": 4.5
+      }
+    ]
+  },
+  "func_8001FF50": {
+    "outcome": "gave up",
+    "time": "2026-10-15 17:02",
+    "summary": "5 of 31 words differ",
+    "best": "attempt4.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.2590929,
+    "turns": 17,
+    "minutes": 0.9,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "5 of 31 words differ",
+        "best": "attempt4.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.2590929,
+        "turns": 17,
+        "minutes": 0.9
+      }
+    ]
+  },
+  "func_8002CA1C": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-15 17:02",
+    "summary": "0 of 31 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.1562566,
+    "turns": 6,
+    "minutes": 0.4,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 31 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.1562566,
+        "turns": 6,
+        "minutes": 0.4
+      }
+    ],
+    "reason": "[19/215] cc src/game/80029884.c\nFAILED: [code=1] build/src/game/80029884.o \n.venv/bin/python tools/psx_cc.py src/game/80029884.c -o build/src/game/80029884.o\nsrc/game/80029884.c:33: previous declaration of `D_8006CB6C'\n[20/215] cc src/game/8002E884.c\n[21/215] cc src/game/8002FB84.c\n[22/215] cc src/game/80026CA0.c\n[23/215] cc src/game/8003147C.c\n[24/215] cc src/game/8002FE58.c\n[25/215] cc src/game/800316EC.c\n[26/215] cc src/game/80031578.c\nninja: build stopped: subcommand failed."
+  },
+  "func_8003118C": {
+    "outcome": "rejected",
+    "time": "2026-10-15 17:02",
+    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_8003118C/match.c:7: `b' undeclared (first use this function)",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.15145229999999998,
+    "turns": 8,
+    "minutes": 0.4,
+    "runs": [
+      {
+        "outcome": "rejected",
+        "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_8003118C/match.c:7: `b' undeclared (first use this function)",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.15145229999999998,
+        "turns": 8,
+        "minutes": 0.4
+      }
+    ]
+  },
+  "func_80036978": {
+    "outcome": "gave up",
+    "time": "2026-10-15 17:07",
+    "summary": "4 of 31 words differ",
+    "best": "attempt1.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 4.9,
+    "cost_usd": 0.2652113,
+    "turns": 3,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "4 of 31 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 4.9,
+        "cost_usd": 0.2652113,
+        "turns": 3,
+        "minutes": 0.2
+      }
+    ]
+  },
+  "func_800343CC": {
+    "outcome": "gave up",
+    "time": "2026-10-15 17:08",
+    "summary": "28 of 32 words differ",
+    "best": "attempt2.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 1.1,
+    "cost_usd": 0.27587439999999996,
+    "turns": 20,
+    "minutes": 1.1,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "28 of 32 words differ",
+        "best": "attempt2.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 1.1,
+        "cost_usd": 0.27587439999999996,
+        "turns": 20,
+        "minutes": 1.1
+      }
+    ]
+  },
+  "func_80012E4C": {
+    "outcome": "gave up",
+    "time": "2026-10-15 17:09",
+    "summary": "8 of 33 words differ",
+    "best": "attempt1.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.7,
+    "cost_usd": 0.21193280000000003,
+    "turns": 12,
+    "minutes": 0.7,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "8 of 33 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.21193280000000003,
+        "turns": 12,
+        "minutes": 0.7
+      }
+    ]
+  },
+  "func_800294B4": {
+    "outcome": "landed",
+    "time": "2026-10-15 17:10",
+    "summary": "0 of 33 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.3,
+    "cost_usd": 0.13583370000000003,
+    "turns": 4,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 33 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.13583370000000003,
+        "turns": 4,
+        "minutes": 0.2
+      }
+    ]
   }
 }
