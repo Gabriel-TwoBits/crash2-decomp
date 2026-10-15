@@ -176,12 +176,12 @@ typedef struct {
     s16 kind;
 } Unk80014148;
 
-Unk80014148 *func_80014148();
+Unk80014148 *func_80014148(u32);
 
-s32 func_80014220(void) {
+s32 func_80014220(u32 arg0) {
     Unk80014148 *e;
 
-    e = func_80014148();
+    e = func_80014148(arg0);
     if (e && e->kind == 1) {
         return e->value;
     }
