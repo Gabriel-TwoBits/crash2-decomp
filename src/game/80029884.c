@@ -28,14 +28,16 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002C0F0);
 
 INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002C324);
 
-INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002CA1C);
-
 extern char D_8006CB68[];
-extern s32 D_8006CB6C;
+
+typedef struct { s32 n; u8 pad[0x28C]; s32 *p[1]; } Unk8006CB6C;
+extern Unk8006CB6C D_8006CB6C;
+
+INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002CA1C);
 
 void func_8002CA98(void) {
     *(char **)D_8006CB68 = D_8006CB68 + 0x414;
-    D_8006CB6C = 0;
+    D_8006CB6C.n = 0;
 }
 
 extern s32 D_8005BC18[];

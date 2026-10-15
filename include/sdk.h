@@ -26,6 +26,7 @@ void _new_card(void);
 /* libc */
 int sprintf(char *buffer, const char *format, ...);
 void bzero(unsigned char *buffer, int size);
+char *strcpy(char *destination, const char *source);
 
 /* libcd */
 int CdControl(unsigned char com, unsigned char *param, unsigned char *result);
