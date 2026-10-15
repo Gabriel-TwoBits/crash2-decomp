@@ -3044,5 +3044,78 @@
         "minutes": 0.3
       }
     ]
+  },
+  "func_8003690C": {
+    "outcome": "gave up",
+    "time": "2026-10-15 16:38",
+    "summary": "8 of 27 words differ",
+    "best": "attempt2.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 1.5,
+    "cost_usd": 0.35388339999999996,
+    "turns": 33,
+    "minutes": 1.4,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "8 of 27 words differ",
+        "best": "attempt2.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 1.5,
+        "cost_usd": 0.35388339999999996,
+        "turns": 33,
+        "minutes": 1.4
+      }
+    ]
+  },
+  "func_800325DC": {
+    "outcome": "gave up",
+    "time": "2026-10-15 16:42",
+    "summary": "3 of 28 words differ",
+    "best": "attempt1.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 3.5,
+    "cost_usd": 0.2634486,
+    "turns": 3,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "3 of 28 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 3.5,
+        "cost_usd": 0.2634486,
+        "turns": 3,
+        "minutes": 0.2
+      }
+    ]
+  },
+  "func_800360CC": {
+    "outcome": "landed",
+    "time": "2026-10-15 16:42",
+    "summary": "0 of 28 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.3,
+    "cost_usd": 0.1442466,
+    "turns": 6,
+    "minutes": 0.3,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 28 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.1442466,
+        "turns": 6,
+        "minutes": 0.3
+      }
+    ]
   }
 }
