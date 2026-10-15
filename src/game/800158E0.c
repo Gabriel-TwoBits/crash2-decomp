@@ -190,7 +190,20 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018CAC);
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018D28);
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018DD0);
+extern u8 D_8006CB18[];
+
+void func_80018DD0(void *arg0, void *arg1, void *arg2) {
+    u8 *var_s0;
+    s32 var_s1;
+
+    var_s1 = 0;
+    var_s0 = D_8006CB18;
+    do {
+        ((void (*)(void *, void *, void *))arg0)(var_s0, arg1, arg2);
+        var_s1 += 1;
+        var_s0 += 8;
+    } while (var_s1 < 8);
+}
 
 void *func_80018E48(void *arg0, s32 arg1) {
     if (*(s32 *)((u8 *)arg0 + 0xB8) == arg1) {
