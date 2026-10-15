@@ -1736,8 +1736,8 @@
     ]
   },
   "func_800117BC": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-14 16:03",
+    "outcome": "landed",
+    "time": "2026-10-15 16:16",
     "summary": "0 of 17 words differ",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
@@ -1756,8 +1756,7 @@
         "turns": 6,
         "minutes": 0.2
       }
-    ],
-    "reason": "[3/215] cc src/game/80015614.c\nFAILED: [code=1] build/src/game/80015614.o \n.venv/bin/python tools/psx_cc.py src/game/80015614.c -o build/src/game/80015614.o\ninclude/game.h:20: previous declaration of `func_800157A0'\n[4/215] cc src/game/80011E24.c\n[5/215] cc src/game/800111B0.c\n[6/215] cc src/game/80019098.c\n[7/215] cc src/game/8001A014.c\n[8/215] cc src/game/800123F0.c\n[9/215] cc src/game/80012010.c\n[10/215] cc src/game/800158E0.c\nninja: build stopped: subcommand failed."
+    ]
   },
   "func_80012250": {
     "outcome": "landed",
