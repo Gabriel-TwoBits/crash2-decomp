@@ -107,6 +107,15 @@ that return their callee's result (`func_80035B3C`, `func_80035C40`), a prototyp
 and the SDK functions declared in game files moved to `include/sdk.h`. The brief now lists the signature of every callee
 defined in C, and `land` refuses a prototype with an empty parameter list.
 
+A sixth batch of 50 (0x64 to 0x94 bytes), Sonnet only, since Opus's retries had cost $2.23 a match against Sonnet's
+$0.25: 21 matched and 29 were left as assembly, at $11.36, 71 minutes of runs. Size doesn't tell them apart (130 bytes on
+average left, 123 matched). Four of the 29 are within 10% of a match and five more within 13%; several differ only in
+the prologue's schedule, `func_80018B50` and `func_800325DC` among them. 15 landed by themselves; 6 met their file: 2 used structures
+their file defines, which `match.c` can't compile without, 2 used `.sbss` variables their file defines further down, 1
+read `D_8005F264` as `s32` and 1 typed `D_8006CB6C` against its file. `land` now drops a structure or a declaration
+the file already has above the function and moves one the file has further down up to it; `func_80014148` got its
+parameter and `D_8006CB6C` its structure.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
