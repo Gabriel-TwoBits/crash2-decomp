@@ -3189,5 +3189,51 @@
         "minutes": 0.4
       }
     ]
+  },
+  "func_8001434C": {
+    "outcome": "rejected",
+    "time": "2026-10-15 16:46",
+    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_8001434C/match.c:14: `r' undeclared (first use this function)",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.22855360000000002,
+    "turns": 19,
+    "minutes": 0.9,
+    "runs": [
+      {
+        "outcome": "rejected",
+        "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_8001434C/match.c:14: `r' undeclared (first use this function)",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.22855360000000002,
+        "turns": 19,
+        "minutes": 0.9
+      }
+    ]
+  },
+  "func_80019FA0": {
+    "outcome": "landed",
+    "time": "2026-10-15 16:47",
+    "summary": "0 of 29 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.23927220000000002,
+    "turns": 17,
+    "minutes": 0.9,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 29 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.23927220000000002,
+        "turns": 17,
+        "minutes": 0.9
+      }
+    ]
   }
 }
