@@ -98,6 +98,15 @@ minutes of runs. 19 landed by themselves; `func_80014220` named its structure `E
 file defines otherwise, and landed once renamed. The agent's instructions now ask for structures named after their
 function or data.
 
+A fifth batch of 50 (0x40 to 0x64 bytes), in two runs: 42 matched (36 by Sonnet, 5 by Opus, 1 by hand) and 8 were left
+as assembly, at $8.83 for Sonnet and $11.17 for Opus, 78 minutes of runs; Opus's retries now cost more than Sonnet's
+first runs. 35 landed by themselves; 7 met signatures this project had wrong or left open: definitions typed `void`
+that return their callee's result (`func_80035B3C`, `func_80035C40`), a prototype in `include/game.h` returning `void`
+(`func_80012ED0`), `func_80018D28` declared as `char` to take its address, a structure its file already defined
+(`func_8001FFCC`), and prototypes written against a callee's C definition. `include/game.h` lost its `()` prototypes,
+and the SDK functions declared in game files moved to `include/sdk.h`. The brief now lists the signature of every callee
+defined in C, and `land` refuses a prototype with an empty parameter list.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
