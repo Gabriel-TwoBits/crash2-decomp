@@ -417,18 +417,21 @@ def land(name):
         else:
             # A common: the split's symbol is the definition
             continue
-    # A structure the file defines above the function: match.c's copy of it goes, and a different one can't land
-    types = {type_name(match): " ".join(match.group(0).split()) for match in TYPE_DEFINITION.finditer(above)}
+    # A structure the file defines: match.c's copy of it goes, or moves up to this function when the file has it further
+    # down, and a different one can't land
+    types = {type_name(match): match for match in TYPE_DEFINITION.finditer(original)}
     for definition in TYPE_DEFINITION.finditer(text):
         kind = type_name(definition)
         if kind not in types:
             # A structure of its own: it lands with the function
             continue
-        elif types[kind] == " ".join(definition.group(0).split()):
-            text = text.replace(definition.group(0), "")
-        else:
+        elif " ".join(types[kind].group(0).split()) != " ".join(definition.group(0).split()):
             record(name, "matched, not landed", reason=f"defines {kind} otherwise than {source.relative_to(HERE)}")
             return False
+        elif types[kind].start() < insertion:
+            text = text.replace(definition.group(0), "")
+        else:
+            below = below.replace(types[kind].group(0), "", 1)
     # One prototype per game function, in include/game.h: one it has goes, a new one of basic types moves there
     header = GAME_H.read_text()
     declared = {prototype.group("name") for prototype in PROTOTYPE.finditer(header)}
@@ -454,9 +457,10 @@ def land(name):
             continue
     updated_header = with_prototypes(header, added) if added else header
     # Its #include lines are the file's already; a declaration the file has above it isn't repeated
-    present = set(line.strip() for line in above.splitlines())
+    present = set(above.splitlines())
+    # A top-level line ending in `;` is a declaration
     kept = [line for line in text.splitlines()
-            if not line.startswith("#include") and not (line.strip().startswith("extern") and line.strip() in present)]
+            if not line.startswith("#include") and not (line == line.lstrip() and line.endswith(";") and line in present)]
     source.write_text(above + below.replace(include, "\n".join(kept).strip() + "\n", 1))
     GAME_H.write_text(updated_header)
 
