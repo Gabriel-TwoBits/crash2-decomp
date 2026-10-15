@@ -229,7 +229,15 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036598);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800365E4);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036628);
+s32 func_80036628(void) {
+    if (func_8003613C() != 0) {
+        func_80036084(2);
+        return 1;
+    }
+    func_800360CC(3);
+    func_80035A7C(3);
+    return 0;
+}
 
 s32 func_80036674(void) {
     s32 ret;
