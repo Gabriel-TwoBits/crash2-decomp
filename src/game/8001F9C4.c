@@ -71,7 +71,22 @@ s32 func_8001FF30(char *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/game/8001F9C4", func_8001FF50);
 
-INCLUDE_ASM("asm/nonmatchings/game/8001F9C4", func_8001FFCC);
+extern s32 D_8006CDF0;
+extern s32 D_8006CDF4;
+extern s32 D_8006CDF8;
+
+
+void func_8001FFCC(Unk8001FDDC *arg0) {
+    s32 *flags;
+
+    flags = (s32 *)((u8 *)arg0->items[0] + 0x27C);
+    if (!(*flags & 1)) {
+        D_8006CDF0 = 0;
+        D_8006CDF8 = 0;
+        D_8006CDF4 = 0x19000;
+        *flags |= 1;
+    }
+}
 
 extern char *D_8005F38C;
 extern int D_800608D0;
