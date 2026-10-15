@@ -94,7 +94,27 @@ void func_8002973C(s32 arg0, s32 arg1) {
     func_80029538(arg0 + 0x60, arg0, arg1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80029768);
+extern s32 D_8005F390;
+extern s32 D_8005F398;
+extern s32 D_8005F3D0;
+
+s32 func_80029768(void) {
+    s16 *p;
+
+    p = (s16 *)func_8001148C(0xBE4);
+    D_8005F390 = (s32)p;
+    D_8005F3D0 = (s32)p;
+    if (p != 0) {
+        p[1] = 0;
+        p = (s16 *)func_8001148C(0xBE4);
+        D_8005F398 = (s32)p;
+        if (p != 0) {
+            p[1] = 0;
+            return -0xFF;
+        }
+    }
+    return -0xF;
+}
 
 extern s32 D_8005F398;
 extern s32 D_8005F3D0;

@@ -2769,5 +2769,76 @@
         "minutes": 0.7
       }
     ]
+  },
+  "func_8003653C": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-15 16:11",
+    "summary": "0 of 23 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.14670249999999999,
+    "turns": 6,
+    "minutes": 0.3,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 23 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.14670249999999999,
+        "turns": 6,
+        "minutes": 0.3
+      }
+    ],
+    "reason": "[27/215] cc src/game/800345C8.c\nFAILED: [code=1] build/src/game/800345C8.o \n.venv/bin/python tools/psx_cc.py src/game/800345C8.c -o build/src/game/800345C8.o\nsrc/game/800345C8.c:283: warning: `func_800368C0' was previously implicitly declared to return `int'\n[28/215] cc src/game/80031AE8.c\n[29/215] cc src/game/80036D0C.c\n[30/215] cc src/game/80037698.c\n[31/215] cc src/game/800324A8.c\n[32/215] cc src/game/80036E30.c\n[33/215] cc src/game/80038700.c\n[34/215] cc src/game/80038F00.c\nninja: build stopped: subcommand failed."
+  },
+  "func_800143C0": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-15 16:12",
+    "summary": "0 of 24 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.1768013,
+    "turns": 11,
+    "minutes": 0.5,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 24 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.1768013,
+        "turns": 11,
+        "minutes": 0.5
+      }
+    ],
+    "reason": "[3/215] cc src/game/800123F0.c\nFAILED: [code=1] build/src/game/800123F0.o \n.venv/bin/python tools/psx_cc.py src/game/800123F0.c -o build/src/game/800123F0.o\ninclude/game.h:20: previous declaration of `func_80014B44'\n[4/215] cc src/game/80015614.c\n[5/215] cc src/game/8001A014.c\n[6/215] cc src/game/80012010.c\n[7/215] cc src/game/80011E24.c\n[8/215] cc src/game/80019098.c\n[9/215] cc src/game/800158E0.c\n[10/215] cc src/game/800111B0.c\nninja: build stopped: subcommand failed."
+  },
+  "func_80029768": {
+    "outcome": "landed",
+    "time": "2026-10-15 16:12",
+    "summary": "0 of 24 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.3,
+    "cost_usd": 0.1305464,
+    "turns": 4,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 24 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.1305464,
+        "turns": 4,
+        "minutes": 0.2
+      }
+    ]
   }
 }
