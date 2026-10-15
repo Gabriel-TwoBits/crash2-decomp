@@ -160,7 +160,22 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014260);
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_8001434C);
 
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_800143C0);
+struct Unk80014B44 *func_80014B44(u32);
+
+s32 func_800143C0(void *a, s32 arg1) {
+    u32 *arg0 = a;
+    u32 v;
+    u32 t;
+
+    t = *arg0;
+    if (t & 1) {
+        v = (u32)func_80014B44(t);
+        *arg0 = v;
+    } else {
+        v = t;
+    }
+    return func_8001434C(v, arg1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014420);
 

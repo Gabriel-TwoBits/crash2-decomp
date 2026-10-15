@@ -15,6 +15,7 @@ s32 func_80012010(s32);
 s32 func_80012ED0(s32);
 void func_80013F28(void *);
 void *func_80014260(void *, s32, s32);
+s32 func_8001434C(u32, s32);
 s32 func_800143C0(void *, s32);
 void func_800155E0(void *, s32);
 void func_80015614(void);
