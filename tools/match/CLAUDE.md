@@ -40,7 +40,9 @@ what restores the original's register.
     the function needs, then the function. No `m2c_macros.h`: replace every `M2C_` type or macro with a real type.
   - A function `include/game.h` or its file declares is called through that prototype, not declared again (BRIEF.md
     lists them). A callee neither declares gets a prototype in `match.c`; landing moves it into `game.h` when it uses
-    only basic types (`s32`, `void *`, ...), so make it the callee's true signature, from the callee's assembly.
+    only basic types (`s32`, `void *`, ...), so make it the callee's true signature, from the callee's assembly, with
+    its parameter list (`(void)` for none, never `()`).
+  - A type its file already defines is used as it is, not defined again.
   - Data is `extern`, except a variable the retail code reads through `$gp`: this compiler only does that for a variable
     defined in the same file, so define it. One in `.sdata` is defined at the top of the function's file already: copy
     that definition as it is. One in `.sbss` (`asm/data/bss.bss.s`) is defined without a value (`s32 D_8005F304;`).

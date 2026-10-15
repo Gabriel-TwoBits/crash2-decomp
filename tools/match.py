@@ -60,6 +60,11 @@ DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D
 PROTOTYPE = re.compile(r"^(?:extern[ \t]+)?(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{\n]*\))"
                        r"[ \t]*;[ \t]*\n?", re.MULTILINE)
 IDENTIFIER = re.compile(r"[A-Za-z_]\w*")
+# A game function's definition in C: return type, name, parameters, then its body
+DEFINITION = re.compile(r"^(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{]*\))\s*\{",
+                        re.MULTILINE)
+# An empty parameter list declares nothing about the arguments: the compiler checks no call against it
+UNCHECKED_PARAMETERS = re.compile(r"\(\s*\)$")
 # PsyQ's libraries start here (config/SCUS_941.54.yaml): a func_ name from there is the SDK's, not the game's
 SDK_START = 0x80046884
 FUNCTION_ADDRESS_START = len("func_")
@@ -215,9 +220,13 @@ def prepare(name):
     size = len(re.findall(r"/\* [0-9A-F]+ [0-9A-F]{8} [0-9A-F]{8} \*/", assembly)) * 4
     calls = sorted(set(CALL.findall(assembly)))
     symbols = sorted(set(SYMBOL.findall(assembly)))
-    # The prototypes include/game.h and its file already give its callees: match.c has to agree with them
+    # The prototypes include/game.h and its file give its callees: match.c has to agree with them
     declared = [line.strip() for line in context.read_text().splitlines()
                 if any(re.search(rf"\b{callee}\s*\(", line) for callee in calls) and line.rstrip().endswith(";")]
+    # A callee defined in C has the signature of its definition, wherever it is
+    declared += [" ".join(definition.group("declaration").split()) + ";" for path in sources()
+                 for definition in DEFINITION.finditer(path.read_text()) if definition.group("name") in calls]
+    declared = list(dict.fromkeys(declared))
     brief = [
         f"# {name}",
         "",
@@ -227,7 +236,7 @@ def prepare(name):
         f"- Calls: {', '.join(calls) or 'nothing'}",
         f"- Data: {', '.join(symbols) or 'none by name'}",
         "",
-        f"## Prototypes include/game.h and {source} already have for its callees",
+        f"## Prototypes include/game.h, {source} and the C definitions already have for its callees",
         "",
         "```c",
         "\n".join(declared) or "(none)",
@@ -408,6 +417,9 @@ def land(name):
         elif int(callee[FUNCTION_ADDRESS_START:], HEXADECIMAL) >= SDK_START:
             # An SDK function not identified yet: include/sdk.h's once it is
             continue
+        elif UNCHECKED_PARAMETERS.search(prototype.group("declaration")):
+            record(name, "matched, not landed", reason=f"`{prototype.group('declaration')}` has no parameter list")
+            return False
         elif set(IDENTIFIER.findall(prototype.group("declaration"))) - {callee} <= BASIC_TYPES:
             added.append(prototype.group("declaration") + ";")
             text = text.replace(prototype.group(0), "")
