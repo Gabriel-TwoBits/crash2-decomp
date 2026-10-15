@@ -64,10 +64,13 @@ s32 func_80035A94(void) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035AB8);
 
-void func_80035B3C(void) {
-    do {
+s32 func_80035B3C(void) {
+    s32 result;
 
-    } while (func_80035AB8() == -1);
+    do {
+        result = func_80035AB8();
+    } while (result == -1);
+    return result;
 }
 
 s32 TestEvent(s32);
@@ -85,9 +88,13 @@ void func_80035B70(void) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035BB8);
 
-void func_80035C40(void) {
+s32 func_80035C40(void) {
+    s32 result;
+
     do {
-    } while (func_80035BB8() == -1);
+        result = func_80035BB8();
+    } while (result == -1);
+    return result;
 }
 
 s32 D_8005F3BC;

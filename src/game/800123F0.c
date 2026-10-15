@@ -154,7 +154,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014790);
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014918);
 
-typedef struct {
+typedef struct Unk80014B44 {
     s32 unk0;
     u32 unk4;
 } Unk80014B44;

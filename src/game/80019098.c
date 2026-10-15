@@ -16,7 +16,6 @@ void func_80019E08(s32 a0) {
     func_80019BBC(a0, 1);
 }
 
-extern char func_80018D28[];
 extern char func_80019D30[];
 
 void func_80019E28(void *arg0) {
