@@ -2996,5 +2996,53 @@
         "minutes": 0.3
       }
     ]
+  },
+  "func_80036BD8": {
+    "outcome": "gave up",
+    "time": "2026-10-15 16:36",
+    "summary": "3 of 26 words differ",
+    "best": "a2.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 5.3,
+    "cost_usd": 0.2902619,
+    "turns": 24,
+    "minutes": 5.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "3 of 26 words differ",
+        "best": "a2.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 5.3,
+        "cost_usd": 0.2902619,
+        "turns": 24,
+        "minutes": 5.2
+      }
+    ]
+  },
+  "func_80031680": {
+    "outcome": "landed",
+    "time": "2026-10-15 16:37",
+    "summary": "0 of 27 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.3,
+    "cost_usd": 0.1283334,
+    "turns": 4,
+    "minutes": 0.3,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 27 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.1283334,
+        "turns": 4,
+        "minutes": 0.3
+      }
+    ]
   }
 }
