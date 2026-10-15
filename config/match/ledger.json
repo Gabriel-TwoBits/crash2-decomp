@@ -3456,9 +3456,8 @@
     "reason": "[19/215] cc src/game/80029884.c\nFAILED: [code=1] build/src/game/80029884.o \n.venv/bin/python tools/psx_cc.py src/game/80029884.c -o build/src/game/80029884.o\nsrc/game/80029884.c:33: previous declaration of `D_8006CB6C'\n[20/215] cc src/game/8002E884.c\n[21/215] cc src/game/8002FB84.c\n[22/215] cc src/game/80026CA0.c\n[23/215] cc src/game/8003147C.c\n[24/215] cc src/game/8002FE58.c\n[25/215] cc src/game/800316EC.c\n[26/215] cc src/game/80031578.c\nninja: build stopped: subcommand failed."
   },
   "func_8003118C": {
-    "outcome": "rejected",
-    "time": "2026-10-15 17:02",
-    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_8003118C/match.c:7: `b' undeclared (first use this function)",
+    "outcome": "landed",
+    "time": "2026-10-15 18:03",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
     "wall_minutes": 0.4,

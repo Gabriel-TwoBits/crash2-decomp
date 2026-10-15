@@ -52,9 +52,16 @@ s32 func_80030FEC(s32 *arg0, s32 *arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_800310EC);
 
-INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_8003118C);
-
 typedef struct { s32 x, y, z; } V;
+
+s32 func_8003118C(V *a, V *b) {
+    V v;
+    v.x = (a->x - b->x) >> 8;
+    v.y = (a->y - b->y) >> 8;
+    v.z = (a->z - b->z) >> 8;
+    return func_80041A78(v.x * v.x + v.y * v.y + v.z * v.z) << 8;
+}
+
 
 s32 func_80031208(s32 *arg0, s32 *arg1) {
     V v;
