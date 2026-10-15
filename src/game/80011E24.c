@@ -5,7 +5,20 @@
 char D_8005F198[] = "[%X]";
 char D_8005F1A0[] = "p%d";
 
-INCLUDE_ASM("asm/nonmatchings/game/80011E24", func_80011E24);
+extern s32 D_8005F17C;
+extern void *D_80062A2C;
+extern void *D_80062A30;
+extern void *D_80062A34;
+extern void *D_80062A38;
+
+void func_80011E24(void) {
+    if (D_8005F17C == 0) {
+        D_80062A2C = &func_80042420;
+        D_80062A30 = &func_800426A0;
+        D_80062A34 = &func_80042548;
+        D_80062A38 = &func_80042818;
+    }
+}
 
 void func_80011E80(void) {
 }
