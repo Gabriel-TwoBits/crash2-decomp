@@ -2282,5 +2282,38 @@
         "minutes": 0.4
       }
     ]
+  },
+  "func_800368C0": {
+    "outcome": "landed",
+    "time": "2026-10-15 15:37",
+    "model": "claude-opus-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.3456612,
+    "turns": 12,
+    "minutes": 0.5,
+    "runs": [
+      {
+        "outcome": "rejected",
+        "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_800368C0/match.c:15: for each function it appears in.)",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.1405562,
+        "turns": 7,
+        "minutes": 0.3
+      },
+      {
+        "outcome": "matched",
+        "summary": "0 of 19 words differ",
+        "model": "claude-opus-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.3456612,
+        "turns": 12,
+        "minutes": 0.5
+      }
+    ],
+    "summary": "0 of 19 words differ"
   }
 }

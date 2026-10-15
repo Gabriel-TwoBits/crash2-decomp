@@ -256,7 +256,18 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_8003670C);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036850);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800368C0);
+void func_800368C0(void) {
+    s32 i;
+    s32 offset;
+
+    i = 0;
+    offset = 0x6F4;
+    do {
+        i++;
+        func_8003690C((s8 *)D_8005F264 + offset);
+        offset += 0x2A4;
+    } while (i < 4);
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_8003690C);
 
