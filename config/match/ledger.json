@@ -3576,5 +3576,102 @@
         "minutes": 0.2
       }
     ]
+  },
+  "func_80029800": {
+    "outcome": "gave up",
+    "time": "2026-10-15 17:13",
+    "summary": "2 of 33 words differ",
+    "best": "attempt3.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 4.0,
+    "cost_usd": 0.2511084,
+    "turns": 18,
+    "minutes": 3.9,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "2 of 33 words differ",
+        "best": "attempt3.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 4.0,
+        "cost_usd": 0.2511084,
+        "turns": 18,
+        "minutes": 3.9
+      }
+    ]
+  },
+  "func_80030D98": {
+    "outcome": "gave up",
+    "time": "2026-10-15 17:18",
+    "summary": "20 of 33 words differ",
+    "best": "attempt2.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 4.5,
+    "cost_usd": 0.23681419999999997,
+    "turns": 3,
+    "minutes": 0.1,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "20 of 33 words differ",
+        "best": "attempt2.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 4.5,
+        "cost_usd": 0.23681419999999997,
+        "turns": 3,
+        "minutes": 0.1
+      }
+    ]
+  },
+  "func_80035AB8": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-15 17:19",
+    "summary": "0 of 33 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.7,
+    "cost_usd": 0.2021809,
+    "turns": 14,
+    "minutes": 0.6,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 33 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.2021809,
+        "turns": 14,
+        "minutes": 0.6
+      }
+    ],
+    "reason": "[27/215] cc src/game/800345C8.c\nFAILED: [code=1] build/src/game/800345C8.o \n.venv/bin/python tools/psx_cc.py src/game/800345C8.c -o build/src/game/800345C8.o\nsrc/game/800345C8.c:95: `D_8005F3AC' used prior to declaration\n[28/215] cc src/game/80031AE8.c\n[29/215] cc src/game/80036D0C.c\n[30/215] cc src/game/80036E30.c\n[31/215] cc src/game/80038700.c\n[32/215] cc src/game/80037698.c\n[33/215] cc src/game/800324A8.c\n[34/215] cc src/game/80038F00.c\nninja: build stopped: subcommand failed."
+  },
+  "func_80035E7C": {
+    "outcome": "landed",
+    "time": "2026-10-15 17:19",
+    "summary": "0 of 33 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.19881460000000004,
+    "turns": 10,
+    "minutes": 0.6,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 33 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.19881460000000004,
+        "turns": 10,
+        "minutes": 0.6
+      }
+    ]
   }
 }
