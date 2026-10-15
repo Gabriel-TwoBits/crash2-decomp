@@ -60,6 +60,9 @@ DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D
 PROTOTYPE = re.compile(r"^(?:extern[ \t]+)?(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{\n]*\))"
                        r"[ \t]*;[ \t]*\n?", re.MULTILINE)
 IDENTIFIER = re.compile(r"[A-Za-z_]\w*")
+# A structure's definition, typedef'd or tagged, with one level of nested braces at most
+TYPE_DEFINITION = re.compile(r"^(?:typedef[ \t]+)?struct[ \t]*(?P<tag>\w*)[ \t]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[ \t]*"
+                             r"(?P<alias>\w*)[ \t]*;[ \t]*\n?", re.MULTILINE)
 # A game function's definition in C: return type, name, parameters, then its body
 DEFINITION = re.compile(r"^(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{]*\))\s*\{",
                         re.MULTILINE)
@@ -358,6 +361,11 @@ def declarator(definition):
     return " ".join(definition.group(0).split("=")[0].rstrip("; \n").split())
 
 
+def type_name(definition):
+    """A structure definition's name: its typedef's, else its tag"""
+    return definition.group("alias") or definition.group("tag")
+
+
 def with_prototypes(header, added):
     """include/game.h with these prototypes added to its list, which stays in address order"""
     prototypes = list(PROTOTYPE.finditer(header))
@@ -385,24 +393,42 @@ def land(name):
         return False
     source, include = source_of(name)
     original = source.read_text()
+    insertion = original.index(include)
+    # Above the function, the file as it is; below it, the file without the definitions match.c moves up
+    above, below = original[:insertion], original[insertion:]
     # The original compiler addresses a variable through $gp only in the file that defines it (docs/COMPILER.md). A
-    # definition the file already has goes; an uninitialised one stays, a common the split's symbol resolves; an
-    # initialised one the file doesn't have is data of another file, which can't be read through $gp from this one
-    defined = {match.group(1): declarator(match) for match in DATA_DEFINITION.finditer(original)}
+    # definition the file already has goes, or moves up to this function when the file has it further down; an
+    # uninitialised one stays, a common the split's symbol resolves; an initialised one the file doesn't have is data of
+    # another file, which can't be read through $gp from this one
+    defined = {match.group(1): match for match in DATA_DEFINITION.finditer(original)}
     for definition in DATA_DEFINITION.finditer(text):
         symbol, initialiser = definition.group(1), definition.group(2)
-        if symbol in defined and defined[symbol] != declarator(definition):
+        if symbol in defined and declarator(defined[symbol]) != declarator(definition):
             record(name, "matched, not landed", reason=f"declares {symbol} as `{declarator(definition)}`, "
-                                                        f"{source.relative_to(HERE)} as `{defined[symbol]}`")
+                                                        f"{source.relative_to(HERE)} as `{declarator(defined[symbol])}`")
             return False
-        elif symbol in defined:
+        elif symbol in defined and defined[symbol].start() < insertion:
             text = text.replace(definition.group(0), "")
+        elif symbol in defined:
+            below = below.replace(defined[symbol].group(0), "", 1)
         elif initialiser is not None:
             record(name, "matched, blocked", reason=f"defines {symbol}, which {source.relative_to(HERE)} doesn't")
             return False
         else:
             # A common: the split's symbol is the definition
             continue
+    # A structure the file defines above the function: match.c's copy of it goes, and a different one can't land
+    types = {type_name(match): " ".join(match.group(0).split()) for match in TYPE_DEFINITION.finditer(above)}
+    for definition in TYPE_DEFINITION.finditer(text):
+        kind = type_name(definition)
+        if kind not in types:
+            # A structure of its own: it lands with the function
+            continue
+        elif types[kind] == " ".join(definition.group(0).split()):
+            text = text.replace(definition.group(0), "")
+        else:
+            record(name, "matched, not landed", reason=f"defines {kind} otherwise than {source.relative_to(HERE)}")
+            return False
     # One prototype per game function, in include/game.h: one it has goes, a new one of basic types moves there
     header = GAME_H.read_text()
     declared = {prototype.group("name") for prototype in PROTOTYPE.finditer(header)}
@@ -428,10 +454,10 @@ def land(name):
             continue
     updated_header = with_prototypes(header, added) if added else header
     # Its #include lines are the file's already; a declaration the file has above it isn't repeated
-    present = set(line.strip() for line in original[:original.index(include)].splitlines())
+    present = set(line.strip() for line in above.splitlines())
     kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line.strip().startswith("extern") and line.strip() in present)]
-    source.write_text(original.replace(include, "\n".join(kept).strip() + "\n"))
+    source.write_text(above + below.replace(include, "\n".join(kept).strip() + "\n", 1))
     GAME_H.write_text(updated_header)
 
     steps = [[sys.executable, "configure.py"], [str(HERE / ".venv" / "bin" / "ninja")]]
