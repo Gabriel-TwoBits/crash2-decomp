@@ -2362,5 +2362,97 @@
         "minutes": 0.3
       }
     ]
+  },
+  "func_80012ED0": {
+    "outcome": "rejected",
+    "time": "2026-10-15 15:39",
+    "model": "claude-opus-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.43613540000000006,
+    "turns": 15,
+    "minutes": 0.8,
+    "runs": [
+      {
+        "outcome": "rejected",
+        "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: include/game.h:15: previous declaration of `func_80012ED0'",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.20300319999999997,
+        "turns": 14,
+        "minutes": 0.6
+      },
+      {
+        "outcome": "rejected",
+        "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: include/game.h:15: previous declaration of `func_80012ED0'",
+        "model": "claude-opus-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.43613540000000006,
+        "turns": 15,
+        "minutes": 0.8
+      }
+    ],
+    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: include/game.h:15: previous declaration of `func_80012ED0'"
+  },
+  "func_80011764": {
+    "outcome": "gave up",
+    "time": "2026-10-15 15:46",
+    "summary": "18 of 22 words differ",
+    "best": "attempt2.c",
+    "model": "claude-opus-5-5",
+    "timed_out": false,
+    "wall_minutes": 6.1,
+    "cost_usd": 1.0948346,
+    "turns": 3,
+    "minutes": 0.1,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "18 of 22 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.1766394,
+        "turns": 9,
+        "minutes": 0.5
+      },
+      {
+        "outcome": "gave up",
+        "summary": "18 of 22 words differ",
+        "best": "attempt2.c",
+        "model": "claude-opus-5-5",
+        "timed_out": false,
+        "wall_minutes": 6.1,
+        "cost_usd": 1.0948346,
+        "turns": 3,
+        "minutes": 0.1
+      }
+    ]
+  },
+  "func_8002609C": {
+    "outcome": "landed",
+    "time": "2026-10-15 15:46",
+    "summary": "0 of 22 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.3,
+    "cost_usd": 0.1263929,
+    "turns": 4,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 22 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.3,
+        "cost_usd": 0.1263929,
+        "turns": 4,
+        "minutes": 0.2
+      }
+    ]
   }
 }
