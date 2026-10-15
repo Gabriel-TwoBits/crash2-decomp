@@ -145,7 +145,16 @@ void func_80035F9C(u8 *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035FD8);
+s32 func_80035FD8(void) {
+    if (!(func_80036150() & 0xD)) {
+        func_800368C0();
+        func_800360CC(1);
+        func_80035A7C(0x40);
+        D_8005F264[7] = 0;
+        return 0;
+    }
+    return 1;
+}
 
 s32 func_80036028(s32 arg0) {
     s32 *p = D_8005F264;
