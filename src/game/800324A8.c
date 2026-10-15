@@ -25,7 +25,6 @@ typedef struct {
 extern void func_8004FE38(s32);
 extern void func_800501A8(Unk80032588 *);
 
-
 void func_80032588(void) {
     Unk80032588 s;
 
@@ -113,7 +112,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80034238);
 
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80034254);
 
-void SsEnd(void);
 void func_8003444C(s16 a, s32 b);
 s16 D_8005F3E4;
 

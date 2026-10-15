@@ -73,7 +73,6 @@ s32 func_80035B3C(void) {
     return result;
 }
 
-s32 TestEvent(s32);
 s32 D_8005F3A0;
 s32 D_8005F3A4;
 s32 D_8005F3A8;
@@ -120,8 +119,6 @@ extern char D_8001069C[];
 s32 func_80035F00(char *arg0) {
     return strncmp(D_8001069C, arg0, 12) == 0;
 }
-
-s32 close(s32);
 
 void func_80035F2C(s32 *arg0) {
     s32 temp_a0;
@@ -207,8 +204,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036150);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036164);
 
-void StopCARD(void);
-
 s32 func_80036304(void) {
     StopCARD();
     return 0;
@@ -238,8 +233,6 @@ s32 func_800363D0(void) {
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036414);
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_8003649C);
-
-extern s32 _card_info(s32);
 
 s32 func_8003653C(void) {
     s32 v;
@@ -280,10 +273,6 @@ s32 func_80036674(void) {
     }
     return ret;
 }
-
-extern s32 _card_write(s32, s32, u8 *);
-extern void _new_card(void);
-extern void bzero(u8 *, s32);
 
 s32 func_800366B4(void) {
     u8 buf[0x80];

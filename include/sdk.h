@@ -13,15 +13,24 @@ typedef struct {
 long StopRCnt(unsigned long spec);
 long CloseEvent(long event);
 long DisableEvent(long event);
+long TestEvent(unsigned long event);
 void EnterCriticalSection(void);
 void ExitCriticalSection(void);
 void StopPAD(void);
+void StopCARD(void);
+long close(long fd);
+long _card_info(long channel);
+long _card_write(long channel, long block, unsigned char *buffer);
+void _new_card(void);
 
 /* libc */
 int sprintf(char *buffer, const char *format, ...);
+void bzero(unsigned char *buffer, int size);
 
 /* libcd */
 int CdControl(unsigned char com, unsigned char *param, unsigned char *result);
+int CdDataSync(int mode);
+int CdReadSync(int mode, unsigned char *result);
 
 /* libetc */
 int StopCallback(void);
@@ -31,5 +40,8 @@ long ratan2(long y, long x);
 
 /* libgpu */
 int ResetGraph(int mode);
+
+/* libsnd */
+void SsEnd(void);
 
 #endif /* SDK_H */

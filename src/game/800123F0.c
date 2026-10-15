@@ -24,9 +24,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80012DC0);
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80012E4C);
 
-s32 CdDataSync(s32 mode);
-s32 CdReadSync(s32 mode, u8 *result);
-
 s32 func_80012ED0(s32 wait) {
     s32 ret;
 
