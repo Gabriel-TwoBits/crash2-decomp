@@ -43,6 +43,7 @@ void func_80036324(s32);
 void func_8003690C(void *);
 s32 *func_80036D0C(struct Obj *, s32);
 void func_8003CBE4(void);
+s32 func_80041A78(s32);
 void func_80042420(void);
 void func_80042548(void);
 void func_800426A0(void);

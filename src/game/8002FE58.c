@@ -54,7 +54,15 @@ INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_800310EC);
 
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_8003118C);
 
-INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80031208);
+typedef struct { s32 x, y, z; } V;
+
+s32 func_80031208(s32 *arg0, s32 *arg1) {
+    V v;
+
+    v.x = (arg0[0] - arg1[0]) >> 8;
+    v.z = (arg0[2] - arg1[2]) >> 8;
+    return func_80041A78(v.x * v.x + v.z * v.z) << 8;
+}
 
 /* Angle (12-bit, 0x1000 per turn) from arg0 to arg1 on the plane of words 0 and 2 */
 s32 func_80031264(s32 *arg0, s32 *arg1) {
