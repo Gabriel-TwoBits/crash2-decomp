@@ -3117,5 +3117,77 @@
         "minutes": 0.3
       }
     ]
+  },
+  "func_80036850": {
+    "outcome": "gave up",
+    "time": "2026-10-15 16:43",
+    "summary": "5 of 28 words differ",
+    "best": "a7.c",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 1.2,
+    "cost_usd": 0.31182829999999995,
+    "turns": 28,
+    "minutes": 1.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "5 of 28 words differ",
+        "best": "a7.c",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 1.2,
+        "cost_usd": 0.31182829999999995,
+        "turns": 28,
+        "minutes": 1.2
+      }
+    ]
+  },
+  "func_80036B68": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-15 16:44",
+    "summary": "0 of 28 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.25151239999999997,
+    "turns": 22,
+    "minutes": 0.9,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 28 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.25151239999999997,
+        "turns": 22,
+        "minutes": 0.9
+      }
+    ],
+    "reason": "declares D_8005F264 as `s32 D_8005F264`, src/game/800345C8.c as `s32 *D_8005F264`"
+  },
+  "func_80039AA4": {
+    "outcome": "landed",
+    "time": "2026-10-15 16:45",
+    "summary": "0 of 28 words differ",
+    "model": "claude-sonnet-5-5",
+    "timed_out": false,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.1630946,
+    "turns": 6,
+    "minutes": 0.4,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 28 words differ",
+        "model": "claude-sonnet-5-5",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.1630946,
+        "turns": 6,
+        "minutes": 0.4
+      }
+    ]
   }
 }

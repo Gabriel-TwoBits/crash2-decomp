@@ -31,6 +31,7 @@ void func_80019E28(void *);
 void func_8002001C(char *);
 void func_80023154(void);
 void func_800241A8(void);
+void func_800278F8(s32);
 void func_80029538(s32, s32, s32);
 s32 func_80031AE8(s32, s32, s32, s32, s32 *, s32, s32 *, s32, s32);
 s32 func_800322C0(s32, s32, s32, s32);
