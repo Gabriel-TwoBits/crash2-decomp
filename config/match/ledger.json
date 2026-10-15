@@ -3191,9 +3191,8 @@
     ]
   },
   "func_8001434C": {
-    "outcome": "rejected",
-    "time": "2026-10-15 16:46",
-    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_8001434C/match.c:14: `r' undeclared (first use this function)",
+    "outcome": "landed",
+    "time": "2026-10-15 18:03",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
     "wall_minutes": 0.9,
