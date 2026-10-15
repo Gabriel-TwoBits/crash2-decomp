@@ -408,7 +408,22 @@ s32 func_80036A8C(s32 *arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036AC8);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036B68);
+extern char D_8005C500[];
+extern char *D_8006CBCC;
+
+s32 func_80036B68(s32 arg0) {
+    s32 ret;
+    char *src;
+    if (D_8005F264 != 0) {
+        src = (char *)(arg0 * 0x2A4 + (s32)D_8005F264 + 0x700);
+        strcpy(D_8005C500, src);
+        D_8006CBCC = D_8005C500;
+        ret = 0;
+    } else {
+        ret = 1;
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036BD8);
 
