@@ -19,7 +19,18 @@ s32 func_8001D194(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     return -0xFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/8001CEDC", func_8001D1E0);
+s32 func_8001D1E0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    s32 sp[6];
+
+    sp[0] = arg0;
+    sp[1] = arg2;
+    sp[3] = arg3;
+    sp[4] = 0;
+    sp[2] = arg4;
+    sp[5] = arg5;
+    func_80018D28((void *)arg1, &func_8001CEDC, sp);
+    return -0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/8001CEDC", func_8001D22C);
 
