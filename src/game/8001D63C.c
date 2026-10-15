@@ -65,7 +65,18 @@ s32 func_8001F018(void) {
 
 INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F054);
 
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F858);
+extern u16 D_8006935C[];
+extern s32 D_8006B1C4[];
+
+void func_8001F858(s32 arg0) {
+    u16 *p;
+
+    for (p = D_8006935C; *p != 0; p++) {
+        if ((*p >> 9) == arg0) {
+            D_8006B1C4[*p & 0x1FF] |= 8;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F8B4);
 
