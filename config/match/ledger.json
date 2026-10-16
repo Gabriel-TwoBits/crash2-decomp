@@ -4255,9 +4255,9 @@
     "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_800116D4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 00:39",
-    "summary": "9 of 36 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:43",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
@@ -8575,8 +8575,8 @@
     ]
   },
   "func_800112A4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 11:20",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:42",
     "summary": "82 of 106 words differ",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
@@ -8599,7 +8599,8 @@
         "turns": 25,
         "minutes": 1.7
       }
-    ]
+    ],
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/800111B0.o \nsrc/game/800111B0.c:55: conflicting types for `D_8005F2A4'"
   },
   "func_80039310": {
     "outcome": "gave up",
@@ -9056,8 +9057,8 @@
     ]
   },
   "func_8001148C": {
-    "outcome": "gave up",
-    "time": "2026-10-16 12:37",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:42",
     "summary": "75 of 141 words differ",
     "best": "attempt6.c",
     "model": "claude-sonnet-5-5",
@@ -9080,7 +9081,8 @@
         "turns": 41,
         "minutes": 4.5
       }
-    ]
+    ],
+    "reason": "declares `s32 func_800111B0(s32)`, include/game.h `s32 func_800111B0(u32)`"
   },
   "func_80019988": {
     "outcome": "gave up",

@@ -10,8 +10,10 @@
 struct Obj;
 
 s32 func_800111B0(u32);
+s32 func_800112A4(s32, s32);
 s32 func_8001148C(s32);
 void func_800116C0(s32);
+s32 func_800116D4(s32, s32);
 s32 *func_80011764(s32, s32);
 s32 func_80011F78(char *);
 s32 func_80012010(s32);

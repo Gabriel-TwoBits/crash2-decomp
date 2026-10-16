@@ -68,7 +68,33 @@ INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_8001148C);
 
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_800116C0);
 
+#ifdef NON_MATCHING
+void bcopy(s32, s32, s32);
+
+s32 func_800116D4(s32 arg0, s32 arg1) {
+    s32 r;
+
+    if (arg0 == 0) {
+        r = func_8001148C(arg1);
+    } else {
+        if (arg1 == 0) {
+            func_800116C0(arg0);
+        } else {
+            r = func_800112A4(arg0, arg1);
+            if (r == 0) {
+                r = func_8001148C(arg1);
+                if (r != 0) {
+                    bcopy(arg0, r, arg1);
+                    func_800116C0(arg0);
+                }
+            }
+        }
+    }
+    return r;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_800116D4);
+#endif
 
 #ifdef NON_MATCHING
 /* count elements of size bytes from func_8001148C, zeroed; 0 when it returns none */
