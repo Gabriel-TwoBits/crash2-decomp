@@ -190,6 +190,7 @@ s32 func_80036B68(s32);
 s32 func_80036BD8(s32);
 s32 func_80036C40(s32);
 s32 *func_80036D0C(struct Obj *, s32);
+void func_8003756C(u8 *, u32);
 void func_8003AE54(void *, s32, u16 *);
 void func_8003B24C(void *, s32, u16 *);
 void func_8003B940(void *, void *, s32);

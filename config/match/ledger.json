@@ -7183,9 +7183,9 @@
     "reason": "declares `void func_800231B0(s32)`, include/game.h `void func_800231B0(s32 *)`"
   },
   "func_8003756C": {
-    "outcome": "gave up",
-    "time": "2026-10-16 05:30",
-    "summary": "10 of 75 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:56",
+    "summary": "2000 of 2000 trials agree, 882 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
