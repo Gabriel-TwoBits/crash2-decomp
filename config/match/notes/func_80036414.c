@@ -14,8 +14,10 @@ s32 func_80036414(s32 arg0) {
     if (func_80035C40() == 0) {
         if (buf[0] == 0x4D) {
             return buf[1] == 0x43;
+        } else {
+            return 0;
         }
-        return 0;
+    } else {
+        return -1;
     }
-    return -1;
 }

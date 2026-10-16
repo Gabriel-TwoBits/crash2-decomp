@@ -17,13 +17,14 @@ int func_80035CBC(char *arg0, int arg1) {
     strcat(buf, D_8005F284);
     if (p == firstfile(buf, p)) {
         n++;
-        while (1) {
+        for (;;) {
             p += 0x28;
-            if (n >= 16) break;
-            n++;
-            if (p != nextfile(p)) { n--; break; }
+            if (n < 16) {
+                n++;
+                if (p != nextfile(p)) { n--; break; }
+            } else break;
         }
         return n;
     }
-    return 0;
+    return n;
 }

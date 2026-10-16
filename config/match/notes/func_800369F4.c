@@ -12,8 +12,9 @@ s32 func_800369F4(void) {
     s32 *p = base + 0x6F4 / 4;
     s32 old;
     s32 ret;
+    s32 arg = base[0x954 / 4];
 
-    func_80036A84(p, 0x2A4, base[0x954 / 4], 0);
+    func_80036A84(p, 0x2A4, arg, 0);
     old = base[0x718 / 4];
     base[0x718 / 4] = 0;
     if (old == func_80036A8C(p, 0x2A4)) {

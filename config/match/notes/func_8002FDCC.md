@@ -1,8 +1,15 @@
 # func_8002FDCC
 
-Initializes a 2-word buffer {0, 0x6400} on the stack, stores a magic (0x6396347F) into `*arg0`, copies word 4 of
-`func_80014260(arg0, 1, 1)`'s result into D_8005F3D8, calls func_80019800(&D_8006CB20, 4, 8, 2, buf, 1), then func_8002FCF8().
+Clears D_800675AC, calls `func_80014260(arg0, 1, 1)`, stores the magic 0x6396347F into `*arg0`, copies word 4 of the
+result into D_8005F3D8, builds a 2-word stack buffer {0, 0x6400}, calls `func_80019800(&D_8006CB20, 4, 8, 2, buf, 1)`
+and then `func_8002FCF8()`.
 
-Final: best.c, 6 of 35 words differ. The stack data must be a 2-element array (m2c's two scalars made the 0x6400 store a dead store).
-Remaining difference: scheduling of the `sw` to `*arg0`, `lw 0x10(v0)` and the `lui/addiu $a0` argument setup (retail puts the store
-and load first, compiled hoists the `$a0` setup). Reordering the statements made it worse (10); a 4-minute permuter run reached 5.
+Not matched. The `best.c` count is the permuter's best (the score run below confirms it).
+
+Tried:
+- earlier.c (buf[2] array): 5 of 35 differ.
+- attempt2 (load into a local before the store): 8. attempt3 (load before the store, in source order): 16.
+- 5-minute permuter run on attempt1: 4 of 35 (temporaries around `*arg0 = magic`).
+
+Still differs: scheduling of the `lui/addiu $a0` for `&D_8006CB20`. Retail emits it after `sw magic` and `lw 0x10($v0)`;
+the compiled code hoists it above them.
