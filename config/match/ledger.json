@@ -1744,8 +1744,8 @@
     ]
   },
   "func_8002DF68": {
-    "outcome": "gave up",
-    "time": "2026-10-15 23:33",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:52",
     "summary": "11 of 16 words differ",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
@@ -1790,7 +1790,8 @@
         "minutes": 0.7
       }
     ],
-    "cflags": "-O2 -G8 -mcpu=r8000"
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "reason": "declares D_8005F3C4 as `u32 *D_8005F3C4`, src/game/80029884.c as `s32 *D_8005F3C4`"
   },
   "func_80036674": {
     "outcome": "landed",
@@ -5197,9 +5198,9 @@
     "reason": "FAILED: [code=1] build/nonmatching/src/game/80026CA0.o \nsrc/game/80026CA0.c:476: conflicting types for `D_80069338'"
   },
   "func_8002E628": {
-    "outcome": "gave up",
-    "time": "2026-10-16 02:09",
-    "summary": "19 of 46 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:53",
+    "summary": "2000 of 2000 trials agree, 1810 compared",
     "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
