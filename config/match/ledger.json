@@ -444,8 +444,8 @@
     ]
   },
   "func_80038C14": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-15 23:28",
+    "outcome": "landed",
+    "time": "2026-10-15 23:29",
     "summary": "2 of 61 words differ",
     "best": "attempt10.c",
     "model": "claude-opus-5-5",
@@ -474,8 +474,7 @@
         "turns": 1,
         "minutes": 0.1
       }
-    ],
-    "reason": "defines Obj otherwise than src/game/80038700.c"
+    ]
   },
   "func_80038D08": {
     "outcome": "landed",

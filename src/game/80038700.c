@@ -29,7 +29,16 @@ static inline s32 *operand_address(Obj *obj, s32 idx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038C14);
+s32 func_80032B7C(Obj *, s32 *, s32);
+
+void func_80038C14(Obj *obj, u32 arg1) {
+    s32 *a;
+    s32 *b;
+
+    a = operand_address(obj, (arg1 >> 12) & 0xFFF);
+    b = operand_address(obj, arg1 & 0xFFF);
+    obj->unk12C = func_80032B7C(obj, b, *(s16 *)a);
+}
 
 void func_80038D08(Obj *obj, u32 op) {
     s32 *dst;
