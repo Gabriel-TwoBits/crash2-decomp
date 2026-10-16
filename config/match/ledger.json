@@ -4619,8 +4619,8 @@
     ]
   },
   "func_8001D22C": {
-    "outcome": "gave up",
-    "time": "2026-10-16 01:16",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:48",
     "summary": "4 of 38 words differ",
     "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
@@ -4643,7 +4643,8 @@
         "turns": 10,
         "minutes": 4.5
       }
-    ]
+    ],
+    "reason": "declares `void func_8001C620(Unk8001D22C *, s32, s32, s32 *)`, include/game.h `s32 func_8001C620(u8 *, s32, s32)`"
   },
   "func_8001F8B4": {
     "outcome": "gave up",
@@ -9713,8 +9714,8 @@
     ]
   },
   "func_8001CC10": {
-    "outcome": "gave up",
-    "time": "2026-10-16 17:38",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:48",
     "summary": "121 of 179 words differ",
     "best": "b9.c",
     "model": "claude-sonnet-5-5",
@@ -9751,7 +9752,8 @@
         "minutes": 10.5
       }
     ],
-    "resumes": 3
+    "resumes": 3,
+    "reason": "declares `void func_8001C620(Unk8001CC10Obj *, s32, s32)`, include/game.h `s32 func_8001C620(u8 *, s32, s32)`"
   },
   "func_8002648C": {
     "outcome": "gave up",
@@ -10067,9 +10069,9 @@
     ]
   },
   "func_8001D2C4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 15:55",
-    "summary": "104 of 222 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:48",
+    "summary": "2000 of 2000 trials agree, 1216 compared",
     "best": "attempt5.c",
     "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
