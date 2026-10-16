@@ -21,6 +21,7 @@ s8 func_800120EC(s32);
 char *func_80012170(s32, u32, s32, s32);
 s32 func_80012294(char *, s32);
 s32 func_8001232C(s32 *);
+s32 func_800123F0(s32 *, s32, s32);
 void func_80012BC4(s32);
 void func_80012DC0(void);
 s32 func_80012ED0(s32);
