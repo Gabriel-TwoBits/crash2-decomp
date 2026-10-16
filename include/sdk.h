@@ -47,5 +47,8 @@ void AddPrim(void *ot, void *primitive);
 
 /* libsnd */
 void SsEnd(void);
+void SsSepPlay(short access_num, short seq_num, char play_mode, short l_count);
+void SsSepPause(short access_num, short seq_num);
+void SsSepReplay(short access_num, short seq_num);
 
 #endif /* SDK_H */

@@ -6740,8 +6740,8 @@
     ]
   },
   "func_800344B0": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 05:53",
+    "outcome": "landed",
+    "time": "2026-10-16 07:42",
     "summary": "0 of 70 words differ",
     "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
@@ -6775,8 +6775,7 @@
         "turns": 48,
         "minutes": 2.4
       }
-    ],
-    "reason": "defines Unk80033DE0 otherwise than src/game/800324A8.c"
+    ]
   },
   "func_80038AFC": {
     "outcome": "gave up",
