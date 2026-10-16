@@ -131,7 +131,53 @@ void func_800171C0(int a0) {
     func_80016F44(a0, 0, 0x6396347F);
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800171E8);
+s32 func_800171E8(void *arg0, s32 arg1, s32 arg2) {
+    u8 *s3;
+    u8 *s2;
+    s32 n;
+    s32 i;
+    s32 idx;
+    s32 e;
+
+    idx = -1;
+    do { s3 = *(u8 **)((u8 *)arg0 + 0x10); } while (0);
+    s2 = *(u8 **)((u8 *)arg0 + 0x1C);
+    n = *(s32 *)(s3 + 0x34);
+    if (arg2 != 0x6396347F) {
+        for (i = 0; i < *(s32 *)(s3 + 0x40); i++) {
+            e = ((s32 *)(s3 + 0xC))[i];
+            if (e & 1) {
+                idx = i;
+                if (arg2 == e) {
+                    goto found;
+                }
+            } else {
+                idx = i;
+                if (arg2 == *(s32 *)(e + 4)) {
+                    goto found;
+                }
+            }
+        }
+        return -0xFF;
+    }
+found:
+    if (arg1 != 0) {
+        for (i = 0; i < n; i++) {
+            if (idx == -1 || idx == ((*(u16 *)(s2 + 6) >> 10) & 7)) {
+                func_80018474(s2, s3 + 0xC);
+            }
+            s2 += 0xC;
+        }
+    } else {
+        for (i = 0; i < n; i++) {
+            if (idx == -1 || idx == ((*(u16 *)(s2 + 6) >> 10) & 7)) {
+                *(u16 *)(s2 + 6) &= 0xFDFF;
+            }
+            s2 += 0xC;
+        }
+    }
+    return -0xFF;
+}
 
 void func_80017358(s32 a0) {
     func_800171E8((void *)a0, 1, 0x6396347F);

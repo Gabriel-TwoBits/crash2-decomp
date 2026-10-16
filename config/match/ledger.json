@@ -616,8 +616,8 @@
     ]
   },
   "func_800171E8": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 01:02",
+    "outcome": "landed",
+    "time": "2026-10-16 01:08",
     "summary": "0 of 92 words differ",
     "best": "attempt7.c",
     "model": "claude-sonnet-5-5",
@@ -659,8 +659,7 @@
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
-    "wall_minutes": 3.2,
-    "reason": "[3/215] cc src/game/800158E0.c\nFAILED: [code=1] build/src/game/800158E0.o \n.venv/bin/python tools/psx_cc.py src/game/800158E0.c -o build/src/game/800158E0.o\nsrc/game/800158E0.c:134: previous declaration of `func_800171E8'\n[4/215] cc src/game/80011E24.c\n[5/215] cc src/game/80015614.c\n[6/215] cc src/game/80019098.c\n[7/215] cc src/game/80012010.c\n[8/215] cc src/game/8001A014.c\n[9/215] cc src/game/800111B0.c\n[10/215] cc src/game/800123F0.c\nninja: build stopped: subcommand failed."
+    "wall_minutes": 3.2
   },
   "func_8002EE48": {
     "outcome": "landed",
