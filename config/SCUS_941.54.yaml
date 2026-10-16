@@ -54,7 +54,26 @@ segments:
     # The startup code clears 0x8005F2A4 to 0x8006F1F0
     bss_size: 0xFF4C
     subsegments:
-      - [0x800, rodata, rodata]
+      # Each game file's constants and jump tables, in its own .rodata (docs/TARGET.md, "The game's read-only data")
+      - [0x800, .rodata, game/80012010]
+      - [0x8D0, .rodata, game/800123F0]
+      - [0xA9C, .rodata, game/800158E0]
+      - [0xABC, .rodata, game/8001BFDC]
+      - [0xAD8, .rodata, game/8001CEDC]
+      - [0xAEC, .rodata, game/8001F9C4]
+      - [0xB80, .rodata, game/80023B04]
+      - [0xC68, .rodata, game/8002648C]
+      - [0xC80, .rodata, game/80026CA0]
+      - [0xCAC, .rodata, game/80029884]
+      - [0xD44, .rodata, game/80031AE8]
+      - [0xD90, .rodata, game/800324A8]
+      - [0xE7C, .rodata, game/800345C8]
+      - [0xF50, .rodata, game/80036D0C]
+      - [0x1004, .rodata, game/80037698]
+      - [0x1118, .rodata, game/80038700]
+      - [0x1138, .rodata, game/80038F00]
+      # The libraries' read-only data, used by asm/sdk/
+      - [0x1150, rodata, rodata]
       # The game's code, one C file per original source file as far as the data shows, named by its first function
       # (docs/TARGET.md, "The game's source files")
       - [0x19B0, c, game/800111B0]

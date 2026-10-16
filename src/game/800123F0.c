@@ -2,6 +2,10 @@
 #include "sdk.h"
 #include "game.h"
 
+INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100D0);
+INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100F0);
+INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_80010110);
+
 s32 D_8005F1A4 = 1;
 char D_8005F1A8[] = "hde\n";
 RECT D_8005F1B0 = { 0, 0, 0x100, 0x80 };

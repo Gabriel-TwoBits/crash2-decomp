@@ -2,6 +2,12 @@
 #include "sdk.h"
 #include "game.h"
 
+INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_8001067C);
+INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_8001068C);
+INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_8001069C);
+INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_800106AC);
+INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_800106C4);
+
 s32 *D_8005F264 = 0;
 s32 D_8005F268 = 1;
 s32 D_8005F26C = -1;

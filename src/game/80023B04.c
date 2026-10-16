@@ -2,6 +2,10 @@
 #include "sdk.h"
 #include "game.h"
 
+INCLUDE_RODATA("asm/nonmatchings/game/80023B04", D_80010380);
+INCLUDE_RODATA("asm/nonmatchings/game/80023B04", D_800103C0);
+INCLUDE_RODATA("asm/nonmatchings/game/80023B04", D_80010400);
+
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023B04);
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023D7C);

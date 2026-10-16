@@ -368,3 +368,25 @@ func_80042420 = 0x80042420; // type:func
 func_80042548 = 0x80042548; // type:func
 func_800426A0 = 0x800426A0; // type:func
 func_80042818 = 0x80042818; // type:func
+
+// Game constants in .rodata: GCC 2.7.2 writes them before the functions, so each file includes them with INCLUDE_RODATA
+// rather than with the function that reads them (docs/TARGET.md, "The game's read-only data")
+D_80010000 = 0x80010000; // force_not_migration:True
+D_80010010 = 0x80010010; // force_not_migration:True
+D_80010020 = 0x80010020; // force_not_migration:True
+D_80010038 = 0x80010038; // force_not_migration:True
+D_80010044 = 0x80010044; // force_not_migration:True
+D_80010054 = 0x80010054; // force_not_migration:True
+D_800100D0 = 0x800100D0; // force_not_migration:True
+D_800100F0 = 0x800100F0; // force_not_migration:True
+D_80010110 = 0x80010110; // force_not_migration:True
+D_80010380 = 0x80010380; // force_not_migration:True
+D_800103C0 = 0x800103C0; // force_not_migration:True
+D_80010400 = 0x80010400; // force_not_migration:True
+D_8001067C = 0x8001067C; // force_not_migration:True
+D_8001068C = 0x8001068C; // force_not_migration:True
+D_8001069C = 0x8001069C; // force_not_migration:True
+D_800106AC = 0x800106AC; // force_not_migration:True
+D_800106C4 = 0x800106C4; // force_not_migration:True
+D_80010750 = 0x80010750; // force_not_migration:True
+D_80010804 = 0x80010804; // force_not_migration:True
