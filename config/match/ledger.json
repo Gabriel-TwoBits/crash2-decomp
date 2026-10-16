@@ -3143,8 +3143,8 @@
     ]
   },
   "func_80036BD8": {
-    "outcome": "gave up",
-    "time": "2026-10-15 23:47",
+    "outcome": "landed",
+    "time": "2026-10-16 01:08",
     "summary": "1 of 26 words differ",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
