@@ -834,10 +834,10 @@ def report():
         for attempt in entry.get("runs", []):
             # Matching and equivalent runs apart: an equivalent run succeeds when its C agrees
             if attempt.get("mode") == EQUIVALENT_MODE:
-                key, success = f"{attempt['model']}, {EQUIVALENT_MODE}", "equivalent, agrees"
+                key, success, verb = f"{attempt['model']}, {EQUIVALENT_MODE}", "equivalent, agrees", "agreed"
             else:
-                key, success = attempt["model"], "matched"
-            stats = models.setdefault(key, {"runs": 0, "succeeded": 0, "cost_usd": 0.0, "success": success})
+                key, success, verb = attempt["model"], "matched", "matched"
+            stats = models.setdefault(key, {"runs": 0, "succeeded": 0, "cost_usd": 0.0, "verb": verb})
             stats["runs"] += 1
             stats["succeeded"] += attempt["outcome"] == success
             stats["cost_usd"] += attempt.get("cost_usd") or 0
@@ -846,7 +846,7 @@ def report():
         elif entry["outcome"] in ("matched, blocked", "matched, not landed", EQUIVALENT_REFUSED):
             # The reason's first compiler error says more than ninja's closing line
             lines = entry.get("reason", "").splitlines()
-            errors = [line for line in lines if re.search(r"\.c:\d+", line)]
+            errors = [line for line in lines if re.search(r"\.[ch]:\d+", line)]
             if errors:
                 reason = errors[0]
             elif lines:
@@ -858,7 +858,7 @@ def report():
             continue
     print("outcomes: " + ", ".join(f"{outcome} {count}" for outcome, count in sorted(outcomes.items())))
     for model, stats in sorted(models.items()):
-        print(f"{model}: {stats['succeeded']} {stats['success']} of {stats['runs']} runs, ${stats['cost_usd']:.2f}")
+        print(f"{model}: {stats['succeeded']} {stats['verb']} of {stats['runs']} runs, ${stats['cost_usd']:.2f}")
     print("near misses and C waiting to land:")
     for line in near:
         print(f"  {line}")
