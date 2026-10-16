@@ -8927,9 +8927,9 @@
     "reason": "defines Unk80013BD8 otherwise than src/game/800123F0.c"
   },
   "func_8001A710": {
-    "outcome": "gave up",
-    "time": "2026-10-16 12:06",
-    "summary": "8 of 127 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:47",
+    "summary": "2000 of 2000 trials agree, 1761 compared",
     "best": "attempt1.c",
     "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
