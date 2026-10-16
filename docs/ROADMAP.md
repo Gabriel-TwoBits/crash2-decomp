@@ -177,6 +177,17 @@ A thirteenth batch of 7 (0x320 to 0x37C bytes), Opus as the first model: 1 match
 Sonnet on some (under three minutes at 59 and 87 words); its two closest, `func_80033EE0` and `func_8002A554` at 16, differ
 in scheduling and register order only. At this size neither model matches more than about 1 function in 7 to 10.
 
+Two tests of keeping the agent on a large function longer, on functions given up within three minutes:
+- The instructions (`tools/match/CLAUDE.md`, step 4): rework the shape while it differs, stop after five attempts in a
+  row without progress or two minutes before the limit, which `score.sh` now prints. Five runs with Sonnet, $2.13:
+  `func_8001A23C` went from 128 words to 7 (12 minutes of permuter then found nothing better); the other four stopped
+  again within six minutes, three of them within one.
+- `tools/match.py` resuming the session up to three times while the shape differed and time was left. The same four and
+  `func_8001CC10`, $11.40: no match, every run resumed three times, shape gains small (94 to 76, 160 to 121 words, the
+  others within 4). Each resumption reloads the whole context, $0.5 to $0.9. Reverted.
+
+On functions over about 0x240 bytes the loop's agent doesn't find the shape by itself, however long it is kept on them.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
