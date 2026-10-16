@@ -76,6 +76,8 @@ void func_8003AE54(void *, s32, u16 *);
 void func_8003B24C(void *, s32, u16 *);
 void func_8003B940(void *, void *, u16);
 void func_8003CBE4(void);
+s32 func_8003D2EC(s32);
+s32 func_8003D360(s32);
 s32 func_80041A78(s32);
 void func_80042420(void);
 void func_80042548(void);
