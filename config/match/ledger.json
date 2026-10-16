@@ -7331,8 +7331,8 @@
     ]
   },
   "func_8003670C": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 06:03",
+    "outcome": "landed",
+    "time": "2026-10-16 07:43",
     "summary": "0 of 81 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -7353,8 +7353,7 @@
         "turns": 27,
         "minutes": 1.2
       }
-    ],
-    "reason": "`s32 func_8003649C()` has no parameter list"
+    ]
   },
   "func_800160B0": {
     "outcome": "landed",
