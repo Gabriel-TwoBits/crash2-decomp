@@ -41,7 +41,24 @@ void func_80032588(void) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800325D0);
 
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800325DC);
+extern void SpuSetReverbDepth(Unk80032588 *);
+
+s32 func_800325DC(s32 arg0, s16 arg1, s16 arg2, s32 arg3, s32 arg4) {
+    Unk80032588 s;
+
+    s.a = 7;
+    s.b = arg0 | 0x100;
+    s.c = arg1;
+    s.d = arg2;
+    if ((u32)(arg0 - 7) < 2U) {
+        s.e = arg3;
+        s.f = arg4;
+    }
+    func_800501A8(&s);
+    SpuSetReverbDepth(&s);
+    func_8004FE38(arg0 != 0);
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_8003264C);
 
