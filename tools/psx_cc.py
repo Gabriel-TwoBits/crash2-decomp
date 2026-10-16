@@ -5,6 +5,7 @@ ASPSX, then GNU as. The one compile path the probes, decomp-permuter and the bui
     python tools/psx_cc.py SOURCE.c -o OUT.o [--gcc 2.7.2] [--aspsx 2.34] [--cflags "-O2 -G8 -mcpu=r8000"] [-D NAME]
 """
 import argparse
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -26,6 +27,8 @@ MASPSX_FLAGS = ["--expand-div", "-G8", "--use-comm-section"]
 # A C file's data ends on a word: each file's data starts on one in the original layout, and the linker script's
 # SUBALIGN(2) would pack the next file's against a section of odd size
 DATA_END = "".join(f"\t.section {section}\n\t.align 2\n" for section in (".rodata", ".data", ".sdata"))
+# A compiler's or assembler's message on a line of its input (`FILE:LINE: ...`) that isn't a warning
+SOURCE_ERROR = re.compile(r":\d+: (?!warning: )")
 
 
 def compiler(version):
@@ -43,7 +46,7 @@ def cpp_command(gcc, source, output, defines=()):
 
 def compile_c(gcc, aspsx, source, cflags, obj, defines=()):
     """Builds obj from source with that GCC folder and ASPSX version, the macros named in defines set: None, or the
-    error's last line"""
+    failing step's first error on a line of its input, else its last line"""
     with tempfile.TemporaryDirectory() as folder:
         work = Path(folder)
         preprocessed = work / "source.i"
@@ -65,7 +68,14 @@ def compile_c(gcc, aspsx, source, cflags, obj, defines=()):
                     result = subprocess.run(command, capture_output=True, text=True, stdin=feed, cwd=HERE)
             if result.returncode != 0:
                 message = result.stderr.strip().splitlines()
-                return message[-1] if message else f"{Path(command[0]).name} failed"
+                # The first error says more than what follows it (a warning, `In function ...`, a later error it caused)
+                errors = [line for line in message if SOURCE_ERROR.search(line)]
+                if errors:
+                    return errors[0]
+                elif message:
+                    return message[-1]
+                else:
+                    return f"{Path(command[0]).name} failed"
             if stdout == rewritten:
                 rewritten.write_text(result.stdout + DATA_END)
             elif stdout is not None:
