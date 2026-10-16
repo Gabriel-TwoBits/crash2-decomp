@@ -745,7 +745,9 @@ def land(name, equivalent=False):
     block and holds when the SHA-1 does, the nonmatching build builds and tools/equiv.py agrees on the landed file"""
     if equivalent:
         candidates = [SCRATCH / name / "equivalent.c", NOTES / f"{name}{EQUIVALENT_NOTES}.c", NOTES / f"{name}.c"]
-        refused = EQUIVALENT_REFUSED
+        replacing = name in equivalents()
+        # A function already equivalent stays so when other C for it doesn't land: its block is still there
+        refused = EQUIVALENT_MODE if replacing else EQUIVALENT_REFUSED
     else:
         candidates = [SCRATCH / name / "match.c", NOTES / f"{name}.c"]
         refused = "matched, not landed"
@@ -790,7 +792,7 @@ def land(name, equivalent=False):
         return False
     if equivalent:
         record(name, EQUIVALENT_MODE, summary=summary)
-        message = f"feat: add equivalent C for {name}"
+        message = f"feat: improve the equivalent C of {name}" if replacing else f"feat: add equivalent C for {name}"
     else:
         record(name, "landed")
         message = f"feat: match {name}"
