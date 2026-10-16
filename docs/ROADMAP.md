@@ -214,8 +214,9 @@ rendering, audio. Names and types come with understanding (docs/WORKFLOW.md, "Na
 compiled code's bytes matching (`tools/progress.py`); the assembly part stays assembly.
 
 A function too costly to match gets behaviour-equivalent C under `NON_MATCHING` (docs/WORKFLOW.md, "The equivalent
-track"). Done: the convention, `ninja nonmatching` and `tools/progress.py` counting equivalent functions apart. Next: the
-differential tester, `tools/equiv.py`.
+track"). Done: the convention, `ninja nonmatching`, `tools/progress.py` counting equivalent functions apart, and
+`tools/equiv.py`, the differential tester that judges them (all 222 functions matched then agree with their C, and a
+near miss differing only in registers agrees). Next: the first equivalent functions.
 
 ## 5. Beyond matching
 
