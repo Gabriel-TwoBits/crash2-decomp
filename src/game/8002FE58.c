@@ -52,10 +52,10 @@ INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_800309A8);
 
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80030CD8);
 
-void func_80030CD8(s32 arg0);
+s32 func_80030CD8(void *, void *);
 
-void func_80030D74(s32 *arg0) {
-    func_80030CD8(arg0[5]);
+s32 func_80030D74(s32 *arg0, void *arg1) {
+    return func_80030CD8((void *)arg0[5], arg1);
 }
 
 typedef struct { s32 x, y, z; } Vec80030D98;

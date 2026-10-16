@@ -74,6 +74,7 @@ void func_8002F0DC(s32);
 void func_8002F228(s32);
 void func_8002FB84(s32);
 void func_8002FE58(s32 *);
+s32 func_80030D74(s32 *, void *);
 s32 func_80031578(s32);
 s32 func_80031AE8(s32, s32, s32, s32, s32 *, s32, s32 *, s32, s32);
 s32 func_800321D4(s32, s32, s32, s32, s32, s32, s32);
