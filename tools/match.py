@@ -66,8 +66,7 @@ TYPE_DEFINITION = re.compile(r"^(?:typedef[ \t]+)?struct[ \t]*(?P<tag>\w*)[ \t]*
 # A game function's definition in C: return type, name, parameters, then its body
 DEFINITION = re.compile(r"^(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{]*\))\s*\{",
                         re.MULTILINE)
-# A parameter's name, the last word of its declaration in a definition
-PARAMETER_NAME = re.compile(r"\b[A-Za-z_]\w*\s*$")
+POINTER_SPACING = re.compile(r"\s*\*\s*")
 # An empty parameter list declares nothing about the arguments: the compiler checks no call against it
 UNCHECKED_PARAMETERS = re.compile(r"\(\s*\)$")
 # PsyQ's libraries start here (config/SCUS_941.54.yaml): a func_ name from there is the SDK's, not the game's
@@ -77,6 +76,8 @@ HEXADECIMAL = 16
 # What a prototype in include/game.h may be written with: one using a structure of its file stays in the file
 BASIC_TYPES = {"void", "char", "short", "int", "long", "unsigned", "signed", "const",
                "s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64"}
+# A parameter's name: the last word of its declaration when a type or a `*` comes before it and it isn't a type itself
+PARAMETER_NAME = re.compile(r"(?<=[\s*])(?!(?:" + "|".join(sorted(BASIC_TYPES)) + r")\b)[A-Za-z_]\w*\s*$")
 ERROR_LINES = 12
 # A line naming a cause: the compiler's (`FILE.c:LINE: ...`), the linker's, a failed step or SHA-1 check (C locale)
 COMPILER_ERROR = re.compile(r"\.c:\d+:|-ld: |FAILED")
@@ -385,18 +386,29 @@ def type_name(definition):
     return definition.group("alias") or definition.group("tag")
 
 
-def prototype_of(declaration):
-    """A definition's return type, name and parameters as a prototype without parameter names; None when a parameter is a
-    function pointer, which this doesn't parse"""
-    head, _, rest = declaration.partition("(")
+def signature_of(declaration):
+    """A declaration's return type, name and parameter types, parameter names left out and spacing made uniform
+    (`s32 *func_X(u8 *, s32)`); None when a parameter is a function pointer, which this doesn't parse"""
+    head, _, rest = POINTER_SPACING.sub(" *", declaration).partition("(")
     parameters = rest[:rest.rindex(")")]
     if "(" in parameters:
         return None
     elif parameters.strip() in ("", "void"):
-        return f"{' '.join(head.split())}(void);"
+        return f"{' '.join(head.split())}(void)"
     else:
-        types = [PARAMETER_NAME.sub("", parameter).strip() for parameter in parameters.split(",")]
-        return f"{' '.join(head.split())}({', '.join(types)});"
+        types = [" ".join(PARAMETER_NAME.sub("", parameter).split()) for parameter in parameters.split(",")]
+        return f"{' '.join(head.split())}({', '.join(types)})"
+
+
+def prototype_of(declaration):
+    """A definition's declarator as a prototype; None when a parameter is a function pointer"""
+    signature = signature_of(declaration)
+    return None if signature is None else signature + ";"
+
+
+def basic(prototype, name):
+    """Whether a prototype uses only basic types, so include/game.h can carry it"""
+    return prototype is not None and set(IDENTIFIER.findall(prototype)) - {name} <= BASIC_TYPES
 
 
 def with_prototypes(header, added):
@@ -467,13 +479,18 @@ def land(name):
             below = below.replace(types[kind].group(0), "", 1)
     # One prototype per game function, in include/game.h: one it has goes, a new one of basic types moves there
     header = GAME_H.read_text()
-    declared = {prototype.group("name") for prototype in PROTOTYPE.finditer(header)}
+    declared = {prototype.group("name"): prototype.group("declaration") for prototype in PROTOTYPE.finditer(header)}
     added = []
     for prototype in PROTOTYPE.finditer(text):
         callee = prototype.group("name")
         if callee == name:
             # The function's own forward declaration stays with it
             continue
+        elif callee in declared and signature_of(prototype.group("declaration")) != signature_of(declared[callee]):
+            # match.c matched with its own prototype; include/game.h's would compile the call otherwise
+            record(name, "matched, not landed", reason=f"declares `{prototype.group('declaration')}`, include/game.h "
+                                                        f"`{declared[callee]}`")
+            return False
         elif callee in declared:
             text = text.replace(prototype.group(0), "")
         elif int(callee[FUNCTION_ADDRESS_START:], HEXADECIMAL) >= SDK_START:
@@ -482,8 +499,8 @@ def land(name):
         elif UNCHECKED_PARAMETERS.search(prototype.group("declaration")):
             record(name, "matched, not landed", reason=f"`{prototype.group('declaration')}` has no parameter list")
             return False
-        elif set(IDENTIFIER.findall(prototype.group("declaration"))) - {callee} <= BASIC_TYPES:
-            added.append(prototype.group("declaration") + ";")
+        elif basic(prototype_of(prototype.group("declaration")), callee):
+            added.append(prototype_of(prototype.group("declaration")))
             text = text.replace(prototype.group(0), "")
         else:
             # A structure of its file in the prototype: it stays in the file
@@ -493,7 +510,7 @@ def land(name):
     own = next((match for match in DEFINITION.finditer(text) if match.group("name") == name), None)
     signature = None if own is None else prototype_of(own.group("declaration"))
     listed = header
-    if signature is not None and set(IDENTIFIER.findall(signature)) - {name} <= BASIC_TYPES:
+    if basic(signature, name):
         for prototype in [match for match in PROTOTYPE.finditer(header) if match.group("name") == name]:
             listed = listed.replace(prototype.group(0), "", 1)
         for prototype in [match for match in PROTOTYPE.finditer(original) if match.group("name") == name]:
