@@ -4534,5 +4534,191 @@
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000"
+  },
+  "func_80011F78": {
+    "outcome": "gave up",
+    "time": "2026-10-16 01:11",
+    "summary": "35 of 38 words differ",
+    "best": "a4.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.2,
+    "cost_usd": 0.30777019999999994,
+    "turns": 21,
+    "minutes": 1.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "35 of 38 words differ",
+        "best": "a4.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.2,
+        "cost_usd": 0.30777019999999994,
+        "turns": 21,
+        "minutes": 1.2
+      }
+    ]
+  },
+  "func_80012294": {
+    "outcome": "gave up",
+    "time": "2026-10-16 01:11",
+    "summary": "25 of 38 words differ",
+    "best": "a1.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.7,
+    "cost_usd": 0.21756789999999995,
+    "turns": 15,
+    "minutes": 0.7,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "25 of 38 words differ",
+        "best": "a1.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.21756789999999995,
+        "turns": 15,
+        "minutes": 0.7
+      }
+    ]
+  },
+  "func_80019F08": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 01:12",
+    "summary": "0 of 38 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.18099780000000001,
+    "turns": 8,
+    "minutes": 0.5,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 38 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.18099780000000001,
+        "turns": 8,
+        "minutes": 0.5
+      }
+    ],
+    "reason": "[209/215] as asm/sdk/libcard/a76.s\n[210/215] as asm/sdk/libcard/end.s\n[211/215] as asm/data/bss.bss.s\n[212/215] as asm/data/data.data.s\n[213/215] ld build/SCUS_941.54.elf\n[214/215] exe build/SCUS_941.54.exe\n[215/215] check build/check.stamp\nFAILED: [code=1] build/check.stamp \nsha1sum --quiet -c config/SCUS_941.54.sha1 && touch build/check.stamp\nbuild/SCUS_941.54.exe: FALHOU\nsha1sum: AVISO: checksum 1 calculado N\u00c3O corresponde\nninja: build stopped: subcommand failed."
+  },
+  "func_8001D22C": {
+    "outcome": "gave up",
+    "time": "2026-10-16 01:16",
+    "summary": "4 of 38 words differ",
+    "best": "attempt1.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 4.6,
+    "cost_usd": 0.1962323,
+    "turns": 10,
+    "minutes": 4.5,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "4 of 38 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 4.6,
+        "cost_usd": 0.1962323,
+        "turns": 10,
+        "minutes": 4.5
+      }
+    ]
+  },
+  "func_8001F8B4": {
+    "outcome": "gave up",
+    "time": "2026-10-16 01:20",
+    "summary": "9 of 38 words differ",
+    "best": "attempt4.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 3.2,
+    "cost_usd": 0.3296231,
+    "turns": 28,
+    "minutes": 3.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "9 of 38 words differ",
+        "best": "attempt4.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.2,
+        "cost_usd": 0.3296231,
+        "turns": 28,
+        "minutes": 3.2
+      }
+    ]
+  },
+  "func_80030EC0": {
+    "outcome": "gave up",
+    "time": "2026-10-16 01:20",
+    "summary": "38 of 38 words differ",
+    "best": "attempt1.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.7,
+    "cost_usd": 0.206653,
+    "turns": 11,
+    "minutes": 0.7,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "38 of 38 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.206653,
+        "turns": 11,
+        "minutes": 0.7
+      }
+    ]
+  },
+  "func_80034A2C": {
+    "outcome": "landed",
+    "time": "2026-10-16 01:21",
+    "summary": "0 of 38 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.2021885,
+    "turns": 12,
+    "minutes": 0.5,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 38 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.2021885,
+        "turns": 12,
+        "minutes": 0.5
+      }
+    ]
   }
 }
