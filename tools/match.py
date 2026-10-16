@@ -111,13 +111,16 @@ EQUIVALENT_PROMPT = ("Write behaviour-equivalent C for the function described in
                      "You have {minutes:g} minutes; past them the session is stopped, so keep best.c current. "
                      "score.sh ends with the minutes left. "
                      "When you stop, leave equivalent.c or best.c and NOTES.md as CLAUDE.md says.")
-# The equivalent track's ledger outcomes all start so; an equivalent run's records carry this mode
+# The mode an equivalent run's records carry, and the outcome of a function landed as equivalent C
 EQUIVALENT_MODE = "equivalent"
 # Notes of an equivalent run sit beside the matching runs' as <function>.equivalent.md and .c
 EQUIVALENT_NOTES = ".equivalent"
-# The outcomes after which the matching loop is done with a function and an equivalent run may take it; a match that
-# didn't land ("matched, not landed") is fixed by hand instead
-GIVEN_UP = ("gave up", "rejected")
+# Equivalent C that didn't land, from a run or the notes
+EQUIVALENT_REFUSED = "equivalent, not landed"
+# The outcomes after which an equivalent run may take a function: the matching loop is done with it, or its notes' C
+# didn't land as equivalent (a run fixes what the builds refused). A match that didn't land ("matched, not landed") is
+# fixed by hand instead
+GIVEN_UP = ("gave up", "rejected", EQUIVALENT_REFUSED)
 # equiv.py's lines: its last, the trials agreeing without being compared, and the first disagreement
 AGREEING = re.compile(r"^(\d+) of (\d+) trials agree$", re.MULTILINE)
 UNCOMPARED = re.compile(r"^(\d+) trials agree by both (?:reaching the limit|taking the same exception)", re.MULTILINE)
@@ -244,21 +247,20 @@ def next_function():
     return candidates[0][2]
 
 
-def tried_equivalent(entry):
-    """Whether the equivalent track has had the function: an equivalent run, or a landing of equivalent C"""
-    return (entry["outcome"].startswith(EQUIVALENT_MODE)
-            or any(attempt.get("mode") == EQUIVALENT_MODE for attempt in entry.get("runs", [])))
+def ran_equivalent(entry):
+    """Whether an equivalent run has had the function"""
+    return any(attempt.get("mode") == EQUIVALENT_MODE for attempt in entry.get("runs", []))
 
 
 def next_equivalent():
     """The next function for an equivalent run: the smallest one the matching loop gave up on for good, still plain
-    INCLUDE_ASM, not skipped, not tried on the equivalent track, and without GTE instructions"""
+    INCLUDE_ASM, not skipped, without an equivalent run before, and without GTE instructions"""
     ledger = load_ledger()
     skip = skipped()
     equivalent = equivalents()
     candidates = sorted((size, name) for name, size in unmatched().items()
                         if name in ledger and ledger[name]["outcome"] in GIVEN_UP and not given_up_elsewhere(ledger[name])
-                        and not tried_equivalent(ledger[name]) and name not in skip and name not in equivalent)
+                        and not ran_equivalent(ledger[name]) and name not in skip and name not in equivalent)
     # The GTE check reads the split, so only as far as the first candidate without
     for _, name in candidates:
         if not uses_gte(name):
@@ -743,7 +745,7 @@ def land(name, equivalent=False):
     block and holds when the SHA-1 does, the nonmatching build builds and tools/equiv.py agrees on the landed file"""
     if equivalent:
         candidates = [SCRATCH / name / "equivalent.c", NOTES / f"{name}{EQUIVALENT_NOTES}.c", NOTES / f"{name}.c"]
-        refused = "equivalent, not landed"
+        refused = EQUIVALENT_REFUSED
     else:
         candidates = [SCRATCH / name / "match.c", NOTES / f"{name}.c"]
         refused = "matched, not landed"
@@ -839,7 +841,7 @@ def report():
             stats["cost_usd"] += attempt.get("cost_usd") or 0
         if near_miss(entry):
             near.append(f"{name} ({entry['summary']})")
-        elif entry["outcome"] in ("matched, blocked", "matched, not landed", "equivalent, not landed"):
+        elif entry["outcome"] in ("matched, blocked", "matched, not landed", EQUIVALENT_REFUSED):
             # The reason's first compiler error says more than ninja's closing line
             lines = entry.get("reason", "").splitlines()
             errors = [line for line in lines if re.search(r"\.c:\d+", line)]
