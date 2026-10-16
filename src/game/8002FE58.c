@@ -325,9 +325,30 @@ void func_800309A8(Unk800309A8Box *out, Unk800309A8Box *in, s16 *m, s32 *trans) 
     out->min[2] = center[2] - extent;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80030CD8);
+#ifdef NON_MATCHING
+s32 func_80030CD8(s32 *a, s32 *p) {
+    s32 x = a[0];
+    s32 px = p[0];
+    s32 y, py, z, pz;
+    s32 r = 0;
 
-s32 func_80030CD8(void *, void *);
+    if (px >= (x << 8)) {
+        y = a[1];
+        py = p[1];
+        if (py >= (y << 8)) {
+            z = a[2];
+            pz = p[2];
+            if (pz >= (z << 8) && px < ((x + a[3]) << 8) && py < ((y + a[4]) << 8)) {
+                r = pz < ((z + a[5]) << 8);
+            }
+        }
+    }
+    return r;
+}
+#else
+INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80030CD8);
+#endif
+
 
 s32 func_80030D74(s32 *arg0, void *arg1) {
     return func_80030CD8((void *)arg0[5], arg1);
