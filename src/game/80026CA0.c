@@ -607,7 +607,52 @@ void *func_80027DEC(char *arg0, void *arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027F3C);
 
+#ifdef NON_MATCHING
+typedef struct {
+    s32 x, y, z;
+} Vec3i80028750;
+
+
+
+s32 func_80028750(Vec3i80028750 *arg0, Vec3i80028750 *arg1) {
+    Unk80027DEC *p = *(Unk80027DEC **)(D_800608CC + 0x10);
+    Vec3i80028750 pos;
+    s32 box[6];
+    s32 r;
+    s32 i;
+    s32 *e;
+    s32 *q;
+
+    if (arg1->x == 0 && arg1->y == 0 && arg1->z == 0) {
+        return 0;
+    }
+    do {
+        pos = *arg0;
+        for (i = 0; i < p->count; i++) {
+            if (p->flags[i] & 4) {
+                e = func_80014260(&p->ent[i], 1, 0);
+                if (func_80030D74(e, arg0) != 0) {
+                    q = *(s32 **)((char *)e + 0x14);
+                    box[0] = q[0] << 8;
+                    box[1] = q[1] << 8;
+                    box[2] = q[2] << 8;
+                    box[3] = q[3] << 8;
+                    box[4] = q[4] << 8;
+                    box[5] = q[5] << 8;
+                    r = func_80027F3C(q, *(u16 *)((char *)q + 0x1C), box, arg0, arg1, 0);
+                    break;
+                }
+            }
+        }
+        if (i == p->count) {
+            return 1;
+        }
+    } while (r == 0);
+    return r;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80028750);
+#endif
 
 extern s32 D_8005BB68[];
 
