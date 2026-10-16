@@ -778,6 +778,10 @@ def land(name, equivalent=False):
         return False
     original = source.read_text()
     header = GAME_H.read_text()
+    if updated == original and updated_header == header:
+        # The file has this C already: nothing to build, record or commit
+        print(f"{name}: {source.relative_to(HERE)} has this C already")
+        return True
     source.write_text(updated)
     GAME_H.write_text(updated_header)
 
