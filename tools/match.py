@@ -125,6 +125,8 @@ GIVEN_UP = ("gave up", "rejected", EQUIVALENT_REFUSED)
 AGREEING = re.compile(r"^(\d+) of (\d+) trials agree$", re.MULTILINE)
 UNCOMPARED = re.compile(r"^(\d+) trials agree by both (?:reaching the limit|taking the same exception)", re.MULTILINE)
 DISAGREEMENT = re.compile(r"^trial \d+ disagrees: ")
+# A disagreement's lines kept as a reason: the trial with its arguments, then its first difference
+DISAGREEMENT_LINES = 2
 UNSUPPORTED = "unsupported"
 # What an agent's run is checked with: equiv.py's defaults, as score.sh runs it
 RUN_SEED = 0
@@ -535,9 +537,9 @@ def equivalence(source, name, trials, seed):
         compared = int(agreeing.group(2)) - sum(int(count) for count in UNCOMPARED.findall(result.stdout))
         return True, compared, f"{agreeing.group(0)}, {compared} compared"
     else:
-        # The first disagreement's trial and its first difference, then the count
+        # The first disagreement, then the count
         start = next((index for index, line in enumerate(lines) if DISAGREEMENT.match(line)), None)
-        shown = [] if start is None else [line.strip() for line in lines[start:start + 2]]
+        shown = [] if start is None else [line.strip() for line in lines[start:start + DISAGREEMENT_LINES]]
         return False, 0, "\n".join(shown + [agreeing.group(0)])
 
 
