@@ -123,6 +123,14 @@ still matches and the build's SHA-1 holds, and 11 functions the loop had left as
 `-mcpu=r8000` now, and the 11 landed (3 by hand, against their file's types). Several other near misses came closer
 under it (`func_800343CC` from 28 differing words to 2, `func_80036BD8` to 1).
 
+A seventh run tried again the 32 functions given up under the old flags, Sonnet only, each starting from its earlier
+notes and best C (`tools/match.py` now records each run's compiler flags and retries a function given up under others
+first): 5 matched, among them the parked `func_800171E8`, at $7.72; 3 landed by themselves, 2 once their file's
+declarations agreed (`func_800171E8`'s prototype, `D_8005F288` read as a structure where its file defines the string
+`"EMPTY"`), and `func_80036BD8` by hand, its sum written in the original's order. Most of the rest stay within 1 to 3
+words, differences in source (operand order, a `$gp` load's place) no `-mcpu` or scheduling flag moves. From here Opus
+retries only a near miss (within 10%).
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
