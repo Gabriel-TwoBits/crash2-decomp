@@ -4590,8 +4590,8 @@
     ]
   },
   "func_80019F08": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 03:15",
+    "outcome": "landed",
+    "time": "2026-10-16 03:20",
     "summary": "0 of 38 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -4612,8 +4612,7 @@
         "turns": 8,
         "minutes": 0.5
       }
-    ],
-    "reason": "FAILED: [code=1] build/check.stamp \nbuild/SCUS_941.54.exe: FAILED"
+    ]
   },
   "func_8001D22C": {
     "outcome": "gave up",
