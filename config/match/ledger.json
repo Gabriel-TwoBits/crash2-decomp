@@ -8632,9 +8632,9 @@
     "reason": "FAILED: [code=1] build/nonmatching/src/game/800111B0.o \nsrc/game/800111B0.c:55: conflicting types for `D_8005F2A4'"
   },
   "func_80039310": {
-    "outcome": "gave up",
-    "time": "2026-10-16 11:27",
-    "summary": "96 of 109 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:57",
+    "summary": "2000 of 2000 trials agree, 1323 compared",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
