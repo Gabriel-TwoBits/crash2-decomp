@@ -17,11 +17,17 @@ s32 func_80024188(void) {
 
 extern s8 D_8005B994;
 extern s8 D_8005B99A;
+typedef struct Unk8005B9E0 {
+    s32 count;
+    u8 pad[0x74];
+    s32 e[8][4];
+} Unk8005B9E0;
+
 extern s32 D_8005B9AC;
 extern s32 D_8005B9BC;
 extern s32 D_8005B9C0;
 extern s32 D_8005B9C4;
-extern s32 D_8005B9E0;
+extern Unk8005B9E0 D_8005B9E0;
 extern s32 D_8005B9E4;
 extern s32 D_8005B9F4;
 extern s32 D_8005B9F8;
@@ -40,7 +46,7 @@ void func_800241A8(void) {
     D_8005B9AC = 0x1001;
     D_800608F0 = 5;
     D_800608F8 = 0;
-    D_8005B9E0 = 0;
+    D_8005B9E0.count = 0;
     D_8005B9E4 = 0;
     D_8005B9C4 = 0;
     D_8005B99A = 0;
@@ -118,21 +124,20 @@ typedef struct Unk8005BA58 {
 } Unk8005BA58;
 
 void func_800260F4(Unk8005BA58 *);
-extern s32 D_8005B9E0;
 extern Unk8005BA58 D_8005BA58[];
 
 void func_8002609C(void) {
     Unk8005BA58 *p;
     s32 n;
 
-    n = D_8005B9E0;
+    n = D_8005B9E0.count;
     p = D_8005BA58;
     while (n > 0) {
         func_800260F4(p);
         n--;
         p++;
     }
-    D_8005B9E0 = 0;
+    D_8005B9E0.count = 0;
 }
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800260F4);
