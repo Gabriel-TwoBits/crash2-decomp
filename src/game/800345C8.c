@@ -13,7 +13,41 @@ char D_8005F288[] = "EMPTY";
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800345C8);
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800346E8);
+extern void _card_clear(long);
+
+void func_800346E8(void) {
+    if (D_8005F264[6] != 0) {
+        D_8005F264[6] = 0;
+        _card_info(0);
+    }
+    switch (func_80035AB8()) {
+    case 1:
+        func_800360CC(0);
+        func_80036084(2);
+        return;
+    case 0:
+        if (!(func_80036150() & 4)) {
+            func_800360CC(0);
+            return;
+        }
+    case 3:
+        func_80035C74();
+        _card_clear(0);
+        if (func_80035C40() == 0) {
+            func_800360AC(6);
+            func_80036084(0x18);
+            func_800360CC(4);
+            func_80035A7C(0x96);
+        } else {
+    case 2:
+            func_800360CC(0);
+            func_80036084(4);
+            func_800360AC(8);
+        }
+        func_80036028(0);
+        return;
+    }
+}
 
 s32 func_80034810(void) {
     D_8005F264[6] = 0;
