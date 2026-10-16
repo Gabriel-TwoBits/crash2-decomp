@@ -9,6 +9,7 @@ known, what proves it, and what is still open.
 | --- | --- | --- |
 | Compiler | PsyQ's GCC (`ccpsx`) 2.7.2 | Proven by `func_8001521C` and `func_80032808` (below), which match under 2.7.2 and no other; for their two files so far, as another file may name another version. `tools/psx_cc.py` defaults to it |
 | Optimisation | `-O2` | Matches `func_80011E98` |
+| Scheduling | `-mcpu=r8000` | Proven by `func_80018B50` (below): the one CPU model under which it and every function in C match. `cc1`'s default, the R3000's, schedules some prologues otherwise. GCC 2.6.3 and before don't know `r8000` |
 | Small data | `-G8`, gp `0x8005F17C` | Proven by `func_8001521C` and `func_80032808`, which read their file's variables through `$gp`; 8 bytes because an 8-byte `RECT` (`D_8005F1B0`) is in `.sdata` and nothing larger is. What goes through `$gp`: below |
 | Assembler | Sony's ASPSX 2.30 to 2.49, emulated by maspsx `--aspsx-version=2.34 --expand-div -G8 --use-comm-section` | Proven by `func_80011E98` (below) |
 | PsyQ libraries | PsyQ 4.0 | 158 of its library objects found by signature (`tools/find_psyq.py`), against 118 for 3.7 and 108 for 4.2; also the strings `bios.c 1.86`, `intr.c 1.76`, `sys.c 1.129` |
@@ -19,7 +20,7 @@ One function decides nothing when it compiles the same under several versions (s
 established by a function that matches under it and under no other:
 
 1. Pick a function with a frame, calls and a loop (register allocation and scheduling differ most between versions).
-2. Write its C, compile it with each of `tools/toolchain/gcc-*-psx` at `-O2 -G8`, run each through maspsx, and compare with
+2. Write its C, compile it with each of `tools/toolchain/gcc-*-psx` at `-O2 -G8 -mcpu=r8000`, run each through maspsx, and compare with
    the retail bytes (objdiff, relocations masked).
 3. Record the result here: the function, the versions and flags tried, which matched. If none match, try the flags next
    (`-O1`, `-O3`, `-fno-schedule-insns`, ...), then the assembler's version.
@@ -36,6 +37,7 @@ side), `tools/psx_cc.py` (the compile path they share), `tools/permute.py` (deco
 | Function | What it does | Result |
 | --- | --- | --- |
 | `func_80011E98` (0x84 bytes) | A number into a 5-character code through a 64-character table (odd numbers), else `sprintf` | **Matches** with GCC 2.6.0, 2.6.3 and 2.7.2 at `-O2 -G8`, ASPSX 2.34 (also with `-fno-schedule-insns2`). GCC 2.5.7: 22 of 33 words differ; 2.8.1: 27. ASPSX before 2.30: 26 differ. ASPSX 2.56 and later: 1 differs, the `li` that retail assembles as `ori` and those versions as `addiu` |
+| `func_80018B50` (0x94 bytes) | Walks a tree depth first, calling a callback on each node | **Matches** with GCC 2.7.2 at `-mcpu=r8000`, `r4000` or `r6000`. At the default (`r3000`), `r2000`, `r4600`, `orion` and `default`, 35 of 37 words differ: the argument copies scheduled among the saves instead of into the first load's delay slot. Of the 139 functions in C then, all match at `r8000` (and the build's SHA-1 holds); 10 differ at `r4000`, 7 at `r6000`, 1 at `r4650`. Ten more of the loop's near misses match at `r8000` |
 | `func_80018CAC` (0x7C bytes) | Walks a linked list, calling `func_80018AA8` on each node | 2 words differ under 2.6.0 to 2.7.2: the prologue's saves and the argument copy scheduled in another order. decomp-permuter: 20 minutes, nothing better than the base |
 | `func_80012F24` (0x114 bytes) | Reads sectors from the CD (`CdIntToPos`, `CdControlF`, `CdSync`, `CdRead`), retrying on error | 50 of 69 differ: the original keeps the first argument in `$a2`. Its retry loop is written with `goto` (a `while` hoists the constant 5 into a saved register) and its locals take 16 bytes |
 | `func_80013888` (0xE0 bytes) | Finds a free entry in a 16-entry table of 0x2C-byte slots, by three criteria in turn | 44 of 56 differ: the loops' shape isn't the original's yet |

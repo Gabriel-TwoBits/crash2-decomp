@@ -4,8 +4,8 @@ You are decompiling one function of Crash Bandicoot 2 (PlayStation, USA): write 
 gives exactly the bytes of `$FUNCTION` (`target.s`). Read `BRIEF.md` first: its address, size, callers, callees, the data it
 touches, and m2c's draft.
 
-The compiler is PsyQ's GCC (2.7.2 here; 2.6.0 and 2.6.3 build the same code so far) at `-O2 -G8`, assembled the way ASPSX
-2.34 does. C89: declarations at the start of a block, no `//` comments, no C99 features.
+The compiler is PsyQ's GCC 2.7.2 at `-O2 -G8 -mcpu=r8000` (`score.sh` uses them), assembled the way ASPSX 2.34 does.
+C89: declarations at the start of a block, no `//` comments, no C99 features.
 
 ## Rules
 

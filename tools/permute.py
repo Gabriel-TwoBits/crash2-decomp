@@ -5,7 +5,7 @@ candidate there as output-<score>-<n>/. The permuter's score leaves out nops, wh
 after mflo/mfhi), so every candidate is scored again with tools/probe_compiler.py's count, and that count is what is
 reported.
 
-    python tools/permute.py FILE.c FUNCTION [--gcc 2.7.2] [--aspsx 2.34] [--cflags "-O2 -G8"] [-j 4] [--minutes 10]
+    python tools/permute.py FILE.c FUNCTION [--gcc 2.7.2] [--aspsx 2.34] [--cflags "-O2 -G8 -mcpu=r8000"] [-j 4] [--minutes 10]
 """
 import argparse
 import os

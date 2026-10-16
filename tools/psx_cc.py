@@ -2,7 +2,7 @@
 """Compiles a C file the way PsyQ did: the PSX GCC's cpp and cc1 (tools/toolchain/gcc-<version>-psx), maspsx standing in for
 ASPSX, then GNU as. The one compile path the probes, decomp-permuter and the build share.
 
-    python tools/psx_cc.py SOURCE.c -o OUT.o [--gcc 2.7.2] [--aspsx 2.34] [--cflags "-O2 -G8"]
+    python tools/psx_cc.py SOURCE.c -o OUT.o [--gcc 2.7.2] [--aspsx 2.34] [--cflags "-O2 -G8 -mcpu=r8000"]
 """
 import argparse
 import sys
@@ -16,10 +16,10 @@ MASPSX = TOOLCHAIN / "maspsx" / "maspsx.py"
 AS = "mipsel-linux-gnu-as"
 ASFLAGS = ["-EL", "-march=r3000", "-mtune=r3000", "-no-pad-sections", "-O1", "-G0", f"-I{HERE / 'include'}"]
 CPP_DEFINES = ["-undef", "-D__GNUC__=2", "-Dmips", "-D__mips__", "-D__mips", "-D_LANGUAGE_C", "-DLANGUAGE_C"]
-# Proven so far (docs/COMPILER.md): an ASPSX of 2.30 to 2.49; GCC 2.6.0 to 2.7.2 at -O2 -G8
+# Proven so far (docs/COMPILER.md): an ASPSX of 2.30 to 2.49; GCC 2.7.2 at -O2 -G8, scheduled as for -mcpu=r8000
 DEFAULT_GCC = "2.7.2"
 DEFAULT_ASPSX = "2.34"
-DEFAULT_CFLAGS = "-O2 -G8"
+DEFAULT_CFLAGS = "-O2 -G8 -mcpu=r8000"
 # maspsx addresses through $gp what the file defines in .sdata/.sbss (or as a common) and nothing else, as ASPSX did
 # (docs/COMPILER.md); commons stay commons, so a tentative definition resolves to the split's symbol
 MASPSX_FLAGS = ["--expand-div", "-G8", "--use-comm-section"]

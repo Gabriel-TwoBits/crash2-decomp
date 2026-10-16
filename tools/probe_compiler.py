@@ -3,7 +3,7 @@
 compares each result with the function's retail bytes from the split (asm/), relocated fields masked. It's how
 docs/COMPILER.md's facts get proven: a match under one configuration and no other.
 
-    python tools/probe_compiler.py FILE.c FUNCTION [--cflags "-O2 -G8"]
+    python tools/probe_compiler.py FILE.c FUNCTION [--cflags "-O2 -G8 -mcpu=r8000"]
     python tools/probe_compiler.py FILE.c FUNCTION --diff 2.7.2 [--aspsx 2.34]   one configuration, side by side
 
 The C file holds the function (and what it needs declared); FUNCTION is its name in the split (func_80011E98).
