@@ -596,8 +596,8 @@
     ]
   },
   "func_8002EE48": {
-    "outcome": "gave up",
-    "time": "2026-10-14 00:39",
+    "outcome": "landed",
+    "time": "2026-10-15 23:28",
     "summary": "16 of 103 words differ",
     "best": "attempt10.c",
     "model": "claude-opus-5-5",
