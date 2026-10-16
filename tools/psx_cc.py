@@ -2,7 +2,7 @@
 """Compiles a C file the way PsyQ did: the PSX GCC's cpp and cc1 (tools/toolchain/gcc-<version>-psx), maspsx standing in for
 ASPSX, then GNU as. The one compile path the probes, decomp-permuter and the build share.
 
-    python tools/psx_cc.py SOURCE.c -o OUT.o [--gcc 2.7.2] [--aspsx 2.34] [--cflags "-O2 -G8 -mcpu=r8000"]
+    python tools/psx_cc.py SOURCE.c -o OUT.o [--gcc 2.7.2] [--aspsx 2.34] [--cflags "-O2 -G8 -mcpu=r8000"] [-D NAME]
 """
 import argparse
 import sys
@@ -35,8 +35,9 @@ def compiler(version):
     return folder
 
 
-def compile_c(gcc, aspsx, source, cflags, obj):
-    """Builds obj from source with that GCC folder and ASPSX version: None, or the error's last line"""
+def compile_c(gcc, aspsx, source, cflags, obj, defines=()):
+    """Builds obj from source with that GCC folder and ASPSX version, the macros named in defines set: None, or the
+    error's last line"""
     with tempfile.TemporaryDirectory() as folder:
         work = Path(folder)
         preprocessed = work / "source.i"
@@ -44,7 +45,8 @@ def compile_c(gcc, aspsx, source, cflags, obj):
         rewritten = work / "source.maspsx.s"
         # (command, file fed to its standard input, file its standard output goes to)
         steps = [
-            ([str(gcc / "cpp"), *CPP_DEFINES, f"-I{HERE / 'include'}", str(source), str(preprocessed)], None, None),
+            ([str(gcc / "cpp"), *CPP_DEFINES, *(f"-D{name}" for name in defines), f"-I{HERE / 'include'}", str(source),
+              str(preprocessed)], None, None),
             ([str(gcc / "cc1"), "-quiet", *cflags.split(), str(preprocessed), "-o", str(assembly)], None, None),
             ([sys.executable, str(MASPSX), f"--aspsx-version={aspsx}", *MASPSX_FLAGS], assembly, rewritten),
             ([AS, *ASFLAGS, "-o", str(obj), str(rewritten)], None, None),
@@ -76,9 +78,11 @@ def main():
     parser.add_argument("--gcc", default=DEFAULT_GCC)
     parser.add_argument("--aspsx", default=DEFAULT_ASPSX)
     parser.add_argument("--cflags", default=DEFAULT_CFLAGS)
+    parser.add_argument("-D", dest="defines", action="append", default=[], metavar="NAME",
+                        help="a macro to define, NON_MATCHING for the equivalent build")
     arguments = parser.parse_args()
     error = compile_c(compiler(arguments.gcc), arguments.aspsx, Path(arguments.source).resolve(), arguments.cflags,
-                      Path(arguments.output).resolve())
+                      Path(arguments.output).resolve(), arguments.defines)
     if error is not None:
         sys.exit(error)
 
