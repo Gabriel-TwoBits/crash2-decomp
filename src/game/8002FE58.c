@@ -382,7 +382,18 @@ s32 func_80030E1C(s32 *arg0, s32 *arg1) {
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80030E1C);
 #endif
 
+#ifdef NON_MATCHING
+s32 func_80030EC0(s32 *a, s32 *b) {
+    if (b[4] < a[1]) return 0;
+    if (b[1] >= a[4]) return 0;
+    if (b[0] >= a[3]) return 0;
+    if (b[2] >= a[5]) return 0;
+    if (b[3] < a[0]) return 0;
+    return b[5] >= a[2];
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80030EC0);
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80030F58);
 
