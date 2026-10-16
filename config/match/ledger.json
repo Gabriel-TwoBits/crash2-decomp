@@ -4591,7 +4591,7 @@
   },
   "func_80019F08": {
     "outcome": "matched, not landed",
-    "time": "2026-10-16 01:12",
+    "time": "2026-10-16 03:15",
     "summary": "0 of 38 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -4613,7 +4613,7 @@
         "minutes": 0.5
       }
     ],
-    "reason": "[209/215] as asm/sdk/libcard/a76.s\n[210/215] as asm/sdk/libcard/end.s\n[211/215] as asm/data/bss.bss.s\n[212/215] as asm/data/data.data.s\n[213/215] ld build/SCUS_941.54.elf\n[214/215] exe build/SCUS_941.54.exe\n[215/215] check build/check.stamp\nFAILED: [code=1] build/check.stamp \nsha1sum --quiet -c config/SCUS_941.54.sha1 && touch build/check.stamp\nbuild/SCUS_941.54.exe: FALHOU\nsha1sum: AVISO: checksum 1 calculado N\u00c3O corresponde\nninja: build stopped: subcommand failed."
+    "reason": "FAILED: [code=1] build/check.stamp \nbuild/SCUS_941.54.exe: FAILED"
   },
   "func_8001D22C": {
     "outcome": "gave up",
@@ -5292,7 +5292,7 @@
   },
   "func_80025FDC": {
     "outcome": "matched, not landed",
-    "time": "2026-10-16 02:15",
+    "time": "2026-10-16 03:15",
     "summary": "0 of 48 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5314,7 +5314,7 @@
         "minutes": 1.6
       }
     ],
-    "reason": "[11/215] cc src/game/80023B04.c\nFAILED: [code=1] build/src/game/80023B04.o \n.venv/bin/python tools/psx_cc.py src/game/80023B04.c -o build/src/game/80023B04.o\nsrc/game/80023B04.c:120: previous declaration of `D_8005B9E0'\n[12/215] cc src/game/8001CEDC.c\n[13/215] cc src/game/8001BFDC.c\n[14/215] cc src/game/8001D63C.c\n[15/215] cc src/game/800200A8.c\n[16/215] cc src/game/8001F9C4.c\n[17/215] cc src/game/80020A24.c\n[18/215] cc src/game/8002648C.c\nninja: build stopped: subcommand failed."
+    "reason": "FAILED: [code=1] build/src/game/80023B04.o \nsrc/game/80023B04.c:120: previous declaration of `D_8005B9E0'"
   },
   "func_80033D10": {
     "outcome": "matched, not landed",
@@ -5420,8 +5420,8 @@
     ]
   },
   "func_800271D8": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 02:20",
+    "outcome": "landed",
+    "time": "2026-10-16 03:17",
     "summary": "0 of 51 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5442,8 +5442,7 @@
         "turns": 14,
         "minutes": 0.5
       }
-    ],
-    "reason": "[19/215] cc src/game/80026CA0.c\nFAILED: [code=1] build/src/game/80026CA0.o \n.venv/bin/python tools/psx_cc.py src/game/80026CA0.c -o build/src/game/80026CA0.o\nsrc/game/80026CA0.c:31: previous declaration of `func_800271D8'\n[20/215] cc src/game/8002E884.c\n[21/215] cc src/game/8002FB84.c\n[22/215] cc src/game/80031578.c\n[23/215] cc src/game/800316EC.c\n[24/215] cc src/game/8003147C.c\n[25/215] cc src/game/8002FE58.c\n[26/215] cc src/game/80029884.c\nninja: build stopped: subcommand failed."
+    ]
   },
   "func_80014078": {
     "outcome": "gave up",
@@ -5642,7 +5641,7 @@
   },
   "func_800270C4": {
     "outcome": "matched, not landed",
-    "time": "2026-10-16 02:40",
+    "time": "2026-10-16 03:16",
     "summary": "0 of 54 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5664,7 +5663,7 @@
         "minutes": 3.6
       }
     ],
-    "reason": "[19/215] cc src/game/80026CA0.c\nFAILED: [code=1] build/src/game/80026CA0.o \n.venv/bin/python tools/psx_cc.py src/game/80026CA0.c -o build/src/game/80026CA0.o\nsrc/game/80026CA0.c:29: previous declaration of `func_8002719C'\n[20/215] cc src/game/80029884.c\n[21/215] cc src/game/8002E884.c\n[22/215] cc src/game/8003147C.c\n[23/215] cc src/game/8002FB84.c\n[24/215] cc src/game/8002FE58.c\n[25/215] cc src/game/80031578.c\n[26/215] cc src/game/800316EC.c\nninja: build stopped: subcommand failed."
+    "reason": "FAILED: [code=1] build/src/game/80026CA0.o \nsrc/game/80026CA0.c:29: previous declaration of `func_8002719C'"
   },
   "func_80012010": {
     "outcome": "matched, not landed",
@@ -5694,7 +5693,7 @@
   },
   "func_80012170": {
     "outcome": "matched, not landed",
-    "time": "2026-10-16 02:42",
+    "time": "2026-10-16 03:16",
     "summary": "0 of 56 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5716,7 +5715,7 @@
         "minutes": 0.4
       }
     ],
-    "reason": "[3/215] cc src/game/80012010.c\nFAILED: [code=1] build/src/game/80012010.o \n.venv/bin/python tools/psx_cc.py src/game/80012010.c -o build/src/game/80012010.o\nsrc/game/80012010.c:26: previous declaration of `func_80012170'\n[4/215] cc src/game/80011E24.c\n[5/215] cc src/game/8001A014.c\n[6/215] cc src/game/80015614.c\n[7/215] cc src/game/800123F0.c\n[8/215] cc src/game/80019098.c\n[9/215] cc src/game/800111B0.c\n[10/215] cc src/game/800158E0.c\nninja: build stopped: subcommand failed."
+    "reason": "FAILED: [code=1] build/src/game/80012010.o \nsrc/game/80012010.c:28: too many arguments to function `func_80012170'"
   },
   "func_80013888": {
     "outcome": "gave up",
@@ -5799,7 +5798,7 @@
   },
   "func_80031578": {
     "outcome": "matched, not landed",
-    "time": "2026-10-16 02:54",
+    "time": "2026-10-16 03:15",
     "summary": "0 of 56 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5821,7 +5820,7 @@
         "minutes": 1.0
       }
     ],
-    "reason": "[19/215] cc src/game/80031578.c\nFAILED: [code=1] build/src/game/80031578.o \n.venv/bin/python tools/psx_cc.py src/game/80031578.c -o build/src/game/80031578.o\ninclude/game.h:54: previous declaration of `func_80031578'\n[20/215] cc src/game/8002E884.c\n[21/215] cc src/game/80026CA0.c\n[22/215] cc src/game/80029884.c\n[23/215] cc src/game/8002FB84.c\n[24/215] cc src/game/8003147C.c\n[25/215] cc src/game/8002FE58.c\n[26/215] cc src/game/800316EC.c\nninja: build stopped: subcommand failed."
+    "reason": "FAILED: [code=1] build/src/game/80031578.o "
   },
   "func_800324A8": {
     "outcome": "landed",
