@@ -59,6 +59,9 @@ this project's C (docs/WORKFLOW.md, "Naming"):
     lists them). A callee neither declares gets a prototype in `equivalent.c`, with its true signature from the callee's
     assembly and its parameter list (`(void)` for none, never `()`): landing moves it into `game.h` when it uses only
     basic types.
+  - What BRIEF.md lists as declared already for the function and its data holds: the function's signature and each
+    variable's type are those (matched callers compile against them). `score.sh` compiles `equivalent.c` alone and
+    can't see a conflict; landing it in its file fails on one.
   - A structure its file already defines is copied from the file as it is, never defined otherwise.
   - Data is `extern` (`extern s32 D_8005F304;`), never defined: the build resolves it to the split's symbol. A string or
     constant in `.rodata` (`D_800100D0`) too (`extern char D_800100D0[];`), never a literal.
