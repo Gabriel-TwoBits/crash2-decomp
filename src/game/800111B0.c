@@ -32,17 +32,18 @@ INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_800116C0);
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_800116D4);
 
 #ifdef NON_MATCHING
+/* count elements of size bytes from func_8001148C, zeroed; 0 when it returns none */
 s32 *func_80011764(s32 count, s32 size) {
     s32 total;
-    s32 p;
+    s32 *block;
 
     total = size * count;
-    p = func_8001148C(total);
-    if (p == 0) {
+    block = (s32 *)func_8001148C(total);
+    if (block == 0) {
         return 0;
     }
-    bzero((u8 *)p, total);
-    return (s32 *)p;
+    bzero((u8 *)block, total);
+    return block;
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_80011764);
