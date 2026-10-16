@@ -7323,8 +7323,8 @@
     ]
   },
   "func_80027664": {
-    "outcome": "gave up",
-    "time": "2026-10-16 06:02",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:51",
     "summary": "19 of 81 words differ",
     "best": "attempt4.c",
     "model": "claude-sonnet-5-5",
@@ -7347,7 +7347,8 @@
         "turns": 29,
         "minutes": 5.7
       }
-    ]
+    ],
+    "reason": "declares `void func_80026EF4(u8 *)`, include/game.h `void func_80026EF4(s32 *)`"
   },
   "func_8003670C": {
     "outcome": "landed",
@@ -7505,9 +7506,9 @@
     ]
   },
   "func_800277A8": {
-    "outcome": "gave up",
-    "time": "2026-10-16 06:25",
-    "summary": "70 of 84 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:51",
+    "summary": "2000 of 2000 trials agree, 1714 compared",
     "best": "a2.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",

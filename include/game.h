@@ -106,6 +106,7 @@ s32 func_800270C4(s32 *, s32);
 s32 func_800271D8(void *, s32);
 void func_80027500(u8 *, u8 *, u8 *, s32, s32, s32, s32);
 s32 func_80027664(s32 *);
+void *func_800277A8(s32, s32, s32, s32);
 void func_800278F8(s32);
 void func_80027980(s32);
 s32 func_80027CD0(u8 *, u8 *, s32);
