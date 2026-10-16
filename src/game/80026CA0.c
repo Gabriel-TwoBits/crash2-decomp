@@ -6,6 +6,8 @@ INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026CA0);
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026EF4);
 
+extern u8 *D_80069358;
+
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_8002706C);
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800270C4);
@@ -48,7 +50,6 @@ INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027664);
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800277A8);
 
-extern s32 D_80069358;
 
 void func_800278F8(s32 arg0) {
     if (*(s32 *)(arg0 + 0xC) != 1) {

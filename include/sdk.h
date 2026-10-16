@@ -41,6 +41,7 @@ long ratan2(long y, long x);
 
 /* libgpu */
 int ResetGraph(int mode);
+int MoveImage(RECT *rect, int x, int y);
 
 /* libsnd */
 void SsEnd(void);

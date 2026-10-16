@@ -6,14 +6,14 @@ INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038700);
 
 INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038AFC);
 
-INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038C14);
-
 typedef struct Obj {
     u8 pad0[0x40];
     s32 regs[(0xBC - 0x40) / 4];
     s32 *sp;
     u8 padC0[0xD4 - 0xC0];
     s32 result;
+    u8 padD8[0x12C - 0xD8];
+    s32 unk12C;
 } Obj;
 
 /* 0xE1F pops the stack, 0xE00-0xFFF name a register, anything else is resolved by func_80036D0C. */
@@ -28,6 +28,8 @@ static inline s32 *operand_address(Obj *obj, s32 idx) {
         return func_80036D0C(obj, idx);
     }
 }
+
+INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038C14);
 
 void func_80038D08(Obj *obj, u32 op) {
     s32 *dst;
