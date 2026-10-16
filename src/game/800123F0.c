@@ -430,7 +430,34 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014420);
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_8001456C);
 
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014638);
+extern Unk80013BD8Table D_800675B0;
+
+void func_80014638(u32 *arg0) {
+    s32 i;
+    s32 bit;
+    Unk80013BD8 *p;
+
+    for (i = 7; i >= 0; i--) {
+        arg0[i] = 0;
+    }
+    for (i = 0; i < D_80067950.count; i++) {
+        p = &D_80067950.e[i];
+        if (p->state != 1 && p->f_f != 0) {
+            bit = p->f_14 >> 1;
+            /* The redundant self-assignment orders the load before the mask, as in the retail code. */
+            arg0[bit / 32] = arg0[bit / 32];
+            arg0[bit / 32] |= 1 << (bit % 32);
+        }
+    }
+    for (i = 0; i < D_800675B0.count; i++) {
+        p = &D_800675B0.e[i];
+        if (p->state != 1 && p->f_f != 0) {
+            bit = p->f_14 >> 1;
+            arg0[bit / 32] = arg0[bit / 32];
+            arg0[bit / 32] |= 1 << (bit % 32);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014790);
 
