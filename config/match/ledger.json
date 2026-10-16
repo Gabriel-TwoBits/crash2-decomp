@@ -9190,8 +9190,8 @@
     "reason": "unsupported: trial 319: the retail code raised reserved instruction; it has an instruction Unicorn lacks"
   },
   "func_800260F4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 12:59",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:51",
     "summary": "4 of 144 words differ",
     "best": "attempt9.c",
     "model": "claude-opus-5-5",
@@ -9226,7 +9226,8 @@
         "turns": 11,
         "minutes": 0.4
       }
-    ]
+    ],
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/80023B04.o \nsrc/game/80023B04.c:273: conflicting types for `D_8005B9E4'"
   },
   "func_800267C4": {
     "outcome": "equivalent, not landed",
@@ -9695,8 +9696,8 @@
     ]
   },
   "func_80025D18": {
-    "outcome": "gave up",
-    "time": "2026-10-16 14:31",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:51",
     "summary": "71 of 177 words differ",
     "best": "attempt5.c",
     "model": "claude-sonnet-5-5",
@@ -9719,7 +9720,8 @@
         "turns": 31,
         "minutes": 1.7
       }
-    ]
+    ],
+    "reason": "FAILED: [code=1] build/src/game/80026CA0.o \nsrc/game/80026CA0.c:16: conflicting types for `func_80025D18'"
   },
   "func_8001CC10": {
     "outcome": "equivalent, not landed",
@@ -9764,9 +9766,9 @@
     "reason": "declares `void func_8001C620(Unk8001CC10Obj *, s32, s32)`, include/game.h `s32 func_8001C620(u8 *, s32, s32)`"
   },
   "func_8002648C": {
-    "outcome": "gave up",
-    "time": "2026-10-16 14:44",
-    "summary": "40 of 182 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:51",
+    "summary": "2000 of 2000 trials agree, 1986 compared",
     "best": "attempt4.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
