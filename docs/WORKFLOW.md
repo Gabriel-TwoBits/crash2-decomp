@@ -26,7 +26,8 @@ at API prices. `config/match/skip.txt` lists functions not to try, with why.
 2. **Draft** it with m2c from its assembly, with the context the project already has (`include/`'s types and declarations).
 3. **Refine** the draft until it compiles and matches: types, control flow, the order of statements, temporaries. This is
    where an AI agent works best, with the draft, the target assembly, its callers' and callees' signatures and similar
-   matched functions as context, and the diff after each attempt. Measured elsewhere (Mizuchi, on GBA and N64 games): about
+   matched functions as context, and the diff after each attempt. `--diff` also counts the retail instructions left
+   without a counterpart once registers are set aside: the code's shape, brought to 0 before the registers. Measured elsewhere (Mizuchi, on GBA and N64 games): about
    three quarters of functions matched, most of them in the first three attempts; later attempts rarely did.
 4. **Permute** a near miss with decomp-permuter, which tries random rewrites and keeps those that score better. It often
    closes the last register swap.

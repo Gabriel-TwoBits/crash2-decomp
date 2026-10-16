@@ -158,6 +158,20 @@ themselves, 3 by hand once their callees' signatures were the assembly's (`func_
 read, `func_80030D74` returns `func_80030CD8`'s result and passes its second argument on, `func_80016F44` returns `s32`).
 `func_800344B0` returns nothing yet is declared `s32`: as `void`, GCC fills the delay slot before its jump otherwise.
 
+An eleventh batch of 40 (0x174 to 0x240 bytes): 5 matched, at $15.76 for Sonnet and $5.50 for Opus; 4 landed by
+themselves, `func_80014790` by hand. On functions this size one register allocated otherwise changes most words, and
+agents gave up within two minutes on counts like 79 of 93. `tools/probe_compiler.py --diff` now also counts the retail
+instructions without a counterpart once registers are set aside (aligned with `difflib`, registers but `$gp` and `$sp`
+normalised): the shape, which the agent brings to 0 first. Four of the batch's give-ups run again with it ($1.48):
+`func_80019BBC` matched and landed by hand; `func_8001A90C`, `func_80022314` and `func_8001EE64` still differ in
+register allocation, or in tails GCC merges and the original keeps apart.
+
+A twelfth batch of 20 (0x244 to 0x31C bytes), Opus on Sonnet's near misses: 2 matched (`func_80026CA0`, `func_800237F8`,
+both landed by hand once a variable had its file's type), at $8.87 for Sonnet and $4.85 for Opus. Of the 18 left, 3 are
+a scheduling swap away (`func_800267C4` at 1 word, `func_8001A4A4` and `func_80026A08` at 2; permuter runs found nothing
+better), and 13 still differ in shape by 11 to 63 instructions: Sonnet gave up on most of them within two to six minutes,
+before an Opus retry, which only near misses get. The rate at this size, 1 in 10, is below the smaller functions'.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
