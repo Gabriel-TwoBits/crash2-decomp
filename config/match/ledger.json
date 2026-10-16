@@ -7982,8 +7982,8 @@
     ]
   },
   "func_80016F44": {
-    "outcome": "rejected",
-    "time": "2026-10-16 07:41",
+    "outcome": "landed",
+    "time": "2026-10-16 07:43",
     "summary": "2 of 92 words differ",
     "best": "b3.c",
     "model": "claude-opus-5-5",
@@ -8017,7 +8017,6 @@
         "turns": 1,
         "minutes": 0.1
       }
-    ],
-    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: include/game.h:40: previous declaration of `func_80016F44'"
+    ]
   }
 }
