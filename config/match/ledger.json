@@ -76,9 +76,9 @@
     "minutes": 0.3
   },
   "func_8001E640": {
-    "outcome": "gave up",
-    "time": "2026-10-16 00:58",
-    "summary": "16 of 80 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:48",
+    "summary": "2000 of 2000 trials agree, 1529 compared",
     "model": "claude-sonnet-5-5",
     "cost_usd": 0.2812709,
     "turns": 3,
@@ -5139,8 +5139,8 @@
     "reason": "FAILED: [code=1] build/nonmatching/src/game/800158E0.o \nsrc/game/800158E0.c:124: conflicting types for `D_8006344C'"
   },
   "func_8001E544": {
-    "outcome": "gave up",
-    "time": "2026-10-16 02:03",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:48",
     "summary": "23 of 46 words differ",
     "best": "attempt4.c",
     "model": "claude-sonnet-5-5",
@@ -5163,7 +5163,8 @@
         "turns": 30,
         "minutes": 4.4
       }
-    ]
+    ],
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/8001D63C.o \nsrc/game/8001D63C.c:71: conflicting types for `D_80063450'"
   },
   "func_80027980": {
     "outcome": "gave up",
