@@ -172,6 +172,11 @@ a scheduling swap away (`func_800267C4` at 1 word, `func_8001A4A4` and `func_800
 better), and 13 still differ in shape by 11 to 63 instructions: Sonnet gave up on most of them within two to six minutes,
 before an Opus retry, which only near misses get. The rate at this size, 1 in 10, is below the smaller functions'.
 
+A thirteenth batch of 7 (0x320 to 0x37C bytes), Opus as the first model: 1 matched and landed by itself
+(`func_800309A8`), at $8.53 plus one run cut at its 15 minutes, whose cost wasn't recorded. Opus gave up as early as
+Sonnet on some (under three minutes at 59 and 87 words); its two closest, `func_80033EE0` and `func_8002A554` at 16, differ
+in scheduling and register order only. At this size neither model matches more than about 1 function in 7 to 10.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
