@@ -224,10 +224,14 @@ def prepare(name):
     target.write_text(ASSEMBLY_PREAMBLE + assembly)
     subprocess.run([AS, *ASFLAGS, "-o", str(folder / "target.o"), str(target)], check=True, cwd=HERE)
 
+    # The function's whole file also holds its jump tables, from which m2c rebuilds a switch
+    m2c_input = folder / "m2c_input.s"
+    m2c_input.write_text(ASSEMBLY_PREAMBLE + assembly_of(name).read_text())
+
     source = source_of(name)[0].relative_to(HERE)
     context = m2c_context(folder, HERE / source)
     draft = subprocess.run([sys.executable, str(M2C), "--target", "mipsel-gcc-c", "--valid-syntax", "--context",
-                            str(context), str(target)], capture_output=True, text=True)
+                            str(context), str(m2c_input)], capture_output=True, text=True)
     shutil.copy2(M2C_MACROS, folder / "m2c_macros.h")
     (folder / "base.c").write_text('#include "common.h"\n#include "sdk.h"\n#include "game.h"\n#include "m2c_macros.h"\n\n'
                                    + draft.stdout)
