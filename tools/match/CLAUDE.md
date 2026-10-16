@@ -29,8 +29,11 @@ C89: declarations at the start of a block, no `//` comments, no C99 features.
    control flow first (the branches and loops line up), then the register and scheduling differences.
 3. Score after every change. Keep each attempt in its own file (`attempt1.c`, `attempt2.c`, ...), and copy the best so far
    to `best.c` each time the count drops: the session has a time limit, and what isn't in a file when it ends is lost.
-4. Stop when it matches, or after about three attempts that lower neither count, or when the remaining difference is a
-   register swap the permuter can't close in 5 minutes.
+4. While instructions are left without a counterpart, keep reworking the shape: the loops (`for`, `while`, `do`, `goto`),
+   the conditions and their order, early returns, a helper's body written inline, a value kept in a local or read again.
+   A large function rarely lines up in the first attempts, and the time is there for it. Stop when it matches; when only
+   registers and scheduling differ and the permuter can't close them in 5 minutes; after five attempts in a row that
+   lower neither count; or when `score.sh` shows 2 minutes left, so that `best.c` and `NOTES.md` are written.
 
 What tends to matter with this GCC: `goto`-built loops are not hoisted like `for`/`while` ones (a constant kept in a saved
 register means the original was a `for`/`while`); the order of statements and of declared locals changes register

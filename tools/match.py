@@ -85,6 +85,8 @@ COMPILER_ERROR = re.compile(r"\.c:\d+:|-ld: |FAILED")
 NEAR_MISS = 0.1
 SECONDS_PER_MINUTE = 60
 MILLISECONDS_PER_MINUTE = 60000
+# Epoch second the agent's time runs out, read by score.sh while the session lasts
+DEADLINE = "deadline"
 DEFAULT_MINUTES = 30
 # Below this a function is a stub or a thunk: nothing to learn, and splat already writes the empty ones
 MIN_SIZE = 0x20
@@ -92,6 +94,7 @@ EXECUTABLE_MODE = 0o755
 AGENT_TOOLS = ["Read", "Edit", "Write", "Glob", "Grep", "Bash(./score.sh:*)", "Bash(./permute.sh:*)"]
 PROMPT = ("Match the function described in CLAUDE.md and BRIEF.md in this directory, following CLAUDE.md's loop and rules. "
           "You have {minutes:g} minutes; past them the session is stopped, so keep best.c current. "
+          "score.sh ends with the minutes left. "
           "When you stop, leave match.c or best.c and NOTES.md as CLAUDE.md says.")
 
 
@@ -286,7 +289,13 @@ def prepare(name):
 
     python = sys.executable
     scripts = {
-        "score.sh": f'#!/bin/sh\nexec "{python}" "{HERE / "tools" / "probe_compiler.py"}" "$1" {name} --diff 2.7.2\n',
+        "score.sh": (f'#!/bin/sh\n"{python}" "{HERE / "tools" / "probe_compiler.py"}" "$1" {name} --diff 2.7.2\n'
+                     'status=$?\n'
+                     f'deadline="$(dirname "$0")/{DEADLINE}"\n'
+                     'if [ -f "$deadline" ]; then\n'
+                     f'    echo "$(( ($(cat "$deadline") - $(date +%s)) / {SECONDS_PER_MINUTE} )) minutes left" >&2\n'
+                     'fi\n'
+                     'exit $status\n'),
         "permute.sh": f'#!/bin/sh\nexec "{python}" "{HERE / "tools" / "permute.py"}" "$1" {name} --minutes "${{2:-5}}"\n',
     }
     for script, text in scripts.items():
@@ -349,6 +358,7 @@ def run(name, minutes, model):
         command += ["--model", model]
     timed_out = False
     started = time.monotonic()
+    (folder / DEADLINE).write_text(str(int(time.time() + minutes * SECONDS_PER_MINUTE)))
     with open(folder / "session.jsonl", "w") as log:
         # Its own process group, so a time limit stops the agent and whatever it started
         agent = subprocess.Popen(command, cwd=folder, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -358,6 +368,7 @@ def run(name, minutes, model):
             os.killpg(agent.pid, signal.SIGTERM)
             agent.wait()
             timed_out = True
+    (folder / DEADLINE).unlink()
     wall = round((time.monotonic() - started) / SECONDS_PER_MINUTE, 1)
     session = {"model": model or "default", "cflags": DEFAULT_CFLAGS, "timed_out": timed_out, "wall_minutes": wall,
                **session_result(folder)}
