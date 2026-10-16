@@ -526,7 +526,33 @@ void func_80014638(u32 *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014790);
+void func_80014790(u32 *arg0) {
+    u32 word0;
+    u32 word;
+    s32 i;
+    s32 bit;
+    Unk80013BD8 *p;
+    for (i = 0; i < D_80067950.count; i++) {
+        p = &D_80067950.e[i];
+        if (p->state != 1 && p->f_f != 0) {
+            bit = p->f_14 >> 1;
+            word0 = arg0[bit / 32];
+            if (!(word0 & (1 << (bit % 32)))) {
+                func_80013EB0((Unk80013EB0 *)p);
+            }
+        }
+    }
+    for (i = 0; i < D_800675B0.count; i++) {
+        p = &D_800675B0.e[i];
+        if (p->state != 1 && p->f_f != 0) {
+            bit = p->f_14 >> 1;
+            word = arg0[bit / 32];
+            if (!(word & (1 << (bit % 32)))) {
+                func_80013EB0((Unk80013EB0 *)p);
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014918);
 

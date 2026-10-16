@@ -8236,8 +8236,8 @@
     ]
   },
   "func_80014790": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 10:40",
+    "outcome": "landed",
+    "time": "2026-10-16 12:59",
     "summary": "0 of 98 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -8258,8 +8258,7 @@
         "turns": 38,
         "minutes": 4.8
       }
-    ],
-    "reason": "FAILED: [code=1] build/src/game/800123F0.o \nsrc/game/800123F0.c:500: previous declaration of `D_800675B0'"
+    ]
   },
   "func_80019800": {
     "outcome": "gave up",
