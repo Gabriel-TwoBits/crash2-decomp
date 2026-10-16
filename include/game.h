@@ -41,6 +41,7 @@ void func_80016F44(s32, s32, s32);
 s32 func_800170B4(s32, s32);
 s32 func_800171E8(void *, s32, s32);
 void func_800176DC(s32, s32, s32, s32, s32, s32);
+void func_8001798C(void);
 void func_80018474(void *, void *);
 s32 func_80018BE4(u8 *, void *, s32);
 s32 func_80018D28(void *, void *, void *);
