@@ -35,6 +35,12 @@ def compiler(version):
     return folder
 
 
+def cpp_command(gcc, source, output, defines=()):
+    """The preprocessor's command line, source into output with the macros named in defines set; run from the root"""
+    return [str(gcc / "cpp"), *CPP_DEFINES, *(f"-D{name}" for name in defines), f"-I{HERE / 'include'}", str(source),
+            str(output)]
+
+
 def compile_c(gcc, aspsx, source, cflags, obj, defines=()):
     """Builds obj from source with that GCC folder and ASPSX version, the macros named in defines set: None, or the
     error's last line"""
@@ -45,8 +51,7 @@ def compile_c(gcc, aspsx, source, cflags, obj, defines=()):
         rewritten = work / "source.maspsx.s"
         # (command, file fed to its standard input, file its standard output goes to)
         steps = [
-            ([str(gcc / "cpp"), *CPP_DEFINES, *(f"-D{name}" for name in defines), f"-I{HERE / 'include'}", str(source),
-              str(preprocessed)], None, None),
+            (cpp_command(gcc, source, preprocessed, defines), None, None),
             ([str(gcc / "cc1"), "-quiet", *cflags.split(), str(preprocessed), "-o", str(assembly)], None, None),
             ([sys.executable, str(MASPSX), f"--aspsx-version={aspsx}", *MASPSX_FLAGS], assembly, rewritten),
             ([AS, *ASFLAGS, "-o", str(obj), str(rewritten)], None, None),
