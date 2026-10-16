@@ -6888,8 +6888,8 @@
     ]
   },
   "func_800345C8": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 04:57",
+    "outcome": "landed",
+    "time": "2026-10-16 05:49",
     "summary": "0 of 72 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -6910,8 +6910,7 @@
         "turns": 32,
         "minutes": 1.4
       }
-    ],
-    "reason": "FAILED: [code=1] build/SCUS_941.54.elf \nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6dc): undefined reference to `.L80034658'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6e0): undefined reference to `.L80034668'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6e4): undefined reference to `.L800346B8'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6e8): undefined reference to `.L800346A0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6ec): undefined reference to `.L800346B0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6f0): undefined reference to `.L80034678'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6f4): undefined reference to `.L80034688'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6f8): undefined reference to `.L80034688'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x6fc): undefined reference to `.L80034688'"
+    ]
   },
   "func_80024A48": {
     "outcome": "gave up",
