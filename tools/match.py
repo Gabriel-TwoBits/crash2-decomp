@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 
 from probe_compiler import retail_assembly
-from psx_cc import AS, ASFLAGS, HERE
+from psx_cc import AS, ASFLAGS, DEFAULT_CFLAGS, HERE
 
 SCRATCH = HERE / "build" / "match"
 RECORDS = HERE / "config" / "match"
@@ -166,15 +166,22 @@ def skipped():
     return {line.split()[0] for line in SKIP.read_text().splitlines() if line.strip() and not line.startswith("#")}
 
 
+def given_up_elsewhere(entry):
+    """Whether a function was given up only under other compiler flags than the build's: worth another run"""
+    return entry["outcome"] == "gave up" and all(run.get("cflags") != DEFAULT_CFLAGS for run in entry.get("runs", []))
+
+
 def next_function():
-    """The smallest unmatched function of MIN_SIZE or more not tried yet, handwritten and skipped ones left out"""
-    tried = load_ledger()
+    """The next function to try, handwritten and skipped ones left out: one given up under other compiler flags first,
+    then the smallest unmatched one of MIN_SIZE or more not tried yet"""
+    ledger = load_ledger()
     skip = skipped()
-    candidates = sorted((size, name) for name, size in unmatched().items()
-                        if size >= MIN_SIZE and name not in tried and name not in skip and not handwritten(name))
+    candidates = sorted((name not in ledger, size, name) for name, size in unmatched().items()
+                        if size >= MIN_SIZE and name not in skip and not handwritten(name)
+                        and (name not in ledger or given_up_elsewhere(ledger[name])))
     if not candidates:
         return None
-    return candidates[0][1]
+    return candidates[0][2]
 
 
 def callers(name):
@@ -258,6 +265,13 @@ def prepare(name):
         "```",
         "",
     ]
+    # A run that gave it up before left its notes and best C: the next one starts from them
+    if (NOTES / f"{name}.md").exists() and (NOTES / f"{name}.c").exists():
+        shutil.copy2(NOTES / f"{name}.md", folder / "EARLIER.md")
+        shutil.copy2(NOTES / f"{name}.c", folder / "earlier.c")
+        brief += ["## An earlier run", "",
+                  "An earlier run gave it up, under other compiler flags: `EARLIER.md` has its notes, `earlier.c` its best C.",
+                  ""]
     (folder / "BRIEF.md").write_text("\n".join(brief))
     (folder / "CLAUDE.md").write_text(TEMPLATE.read_text().replace("$FUNCTION", name))
 
@@ -336,7 +350,8 @@ def run(name, minutes, model):
             agent.wait()
             timed_out = True
     wall = round((time.monotonic() - started) / SECONDS_PER_MINUTE, 1)
-    session = {"model": model or "default", "timed_out": timed_out, "wall_minutes": wall, **session_result(folder)}
+    session = {"model": model or "default", "cflags": DEFAULT_CFLAGS, "timed_out": timed_out, "wall_minutes": wall,
+               **session_result(folder)}
 
     candidate = folder / "match.c"
     if candidate.exists():

@@ -20,7 +20,8 @@ C89: declarations at the start of a block, no `//` comments, no C99 features.
 ## The loop
 
 1. `./score.sh base.c` once, unchanged: the baseline. m2c's draft may need small fixes to compile (types, `?` placeholders);
-   make only those before the first score.
+   make only those before the first score. When BRIEF.md has an earlier run, score its `earlier.c` too and start from the
+   closer of the two.
 2. Work out what the function does from the draft, its callers and callees (BRIEF.md), then write that C plainly. Fix the
    control flow first (the branches and loops line up), then the register and scheduling differences.
 3. Score after every change. Keep each attempt in its own file (`attempt1.c`, `attempt2.c`, ...), and copy the best so far
