@@ -636,7 +636,18 @@ s32 func_8003653C(void) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036598);
 
+#ifdef NON_MATCHING
+s32 func_800365E4(void) {
+    func_80035B70();
+    _card_info(0);
+    if (func_80035B3C() == 2) {
+        return 1;
+    }
+    return 0;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800365E4);
+#endif
 
 s32 func_80036628(void) {
     if (func_8003613C() != 0) {
