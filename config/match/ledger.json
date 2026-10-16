@@ -8753,9 +8753,9 @@
     "reason": "defines Unk80013BD8 otherwise than src/game/800123F0.c"
   },
   "func_800394C4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 11:42",
-    "summary": "99 of 112 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:57",
+    "summary": "2000 of 2000 trials agree, 1323 compared",
     "best": "attempt4.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
