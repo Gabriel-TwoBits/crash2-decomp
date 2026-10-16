@@ -5846,9 +5846,9 @@
     ]
   },
   "func_800170B4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 03:14",
-    "summary": "4 of 57 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:45",
+    "summary": "2000 of 2000 trials agree, 1035 compared",
     "best": "best.c",
     "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -9558,8 +9558,8 @@
     ]
   },
   "func_80016C58": {
-    "outcome": "gave up",
-    "time": "2026-10-16 14:13",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:45",
     "summary": "151 of 169 words differ",
     "best": "attempt2.c",
     "model": "claude-sonnet-5-5",
@@ -9582,7 +9582,8 @@
         "turns": 30,
         "minutes": 2.3
       }
-    ]
+    ],
+    "reason": "defines Unk80063458 otherwise than src/game/800158E0.c"
   },
   "func_800176DC": {
     "outcome": "gave up",
