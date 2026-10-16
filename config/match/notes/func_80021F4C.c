@@ -15,7 +15,7 @@ extern s32 D_80060820;
 extern s32 D_800608CC;
 extern s32 D_800608D4;
 extern s32 D_800608E0;
-extern s32 D_800608F8;
+extern volatile s32 D_800608F8;
 extern s32 D_80060914;
 
 void func_80021F4C(s32 *arg0, s32 arg1) {
@@ -27,6 +27,7 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
     s32 v;
     s32 t;
     s32 a0, a1, a2;
+    s32 *p;
 
     if (arg1 != 0) {
         D_8005B9AC = 0x1001;
@@ -42,11 +43,12 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
     } else if (s0 >= 0x201) {
         s0 = 0x200;
     }
+    p = &D_8005B9AC;
     D_80060914 = s0;
-    if (D_8005B9AC != 0x1001) {
-        s0 = func_800312CC(D_8005B9AC, s0, 0x80);
+    if (*p != 0x1001) {
+        s0 = func_800312CC(*p, s0, 0x80);
     }
-    D_8005B9AC = s0;
+    *p = s0;
     v = s0 - (ratan2(D_80060818 - D_8005BB3C, D_80060820 - D_8005BB44) & 0xFFF);
     if (v >= 0x801) {
         v -= 0x1000;
