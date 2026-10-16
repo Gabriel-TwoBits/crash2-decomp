@@ -111,7 +111,16 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80032B7C);
 
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80032F18);
 
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80033448);
+void func_80013E10(void *arg0);
+void func_80051078(s32 arg0, s32 arg1);
+
+void func_80033448(void *arg0) {
+    do { func_80051078(0, 1 << ((u16 *)arg0)[3]); } while (0);
+    ((s32 *)arg0)[1] &= ~8;
+    if (((void **)arg0)[6] != 0) {
+        func_80013E10(((void **)arg0)[6]);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800334A0);
 
