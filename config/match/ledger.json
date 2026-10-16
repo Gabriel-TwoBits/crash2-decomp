@@ -5795,8 +5795,8 @@
     ]
   },
   "func_80031578": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 03:15",
+    "outcome": "landed",
+    "time": "2026-10-16 03:17",
     "summary": "0 of 56 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5817,8 +5817,7 @@
         "turns": 19,
         "minutes": 1.0
       }
-    ],
-    "reason": "FAILED: [code=1] build/src/game/80031578.o "
+    ]
   },
   "func_800324A8": {
     "outcome": "landed",
