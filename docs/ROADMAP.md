@@ -151,6 +151,13 @@ $15.18 for Sonnet and $4.19 for Opus. 11 landed by themselves, 6 by hand once th
 typed `s32 *` (`D_8005F3C4`), one structure for `D_80062BB4` where two functions had their own, a callee given its
 argument (`func_80013968`, which `func_80013A54` called with none) and another its pointer result (`func_8001557C`).
 
+A tenth run tried again the two functions with a jump table given up before the split, then 25 more (0x140 to 0x170
+bytes), Opus on Sonnet's near misses: $10.33 for Sonnet and $6.61 for Opus. With its `switch` in m2c's draft,
+`func_800344B0` went from 63 words differing to a match; `func_80038F00` stays at 13. Of the 25, 10 matched: 7 landed by
+themselves, 3 by hand once their callees' signatures were the assembly's (`func_8003649C` takes an argument it doesn't
+read, `func_80030D74` returns `func_80030CD8`'s result and passes its second argument on, `func_80016F44` returns `s32`).
+`func_800344B0` returns nothing yet is declared `s32`: as `void`, GCC fills the delay slot before its jump otherwise.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
