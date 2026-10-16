@@ -9,6 +9,10 @@ and the result checked and landed by this script, never taken on the agent's wor
     python tools/match.py loop [--count N] [--minutes 30] [--model MODEL] [--retry-model MODEL]
     python tools/match.py report                   outcomes, models, costs, near misses
 
+With --equivalent, next, prepare, run, land and loop work on the equivalent track (docs/WORKFLOW.md): the agent writes
+behaviour-equivalent C (tools/match/EQUIVALENT.md), judged by tools/equiv.py, and land puts it into a NON_MATCHING block
+around the function's INCLUDE_ASM line, kept only when both builds hold and equiv.py agrees on the landed file.
+
 Each outcome goes into config/match/ledger.json, and each run's notes and C into config/match/notes/ (in git: what was
 learned about a function outlives its scratch directory). config/match/skip.txt lists functions not to try, with why.
 The agent may only read, edit inside its scratch directory and run its scratch's score.sh and permute.sh
@@ -25,7 +29,8 @@ import sys
 import time
 from pathlib import Path
 
-from probe_compiler import retail_assembly
+from equiv import DEFAULT_TRIALS, EXIT_UNSUPPORTED, GTE_OPCODES, OPCODE_SHIFT
+from probe_compiler import retail_assembly, retail_words
 from progress import EQUIVALENT
 from psx_cc import AS, ASFLAGS, DEFAULT_CFLAGS, HERE
 
@@ -35,6 +40,8 @@ LEDGER = RECORDS / "ledger.json"
 NOTES = RECORDS / "notes"
 SKIP = RECORDS / "skip.txt"
 TEMPLATE = HERE / "tools" / "match" / "CLAUDE.md"
+EQUIVALENT_TEMPLATE = HERE / "tools" / "match" / "EQUIVALENT.md"
+EQUIV = HERE / "tools" / "equiv.py"
 SOURCES = HERE / "src" / "game"
 GAME_H = HERE / "include" / "game.h"
 NONMATCHINGS = HERE / "asm" / "nonmatchings" / "game"
@@ -97,6 +104,32 @@ PROMPT = ("Match the function described in CLAUDE.md and BRIEF.md in this direct
           "You have {minutes:g} minutes; past them the session is stopped, so keep best.c current. "
           "score.sh ends with the minutes left. "
           "When you stop, leave match.c or best.c and NOTES.md as CLAUDE.md says.")
+EQUIVALENT_TOOLS = ["Read", "Edit", "Write", "Glob", "Grep", "Bash(./score.sh:*)"]
+EQUIVALENT_PROMPT = ("Write behaviour-equivalent C for the function described in CLAUDE.md and BRIEF.md in this directory, "
+                     "following CLAUDE.md's loop and rules. "
+                     "You have {minutes:g} minutes; past them the session is stopped, so keep best.c current. "
+                     "score.sh ends with the minutes left. "
+                     "When you stop, leave equivalent.c or best.c and NOTES.md as CLAUDE.md says.")
+# The equivalent track's ledger outcomes all start so; an equivalent run's records carry this mode
+EQUIVALENT_MODE = "equivalent"
+# Notes of an equivalent run sit beside the matching runs' as <function>.equivalent.md and .c
+EQUIVALENT_NOTES = ".equivalent"
+# The outcomes after which the matching loop is done with a function and an equivalent run may take it; a match that
+# didn't land ("matched, not landed") is fixed by hand instead
+GIVEN_UP = ("gave up", "rejected")
+# equiv.py's lines: its last, the trials agreeing without being compared, and the first disagreement
+AGREEING = re.compile(r"^(\d+) of (\d+) trials agree$", re.MULTILINE)
+UNCOMPARED = re.compile(r"^(\d+) trials agree by both (?:reaching the limit|taking the same exception)", re.MULTILINE)
+DISAGREEMENT = re.compile(r"^trial \d+ disagrees: ")
+UNSUPPORTED = "unsupported"
+# What an agent's run is checked with: equiv.py's defaults, as score.sh runs it
+RUN_SEED = 0
+# The landing check: more trials and another seed than the agent's score.sh
+LANDING_TRIALS = 2000
+LANDING_SEED = 1
+# TRADEOFF: a heuristic floor against vacuous agreement, when nearly every trial agrees only by both runs reaching the
+# limit or taking the same exception; a function whose paths random inputs rarely reach needs inputs built for it
+MIN_COMPARED_SHARE = 0.05
 
 
 def load_ledger():
@@ -168,6 +201,16 @@ def unmatched():
     return sizes
 
 
+def equivalents():
+    """The functions with an equivalent block in their file: still assembly in the build, their C under NON_MATCHING"""
+    return {name for source in sources() for name in EQUIVALENT.findall(source.read_text())}
+
+
+def uses_gte(name):
+    """Whether the function's code has a GTE instruction, which tools/equiv.py can't run"""
+    return any(word >> OPCODE_SHIFT in GTE_OPCODES for word in retail_words(name))
+
+
 def handwritten(name):
     """splat marks a function its disassembler finds not compiled (GTE code, register calling conventions)"""
     return HANDWRITTEN in assembly_of(name).read_text()
@@ -186,16 +229,42 @@ def given_up_elsewhere(entry):
 
 
 def next_function():
-    """The next function to try, handwritten and skipped ones left out: one given up under other compiler flags first,
-    then the smallest unmatched one of MIN_SIZE or more not tried yet"""
+    """The next function to try, handwritten, skipped and equivalent ones left out: one given up under other compiler
+    flags first, then the smallest unmatched one of MIN_SIZE or more not tried yet"""
     ledger = load_ledger()
     skip = skipped()
+    # An equivalent function went to that track because matching it cost too much: a match is left to `run FUNCTION`
+    equivalent = equivalents()
     candidates = sorted((name not in ledger, size, name) for name, size in unmatched().items()
-                        if size >= MIN_SIZE and name not in skip and not handwritten(name)
+                        if size >= MIN_SIZE and name not in skip and name not in equivalent and not handwritten(name)
                         and (name not in ledger or given_up_elsewhere(ledger[name])))
     if not candidates:
         return None
     return candidates[0][2]
+
+
+def tried_equivalent(entry):
+    """Whether the equivalent track has had the function: an equivalent run, or a landing of equivalent C"""
+    return (entry["outcome"].startswith(EQUIVALENT_MODE)
+            or any(attempt.get("mode") == EQUIVALENT_MODE for attempt in entry.get("runs", [])))
+
+
+def next_equivalent():
+    """The next function for an equivalent run: the smallest one the matching loop gave up on for good, still plain
+    INCLUDE_ASM, not skipped, not tried on the equivalent track, and without GTE instructions"""
+    ledger = load_ledger()
+    skip = skipped()
+    equivalent = equivalents()
+    candidates = sorted((size, name) for name, size in unmatched().items()
+                        if name in ledger and ledger[name]["outcome"] in GIVEN_UP and not given_up_elsewhere(ledger[name])
+                        and not tried_equivalent(ledger[name]) and name not in skip and name not in equivalent)
+    # The GTE check reads the split, so only as far as the first candidate without
+    for _, name in candidates:
+        if not uses_gte(name):
+            return name
+        else:
+            continue
+    return None
 
 
 def callers(name):
@@ -224,7 +293,8 @@ def m2c_context(folder, source):
     return context
 
 
-def prepare(name):
+def prepare(name, equivalent=False):
+    """The function's scratch directory, for a matching run or, with equivalent, an equivalent one"""
     folder = SCRATCH / name
     if folder.exists():
         shutil.rmtree(folder)
@@ -284,27 +354,44 @@ def prepare(name):
         "```",
         "",
     ]
-    # A run that gave it up before left its notes and best C: the next one starts from them
-    if (NOTES / f"{name}.md").exists() and (NOTES / f"{name}.c").exists():
-        shutil.copy2(NOTES / f"{name}.md", folder / "EARLIER.md")
-        shutil.copy2(NOTES / f"{name}.c", folder / "earlier.c")
-        brief += ["## An earlier run", "",
-                  "An earlier run gave it up, under other compiler flags: `EARLIER.md` has its notes, `earlier.c` its best C.",
-                  ""]
+    # A run that gave it up before left its notes and best C: the next one starts from them. An equivalent run starts
+    # from an earlier equivalent run's, else from the matching run's
+    earlier = f"{name}{EQUIVALENT_NOTES}" if equivalent else name
+    if equivalent and not (NOTES / f"{earlier}.c").exists():
+        earlier = name
+    if (NOTES / f"{earlier}.md").exists() and (NOTES / f"{earlier}.c").exists():
+        shutil.copy2(NOTES / f"{earlier}.md", folder / "EARLIER.md")
+        shutil.copy2(NOTES / f"{earlier}.c", folder / "earlier.c")
+        if not equivalent:
+            told = "An earlier run gave it up, under other compiler flags: `EARLIER.md` has its notes, `earlier.c` its best C."
+        elif earlier != name:
+            told = "An earlier equivalent run: `EARLIER.md` has its notes, `earlier.c` its best C."
+        else:
+            told = ("The matching loop gave it up: `EARLIER.md` has its notes, `earlier.c` its closest C, which compiles "
+                    "to other bytes and may behave otherwise.")
+        brief += ["## An earlier run", "", told, ""]
     (folder / "BRIEF.md").write_text("\n".join(brief))
-    (folder / "CLAUDE.md").write_text(TEMPLATE.read_text().replace("$FUNCTION", name))
+    template = EQUIVALENT_TEMPLATE if equivalent else TEMPLATE
+    (folder / "CLAUDE.md").write_text(template.read_text().replace("$FUNCTION", name))
 
     python = sys.executable
-    scripts = {
-        "score.sh": (f'#!/bin/sh\n"{python}" "{HERE / "tools" / "probe_compiler.py"}" "$1" {name} --diff 2.7.2\n'
-                     'status=$?\n'
-                     f'deadline="$(dirname "$0")/{DEADLINE}"\n'
-                     'if [ -f "$deadline" ]; then\n'
-                     f'    echo "$(( ($(cat "$deadline") - $(date +%s)) / {SECONDS_PER_MINUTE} )) minutes left" >&2\n'
-                     'fi\n'
-                     'exit $status\n'),
-        "permute.sh": f'#!/bin/sh\nexec "{python}" "{HERE / "tools" / "permute.py"}" "$1" {name} --minutes "${{2:-5}}"\n',
-    }
+    minutes_left = (f'deadline="$(dirname "$0")/{DEADLINE}"\n'
+                    'if [ -f "$deadline" ]; then\n'
+                    f'    echo "$(( ($(cat "$deadline") - $(date +%s)) / {SECONDS_PER_MINUTE} )) minutes left" >&2\n'
+                    'fi\n'
+                    'exit $status\n')
+    if equivalent:
+        # Arguments after the file go to equiv.py: --seed N, --trials N
+        scripts = {
+            "score.sh": (f'#!/bin/sh\nsource="$1"\nshift\n"{python}" "{EQUIV}" "$source" {name} "$@"\nstatus=$?\n'
+                         + minutes_left),
+        }
+    else:
+        scripts = {
+            "score.sh": (f'#!/bin/sh\n"{python}" "{HERE / "tools" / "probe_compiler.py"}" "$1" {name} --diff 2.7.2\n'
+                         'status=$?\n' + minutes_left),
+            "permute.sh": f'#!/bin/sh\nexec "{python}" "{HERE / "tools" / "permute.py"}" "$1" {name} --minutes "${{2:-5}}"\n',
+        }
     for script, text in scripts.items():
         (folder / script).write_text(text)
         (folder / script).chmod(EXECUTABLE_MODE)
@@ -348,18 +435,20 @@ def best_attempt(folder):
     return best
 
 
-def keep_notes(name, folder, source):
-    """The run's NOTES.md and its C (the match or the best attempt) into config/match/notes/"""
+def keep_notes(name, folder, source, stem=None):
+    """The run's NOTES.md and its C (the match or the best attempt) into config/match/notes/, as <stem>.md and .c (the
+    function's name by default)"""
+    stem = stem or name
     NOTES.mkdir(parents=True, exist_ok=True)
     if (folder / "NOTES.md").exists():
-        (NOTES / f"{name}.md").write_text(portable((folder / "NOTES.md").read_text()))
+        (NOTES / f"{stem}.md").write_text(portable((folder / "NOTES.md").read_text()))
     if source is not None and (folder / source).exists():
-        (NOTES / f"{name}.c").write_text(portable((folder / source).read_text()))
+        (NOTES / f"{stem}.c").write_text(portable((folder / source).read_text()))
 
 
-def run(name, minutes, model):
-    folder = prepare(name)
-    command = ["claude", "-p", PROMPT.format(minutes=minutes), "--permission-mode", "acceptEdits", "--allowedTools", *AGENT_TOOLS,
+def agent_session(folder, prompt, tools, minutes, model):
+    """Headless Claude Code in the scratch directory until it stops or its time runs out: what the ledger keeps of it"""
+    command = ["claude", "-p", prompt, "--permission-mode", "acceptEdits", "--allowedTools", *tools,
                "--output-format", "stream-json", "--verbose", "--no-session-persistence"]
     if model:
         command += ["--model", model]
@@ -377,8 +466,13 @@ def run(name, minutes, model):
             timed_out = True
     (folder / DEADLINE).unlink()
     wall = round((time.monotonic() - started) / SECONDS_PER_MINUTE, 1)
-    session = {"model": model or "default", "cflags": DEFAULT_CFLAGS, "timed_out": timed_out, "wall_minutes": wall,
-               **session_result(folder)}
+    return {"model": model or "default", "cflags": DEFAULT_CFLAGS, "timed_out": timed_out, "wall_minutes": wall,
+            **session_result(folder)}
+
+
+def run(name, minutes, model):
+    folder = prepare(name)
+    session = agent_session(folder, PROMPT.format(minutes=minutes), AGENT_TOOLS, minutes, model)
 
     candidate = folder / "match.c"
     if candidate.exists():
@@ -395,6 +489,67 @@ def run(name, minutes, model):
     best, summary = best_attempt(folder)
     keep_notes(name, folder, best)
     record(name, "gave up", summary=summary, best=best, **session)
+    return False
+
+
+def unfit(text):
+    """Why a candidate's C can't go into a file as it is, or None"""
+    macro = M2C_MACRO.search(text)
+    if macro is not None:
+        return f"uses m2c's {macro.group(0)}: real types needed"
+    elif INLINE_ASSEMBLY.search(text):
+        return "inline assembly"
+    elif INCLUDED.search(text):
+        return "an INCLUDE_ASM line"
+    else:
+        return None
+
+
+def equivalence(source, name, trials, seed):
+    """tools/equiv.py's verdict on a C file: (whether every trial agrees, the trials compared, its summary or why not).
+    Compared are the agreeing trials but those agreeing by both runs reaching the limit or taking the same exception"""
+    result = subprocess.run([sys.executable, str(EQUIV), str(source), name, "--trials", str(trials), "--seed", str(seed)],
+                            cwd=HERE, capture_output=True, text=True)
+    lines = (result.stdout + result.stderr).strip().splitlines()
+    agreeing = AGREEING.search(result.stdout)
+    if result.returncode == EXIT_UNSUPPORTED:
+        return False, 0, next((line for line in lines if line.startswith(UNSUPPORTED)), UNSUPPORTED)
+    elif agreeing is None:
+        # It stopped before the trials: the C doesn't compile, or names what the retail executable doesn't have
+        return False, 0, "\n".join(lines[-ERROR_LINES:]) or f"equiv.py exited with status {result.returncode}"
+    elif result.returncode == 0 and agreeing.group(1) == agreeing.group(2):
+        compared = int(agreeing.group(2)) - sum(int(count) for count in UNCOMPARED.findall(result.stdout))
+        return True, compared, f"{agreeing.group(0)}, {compared} compared"
+    else:
+        # The first disagreement's trial and its first difference, then the count
+        start = next((index for index, line in enumerate(lines) if DISAGREEMENT.match(line)), None)
+        shown = [] if start is None else [line.strip() for line in lines[start:start + 2]]
+        return False, 0, "\n".join(shown + [agreeing.group(0)])
+
+
+def run_equivalent(name, minutes, model):
+    """An agent run on the equivalent track; True when its equivalent.c agrees on every trial of equiv.py's default run"""
+    folder = prepare(name, equivalent=True)
+    session = {"mode": EQUIVALENT_MODE,
+               **agent_session(folder, EQUIVALENT_PROMPT.format(minutes=minutes), EQUIVALENT_TOOLS, minutes, model)}
+    stem = f"{name}{EQUIVALENT_NOTES}"
+    candidate = folder / "equivalent.c"
+    if candidate.exists():
+        keep_notes(name, folder, candidate.name, stem)
+        reason = unfit(candidate.read_text())
+        if reason is not None:
+            record(name, "equivalent, rejected", reason=f"equivalent.c: {reason}", **session)
+            return False
+        agrees, _, summary = equivalence(candidate, name, DEFAULT_TRIALS, RUN_SEED)
+        if agrees:
+            record(name, "equivalent, agrees", summary=summary, **session)
+            return True
+        record(name, "equivalent, rejected", reason=f"equivalent.c disagrees: {summary}", **session)
+        return False
+    best = "best.c" if (folder / "best.c").exists() else None
+    keep_notes(name, folder, best, stem)
+    summary = "no attempt kept" if best is None else equivalence(folder / best, name, DEFAULT_TRIALS, RUN_SEED)[2]
+    record(name, "equivalent, gave up", summary=summary, best=best, **session)
     return False
 
 
@@ -446,23 +601,37 @@ def with_prototypes(header, added):
     return header[:start] + "\n".join(lines) + "\n" + header[end:]
 
 
-def land(name):
-    """match.c's declarations and function in place of the INCLUDE_ASM line; kept only when the build's SHA-1 holds"""
-    candidate = SCRATCH / name / "match.c"
-    if not candidate.exists():
-        candidate = NOTES / f"{name}.c"
-    if not candidate.exists():
-        sys.exit(f"no match.c for {name}")
-    text = candidate.read_text()
-    macro = M2C_MACRO.search(text)
-    if macro is not None:
-        record(name, "matched, not landed", reason=f"uses m2c's {macro.group(0)}: real types needed")
-        return False
-    source, include = source_of(name)
-    original = source.read_text()
+class NotLanded(Exception):
+    """Why a candidate can't go into its file as it is; blocked when it defines data the file doesn't"""
+
+    def __init__(self, reason, blocked=False):
+        super().__init__(reason)
+        self.reason = reason
+        self.blocked = blocked
+
+
+def placement(name, text, equivalent):
+    """(C file, its new text, include/game.h's new text) with the candidate's declarations and function in place of the
+    function's INCLUDE_ASM line, or with equivalent in a NON_MATCHING block around that line. An equivalent block the
+    function already has goes whole, with what it defined. Raises NotLanded when the candidate can't go in as it is"""
+    source, current = source_of(name)
+    relative = source.relative_to(HERE)
+    include = INCLUDED.search(current).group(0)
+    original = source.read_text().replace(current, include, 1)
     insertion = original.index(include)
-    # Above the function, the file as it is; below it, the file without the definitions match.c moves up
+    # Above the function, the file as it is; below it, the file without the definitions the candidate moves up
     above, below = original[:insertion], original[insertion:]
+    # Other functions' equivalent blocks: what they define is in the nonmatching build only
+    blocks = [range(match.start(), match.end()) for match in EQUIVALENT.finditer(original)]
+
+    def moved_up(definition, what):
+        """below without a definition the candidate moves up to the function. Into a NON_MATCHING block, only out of
+        another one: from anywhere else the default build would lose it"""
+        if equivalent and not any(definition.start() in block for block in blocks):
+            raise NotLanded(f"{relative} defines {what} further down: moved into the NON_MATCHING block, it would leave "
+                            f"the default build")
+        return below.replace(definition.group(0), "", 1)
+
     # The original compiler addresses a variable through $gp only in the file that defines it (docs/COMPILER.md). A
     # definition the file already has goes, or moves up to this function when the file has it further down; an
     # uninitialised one stays, a common the split's symbol resolves; an initialised one the file doesn't have is data of
@@ -471,21 +640,19 @@ def land(name):
     for definition in DATA_DEFINITION.finditer(text):
         symbol, initialiser = definition.group(1), definition.group(2)
         if symbol in defined and declarator(defined[symbol]) != declarator(definition):
-            record(name, "matched, not landed", reason=f"declares {symbol} as `{declarator(definition)}`, "
-                                                        f"{source.relative_to(HERE)} as `{declarator(defined[symbol])}`")
-            return False
+            raise NotLanded(f"declares {symbol} as `{declarator(definition)}`, {relative} as "
+                            f"`{declarator(defined[symbol])}`")
         elif symbol in defined and defined[symbol].start() < insertion:
             text = text.replace(definition.group(0), "")
         elif symbol in defined:
-            below = below.replace(defined[symbol].group(0), "", 1)
+            below = moved_up(defined[symbol], symbol)
         elif initialiser is not None:
-            record(name, "matched, blocked", reason=f"defines {symbol}, which {source.relative_to(HERE)} doesn't")
-            return False
+            raise NotLanded(f"defines {symbol}, which {relative} doesn't", blocked=True)
         else:
             # A common: the split's symbol is the definition
             continue
-    # A structure the file defines: match.c's copy of it goes, or moves up to this function when the file has it further
-    # down, and a different one can't land
+    # A structure the file defines: the candidate's copy of it goes, or moves up to this function when the file has it
+    # further down, and a different one can't land
     types = {type_name(match): match for match in TYPE_DEFINITION.finditer(original)}
     for definition in TYPE_DEFINITION.finditer(text):
         kind = type_name(definition)
@@ -493,12 +660,11 @@ def land(name):
             # A structure of its own: it lands with the function
             continue
         elif " ".join(types[kind].group(0).split()) != " ".join(definition.group(0).split()):
-            record(name, "matched, not landed", reason=f"defines {kind} otherwise than {source.relative_to(HERE)}")
-            return False
+            raise NotLanded(f"defines {kind} otherwise than {relative}")
         elif types[kind].start() < insertion:
             text = text.replace(definition.group(0), "")
         else:
-            below = below.replace(types[kind].group(0), "", 1)
+            below = moved_up(types[kind], kind)
     # One prototype per game function, in include/game.h: one it has goes, a new one of basic types moves there
     header = GAME_H.read_text()
     declared = {prototype.group("name"): prototype.group("declaration") for prototype in PROTOTYPE.finditer(header)}
@@ -509,18 +675,15 @@ def land(name):
             # The function's own forward declaration stays with it
             continue
         elif callee in declared and signature_of(prototype.group("declaration")) != signature_of(declared[callee]):
-            # match.c matched with its own prototype; include/game.h's would compile the call otherwise
-            record(name, "matched, not landed", reason=f"declares `{prototype.group('declaration')}`, include/game.h "
-                                                        f"`{declared[callee]}`")
-            return False
+            # The candidate was judged with its own prototype; include/game.h's would compile the call otherwise
+            raise NotLanded(f"declares `{prototype.group('declaration')}`, include/game.h `{declared[callee]}`")
         elif callee in declared:
             text = text.replace(prototype.group(0), "")
         elif int(callee[FUNCTION_ADDRESS_START:], HEXADECIMAL) >= SDK_START:
             # An SDK function not identified yet: include/sdk.h's once it is
             continue
         elif UNCHECKED_PARAMETERS.search(prototype.group("declaration")):
-            record(name, "matched, not landed", reason=f"`{prototype.group('declaration')}` has no parameter list")
-            return False
+            raise NotLanded(f"`{prototype.group('declaration')}` has no parameter list")
         elif basic(prototype_of(prototype.group("declaration")), callee):
             added.append(prototype_of(prototype.group("declaration")))
             text = text.replace(prototype.group(0), "")
@@ -550,25 +713,86 @@ def land(name):
     # A top-level line ending in `;` is a declaration
     kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line == line.lstrip() and line.endswith(";") and line in present)]
-    source.write_text(above + below.replace(include, "\n".join(kept).strip() + "\n", 1))
-    GAME_H.write_text(updated_header)
+    body = "\n".join(kept).strip() + "\n"
+    if equivalent:
+        body = f"#ifdef NON_MATCHING\n{body}#else\n{include}#endif\n"
+    updated = above + below.replace(include, body, 1)
+    if equivalent and name not in EQUIVALENT.findall(updated):
+        raise NotLanded("a conditional of its own (#if, #else, #endif), which the NON_MATCHING block can't hold")
+    return source, updated, updated_header
 
-    steps = [[sys.executable, "configure.py"], [str(HERE / ".venv" / "bin" / "ninja")]]
+
+def build(steps):
+    """Runs each step from the root: None when all pass, else the failing step's cause"""
     for step in steps:
         result = subprocess.run(step, cwd=HERE, capture_output=True, text=True, env={**os.environ, "LC_ALL": "C"})
         if result.returncode != 0:
-            source.write_text(original)
-            GAME_H.write_text(header)
-            subprocess.run([sys.executable, "configure.py"], cwd=HERE, capture_output=True)
             lines = (result.stdout + result.stderr).strip().splitlines()
             # The compiler's and the linker's own lines first: ninja's progress lines bury them
             causes = [line for line in lines if COMPILER_ERROR.search(line)]
-            error = "\n".join((causes or lines[-ERROR_LINES:])[:ERROR_LINES])
-            record(name, "matched, not landed", reason=error)
-            return False
-    record(name, "landed")
+            return "\n".join((causes or lines[-ERROR_LINES:])[:ERROR_LINES])
+        else:
+            continue
+    return None
+
+
+def land(name, equivalent=False):
+    """The candidate's declarations and function in place of the INCLUDE_ASM line, committed only when it holds. A match
+    (match.c) holds when the build's SHA-1 does; equivalent C (equivalent.c, else the notes' C) goes into a NON_MATCHING
+    block and holds when the SHA-1 does, the nonmatching build builds and tools/equiv.py agrees on the landed file"""
+    if equivalent:
+        candidates = [SCRATCH / name / "equivalent.c", NOTES / f"{name}{EQUIVALENT_NOTES}.c", NOTES / f"{name}.c"]
+        refused = "equivalent, not landed"
+    else:
+        candidates = [SCRATCH / name / "match.c", NOTES / f"{name}.c"]
+        refused = "matched, not landed"
+    candidate = next((path for path in candidates if path.exists()), None)
+    if candidate is None:
+        sys.exit(f"no {candidates[0].name} for {name}")
+    reason = unfit(candidate.read_text())
+    if reason is not None:
+        record(name, refused, reason=reason)
+        return False
+    try:
+        source, updated, updated_header = placement(name, candidate.read_text(), equivalent)
+    except NotLanded as refusal:
+        record(name, "matched, blocked" if refusal.blocked and not equivalent else refused, reason=refusal.reason)
+        return False
+    original = source.read_text()
+    header = GAME_H.read_text()
+    source.write_text(updated)
+    GAME_H.write_text(updated_header)
+
+    ninja = str(HERE / ".venv" / "bin" / "ninja")
+    steps = [[sys.executable, "configure.py"], [ninja]]
+    if equivalent:
+        steps.append([ninja, "nonmatching"])
+    error = build(steps)
+    summary = None
+    if error is None and equivalent:
+        # The landed file, not the candidate: its own definitions and include/game.h's prototypes compile the function
+        agrees, compared, summary = equivalence(source, name, LANDING_TRIALS, LANDING_SEED)
+        if not agrees:
+            error = summary
+        elif compared < MIN_COMPARED_SHARE * LANDING_TRIALS:
+            error = f"{summary}: fewer than {MIN_COMPARED_SHARE:.0%} of the trials compared"
+        else:
+            # Every trial agrees, enough of them compared
+            pass
+    if error is not None:
+        source.write_text(original)
+        GAME_H.write_text(header)
+        subprocess.run([sys.executable, "configure.py"], cwd=HERE, capture_output=True)
+        record(name, refused, reason=error)
+        return False
+    if equivalent:
+        record(name, EQUIVALENT_MODE, summary=summary)
+        message = f"feat: add equivalent C for {name}"
+    else:
+        record(name, "landed")
+        message = f"feat: match {name}"
     subprocess.run(["git", "add", str(source), str(GAME_H), str(RECORDS)], cwd=HERE, check=True)
-    commit(f"feat: match {name}")
+    commit(message)
     return True
 
 
@@ -603,13 +827,18 @@ def report():
     for name, entry in sorted(ledger.items()):
         outcomes[entry["outcome"]] = outcomes.get(entry["outcome"], 0) + 1
         for attempt in entry.get("runs", []):
-            stats = models.setdefault(attempt["model"], {"runs": 0, "matched": 0, "cost_usd": 0.0})
+            # Matching and equivalent runs apart: an equivalent run succeeds when its C agrees
+            if attempt.get("mode") == EQUIVALENT_MODE:
+                key, success = f"{attempt['model']}, {EQUIVALENT_MODE}", "equivalent, agrees"
+            else:
+                key, success = attempt["model"], "matched"
+            stats = models.setdefault(key, {"runs": 0, "succeeded": 0, "cost_usd": 0.0, "success": success})
             stats["runs"] += 1
-            stats["matched"] += attempt["outcome"] == "matched"
+            stats["succeeded"] += attempt["outcome"] == success
             stats["cost_usd"] += attempt.get("cost_usd") or 0
         if near_miss(entry):
             near.append(f"{name} ({entry['summary']})")
-        elif entry["outcome"] in ("matched, blocked", "matched, not landed"):
+        elif entry["outcome"] in ("matched, blocked", "matched, not landed", "equivalent, not landed"):
             # The reason's first compiler error says more than ninja's closing line
             lines = entry.get("reason", "").splitlines()
             errors = [line for line in lines if re.search(r"\.c:\d+", line)]
@@ -624,8 +853,8 @@ def report():
             continue
     print("outcomes: " + ", ".join(f"{outcome} {count}" for outcome, count in sorted(outcomes.items())))
     for model, stats in sorted(models.items()):
-        print(f"{model}: {stats['matched']} matched of {stats['runs']} runs, ${stats['cost_usd']:.2f}")
-    print("near misses and matches waiting to land:")
+        print(f"{model}: {stats['succeeded']} {stats['success']} of {stats['runs']} runs, ${stats['cost_usd']:.2f}")
+    print("near misses and C waiting to land:")
     for line in near:
         print(f"  {line}")
 
@@ -638,12 +867,31 @@ def main():
     parser.add_argument("--model", help="the agent's model (default: Claude Code's)")
     parser.add_argument("--count", type=int, default=1, help="loop: how many functions")
     parser.add_argument("--retry-model", help="loop: a second model for near misses of the first")
+    parser.add_argument("--equivalent", action="store_true",
+                        help="next, prepare, run, land, loop: the equivalent track (behaviour-equivalent C under NON_MATCHING)")
     arguments = parser.parse_args()
 
-    if arguments.command == "next":
+    if arguments.command == "next" and arguments.equivalent:
+        print(next_equivalent() or "nothing left to try")
+    elif arguments.command == "next":
         print(next_function() or "nothing left to try")
     elif arguments.command == "report":
         report()
+    elif arguments.command == "loop" and arguments.equivalent:
+        if arguments.retry_model:
+            sys.exit("--retry-model retries near misses of matching runs: not with --equivalent")
+        for _ in range(arguments.count):
+            name = next_equivalent()
+            if name is None:
+                print("nothing left to try")
+                break
+            if run_equivalent(name, arguments.minutes, arguments.model):
+                land(name, equivalent=True)
+            else:
+                # Its C doesn't agree, or there is none: the ledger has why
+                pass
+            print(f"{name}: {load_ledger()[name]['outcome']}", flush=True)
+        commit_records()
     elif arguments.command == "loop":
         for _ in range(arguments.count):
             name = next_function()
@@ -660,13 +908,17 @@ def main():
     elif arguments.function is None:
         sys.exit(f"{arguments.command} needs a FUNCTION")
     elif arguments.command == "prepare":
-        print(prepare(arguments.function))
+        print(prepare(arguments.function, arguments.equivalent))
+    elif arguments.command == "run" and arguments.equivalent:
+        agrees = run_equivalent(arguments.function, arguments.minutes, arguments.model)
+        print(f"{arguments.function}: {load_ledger()[arguments.function]}")
+        sys.exit(0 if agrees else 1)
     elif arguments.command == "run":
         matched = run(arguments.function, arguments.minutes, arguments.model)
         print(f"{arguments.function}: {load_ledger()[arguments.function]}")
         sys.exit(0 if matched else 1)
     elif arguments.command == "land":
-        sys.exit(0 if land(arguments.function) else 1)
+        sys.exit(0 if land(arguments.function, arguments.equivalent) else 1)
     else:
         sys.exit(f"unknown command {arguments.command}")
 
