@@ -329,6 +329,11 @@ def prepare(name, equivalent=False):
     declared += [" ".join(definition.group("declaration").split()) + ";" for path in sources()
                  for definition in DEFINITION.finditer(path.read_text()) if definition.group("name") in calls]
     declared = list(dict.fromkeys(declared))
+    # What the file and include/game.h declare of the function and its data, at the top level (a body's lines are
+    # indented): its file compiles the C with them
+    own = [line for line in context.read_text().splitlines()
+           if line == line.lstrip() and line.rstrip().endswith(";")
+           and any(re.search(rf"\b{symbol}\b", line) for symbol in [name, *symbols])]
     brief = [
         f"# {name}",
         "",
@@ -342,6 +347,12 @@ def prepare(name, equivalent=False):
         "",
         "```c",
         "\n".join(declared) or "(none)",
+        "```",
+        "",
+        f"## Declarations include/game.h and {source} already have for it and its data",
+        "",
+        "```c",
+        "\n".join(dict.fromkeys(own)) or "(none)",
         "```",
         "",
         "## m2c's draft (base.c)",
