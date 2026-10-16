@@ -803,7 +803,16 @@ s32 func_8003653C(void) {
     return 1;
 }
 
+#ifdef NON_MATCHING
+extern char D_8005C500[];
+
+
+s32 func_80036598(s32 arg0) {
+    return strcmp(D_8005C500, (char *)(arg0 * 0x2A4 + (int)D_8005F264) + 0x700) == 0;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036598);
+#endif
 
 #ifdef NON_MATCHING
 s32 func_800365E4(void) {

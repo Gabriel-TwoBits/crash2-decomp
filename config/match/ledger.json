@@ -2331,9 +2331,9 @@
     ]
   },
   "func_80036598": {
-    "outcome": "gave up",
-    "time": "2026-10-15 23:38",
-    "summary": "2 of 19 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:56",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "a3.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
