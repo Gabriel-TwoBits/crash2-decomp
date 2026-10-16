@@ -23,7 +23,6 @@ import signal
 import subprocess
 import sys
 import time
-import uuid
 from pathlib import Path
 
 from probe_compiler import retail_assembly
@@ -53,7 +52,6 @@ MATCHED = re.compile(r"^0 of \d+ words differ$", re.MULTILINE)
 INLINE_ASSEMBLY = re.compile(r"\b(__asm__|asm)\s*\(")
 HANDWRITTEN = "/* Handwritten function */"
 DIFFERING = re.compile(r"^(\d+) of (\d+) words differ$", re.MULTILINE)
-SHAPE = re.compile(r"^(\d+) of \d+ instructions without a counterpart", re.MULTILINE)
 M2C_MACRO = re.compile(r"\bM2C_\w+")
 # A top-level definition of a split data symbol (not an extern declaration), with its initialiser if it has one
 DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D_[0-9A-F]{8})\b[^(;=]*(=[^;]*)?;\n?",
@@ -98,12 +96,6 @@ PROMPT = ("Match the function described in CLAUDE.md and BRIEF.md in this direct
           "You have {minutes:g} minutes; past them the session is stopped, so keep best.c current. "
           "score.sh ends with the minutes left. "
           "When you stop, leave match.c or best.c and NOTES.md as CLAUDE.md says.")
-# A session that stops unmatched with its shape still off and this much time left is sent back to work, up to MAX_RESUMES
-RESUME_MIN_MINUTES = 3
-MAX_RESUMES = 3
-RESUME_PROMPT = ("Not matched yet, with {minutes:g} minutes left: the best attempt has {shape} instructions without a "
-                 "counterpart ({summary}). Keep reworking the shape as CLAUDE.md's step 4 says, with forms not tried yet, "
-                 "and keep best.c and NOTES.md current.")
 
 
 def load_ledger():
@@ -321,8 +313,7 @@ def score(folder, source):
 
 
 def session_result(folder):
-    """The agent session's own summary from its log, summed over its resumptions: cost, turns, duration (an empty dict if
-    it never finished)"""
+    """The agent session's own summary from its log: cost, turns, duration (an empty dict if it never finished)"""
     found = {}
     for line in (folder / "session.jsonl").read_text().splitlines():
         try:
@@ -330,9 +321,8 @@ def session_result(folder):
         except json.JSONDecodeError:
             continue
         if event.get("type") == "result":
-            found = {"cost_usd": found.get("cost_usd", 0) + (event.get("total_cost_usd") or 0),
-                     "turns": found.get("turns", 0) + (event.get("num_turns") or 0),
-                     "minutes": round(found.get("minutes", 0) + event.get("duration_ms", 0) / MILLISECONDS_PER_MINUTE, 1)}
+            found = {"cost_usd": event.get("total_cost_usd"), "turns": event.get("num_turns"),
+                     "minutes": round(event.get("duration_ms", 0) / MILLISECONDS_PER_MINUTE, 1)}
     return found
 
 
@@ -351,17 +341,6 @@ def best_attempt(folder):
     return best
 
 
-def shape_left(folder, source):
-    """How many of the target's instructions a scratch C file leaves without a counterpart; None if it doesn't compile"""
-    if source is None:
-        return None
-    result = subprocess.run([str(folder / "score.sh"), str(folder / source)], capture_output=True, text=True)
-    found = SHAPE.search(result.stdout)
-    if found is None:
-        return None
-    return int(found.group(1))
-
-
 def keep_notes(name, folder, source):
     """The run's NOTES.md and its C (the match or the best attempt) into config/match/notes/"""
     NOTES.mkdir(parents=True, exist_ok=True)
@@ -373,43 +352,26 @@ def keep_notes(name, folder, source):
 
 def run(name, minutes, model):
     folder = prepare(name)
-    options = ["--permission-mode", "acceptEdits", "--allowedTools", *AGENT_TOOLS, "--output-format", "stream-json", "--verbose"]
+    command = ["claude", "-p", PROMPT.format(minutes=minutes), "--permission-mode", "acceptEdits", "--allowedTools", *AGENT_TOOLS,
+               "--output-format", "stream-json", "--verbose", "--no-session-persistence"]
     if model:
-        options += ["--model", model]
-    session_id = str(uuid.uuid4())
-    turn = ["-p", PROMPT.format(minutes=minutes), "--session-id", session_id]
+        command += ["--model", model]
     timed_out = False
-    resumes = 0
     started = time.monotonic()
-    deadline = started + minutes * SECONDS_PER_MINUTE
     (folder / DEADLINE).write_text(str(int(time.time() + minutes * SECONDS_PER_MINUTE)))
     with open(folder / "session.jsonl", "w") as log:
-        while True:
-            # Its own process group, so a time limit stops the agent and whatever it started
-            agent = subprocess.Popen(["claude", *turn, *options], cwd=folder, stdout=log, stderr=subprocess.STDOUT,
-                                     start_new_session=True)
-            try:
-                agent.wait(timeout=max(deadline - time.monotonic(), 0))
-            except subprocess.TimeoutExpired:
-                os.killpg(agent.pid, signal.SIGTERM)
-                agent.wait()
-                timed_out = True
-                break
-            left = (deadline - time.monotonic()) / SECONDS_PER_MINUTE
-            if (folder / "match.c").exists() or resumes >= MAX_RESUMES or left < RESUME_MIN_MINUTES:
-                break
-            best, summary = best_attempt(folder)
-            shape = shape_left(folder, best)
-            if shape is None or shape == 0:
-                # Nothing compiled, or only registers differ: the agent's own stop (permuter included) stands
-                break
-            else:
-                resumes += 1
-                turn = ["-p", RESUME_PROMPT.format(minutes=int(left), shape=shape, summary=summary), "--resume", session_id]
+        # Its own process group, so a time limit stops the agent and whatever it started
+        agent = subprocess.Popen(command, cwd=folder, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            agent.wait(timeout=minutes * SECONDS_PER_MINUTE)
+        except subprocess.TimeoutExpired:
+            os.killpg(agent.pid, signal.SIGTERM)
+            agent.wait()
+            timed_out = True
     (folder / DEADLINE).unlink()
     wall = round((time.monotonic() - started) / SECONDS_PER_MINUTE, 1)
     session = {"model": model or "default", "cflags": DEFAULT_CFLAGS, "timed_out": timed_out, "wall_minutes": wall,
-               "resumes": resumes, **session_result(folder)}
+               **session_result(folder)}
 
     candidate = folder / "match.c"
     if candidate.exists():
