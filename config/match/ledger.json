@@ -6174,8 +6174,8 @@
     ]
   },
   "func_80022224": {
-    "outcome": "gave up",
-    "time": "2026-10-16 03:49",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:49",
     "summary": "47 of 60 words differ",
     "best": "attempt2.c",
     "model": "claude-sonnet-5-5",
@@ -6198,7 +6198,8 @@
         "turns": 21,
         "minutes": 1.1
       }
-    ]
+    ],
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/80020A24.o \nsrc/game/80020A24.c:109: conflicting types for `D_800608D8'"
   },
   "func_800111B0": {
     "outcome": "equivalent",
@@ -8370,9 +8371,9 @@
     "reason": "src/game/80015614.c defines D_8005F3DC further down: moved into the NON_MATCHING block, it would leave the default build"
   },
   "func_80022314": {
-    "outcome": "gave up",
-    "time": "2026-10-16 13:07",
-    "summary": "50 of 99 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:49",
+    "summary": "2000 of 2000 trials agree, 1159 compared",
     "best": "attempt7.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -9476,8 +9477,8 @@
     ]
   },
   "func_80021F4C": {
-    "outcome": "gave up",
-    "time": "2026-10-16 17:19",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:49",
     "summary": "76 of 164 words differ",
     "best": "b3.c",
     "model": "claude-sonnet-5-5",
@@ -9526,7 +9527,8 @@
         "minutes": 2.8
       }
     ],
-    "resumes": 3
+    "resumes": 3,
+    "reason": "FAILED: [code=1] build/src/game/8002648C.o \nsrc/game/8002648C.c:11: conflicting types for `func_80026764'"
   },
   "func_80026A08": {
     "outcome": "gave up",
