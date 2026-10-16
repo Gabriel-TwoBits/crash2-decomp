@@ -1,6 +1,5 @@
 #include "common.h"
 #include "sdk.h"
-#include "game.h"
 
 s32 func_80031578(s32);
 void func_80036A84(s32 *, s32, s32, s32);

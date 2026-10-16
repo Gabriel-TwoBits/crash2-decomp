@@ -22,13 +22,15 @@ s32 func_8001FF50(s32 arg0, s32 *arg1) {
         do {
             v = *(s32 *)(slot + 0x194);
             if (v & 1) {
-                if (v == key) return 1;
+                if (v != key) {
+                    i++;
+                    goto next;
+                }
+                return 1;
             } else {
                 i++;
                 if (((s32 *)v)[1] == key) return 1;
-                goto next;
             }
-            i++;
 next:
             slot += 4;
         } while (i < n);

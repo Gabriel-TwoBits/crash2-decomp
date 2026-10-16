@@ -2,21 +2,21 @@
 #include "sdk.h"
 #include "game.h"
 
-s32 func_80018AA8(void *, s32, s32);
+typedef struct Node { s32 kind; struct Node *first; u8 pad[0x40]; struct Node *nx; struct Node *head; } Node;
+s32 func_80018AA8(Node *, s32, s32);
 
-s32 func_80018CAC(s32 *arg0, s32 arg1, s32 arg2) {
-    s32 *p;
-    s32 *next;
-
-    if (arg0[0] == 2) {
-        p = (s32 *)arg0[1];
+s32 func_80018CAC(Node *a, s32 b, s32 c) {
+    Node *n;
+    Node *nx;
+    if (a->kind == 2) {
+        n = a->first;
     } else {
-        p = (s32 *)arg0[0x4C / 4];
+        n = a->head;
     }
-    while (p != 0) {
-        next = (s32 *)p[0x48 / 4];
-        func_80018AA8(p, arg1, arg2);
-        p = next;
+    while (n != 0) {
+        nx = n->nx;
+        func_80018AA8(n, b, c);
+        n = nx;
     }
     return -0xFF;
 }
