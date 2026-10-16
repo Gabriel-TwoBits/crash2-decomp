@@ -2,7 +2,7 @@
 #include "sdk.h"
 #include "game.h"
 
-typedef struct {
+typedef struct Unk80033DE0 {
     s16 seq;
     s16 pad2;
     s32 state;
@@ -10,42 +10,50 @@ typedef struct {
     s32 padC;
     s16 volL;
     s16 volR;
-} Unk800344B0;
+} Unk80033DE0;
 
+void func_80056760(s16, s16, s16, s16);
 s16 D_8005F2F8;
 s16 D_8005F3E4;
-void SsSepPlay(s16, s16, s16, s16);
 void SsSepPause(s16, s16);
+void SsSepPlay(s16, s16, s32, s16);
 void SsSepReplay(s16, s16);
 void func_80056304(s16, s16);
 
-void func_800344B0(Unk800344B0 *arg0, u32 cmd, s32 vol) {
+s32 func_800344B0(Unk80033DE0 *obj, s32 cmd, s32 vol) {
     s32 i;
+    s32 pad[2];
 
-    if (arg0 != 0 && cmd < 5) {
+    if (obj != 0) {
         switch (cmd) {
         case 0:
-            arg0->state = 1;
-            SsSepPlay(D_8005F3E4, arg0->seq, 1, vol);
+            obj->state = 1;
+            SsSepPlay(D_8005F3E4, obj->seq, 1, (s16)vol);
             break;
         case 1:
-            arg0->state = 2;
-            func_80056304(D_8005F3E4, arg0->seq);
+            obj->state = 2;
+            func_80056304(D_8005F3E4, obj->seq);
             break;
         case 2:
-            arg0->state = 0;
-            SsSepPause(D_8005F3E4, arg0->seq);
+            obj->state = 0;
+            SsSepPause(D_8005F3E4, obj->seq);
             break;
         case 3:
-            arg0->state = 1;
-            SsSepReplay(D_8005F3E4, arg0->seq);
+            obj->state = 1;
+            SsSepReplay(D_8005F3E4, obj->seq);
             break;
         case 4:
-            arg0->volL = vol >> 16;
-            arg0->volR = vol;
-            for (i = 0; i < D_8005F2F8; i++) {
-                func_80056760(D_8005F3E4, arg0->seq, arg0->volL, arg0->volR);
+            i = 0;
+            obj->volL = vol >> 16;
+            obj->volR = vol;
+            if (D_8005F2F8 > 0) {
+                do {
+                    i++;
+                    func_80056760(D_8005F3E4, obj->seq, obj->volL, obj->volR);
+                } while (i < D_8005F2F8);
             }
+            break;
+        default:
             break;
         }
     }
