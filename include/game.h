@@ -40,6 +40,7 @@ void *func_8001557C(s32);
 void func_800155E0(void *, s32);
 void func_80015614(void);
 s32 func_800157A0(void);
+void func_80015828(s32);
 void func_800158E0(void);
 void func_800160B0(void);
 void func_800163B4(void *);
