@@ -206,6 +206,7 @@ The game object's layout is still worth writing down for the port (section 4), b
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **More batches**, a few hundred functions in all.
+2. **The first equivalent functions** (section 4, "Next").
 
 ## 4. The engine in C
 
@@ -216,7 +217,19 @@ compiled code's bytes matching (`tools/progress.py`); the assembly part stays as
 A function too costly to match gets behaviour-equivalent C under `NON_MATCHING` (docs/WORKFLOW.md, "The equivalent
 track"). Done: the convention, `ninja nonmatching`, `tools/progress.py` counting equivalent functions apart, and
 `tools/equiv.py`, the differential tester that judges them (all 222 functions matched then agree with their C, and a
-near miss differing only in registers agrees). Next: the first equivalent functions.
+near miss differing only in registers agrees), and `tools/match.py`'s equivalent mode (docs/WORKFLOW.md, "Landing an
+equivalent function" and "The loop's equivalent mode"): `land --equivalent` puts C into the block and keeps it only when
+both builds hold and equiv.py agrees on the landed file (2,000 trials, seed 1, at least 5% compared); `loop --equivalent`
+runs an agent on functions the matching loop gave up (`tools/match/EQUIVALENT.md`).
+
+Of the matching runs' notes, 125 of the 152 left as assembly agree on 500 trials as they are. Landed from them:
+`func_800365E4`, `func_8001C620`, `func_80011764` (the last then rewritten readably, the block replaced). Six notes'
+drafts were refused by the builds: four over a variable their file declares with another type (`conflicting types for
+D_800608D4`), one over the function's own prototype there, one over a callee's prototype its C definition contradicts.
+The brief now lists what the file declares of the function and its data, for the agent to keep.
+
+Next: `land --equivalent` over the rest of the 125 (no agent, no cost), then `loop --equivalent` on the refused and the
+remaining given-up functions, in batches the user approves.
 
 ## 5. Beyond matching
 

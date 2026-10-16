@@ -105,6 +105,39 @@ Its limits, which a passing run doesn't lift:
 - One word per parameter (no 64-bit or structure arguments), and a variadic callee's named parameters only.
 - GTE instructions (coprocessor 2) aren't emulated: such a function stops with `unsupported: ...` and exit status 2.
 
+### Landing an equivalent function
+
+    .venv/bin/python tools/match.py land FUNCTION --equivalent
+
+The candidate is `build/match/FUNCTION/equivalent.c`, else the notes' C (`config/match/notes/FUNCTION.equivalent.c`, then
+`FUNCTION.c`). Its declarations are handled as a match's (a prototype of basic types moves into `include/game.h`, a copy
+of what the file has goes), and the rest goes into the block in place of the `INCLUDE_ASM` line; a function that already
+has a block gets its C replaced. Refused before building: m2c's macros, inline assembly, an `INCLUDE_ASM` line, a
+conditional of its own, and a definition the file has further down, which moved into the block would leave the default
+build. Then `configure.py`, `ninja` (the SHA-1), `ninja nonmatching`, and `tools/equiv.py` on the landed file, not the
+candidate (the file's declarations and `include/game.h` compile it), at 2,000 trials and seed 1: every trial has to
+agree, and at least 5% of them compared, not agreeing by both reaching the limit or taking the same exception. A failure
+restores the file and `include/game.h` and is recorded as `equivalent, not landed` with its cause (a function whose block
+stays keeps `equivalent`); a landing is recorded as `equivalent` with equiv.py's count (`2000 of 2000 trials agree, 1119
+compared`) and committed as `feat: add equivalent C for FUNCTION` (`feat: improve the equivalent C of FUNCTION` for a
+replacement).
+
+Most refusals of the matching runs' notes come from the nonmatching build, where the C meets its file's declarations for
+the first time: a variable or the function itself declared with another type there than in the candidate.
+
+### The loop's equivalent mode
+
+    .venv/bin/python tools/match.py loop --equivalent --count N --minutes 15 --model claude-sonnet-5-5
+
+It takes the smallest function the matching loop gave up on (`gave up`, `rejected`, or notes' C that didn't land as
+equivalent) that is still plain `INCLUDE_ASM`, has no GTE instruction and has had no equivalent run. The agent's
+instructions are `tools/match/EQUIVALENT.md`; its `score.sh` runs equiv.py on a draft (`./score.sh FILE.c --seed 1`), and
+its starting points are the assembly, m2c's draft and the matching run's notes and C. It stops when every trial agrees
+on two seeds, after five attempts without progress, or two minutes before the limit, leaving `equivalent.c` or `best.c`.
+`tools/match.py` checks `equivalent.c` itself (500 trials, seed 0, `equivalent, agrees`), then lands it as above. A run's
+notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside the matching run's. `run --equivalent`,
+`prepare --equivalent` and `next --equivalent` do one step of it. The matching loop leaves equivalent functions alone.
+
 ## Matching C and this project's style
 
 The C has to compile to the retail bytes, so the original's shape wins over style: a missing `else`, an early `return` in
