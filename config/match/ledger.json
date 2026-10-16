@@ -5340,9 +5340,8 @@
     "reason": "mipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x63c): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x640): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x644): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x648): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x64c): undefined reference to `.L80033D94'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x650): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x654): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x658): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x65c): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x660): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x664): undefined reference to `.L80033D94'\nninja: build stopped: subcommand failed."
   },
   "func_80018BE4": {
-    "outcome": "rejected",
-    "time": "2026-10-16 02:17",
-    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_80018BE4/match.c:11: for each function it appears in.)",
+    "outcome": "landed",
+    "time": "2026-10-16 03:21",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
