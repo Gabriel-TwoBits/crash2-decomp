@@ -104,6 +104,7 @@ s32 func_80036084(s32);
 s32 func_800360CC(s32);
 s32 func_8003613C(void);
 s32 func_80036150(void);
+void func_80036164(void);
 s32 func_80036304(void);
 void func_80036324(s32);
 s32 func_80036414(s32);
