@@ -8205,9 +8205,9 @@
     "reason": "FAILED: [code=1] build/nonmatching/src/game/800123F0.o \nsrc/game/800123F0.c:421: conflicting types for `D_80067FC4'"
   },
   "func_8001AA80": {
-    "outcome": "gave up",
-    "time": "2026-10-16 10:28",
-    "summary": "10 of 94 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:47",
+    "summary": "2000 of 2000 trials agree, 1487 compared",
     "best": "a2.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
