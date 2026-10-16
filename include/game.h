@@ -80,6 +80,7 @@ s32 func_80036414(s32);
 void func_80036850(void);
 void func_800368C0(void);
 void func_8003690C(void *);
+void func_800369F4(void);
 s32 *func_80036D0C(struct Obj *, s32);
 void func_8003AE54(void *, s32, u16 *);
 void func_8003B24C(void *, s32, u16 *);
