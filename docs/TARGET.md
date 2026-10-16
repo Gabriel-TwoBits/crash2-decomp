@@ -109,7 +109,7 @@ Handwritten code (from `0x8003A014` on, mostly) reads any variable through `$gp`
 | `80031AE8` | 26 | `80031AE8` | rodata 0x80010544 | `80031AE8` |
 | `800324A8` | 23 | `800324A8`-`800344B0` | .sdata F244-F260; .sbss F2E0-F308; the commons F39C, F3E0, F3E4; rodata 0x80010590-0x80010668 | `800321D4` |
 | `800345C8` | 64 | `800345C8`-`80036C40` | .sdata F264-F28C; .sbss F314-F31C; the commons F3A0-F3CC; rodata 0x8001067C-0x80010704 | `800345C8` |
-| `80036D0C` | 1 | `80036D0C` | .sdata F290 | `80036CF8` |
+| `80036D0C` | 1 | `80036D0C` | .sdata F290; rodata 0x80010750 (below) | `80036CF8` |
 | `80036E30` | 5 | `80036E30` | .sdata F294-F2A0 | `80036E30` |
 | `80037698` | 2 | `80037698`-`8003817C` | rodata 0x80010804-0x800108F8 | `80036FAC` |
 | `80038700` | 5 | `80038700` | rodata 0x80010918 | `80038700` |
@@ -120,6 +120,19 @@ small data no function reads through `$gp`: a file starts at its first function 
 the last column. Neighbouring files with nothing setting them apart may be one file in the original; they stay apart until
 a function shows otherwise. Whatever the boundaries, the bytes are the same: they matter to a function written in C, which
 reads through `$gp` exactly the data its file defines.
+
+## The game's read-only data
+
+From `0x80010000` to `0x80010950` the `.rodata` is the game's files', in their order; the libraries' follows. In each file
+that has both, its constants (strings) come first, then its functions' jump tables in function order: the order GCC writes
+them in (docs/COMPILER.md, "Read-only data"). So `config/SCUS_941.54.yaml` gives each of these files its own `.rodata`
+subsegment, splat moves each jump table into its function's assembly (with `INCLUDE_ASM`, or with the `switch` once the
+function is in C), and the constants, marked `force_not_migration` in `config/symbol_addrs.txt`, are included at the top
+of their file with `INCLUDE_RODATA`, in address order. C reads them as `extern`.
+
+`D_80010750` (`0x80010750`-`0x80010804`) is eleven strings no code reads, `"----stack pop"`, `"-----ireg ref"`,
+`"-----pool ref"` and the like: the kinds of operand `func_80036D0C` resolves, so it goes with that file. Any file from
+`800345C8` to `80036E30` gives the same bytes.
 
 ## The rest of the disc
 

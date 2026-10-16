@@ -9,7 +9,7 @@ The repository, its licence, the docs, `tools/extract_disc.py` (the executable o
 
 ## 1. The split rebuilt byte for byte (done)
 
-splat splits `SCUS_941.54` (`config/SCUS_941.54.yaml`: rodata, text, data and bss as one segment each), `configure.py`
+splat splits `SCUS_941.54` (`config/SCUS_941.54.yaml`: text by source file, the game's rodata by file, data and bss as one segment each), `configure.py`
 writes `build.ninja`, and ninja assembles, links and pads it into `build/SCUS_941.54.exe`, whose SHA-1 is checked against
 the retail one (`config/SCUS_941.54.sha1`) on every build. A changed instruction fails the check.
 
@@ -138,9 +138,18 @@ four arguments), definitions typed `void` that return their callee's result (`fu
 structures (`D_8005B9E0`, the count before `D_8005BA58`'s entries), a structure's further fields (`Unk80063458`) and a
 callee's parameter (`func_8003B940`'s count, `s32`). `land` now gives a function's definition signature to
 `include/game.h` in place of a guessed one, refuses a callee prototype that differs from the header's, and records the
-compiler's or linker's error line. Two matches can't land yet: `func_80012010` and `func_80033D10` jump through tables
+compiler's or linker's error line. Two matches couldn't land: `func_80012010` and `func_80033D10` jump through tables
 in the executable's one `.rodata` segment, which a compiled `switch` brings with it; 22 functions in assembly do the
 same.
+
+The game's `.rodata` is now split by file (docs/TARGET.md, "The game's read-only data"): each jump table goes with its
+function, and m2c gets it, so a draft has its `switch`. `func_80012010`, `func_80033D10` and `func_800345C8` landed with
+theirs.
+
+A ninth batch of 50 (0xE4 to 0x138 bytes), Opus on Sonnet's near misses: 18 matched and 32 were left as assembly, at
+$15.18 for Sonnet and $4.19 for Opus. 11 landed by themselves, 6 by hand once their files agreed: a scratchpad pointer
+typed `s32 *` (`D_8005F3C4`), one structure for `D_80062BB4` where two functions had their own, a callee given its
+argument (`func_80013968`, which `func_80013A54` called with none) and another its pointer result (`func_8001557C`).
 
 ## Next
 

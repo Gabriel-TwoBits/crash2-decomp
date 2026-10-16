@@ -49,6 +49,15 @@ side), `tools/psx_cc.py` (the compile path they share), `tools/permute.py` (deco
 The first functions scored the same under 2.6.0, 2.6.3 and 2.7.2; `func_8001521C` and `func_80032808`, with more calls and
 loops, separate them.
 
+## Read-only data
+
+GCC 2.7.2 writes top-level `asm` statements as it reads them and the file's functions after them, each with its jump table
+(`include/include_asm.h` works around the first for `INCLUDE_ASM`). Proven by `func_80012010`, `func_80033D10` and
+`func_800345C8`: compiled `switch`es whose tables land at their retail addresses after their file's constants, included
+with `INCLUDE_RODATA`, the build's SHA-1 holding. Every file with both has its constants before its tables in retail,
+which fits constants written the same way; where GCC writes a string literal in a function's code isn't proven, so the
+constants stay in the split and C reads them as `extern` (docs/TARGET.md, "The game's read-only data").
+
 ## Small data
 
 At `-G8` GCC puts every variable of 8 bytes or less in `.sdata` (initialised) or `.sbss`, and so it does with string
