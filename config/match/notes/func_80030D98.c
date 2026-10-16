@@ -2,22 +2,13 @@
 #include "sdk.h"
 #include "game.h"
 
-s32 func_80030D98(s32 *a, s32 *b) {
-    s32 x;
-    s32 y;
-    s32 z;
-    s32 r;
+typedef struct { s32 x, y, z; } Vec80030D98;
+typedef struct { Vec80030D98 min; Vec80030D98 max; } Box80030D98;
 
-    x = a[0];
-    r = 0;
-    if (x >= b[0]) {
-        y = a[1];
-        if (y >= b[1]) {
-            z = a[2];
-            if (z >= b[2] && x < b[3] && y < b[4]) {
-                r = z < b[5];
-            }
-        }
+s32 func_80030D98(Vec80030D98 *p, Box80030D98 *b) {
+    if (p->x >= b->min.x && p->y >= b->min.y && p->z >= b->min.z &&
+        p->x < b->max.x && p->y < b->max.y && p->z < b->max.z) {
+        return 1;
     }
-    return r;
+    return 0;
 }

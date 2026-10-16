@@ -3818,15 +3818,15 @@
     ]
   },
   "func_80030D98": {
-    "outcome": "gave up",
-    "time": "2026-10-15 17:18",
-    "summary": "20 of 33 words differ",
+    "outcome": "landed",
+    "time": "2026-10-16 00:17",
+    "summary": "0 of 33 words differ",
     "best": "attempt2.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
     "wall_minutes": 4.5,
-    "cost_usd": 0.23681419999999997,
-    "turns": 3,
+    "cost_usd": 0.2346691,
+    "turns": 1,
     "minutes": 0.1,
     "runs": [
       {
@@ -3839,8 +3839,20 @@
         "cost_usd": 0.23681419999999997,
         "turns": 3,
         "minutes": 0.1
+      },
+      {
+        "outcome": "matched",
+        "summary": "0 of 33 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 4.5,
+        "cost_usd": 0.2346691,
+        "turns": 1,
+        "minutes": 0.1
       }
-    ]
+    ],
+    "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_80035AB8": {
     "outcome": "landed",
