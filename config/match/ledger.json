@@ -9262,9 +9262,9 @@
     "reason": "FAILED: [code=1] build/nonmatching/src/game/8002648C.o \nsrc/game/8002648C.c:26: conflicting types for `func_800267C4'"
   },
   "func_8001BD84": {
-    "outcome": "gave up",
-    "time": "2026-10-16 17:27",
-    "summary": "136 of 148 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:47",
+    "summary": "2000 of 2000 trials agree, 714 compared",
     "best": "e1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
