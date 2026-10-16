@@ -9980,9 +9980,9 @@
     "reason": "FAILED: [code=1] build/nonmatching/src/game/80023B04.o \nsrc/game/80023B04.c:51: conflicting types for `func_80023E60'"
   },
   "func_80030680": {
-    "outcome": "gave up",
-    "time": "2026-10-16 17:16",
-    "summary": "55 of 202 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:54",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "b1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
