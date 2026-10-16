@@ -108,13 +108,20 @@ and the SDK functions declared in game files moved to `include/sdk.h`. The brief
 defined in C, and `land` refuses a prototype with an empty parameter list.
 
 A sixth batch of 50 (0x64 to 0x94 bytes), Sonnet only, since Opus's retries had cost $2.23 a match against Sonnet's
-$0.25: 21 matched and 29 were left as assembly, at $11.36, 71 minutes of runs. Size doesn't tell them apart (130 bytes on
-average left, 123 matched). Four of the 29 are within 10% of a match and five more within 13%; several differ only in
-the prologue's schedule, `func_80018B50` and `func_800325DC` among them. 15 landed by themselves; 6 met their file: 2 used structures
-their file defines, which `match.c` can't compile without, 2 used `.sbss` variables their file defines further down, 1
-read `D_8005F264` as `s32` and 1 typed `D_8006CB6C` against its file. `land` now drops a structure or a declaration
-the file already has above the function and moves one the file has further down up to it; `func_80014148` got its
-parameter and `D_8006CB6C` its structure.
+$0.25: 21 matched and 29 were left as assembly, at $11.36, 71 minutes of runs. Size doesn't tell them apart (130 bytes
+on average left, 123 matched). Four of the 29 are within 10% of a match and five more within 13%; several differ only in
+the prologue's schedule, `func_80018B50` and `func_800325DC` among them. 15 landed by themselves; 6 met their file: 2
+used structures their file defines, which `match.c` can't compile without, 2 used `.sbss` variables their file defines
+further down, 1 read `D_8005F264` as `s32` and 1 typed `D_8006CB6C` against its file. `land` now drops a structure or a
+declaration the file already has above the function and moves one the file has further down up to it; `func_80014148`
+got its parameter and `D_8006CB6C` its structure.
+
+The prologues that differed only in their schedule were the compiler's CPU model: at `-mcpu=r8000` every function in C
+still matches and the build's SHA-1 holds, and 11 functions the loop had left as assembly match as they were,
+`func_80018B50`, `func_800325DC` and the parked `func_80038C14` among them (docs/COMPILER.md, "Scheduling"). `r4000` and
+`r6000` match the same 11 but break others; `cc1`'s default, the R3000's, matches neither. The tools compile at
+`-mcpu=r8000` now, and the 11 landed (3 by hand, against their file's types). Several other near misses came closer
+under it (`func_800343CC` from 28 differing words to 2, `func_80036BD8` to 1).
 
 ## Next
 
