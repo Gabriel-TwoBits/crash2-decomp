@@ -41,7 +41,36 @@ INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800271D8);
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800272A4);
 
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027420);
+void *memcpy(void *, const void *, u32);
+
+u8 *func_80027420(u8 *src, u8 *dst, s32 mode, s32 *outLen, s32 noCopy, s32 arg5) {
+    s32 len;
+
+    switch (mode) {
+    case 1:
+        len = (src[0] << 8) | src[1];
+        src += 2;
+        if (noCopy != 0) {
+            dst = src;
+        } else {
+            memcpy(dst, src, len);
+        }
+        break;
+    case 2:
+        len = func_80027C00(src, dst);
+        break;
+    case 3:
+        len = func_80027CD0(src, dst, arg5);
+        break;
+    default:
+        len = 0;
+        break;
+    }
+    if (outLen != 0) {
+        *outLen = len;
+    }
+    return dst;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027500);
 

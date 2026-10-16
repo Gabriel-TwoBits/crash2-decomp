@@ -5585,5 +5585,189 @@
         "minutes": 0.8
       }
     ]
+  },
+  "func_80014148": {
+    "outcome": "gave up",
+    "time": "2026-10-16 02:36",
+    "summary": "40 of 54 words differ",
+    "best": "attempt3.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.2892303,
+    "turns": 14,
+    "minutes": 1.0,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "40 of 54 words differ",
+        "best": "attempt3.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.2892303,
+        "turns": 14,
+        "minutes": 1.0
+      }
+    ]
+  },
+  "func_80019D30": {
+    "outcome": "gave up",
+    "time": "2026-10-16 02:37",
+    "summary": "6 of 54 words differ",
+    "best": "a2.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.2503605,
+    "turns": 15,
+    "minutes": 1.0,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "6 of 54 words differ",
+        "best": "a2.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.2503605,
+        "turns": 15,
+        "minutes": 1.0
+      }
+    ]
+  },
+  "func_800270C4": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 02:40",
+    "summary": "0 of 54 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 3.6,
+    "cost_usd": 0.3181601,
+    "turns": 26,
+    "minutes": 3.6,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 54 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.6,
+        "cost_usd": 0.3181601,
+        "turns": 26,
+        "minutes": 3.6
+      }
+    ],
+    "reason": "[19/215] cc src/game/80026CA0.c\nFAILED: [code=1] build/src/game/80026CA0.o \n.venv/bin/python tools/psx_cc.py src/game/80026CA0.c -o build/src/game/80026CA0.o\nsrc/game/80026CA0.c:29: previous declaration of `func_8002719C'\n[20/215] cc src/game/80029884.c\n[21/215] cc src/game/8002E884.c\n[22/215] cc src/game/8003147C.c\n[23/215] cc src/game/8002FB84.c\n[24/215] cc src/game/8002FE58.c\n[25/215] cc src/game/80031578.c\n[26/215] cc src/game/800316EC.c\nninja: build stopped: subcommand failed."
+  },
+  "func_80012010": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 02:41",
+    "summary": "0 of 55 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.2531167,
+    "turns": 18,
+    "minutes": 0.8,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 55 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.2531167,
+        "turns": 18,
+        "minutes": 0.8
+      }
+    ],
+    "reason": "mipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xa4): undefined reference to `.L800120B8'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xa8): undefined reference to `.L800120E0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xac): undefined reference to `.L800120E0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xb0): undefined reference to `.L80012058'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xb4): undefined reference to `.L80012070'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xb8): undefined reference to `.L800120C0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xbc): undefined reference to `.L80012050'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xc0): undefined reference to `.L80012068'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xc4): undefined reference to `.L800120D8'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xc8): undefined reference to `.L800120E0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xcc): undefined reference to `.L80012080'\nninja: build stopped: subcommand failed."
+  },
+  "func_80012170": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 02:42",
+    "summary": "0 of 56 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.1674344,
+    "turns": 6,
+    "minutes": 0.4,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 56 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.1674344,
+        "turns": 6,
+        "minutes": 0.4
+      }
+    ],
+    "reason": "[3/215] cc src/game/80012010.c\nFAILED: [code=1] build/src/game/80012010.o \n.venv/bin/python tools/psx_cc.py src/game/80012010.c -o build/src/game/80012010.o\nsrc/game/80012010.c:26: previous declaration of `func_80012170'\n[4/215] cc src/game/80011E24.c\n[5/215] cc src/game/8001A014.c\n[6/215] cc src/game/80015614.c\n[7/215] cc src/game/800123F0.c\n[8/215] cc src/game/80019098.c\n[9/215] cc src/game/800111B0.c\n[10/215] cc src/game/800158E0.c\nninja: build stopped: subcommand failed."
+  },
+  "func_80013888": {
+    "outcome": "gave up",
+    "time": "2026-10-16 02:48",
+    "summary": "8 of 56 words differ",
+    "best": "best.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 6.7,
+    "cost_usd": 0.4450846,
+    "turns": 8,
+    "minutes": 0.4,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "8 of 56 words differ",
+        "best": "best.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 6.7,
+        "cost_usd": 0.4450846,
+        "turns": 8,
+        "minutes": 0.4
+      }
+    ]
+  },
+  "func_80027420": {
+    "outcome": "landed",
+    "time": "2026-10-16 02:49",
+    "summary": "0 of 56 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.1919883,
+    "turns": 11,
+    "minutes": 0.5,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 56 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.1919883,
+        "turns": 11,
+        "minutes": 0.5
+      }
+    ]
   }
 }
