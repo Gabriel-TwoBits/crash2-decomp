@@ -9779,5 +9779,105 @@
         "minutes": 6.7
       }
     ]
+  },
+  "func_8002BC38": {
+    "outcome": "gave up",
+    "time": "2026-10-16 15:32",
+    "summary": "52 of 200 words differ",
+    "best": "attempt7.c",
+    "model": "claude-opus-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": true,
+    "wall_minutes": 15.0,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "52 of 200 words differ",
+        "best": "attempt7.c",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": true,
+        "wall_minutes": 15.0
+      }
+    ]
+  },
+  "func_80023E60": {
+    "outcome": "gave up",
+    "time": "2026-10-16 15:35",
+    "summary": "87 of 202 words differ",
+    "best": "attempt6.c",
+    "model": "claude-opus-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.7,
+    "cost_usd": 1.1682772000000001,
+    "turns": 38,
+    "minutes": 2.7,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "87 of 202 words differ",
+        "best": "attempt6.c",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.7,
+        "cost_usd": 1.1682772000000001,
+        "turns": 38,
+        "minutes": 2.7
+      }
+    ]
+  },
+  "func_80030680": {
+    "outcome": "gave up",
+    "time": "2026-10-16 15:38",
+    "summary": "59 of 202 words differ",
+    "best": "attempt3.c",
+    "model": "claude-opus-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.7,
+    "cost_usd": 1.0825261999999998,
+    "turns": 32,
+    "minutes": 2.7,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "59 of 202 words differ",
+        "best": "attempt3.c",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.7,
+        "cost_usd": 1.0825261999999998,
+        "turns": 32,
+        "minutes": 2.7
+      }
+    ]
+  },
+  "func_800309A8": {
+    "outcome": "landed",
+    "time": "2026-10-16 15:44",
+    "summary": "0 of 204 words differ",
+    "model": "claude-opus-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 6.0,
+    "cost_usd": 1.5313755999999998,
+    "turns": 21,
+    "minutes": 1.0,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 204 words differ",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 6.0,
+        "cost_usd": 1.5313755999999998,
+        "turns": 21,
+        "minutes": 1.0
+      }
+    ]
   }
 }
