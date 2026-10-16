@@ -392,7 +392,7 @@ D_80010750 = 0x80010750; // force_not_migration:True
 D_80010804 = 0x80010804; // force_not_migration:True
 
 // Addresses .data holds that splat finds no symbol at: with one, the word is relocated in every build, the equivalent
-// track's included (docs/WORKFLOW.md)
+// track's included (docs/WORKFLOW.md). configure.py stops on a number of the split left pointing into the image
 
 // Strings of the libraries' .rodata, inside a run of strings splat takes for one symbol: libcd's command and interrupt
 // names, the libraries' $Id version strings

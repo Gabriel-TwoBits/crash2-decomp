@@ -51,11 +51,18 @@ HEADER_FIELD = re.compile(r"^\.word 0x[0-9A-Fa-f]+(?P<comment>\s+/\* (?P<field>I
 HEADER_SYMBOLS = {"Initial PC": "__SN_ENTRY_POINT", ".text size": "nonmatching_TEXT_SIZE"}
 TEXT_SIZE = f"nonmatching_TEXT_SIZE = ALIGN(main_ROM_END - main_ROM_START, {SECTOR_SIZE:#x});"
 LINKER_SCRIPT_END = "    /DISCARD/ :"
+# The image's addresses: .text's start (config/SCUS_941.54.yaml) to the end of .bss
+IMAGE_START = 0x80010000
+IMAGE_END = 0x8006F1F0
 # splat pins an address its split references to its retail value, though an object defines most of them with a label;
 # PROVIDE leaves those to the label. The startup code clears .bss up to this one, which nothing defines
 UNDEFINED_SYMBOL = re.compile(r"^(\w+) = (0x[0-9A-Fa-f]+);$")
-BSS_END_SYMBOL = "D_8006F1F0"
+BSS_END_SYMBOL = f"D_{IMAGE_END:08X}"
 BSS_END = "main_BSS_END"
+# A word of the split written as a number, not as a symbol
+NUMERIC_WORD = re.compile(r"\.word (0x[0-9A-Fa-f]+)\b")
+# Not checked for numbers: the header's layout fields are rewritten for the equivalent build, and .text's start stays
+SPLIT_HEADER = Path("asm") / "header.s"
 
 
 def split():
@@ -63,6 +70,23 @@ def split():
     if not TARGET.exists():
         sys.exit(f"{TARGET} is missing: tools/extract_disc.py takes it out of your disc image (CONTRIBUTING.md)")
     subprocess.run([sys.executable, "-m", "splat", "split", str(SPLAT_CONFIG)], cwd=HERE, check=True)
+
+
+def check_numeric_addresses():
+    """Stops on a word of the split that holds an address into the image as a number: the equivalent build keeps its
+    retail value while what it points at moves. config/symbol_addrs.txt gives such an address a symbol"""
+    found = []
+    for path in sorted((HERE / "asm").rglob("*.s")):
+        source = path.relative_to(HERE)
+        if source == SPLIT_HEADER:
+            continue
+        for number, line in enumerate(path.read_text().splitlines(), start=1):
+            word = NUMERIC_WORD.search(line)
+            if word is not None and IMAGE_START <= int(word.group(1), 0) < IMAGE_END:
+                found.append(f"{source}:{number}: {word.group(1)}")
+    if found:
+        sys.exit("addresses into the image the split writes as numbers, stale in the equivalent build: "
+                 "give them symbols in config/symbol_addrs.txt\n" + "\n".join(found))
 
 
 def objects():
@@ -94,8 +118,9 @@ def nonmatching_link_files():
     """Writes the equivalent build's header, linker script and symbol files, from splat's, for a layout whose sizes may
     differ from the retail one. _gp keeps its retail value: the startup code loads $gp from the symbol the linker measures
     its offsets from"""
-    # TRADEOFF: words of data splat left as numbers (addresses into code and data it found no symbol for) keep their
-    # retail values, stale once a size changes, until the split gives them symbols
+    # TRADEOFF: the handwritten code loads 20 of the game's function addresses as lui/ori pairs of numbers
+    # (asm/game/80039D2C.s), which no relocation can write: they keep their retail values, stale once the C before them
+    # changes size, until this build rewrites them as lui/addiu pairs of symbols
     header, fields = HEADER_FIELD.subn(lambda match: f".word {HEADER_SYMBOLS[match.group('field')]}{match.group('comment')}",
                                        (HERE / "asm" / "header.s").read_text())
     if fields != len(HEADER_SYMBOLS):
@@ -228,6 +253,7 @@ def write_ninja(linked):
 
 def main():
     split()
+    check_numeric_addresses()
     linked = objects()
     nonmatching_link_files()
     write_ninja(linked)
