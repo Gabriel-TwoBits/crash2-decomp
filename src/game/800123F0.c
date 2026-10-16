@@ -473,7 +473,37 @@ loop:
     return *(s8 *)(p + 0xF);
 }
 
+#ifdef NON_MATCHING
+typedef struct Unk80014078 {
+    s8 pad0[6];
+    s16 f6;
+    s8 pad8[7];
+    s8 fF;
+} Unk80014078;
+
+s32 func_80014078(s32 arg0, s32 arg1) {
+    Unk80014078 *p;
+    s32 i;
+
+    p = (Unk80014078 *)D_80067FC4[arg0 >> 1];
+    if ((s32)p >= -0xFE) {
+        return 0;
+    }
+    if ((s32)p == -0xFF || p->f6 == 3 || p->f6 == 5) {
+        return 1;
+    }
+    if (arg1 < 0) {
+        func_80013E7C((s8 *)p);
+    } else {
+        for (i = 0; i < arg1; i++) {
+            func_80013E10(p);
+        }
+    }
+    return p->fF + 1;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014078);
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014148);
 
