@@ -5958,8 +5958,8 @@
     ]
   },
   "func_80013968": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 03:27",
+    "outcome": "landed",
+    "time": "2026-10-16 05:45",
     "summary": "0 of 59 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5980,8 +5980,7 @@
         "turns": 36,
         "minutes": 1.9
       }
-    ],
-    "reason": "FAILED: [code=1] build/src/game/800123F0.o \nsrc/game/800123F0.c:198: too few arguments to function `func_80013968'"
+    ]
   },
   "func_80014260": {
     "outcome": "gave up",
@@ -6127,8 +6126,8 @@
     ]
   },
   "func_80013AE8": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 03:47",
+    "outcome": "landed",
+    "time": "2026-10-16 05:45",
     "summary": "0 of 60 words differ",
     "best": "attempt5.c",
     "model": "claude-opus-5-5",
@@ -6162,8 +6161,7 @@
         "turns": 18,
         "minutes": 1.5
       }
-    ],
-    "reason": "FAILED: [code=1] build/src/game/800123F0.o \nsrc/game/800123F0.c:180: previous declaration of `D_80062BB4'"
+    ]
   },
   "func_80022224": {
     "outcome": "gave up",
