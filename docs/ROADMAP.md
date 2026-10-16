@@ -206,7 +206,7 @@ The game object's layout is still worth writing down for the port (section 4), b
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **More batches**, a few hundred functions in all.
-2. **The first equivalent functions** (section 4, "Next").
+2. **More equivalent functions** (section 4, "Next").
 
 ## 4. The engine in C
 
@@ -228,8 +228,12 @@ drafts were refused by the builds: four over a variable their file declares with
 D_800608D4`), one over the function's own prototype there, one over a callee's prototype its C definition contradicts.
 The brief now lists what the file declares of the function and its data, for the agent to keep.
 
-Next: `land --equivalent` over the rest of the 125 (no agent, no cost), then `loop --equivalent` on the refused and the
-remaining given-up functions, in batches the user approves.
+`land --equivalent` over all 125 landed 74 (no agent, no cost). The 51 refused break a build, all but one over
+declarations: a type its file or `include/game.h` declares otherwise (a variable, the function, a callee), a structure
+the file defines otherwise or further down; one runs an instruction Unicorn lacks. Landing the same C again leaves the
+file and the history alone.
+
+Next: `loop --equivalent` on the refused and the remaining given-up functions, in batches.
 
 ## 5. Beyond matching
 
