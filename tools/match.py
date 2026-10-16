@@ -26,6 +26,7 @@ import time
 from pathlib import Path
 
 from probe_compiler import retail_assembly
+from progress import EQUIVALENT
 from psx_cc import AS, ASFLAGS, DEFAULT_CFLAGS, HERE
 
 SCRATCH = HERE / "build" / "match"
@@ -130,9 +131,14 @@ def sources():
 
 
 def source_of(name):
-    """(C file, INCLUDE_ASM line) of a function still included from the split"""
+    """(C file, INCLUDE_ASM line) of a function still included from the split; for an equivalent one, its whole
+    NON_MATCHING block, which the matched function replaces"""
     for source in sources():
-        for match in INCLUDED.finditer(source.read_text()):
+        text = source.read_text()
+        for match in EQUIVALENT.finditer(text):
+            if match.group(1) == name:
+                return source, match.group(0)
+        for match in INCLUDED.finditer(text):
             if match.group(1) == name:
                 return source, match.group(0)
     sys.exit(f"{name} isn't included from the split in {SOURCES}")
@@ -201,7 +207,8 @@ def callers(name):
         pieces = GLABEL.split(path.read_text())[1:]
         found += [function for function, body in zip(pieces[::2], pieces[1::2]) if call.search(body)]
     for source in sources():
-        text = INCLUDED.sub("", source.read_text())
+        # An equivalent function's C isn't in the build
+        text = INCLUDED.sub("", EQUIVALENT.sub("", source.read_text()))
         if re.search(rf"\b{name}\s*\(", text):
             found.append(f"(called from C in {source.relative_to(HERE)})")
     return found
