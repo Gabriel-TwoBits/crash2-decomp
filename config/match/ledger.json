@@ -5109,8 +5109,8 @@
     ]
   },
   "func_800162FC": {
-    "outcome": "gave up",
-    "time": "2026-10-16 01:58",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:45",
     "summary": "12 of 46 words differ",
     "best": "b2.c",
     "model": "claude-sonnet-5-5",
@@ -5133,7 +5133,8 @@
         "turns": 28,
         "minutes": 1.3
       }
-    ]
+    ],
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/800158E0.o \nsrc/game/800158E0.c:124: conflicting types for `D_8006344C'"
   },
   "func_8001E544": {
     "outcome": "gave up",
@@ -6508,8 +6509,8 @@
     ]
   },
   "func_800161F8": {
-    "outcome": "gave up",
-    "time": "2026-10-16 04:14",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:45",
     "summary": "63 of 65 words differ",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
@@ -6532,7 +6533,8 @@
         "turns": 20,
         "minutes": 1.2
       }
-    ]
+    ],
+    "reason": "src/game/800158E0.c defines Unk80063458 further down: moved into the NON_MATCHING block, it would leave the default build"
   },
   "func_800175D8": {
     "outcome": "gave up",
@@ -7454,9 +7456,9 @@
     ]
   },
   "func_80016B08": {
-    "outcome": "gave up",
-    "time": "2026-10-16 06:24",
-    "summary": "4 of 84 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:45",
+    "summary": "2000 of 2000 trials agree, 506 compared",
     "best": "attempt1.c",
     "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",

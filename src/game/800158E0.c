@@ -186,7 +186,51 @@ void func_80016A60(s32 arg0, s32 arg1, s16 arg2, s16 arg3, u8 arg4, u8 arg5, u8 
     AddPrim(&D_80063458[0]->padC[0xC], p);
 }
 
+#ifdef NON_MATCHING
+extern u8 D_8005B500[];
+extern s32 D_8006CB94;
+s32 GetTPage(s32, s32, s32, s32);
+void SetDrawMode(void *, s32, s32, s32, s32 *);
+void SetPolyF4(void *);
+void SetSemiTrans(void *, s32);
+
+void func_80016B08(u32 arg0) {
+    u8 *p;
+    u8 *q;
+    u8 *t;
+    s32 lo;
+    s32 hi;
+
+    q = (u8 *)D_80063458[0]->unk8;
+    D_80063458[0]->unk8 = (s32)(q + 0xC);
+    p = (u8 *)D_80063458[0]->unk8;
+    D_80063458[0]->unk8 = (s32)(p + 0x18);
+    if (arg0 != 0) {
+        t = D_8005B500 + (arg0 >> 4);
+        lo = t[0];
+        hi = t[1];
+        *(s16 *)(p + 8) = 0;
+        *(s16 *)(p + 0x10) = 0;
+        *(s16 *)(p + 0xA) = -0xC;
+        *(s16 *)(p + 0xE) = -0xC;
+        *(s16 *)(p + 0xC) = 0x200;
+        *(s16 *)(p + 0x12) = 0xE4;
+        *(s16 *)(p + 0x14) = 0x200;
+        *(s16 *)(p + 0x16) = 0xE4;
+        arg0 = ((u32)((hi - lo) * (arg0 & 0xF)) >> 4) + lo;
+        p[4] = arg0;
+        p[5] = arg0;
+        p[6] = arg0;
+        SetPolyF4(p);
+        SetSemiTrans(p, 1);
+        AddPrim(&D_80063458[0]->padC[0x2008], p);
+        SetDrawMode(q, 1, 0, GetTPage(0, (D_8006CB94 & 0x800000) ? 1 : 2, 0, 0) & 0xFFFF, 0);
+        AddPrim(&D_80063458[0]->padC[0x2008], q);
+    }
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016B08);
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016C58);
 
