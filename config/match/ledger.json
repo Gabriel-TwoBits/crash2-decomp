@@ -7825,5 +7825,84 @@
         "minutes": 1.2
       }
     ]
+  },
+  "func_8001E780": {
+    "outcome": "gave up",
+    "time": "2026-10-16 07:23",
+    "summary": "72 of 89 words differ",
+    "best": "attempt3.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.2650418,
+    "turns": 13,
+    "minutes": 1.0,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "72 of 89 words differ",
+        "best": "attempt3.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.2650418,
+        "turns": 13,
+        "minutes": 1.0
+      }
+    ]
+  },
+  "func_80027A38": {
+    "outcome": "gave up",
+    "time": "2026-10-16 07:24",
+    "summary": "79 of 89 words differ",
+    "best": "attempt3.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.3,
+    "cost_usd": 0.33415940000000005,
+    "turns": 21,
+    "minutes": 1.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "79 of 89 words differ",
+        "best": "attempt3.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.3,
+        "cost_usd": 0.33415940000000005,
+        "turns": 21,
+        "minutes": 1.2
+      }
+    ]
+  },
+  "func_8001E3DC": {
+    "outcome": "landed",
+    "time": "2026-10-16 07:25",
+    "summary": "0 of 90 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.26126209999999994,
+    "turns": 20,
+    "minutes": 1.0,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 90 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.26126209999999994,
+        "turns": 20,
+        "minutes": 1.0
+      }
+    ]
   }
 }
