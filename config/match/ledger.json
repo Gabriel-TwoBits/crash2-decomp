@@ -8020,17 +8020,17 @@
     ]
   },
   "func_80019BBC": {
-    "outcome": "gave up",
-    "time": "2026-10-16 10:13",
-    "summary": "31 of 93 words differ",
+    "outcome": "landed",
+    "time": "2026-10-16 13:09",
+    "summary": "0 of 93 words differ",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 2.9,
-    "cost_usd": 0.4973006,
-    "turns": 41,
-    "minutes": 2.8,
+    "wall_minutes": 3.0,
+    "cost_usd": 0.4681500000000002,
+    "turns": 40,
+    "minutes": 2.9,
     "runs": [
       {
         "outcome": "gave up",
@@ -8043,21 +8043,32 @@
         "cost_usd": 0.4973006,
         "turns": 41,
         "minutes": 2.8
+      },
+      {
+        "outcome": "matched",
+        "summary": "0 of 93 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.0,
+        "cost_usd": 0.4681500000000002,
+        "turns": 40,
+        "minutes": 2.9
       }
     ]
   },
   "func_8001A90C": {
     "outcome": "gave up",
-    "time": "2026-10-16 10:14",
-    "summary": "79 of 93 words differ",
-    "best": "attempt4.c",
+    "time": "2026-10-16 13:04",
+    "summary": "76 of 93 words differ",
+    "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.3,
-    "cost_usd": 0.36367920000000004,
-    "turns": 21,
-    "minutes": 1.3,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.2467043,
+    "turns": 13,
+    "minutes": 0.8,
     "runs": [
       {
         "outcome": "gave up",
@@ -8070,21 +8081,33 @@
         "cost_usd": 0.36367920000000004,
         "turns": 21,
         "minutes": 1.3
+      },
+      {
+        "outcome": "gave up",
+        "summary": "76 of 93 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.2467043,
+        "turns": 13,
+        "minutes": 0.8
       }
     ]
   },
   "func_8001EE64": {
     "outcome": "gave up",
-    "time": "2026-10-16 10:15",
+    "time": "2026-10-16 13:08",
     "summary": "63 of 93 words differ",
-    "best": "a2.c",
+    "best": "earlier.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.5,
-    "cost_usd": 0.34156520000000007,
-    "turns": 18,
-    "minutes": 1.4,
+    "wall_minutes": 1.7,
+    "cost_usd": 0.34744470000000005,
+    "turns": 13,
+    "minutes": 1.6,
     "runs": [
       {
         "outcome": "gave up",
@@ -8097,6 +8120,18 @@
         "cost_usd": 0.34156520000000007,
         "turns": 18,
         "minutes": 1.4
+      },
+      {
+        "outcome": "gave up",
+        "summary": "63 of 93 words differ",
+        "best": "earlier.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.7,
+        "cost_usd": 0.34744470000000005,
+        "turns": 13,
+        "minutes": 1.6
       }
     ]
   },
@@ -8316,16 +8351,16 @@
   },
   "func_80022314": {
     "outcome": "gave up",
-    "time": "2026-10-16 10:50",
-    "summary": "77 of 99 words differ",
-    "best": "attempt2.c",
+    "time": "2026-10-16 13:07",
+    "summary": "50 of 99 words differ",
+    "best": "attempt7.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.4,
-    "cost_usd": 0.3234419,
-    "turns": 19,
-    "minutes": 1.3,
+    "wall_minutes": 2.3,
+    "cost_usd": 0.4148344,
+    "turns": 28,
+    "minutes": 2.3,
     "runs": [
       {
         "outcome": "gave up",
@@ -8338,6 +8373,18 @@
         "cost_usd": 0.3234419,
         "turns": 19,
         "minutes": 1.3
+      },
+      {
+        "outcome": "gave up",
+        "summary": "50 of 99 words differ",
+        "best": "attempt7.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.3,
+        "cost_usd": 0.4148344,
+        "turns": 28,
+        "minutes": 2.3
       }
     ]
   },

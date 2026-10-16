@@ -490,7 +490,7 @@ s32 func_80018AA8(Unk80018AA8 *arg0, Cb80018AA8 arg1, void *arg2) {
 
     ret = arg1(arg0, arg2);
     if (ret == -0x19) {
-        func_80019BBC((s32)arg0, 0);
+        func_80019BBC((s32 *)arg0, 0);
         return -0x19;
     }
     p = arg0->child;
@@ -511,7 +511,7 @@ s32 func_80018B50(void *arg0, s32 (*arg1)(void *, s32), s32 arg2) {
         do {
             next = *(char **)(child + 0x48);
             if (func_80018B50(child, arg1, arg2) == -0x19) {
-                func_80019BBC((s32)arg0, 0);
+                func_80019BBC((s32 *)arg0, 0);
             }
             child = next;
         } while (child != 0);
