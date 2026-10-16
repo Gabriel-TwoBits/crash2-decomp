@@ -66,6 +66,8 @@ TYPE_DEFINITION = re.compile(r"^(?:typedef[ \t]+)?struct[ \t]*(?P<tag>\w*)[ \t]*
 # A game function's definition in C: return type, name, parameters, then its body
 DEFINITION = re.compile(r"^(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{]*\))\s*\{",
                         re.MULTILINE)
+# A parameter's name, the last word of its declaration in a definition
+PARAMETER_NAME = re.compile(r"\b[A-Za-z_]\w*\s*$")
 # An empty parameter list declares nothing about the arguments: the compiler checks no call against it
 UNCHECKED_PARAMETERS = re.compile(r"\(\s*\)$")
 # PsyQ's libraries start here (config/SCUS_941.54.yaml): a func_ name from there is the SDK's, not the game's
@@ -76,6 +78,8 @@ HEXADECIMAL = 16
 BASIC_TYPES = {"void", "char", "short", "int", "long", "unsigned", "signed", "const",
                "s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64"}
 ERROR_LINES = 12
+# A line naming a cause: the compiler's (`FILE.c:LINE: ...`), the linker's, a failed step or SHA-1 check (C locale)
+COMPILER_ERROR = re.compile(r"\.c:\d+:|-ld: |FAILED")
 # A near miss for the report: at most this share of the words differ
 NEAR_MISS = 0.1
 SECONDS_PER_MINUTE = 60
@@ -381,6 +385,20 @@ def type_name(definition):
     return definition.group("alias") or definition.group("tag")
 
 
+def prototype_of(declaration):
+    """A definition's return type, name and parameters as a prototype without parameter names; None when a parameter is a
+    function pointer, which this doesn't parse"""
+    head, _, rest = declaration.partition("(")
+    parameters = rest[:rest.rindex(")")]
+    if "(" in parameters:
+        return None
+    elif parameters.strip() in ("", "void"):
+        return f"{' '.join(head.split())}(void);"
+    else:
+        types = [PARAMETER_NAME.sub("", parameter).strip() for parameter in parameters.split(",")]
+        return f"{' '.join(head.split())}({', '.join(types)});"
+
+
 def with_prototypes(header, added):
     """include/game.h with these prototypes added to its list, which stays in address order"""
     prototypes = list(PROTOTYPE.finditer(header))
@@ -470,7 +488,24 @@ def land(name):
         else:
             # A structure of its file in the prototype: it stays in the file
             continue
-    updated_header = with_prototypes(header, added) if added else header
+    # The definition is the truth about the function's signature: prototypes of it its callers' landings wrote give way to
+    # the definition's, in include/game.h, when its types are basic
+    own = next((match for match in DEFINITION.finditer(text) if match.group("name") == name), None)
+    signature = None if own is None else prototype_of(own.group("declaration"))
+    listed = header
+    if signature is not None and set(IDENTIFIER.findall(signature)) - {name} <= BASIC_TYPES:
+        for prototype in [match for match in PROTOTYPE.finditer(header) if match.group("name") == name]:
+            listed = listed.replace(prototype.group(0), "", 1)
+        for prototype in [match for match in PROTOTYPE.finditer(original) if match.group("name") == name]:
+            above = above.replace(prototype.group(0), "", 1)
+            below = below.replace(prototype.group(0), "", 1)
+        for prototype in [match for match in PROTOTYPE.finditer(text) if match.group("name") == name]:
+            text = text.replace(prototype.group(0), "", 1)
+        added.append(signature)
+    else:
+        # A structure in its signature, or none parsed: its prototypes stay, and the build says whether they agree
+        pass
+    updated_header = with_prototypes(listed, added) if added else header
     # Its #include lines are the file's already; a declaration the file has above it isn't repeated
     present = set(above.splitlines())
     # A top-level line ending in `;` is a declaration
@@ -481,12 +516,15 @@ def land(name):
 
     steps = [[sys.executable, "configure.py"], [str(HERE / ".venv" / "bin" / "ninja")]]
     for step in steps:
-        result = subprocess.run(step, cwd=HERE, capture_output=True, text=True)
+        result = subprocess.run(step, cwd=HERE, capture_output=True, text=True, env={**os.environ, "LC_ALL": "C"})
         if result.returncode != 0:
             source.write_text(original)
             GAME_H.write_text(header)
             subprocess.run([sys.executable, "configure.py"], cwd=HERE, capture_output=True)
-            error = "\n".join((result.stdout + result.stderr).strip().splitlines()[-ERROR_LINES:])
+            lines = (result.stdout + result.stderr).strip().splitlines()
+            # The compiler's and the linker's own lines first: ninja's progress lines bury them
+            causes = [line for line in lines if COMPILER_ERROR.search(line)]
+            error = "\n".join((causes or lines[-ERROR_LINES:])[:ERROR_LINES])
             record(name, "matched, not landed", reason=error)
             return False
     record(name, "landed")
