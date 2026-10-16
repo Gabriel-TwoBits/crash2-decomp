@@ -9231,7 +9231,7 @@
   },
   "func_800267C4": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:34",
+    "time": "2026-10-16 20:51",
     "summary": "1 of 145 words differ",
     "best": "best.c",
     "model": "claude-opus-5-5",
@@ -9267,7 +9267,7 @@
         "minutes": 0.4
       }
     ],
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/8002648C.o \nsrc/game/8002648C.c:26: conflicting types for `func_800267C4'"
+    "reason": "defines Arg otherwise than src/game/8002648C.c"
   },
   "func_8001BD84": {
     "outcome": "equivalent",
@@ -9536,9 +9536,9 @@
     "reason": "FAILED: [code=1] build/src/game/8002648C.o \nsrc/game/8002648C.c:11: conflicting types for `func_80026764'"
   },
   "func_80026A08": {
-    "outcome": "gave up",
-    "time": "2026-10-16 14:11",
-    "summary": "2 of 166 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:51",
+    "summary": "2000 of 2000 trials agree, 264 compared",
     "best": "attempt2.c",
     "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
