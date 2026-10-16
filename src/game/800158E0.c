@@ -61,7 +61,10 @@ void func_800163C4(s32 *arg0) {
 typedef struct {
     u8 pad0[0x8];
     s32 unk8;
-    u8 padC[0x2088 - 0xC];
+    u8 padC[0x202C - 0xC];
+    u16 unk202C;
+    u16 unk202E;
+    u8 pad2030[0x2088 - 0x2030];
     void *unk2088;
     u8 pad208C[0x2090 - 0x208C];
     char *unk2090;
