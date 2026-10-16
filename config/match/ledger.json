@@ -450,8 +450,8 @@
     ]
   },
   "func_80022E74": {
-    "outcome": "gave up",
-    "time": "2026-10-16 00:54",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:50",
     "summary": "3 of 57 words differ",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
@@ -494,7 +494,8 @@
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
-    "wall_minutes": 3.8
+    "wall_minutes": 3.8,
+    "reason": "declares `Outer *func_80014260(s8 *, s32, s32)`, include/game.h `void *func_80014260(void *, s32, s32)`"
   },
   "func_80038C14": {
     "outcome": "landed",
@@ -6822,9 +6823,9 @@
     ]
   },
   "func_800236DC": {
-    "outcome": "gave up",
-    "time": "2026-10-16 04:45",
-    "summary": "9 of 71 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:50",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "attempt5.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -7138,8 +7139,8 @@
     ]
   },
   "func_80022F58": {
-    "outcome": "gave up",
-    "time": "2026-10-16 05:26",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:50",
     "summary": "3 of 75 words differ",
     "best": "best.c",
     "model": "claude-opus-5-5",
@@ -7174,7 +7175,8 @@
         "turns": 3,
         "minutes": 0.1
       }
-    ]
+    ],
+    "reason": "declares `void func_800231B0(s32)`, include/game.h `void func_800231B0(s32 *)`"
   },
   "func_8003756C": {
     "outcome": "gave up",
@@ -8797,8 +8799,8 @@
     ]
   },
   "func_80022878": {
-    "outcome": "gave up",
-    "time": "2026-10-16 11:46",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 20:50",
     "summary": "70 of 121 words differ",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
@@ -8821,7 +8823,8 @@
         "turns": 32,
         "minutes": 1.4
       }
-    ]
+    ],
+    "reason": "declares `s32 func_800200A8(s32, s32, s32, s32)`, include/game.h `void func_800200A8(s32, s32, s32, s32)`"
   },
   "func_80030498": {
     "outcome": "landed",
