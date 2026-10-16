@@ -194,4 +194,16 @@ s32 func_800297C8(void) {
     return -0xFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80029800);
+u16 *func_80029800(u16 *arg0, s32 arg1, u16 *arg2, s32 arg3) {
+    if (!(arg0[1] & 1)) {
+        func_8003B940(arg0 + 2, arg2 + 2, arg0[0]);
+        *arg2 = arg0[0];
+        return arg2;
+    }
+    if (arg3 == 0) {
+        func_8003B24C(arg0, arg1, arg2);
+        return arg2;
+    }
+    func_8003AE54(arg0, arg1, arg2);
+    return arg2;
+}

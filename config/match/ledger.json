@@ -2453,8 +2453,8 @@
     ]
   },
   "func_8002706C": {
-    "outcome": "gave up",
-    "time": "2026-10-15 15:52",
+    "outcome": "matched, not landed",
+    "time": "2026-10-15 23:28",
     "summary": "8 of 22 words differ",
     "best": "attempt10.c",
     "model": "claude-opus-5-5",
@@ -2486,7 +2486,8 @@
         "turns": 3,
         "minutes": 0.1
       }
-    ]
+    ],
+    "reason": "[17/215] cc src/game/80026CA0.c\nFAILED: [code=1] build/src/game/80026CA0.o \n.venv/bin/python tools/psx_cc.py src/game/80026CA0.c -o build/src/game/80026CA0.o\nsrc/game/80026CA0.c:12: previous declaration of `D_80069358'\n[18/215] cc src/game/80020A24.c\n[19/215] cc src/game/8002648C.c\n[20/215] cc src/game/8002E884.c\n[21/215] cc src/game/8002FB84.c\n[22/215] cc src/game/80029884.c\n[23/215] cc src/game/8003147C.c\n[24/215] cc src/game/8002FE58.c\nninja: build stopped: subcommand failed."
   },
   "func_8002FC78": {
     "outcome": "landed",
@@ -3575,8 +3576,8 @@
     ]
   },
   "func_80029800": {
-    "outcome": "gave up",
-    "time": "2026-10-15 17:13",
+    "outcome": "landed",
+    "time": "2026-10-15 23:28",
     "summary": "2 of 33 words differ",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
