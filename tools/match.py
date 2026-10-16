@@ -87,8 +87,9 @@ BASIC_TYPES = {"void", "char", "short", "int", "long", "unsigned", "signed", "co
 # A parameter's name: the last word of its declaration when a type or a `*` comes before it and it isn't a type itself
 PARAMETER_NAME = re.compile(r"(?<=[\s*])(?!(?:" + "|".join(sorted(BASIC_TYPES)) + r")\b)[A-Za-z_]\w*\s*$")
 ERROR_LINES = 12
-# A line naming a cause: the compiler's (`FILE.c:LINE: ...`), the linker's, a failed step or SHA-1 check (C locale)
-COMPILER_ERROR = re.compile(r"\.c:\d+:|-ld: |FAILED")
+# A line naming a cause: the compiler's (`FILE.c:LINE: ...`, or a header's), the linker's, a failed step or SHA-1 check
+# (C locale)
+COMPILER_ERROR = re.compile(r"\.[ch]:\d+:|-ld: |FAILED")
 # A near miss for the report: at most this share of the words differ
 NEAR_MISS = 0.1
 SECONDS_PER_MINUTE = 60
