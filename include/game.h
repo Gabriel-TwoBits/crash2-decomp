@@ -94,6 +94,7 @@ s32 func_80035B3C(void);
 s32 func_80035BB8(void);
 s32 func_80035C40(void);
 void func_80035C74(void);
+s32 func_80035CBC(char *, void *);
 s32 func_80036028(s32);
 s32 func_80036084(s32);
 s32 func_800360CC(s32);
