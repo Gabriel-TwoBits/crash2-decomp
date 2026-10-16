@@ -5289,5 +5289,134 @@
         "minutes": 0.2
       }
     ]
+  },
+  "func_80025FDC": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 02:15",
+    "summary": "0 of 48 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.6,
+    "cost_usd": 0.39388300000000004,
+    "turns": 31,
+    "minutes": 1.6,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 48 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.6,
+        "cost_usd": 0.39388300000000004,
+        "turns": 31,
+        "minutes": 1.6
+      }
+    ],
+    "reason": "[11/215] cc src/game/80023B04.c\nFAILED: [code=1] build/src/game/80023B04.o \n.venv/bin/python tools/psx_cc.py src/game/80023B04.c -o build/src/game/80023B04.o\nsrc/game/80023B04.c:120: previous declaration of `D_8005B9E0'\n[12/215] cc src/game/8001CEDC.c\n[13/215] cc src/game/8001BFDC.c\n[14/215] cc src/game/8001D63C.c\n[15/215] cc src/game/800200A8.c\n[16/215] cc src/game/8001F9C4.c\n[17/215] cc src/game/80020A24.c\n[18/215] cc src/game/8002648C.c\nninja: build stopped: subcommand failed."
+  },
+  "func_80033D10": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 02:16",
+    "summary": "0 of 48 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.25341559999999996,
+    "turns": 16,
+    "minutes": 0.8,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 48 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.25341559999999996,
+        "turns": 16,
+        "minutes": 0.8
+      }
+    ],
+    "reason": "mipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x63c): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x640): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x644): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x648): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x64c): undefined reference to `.L80033D94'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x650): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x654): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x658): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x65c): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x660): undefined reference to `.L80033DAC'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0x664): undefined reference to `.L80033D94'\nninja: build stopped: subcommand failed."
+  },
+  "func_80018BE4": {
+    "outcome": "rejected",
+    "time": "2026-10-16 02:17",
+    "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_80018BE4/match.c:11: for each function it appears in.)",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.2571875,
+    "turns": 19,
+    "minutes": 0.9,
+    "runs": [
+      {
+        "outcome": "rejected",
+        "reason": "match.c doesn't match: gcc-2.7.2-psx aspsx 2.34: build/match/func_80018BE4/match.c:11: for each function it appears in.)",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.2571875,
+        "turns": 19,
+        "minutes": 0.9
+      }
+    ]
+  },
+  "func_8001456C": {
+    "outcome": "gave up",
+    "time": "2026-10-16 02:19",
+    "summary": "46 of 51 words differ",
+    "best": "attempt5.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.2,
+    "cost_usd": 0.4122064000000001,
+    "turns": 28,
+    "minutes": 2.2,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "46 of 51 words differ",
+        "best": "attempt5.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.2,
+        "cost_usd": 0.4122064000000001,
+        "turns": 28,
+        "minutes": 2.2
+      }
+    ]
+  },
+  "func_80017AF8": {
+    "outcome": "landed",
+    "time": "2026-10-16 02:20",
+    "summary": "0 of 51 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.2,
+    "cost_usd": 0.1339886,
+    "turns": 4,
+    "minutes": 0.2,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 51 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.2,
+        "cost_usd": 0.1339886,
+        "turns": 4,
+        "minutes": 0.2
+      }
+    ]
   }
 }
