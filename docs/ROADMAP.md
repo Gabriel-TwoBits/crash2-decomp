@@ -188,6 +188,19 @@ Two tests of keeping the agent on a large function longer, on functions given up
 
 On functions over about 0x240 bytes the loop's agent doesn't find the shape by itself, however long it is kept on them.
 
+Whether shared types would bring the large functions closer, tried by hand on `func_80021F4C` and against the field
+accesses in the assembly:
+- A field typed in a structure compiles like the same offset written by hand (`p->f` and `*(s32 *)(p + 0x60)` are one
+  load), so typing the game object mostly helps the reader, not the bytes.
+- How a global is declared does change the bytes: an array keeps its address in a saved register, a scalar doesn't
+  (docs/COMPILER.md, "Small data"). That fixed the first half of `func_80021F4C`.
+- Neighbouring globals as one structure made it worse (34 instructions without a counterpart to 56): `D_800608CC` to
+  `D_80060914` were separate variables in the original.
+- Following the object pointer through calls from the assembly alone reaches few functions (8): most get the object
+  through GOOL's tables of function pointers.
+
+The game object's layout is still worth writing down for the port (section 4), but it won't raise the match rate.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
