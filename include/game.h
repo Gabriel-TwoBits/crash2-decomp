@@ -159,6 +159,7 @@ void func_800345C8(void);
 void func_800346E8(void);
 void func_80034898(void);
 void func_80034BB8(void);
+void func_8003516C(u8 *);
 void func_80035444(s32);
 void func_80035A7C(s32);
 s32 func_80035AB8(void);
