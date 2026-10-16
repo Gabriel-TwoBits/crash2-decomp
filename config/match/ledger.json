@@ -5847,5 +5847,44 @@
         "minutes": 4.5
       }
     ]
+  },
+  "func_800170B4": {
+    "outcome": "gave up",
+    "time": "2026-10-16 03:14",
+    "summary": "4 of 57 words differ",
+    "best": "best.c",
+    "model": "claude-opus-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 5.4,
+    "cost_usd": 0.9897363999999998,
+    "turns": 2,
+    "minutes": 0.1,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "4 of 57 words differ",
+        "best": "attempt7.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 10.4,
+        "cost_usd": 0.3746522,
+        "turns": 31,
+        "minutes": 10.3
+      },
+      {
+        "outcome": "gave up",
+        "summary": "4 of 57 words differ",
+        "best": "best.c",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 5.4,
+        "cost_usd": 0.9897363999999998,
+        "turns": 2,
+        "minutes": 0.1
+      }
+    ]
   }
 }
