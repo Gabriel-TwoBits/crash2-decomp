@@ -5933,8 +5933,8 @@
     ]
   },
   "func_8002CB68": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 03:25",
+    "outcome": "landed",
+    "time": "2026-10-16 05:45",
     "summary": "0 of 58 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5955,8 +5955,7 @@
         "turns": 14,
         "minutes": 0.8
       }
-    ],
-    "reason": "declares D_8005F3C4 as `s32 *D_8005F3C4`, src/game/80029884.c as `s32 D_8005F3C4`"
+    ]
   },
   "func_80013968": {
     "outcome": "matched, not landed",
