@@ -3203,8 +3203,8 @@
     ]
   },
   "func_8003690C": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-15 23:48",
+    "outcome": "landed",
+    "time": "2026-10-16 01:09",
     "summary": "0 of 27 words differ",
     "best": "attempt2.c",
     "model": "claude-sonnet-5-5",
@@ -3237,8 +3237,7 @@
         "minutes": 0.4
       }
     ],
-    "cflags": "-O2 -G8 -mcpu=r8000",
-    "reason": "declares D_8005F288 as `struct Unk8005F288 D_8005F288`, src/game/800345C8.c as `char D_8005F288[]`"
+    "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_800325DC": {
     "outcome": "landed",
