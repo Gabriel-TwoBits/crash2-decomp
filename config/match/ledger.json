@@ -5691,8 +5691,8 @@
     "reason": "mipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xa4): undefined reference to `.L800120B8'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xa8): undefined reference to `.L800120E0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xac): undefined reference to `.L800120E0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xb0): undefined reference to `.L80012058'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xb4): undefined reference to `.L80012070'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xb8): undefined reference to `.L800120C0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xbc): undefined reference to `.L80012050'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xc0): undefined reference to `.L80012068'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xc4): undefined reference to `.L800120D8'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xc8): undefined reference to `.L800120E0'\nmipsel-linux-gnu-ld: build/asm/data/rodata.rodata.o:(.rodata+0xcc): undefined reference to `.L80012080'\nninja: build stopped: subcommand failed."
   },
   "func_80012170": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 03:16",
+    "outcome": "landed",
+    "time": "2026-10-16 03:17",
     "summary": "0 of 56 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -5713,8 +5713,7 @@
         "turns": 6,
         "minutes": 0.4
       }
-    ],
-    "reason": "FAILED: [code=1] build/src/game/80012010.o \nsrc/game/80012010.c:28: too many arguments to function `func_80012170'"
+    ]
   },
   "func_80013888": {
     "outcome": "gave up",
