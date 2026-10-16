@@ -128,6 +128,8 @@ void func_8002EFE4(void);
 void func_8002F0DC(s32);
 void func_8002F228(s32);
 void func_8002FB84(s32);
+void func_8002FCF8(void);
+void func_8002FDCC(s32 *);
 void func_8002FE58(s32 *);
 s32 func_80030D74(s32 *, void *);
 s32 func_80030EC0(s32 *, void *);

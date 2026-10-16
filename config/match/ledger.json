@@ -4144,9 +4144,9 @@
     "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_8002FDCC": {
-    "outcome": "gave up",
-    "time": "2026-10-16 00:28",
-    "summary": "4 of 35 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:53",
+    "summary": "2000 of 2000 trials agree, 1172 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
