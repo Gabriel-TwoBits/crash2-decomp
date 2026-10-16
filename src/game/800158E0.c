@@ -133,10 +133,8 @@ void func_800171C0(int a0) {
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800171E8);
 
-void func_800171E8(s32 a0, s32 a1, s32 a2);
-
 void func_80017358(s32 a0) {
-    func_800171E8(a0, 1, 0x6396347F);
+    func_800171E8((void *)a0, 1, 0x6396347F);
 }
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80017380);
