@@ -2,9 +2,12 @@
 """Splits the executable with splat (config/SCUS_941.54.yaml) and writes build.ninja, which compiles src/'s C
 (tools/psx_cc.py: the original compiler, its INCLUDE_ASM functions taken from asm/nonmatchings/) and assembles the rest of the
 split, links it with splat's linker script into build/SCUS_941.54.exe and checks that file's SHA-1 against the retail one.
+`ninja nonmatching` builds build/nonmatching/SCUS_941.54.exe with NON_MATCHING defined, unchecked: the equivalent track
+(docs/WORKFLOW.md).
 
     .venv/bin/python configure.py
     .venv/bin/ninja
+    .venv/bin/ninja nonmatching
 
 build.ninja runs this again when the splat configuration or this file change. Needs orig/USA/SCUS_941.54
 (tools/extract_disc.py) and binutils for little-endian MIPS (CONTRIBUTING.md).
@@ -31,6 +34,28 @@ EXE_SIZE = 0x50000
 ASFLAGS = "-EL -march=r3000 -mtune=r3000 -no-pad-sections -O1 -G0 -Iinclude"
 # An object of the linker script, build/<source path without its extension>.o
 LINKED_OBJECT = re.compile(r"(build/\S+?)\.o\(")
+HEADER_OBJECT = BUILD / "asm" / "header.o"
+
+# The equivalent build: the C compiled with NON_MATCHING defined, the assembly objects shared with the default build
+NONMATCHING_MACRO = "NON_MATCHING"
+NONMATCHING_BUILD = BUILD / "nonmatching"
+NONMATCHING_HEADER = NONMATCHING_BUILD / "asm" / "header.s"
+NONMATCHING_LINKER_SCRIPT = NONMATCHING_BUILD / f"{NAME}.ld"
+NONMATCHING_ELF = NONMATCHING_BUILD / f"{NAME}.elf"
+NONMATCHING_EXE = NONMATCHING_BUILD / f"{NAME}.exe"
+# A PS-X EXE's header and its .text are whole CD sectors
+SECTOR_SIZE = 0x800
+# Equivalent C may change the size of what follows it, so the header's entry point and .text size come from the link: the
+# fields by their comment in splat's header, and the symbol each becomes
+HEADER_FIELD = re.compile(r"^\.word 0x[0-9A-Fa-f]+(?P<comment>\s+/\* (?P<field>Initial PC|\.text size) \*/)$", re.MULTILINE)
+HEADER_SYMBOLS = {"Initial PC": "__SN_ENTRY_POINT", ".text size": "nonmatching_TEXT_SIZE"}
+TEXT_SIZE = f"nonmatching_TEXT_SIZE = ALIGN(main_ROM_END - main_ROM_START, {SECTOR_SIZE:#x});"
+LINKER_SCRIPT_END = "    /DISCARD/ :"
+# splat pins an address its split references to its retail value, though an object defines most of them with a label;
+# PROVIDE leaves those to the label. The startup code clears .bss up to this one, which nothing defines
+UNDEFINED_SYMBOL = re.compile(r"^(\w+) = (0x[0-9A-Fa-f]+);$")
+BSS_END_SYMBOL = "D_8006F1F0"
+BSS_END = "main_BSS_END"
 
 
 def split():
@@ -65,6 +90,57 @@ def c_dependencies(source):
     return [path.relative_to(HERE) for path in included + headers] + [Path("tools") / "psx_cc.py"]
 
 
+def nonmatching_link_files():
+    """Writes the equivalent build's header, linker script and symbol files, from splat's, for a layout whose sizes may
+    differ from the retail one. _gp keeps its retail value: the startup code loads $gp from the symbol the linker measures
+    its offsets from"""
+    # TRADEOFF: words of data splat left as numbers (addresses into code and data it found no symbol for) keep their
+    # retail values, stale once a size changes, until the split gives them symbols
+    header, fields = HEADER_FIELD.subn(lambda match: f".word {HEADER_SYMBOLS[match.group('field')]}{match.group('comment')}",
+                                       (HERE / "asm" / "header.s").read_text())
+    if fields != len(HEADER_SYMBOLS):
+        sys.exit(f"asm/header.s: {fields} of the header's {len(HEADER_SYMBOLS)} layout fields found")
+    script = (HERE / LINKER_SCRIPT).read_text()
+    if LINKER_SCRIPT_END not in script:
+        sys.exit(f"{LINKER_SCRIPT} has no {LINKER_SCRIPT_END.strip()} section")
+    script = script.replace(f"{BUILD}/src/", f"{NONMATCHING_BUILD}/src/").replace(
+        f"{HEADER_OBJECT}(", f"{NONMATCHING_BUILD / HEADER_OBJECT.relative_to(BUILD)}(").replace(
+        LINKER_SCRIPT_END, f"    {TEXT_SIZE}\n{LINKER_SCRIPT_END}", 1)
+    (HERE / NONMATCHING_HEADER).parent.mkdir(parents=True, exist_ok=True)
+    (HERE / NONMATCHING_HEADER).write_text(header)
+    (HERE / NONMATCHING_LINKER_SCRIPT).write_text(script)
+    bss_end_found = False
+    for path in UNDEFINED_SYMBOLS:
+        lines = []
+        for line in (HERE / path).read_text().splitlines():
+            assignment = UNDEFINED_SYMBOL.match(line)
+            if not line.strip():
+                continue
+            elif assignment is None:
+                sys.exit(f"{path}: `{line}` isn't a symbol's assignment")
+            elif assignment.group(1) == BSS_END_SYMBOL:
+                lines.append(f"{BSS_END_SYMBOL} = {BSS_END};")
+                bss_end_found = True
+            else:
+                lines.append(f"PROVIDE({assignment.group(1)} = {assignment.group(2)});")
+        (HERE / NONMATCHING_BUILD / path.name).write_text("".join(f"{line}\n" for line in lines))
+    if not bss_end_found:
+        sys.exit(f"{BSS_END_SYMBOL}, the end of .bss, isn't in {' or '.join(str(path) for path in UNDEFINED_SYMBOLS)}")
+
+
+def nonmatching_objects(linked):
+    """(object, source, built here) of the equivalent build: its own C objects and header, the default build's assembly"""
+    found = []
+    for obj, source in linked:
+        if source.suffix == ".c":
+            found.append((NONMATCHING_BUILD / obj.relative_to(BUILD), source, True))
+        elif obj == HEADER_OBJECT:
+            found.append((NONMATCHING_BUILD / obj.relative_to(BUILD), NONMATCHING_HEADER, True))
+        else:
+            found.append((obj, source, False))
+    return found
+
+
 def write_ninja(linked):
     binutils = {tool: BINUTILS_PREFIX + tool for tool in ("as", "ld", "objcopy")}
     missing = [command for command in binutils.values() if shutil.which(command) is None]
@@ -84,17 +160,20 @@ def write_ninja(linked):
         "  description = as $in",
         "",
         "rule cc",
-        f"  command = {sys.executable} tools/psx_cc.py $in -o $out",
+        f"  command = {sys.executable} tools/psx_cc.py $in -o $out $defines",
         "  description = cc $in",
         "",
         "rule ld",
-        f"  command = {binutils['ld']} -nostdlib --no-check-sections --no-warn-rwx-segments -T {LINKER_SCRIPT} "
-        + " ".join(f"-T {path}" for path in UNDEFINED_SYMBOLS)
-        + f" -Map {BUILD / NAME}.map -o $out $in",
+        f"  command = {binutils['ld']} -nostdlib --no-check-sections --no-warn-rwx-segments -T $script $symbols "
+        "-Map $map -o $out $in",
         "  description = ld $out",
         "",
         "rule exe",
         f"  command = {binutils['objcopy']} -O binary --gap-fill 0 --pad-to {EXE_SIZE:#x} $in $out",
+        "  description = exe $out",
+        "",
+        "rule exe_nonmatching",
+        f"  command = {binutils['objcopy']} -O binary $in $out && truncate -s %{SECTOR_SIZE} $out",
         "  description = exe $out",
         "",
         "rule check",
@@ -113,10 +192,35 @@ def write_ninja(linked):
         "",
         f"build {ELF}: ld {' '.join(str(obj) for obj, _ in linked)} | {LINKER_SCRIPT} "
         + " ".join(str(path) for path in UNDEFINED_SYMBOLS),
+        f"  script = {LINKER_SCRIPT}",
+        "  symbols = " + " ".join(f"-T {path}" for path in UNDEFINED_SYMBOLS),
+        f"  map = {BUILD / NAME}.map",
         f"build {EXE}: exe {ELF}",
         f"build {BUILD / 'check.stamp'}: check {CHECKSUM} | {EXE}",
         f"build check: phony {BUILD / 'check.stamp'}",
         "default check",
+        "",
+    ]
+    nonmatching = nonmatching_objects(linked)
+    nonmatching_symbols = [NONMATCHING_BUILD / path.name for path in UNDEFINED_SYMBOLS]
+    for obj, source, built_here in nonmatching:
+        if not built_here:
+            # The default build's object
+            continue
+        elif source.suffix == ".c":
+            lines.append(f"build {obj}: cc {source} | {' '.join(str(path) for path in c_dependencies(source))}")
+            lines.append(f"  defines = -D {NONMATCHING_MACRO}")
+        else:
+            lines.append(f"build {obj}: as {source}")
+    lines += [
+        "",
+        f"build {NONMATCHING_ELF}: ld {' '.join(str(obj) for obj, _, _ in nonmatching)} | {NONMATCHING_LINKER_SCRIPT} "
+        + " ".join(str(path) for path in nonmatching_symbols),
+        f"  script = {NONMATCHING_LINKER_SCRIPT}",
+        "  symbols = " + " ".join(f"-T {path}" for path in nonmatching_symbols),
+        f"  map = {NONMATCHING_BUILD / NAME}.map",
+        f"build {NONMATCHING_EXE}: exe_nonmatching {NONMATCHING_ELF}",
+        f"build nonmatching: phony {NONMATCHING_EXE}",
         "",
     ]
     (HERE / "build.ninja").write_text("\n".join(lines))
@@ -125,8 +229,9 @@ def write_ninja(linked):
 def main():
     split()
     linked = objects()
+    nonmatching_link_files()
     write_ninja(linked)
-    print(f"build.ninja: {len(linked)} objects; ninja builds and checks {EXE}")
+    print(f"build.ninja: {len(linked)} objects; ninja builds and checks {EXE}, ninja nonmatching builds {NONMATCHING_EXE}")
 
 
 if __name__ == "__main__":
