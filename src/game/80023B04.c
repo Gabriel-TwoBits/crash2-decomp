@@ -117,7 +117,39 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800254D4);
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80025D18);
 
-INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80025FDC);
+void func_80025FDC(s32 arg0, s32 *arg1) {
+    s32 *dst;
+    s32 n;
+    s32 *e;
+
+    if (D_8005B9E0.count < 8) {
+        switch (arg0) {
+        case 0x500:
+        case 0x600:
+            n = 3;
+            break;
+        case 0x800:
+            n = 0;
+            break;
+        case 0x900:
+        default:
+            n = 1;
+            break;
+        case 0x700:
+            n = 2;
+            break;
+        }
+        n--;
+        e = D_8005B9E0.e[D_8005B9E0.count];
+        dst = e + 1;
+        *e = arg0;
+        while (n >= 0) {
+            *dst++ = *arg1++;
+            n--;
+        }
+        D_8005B9E0.count++;
+    }
+}
 
 typedef struct Unk8005BA58 {
     u8 pad[0x10];
