@@ -131,6 +131,17 @@ declarations agreed (`func_800171E8`'s prototype, `D_8005F288` read as a structu
 words, differences in source (operand order, a `$gp` load's place) no `-mcpu` or scheduling flag moves. From here Opus
 retries only a near miss (within 10%).
 
+An eighth batch of 50 (0x98 to 0xE4 bytes), Opus only on Sonnet's near misses: 28 matched and 22 were left as assembly,
+at $13.32 for Sonnet and $3.74 for Opus, 94 minutes of runs. 18 landed by themselves, 8 once their files agreed with
+them: prototypes earlier landings had guessed from a call (`func_800271D8`, `func_80012170`, which its caller passes
+four arguments), definitions typed `void` that return their callee's result (`func_8002719C`), variables that are
+structures (`D_8005B9E0`, the count before `D_8005BA58`'s entries), a structure's further fields (`Unk80063458`) and a
+callee's parameter (`func_8003B940`'s count, `s32`). `land` now gives a function's definition signature to
+`include/game.h` in place of a guessed one, refuses a callee prototype that differs from the header's, and records the
+compiler's or linker's error line. Two matches can't land yet: `func_80012010` and `func_80033D10` jump through tables
+in the executable's one `.rodata` segment, which a compiled `switch` brings with it; 22 functions in assembly do the
+same.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
