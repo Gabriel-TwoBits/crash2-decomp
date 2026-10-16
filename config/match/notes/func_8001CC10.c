@@ -48,14 +48,15 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
 #define self ((Unk8001CC10Obj *)arg0)
 #define obj ((Unk8001CC10Obj *)arg1)
 #define args ((s32 *)arg4)
-    s32 out[20];
+    s32 out[22];
     s32 r;
-    s32 s3;
+    u16 s3;
     s32 i;
     s32 *src;
     s32 fl;
     s32 mask;
     s32 st;
+    Unk8001CC10Obj *cur;
 
     r = -0x1A;
     if (obj != 0) {
@@ -111,11 +112,13 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
         if (id == 0x1800 || id == 0x2600 || id == 0x1900 || id == 0x2500) {
             fl &= ~2;
         }
+        cur = D_8005F38C;
         mask = obj->bank->flags[s3 * 4];
         st = fl & mask;
-        if (obj == D_8005F38C) {
+        if (obj == cur) {
             if ((u32)(obj->f108 - 3) < 2U || obj->f108 == 2) {
-                st = (fl | 0x1002) & mask;
+                st = fl;
+                st = (st | 0x1002) & mask;
             }
         }
         if (st == 0) {
@@ -124,6 +127,9 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
                 obj->fA8 |= 0x10000;
             }
             func_8001C340(obj, s3, n, args);
+            return -0xFF;
+        }
+        if (s3 == 0xFF) {
             return -0xFF;
         }
     }

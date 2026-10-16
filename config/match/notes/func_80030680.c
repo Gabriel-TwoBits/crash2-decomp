@@ -14,7 +14,6 @@ s32 func_80030680(Unk80030680 *point, Unk80030680 *quad) {
     s32 x;
     s32 last;
     s32 *s;
-    s32 *a;
     s32 *b;
     Unk80030680 *q;
 
@@ -96,16 +95,16 @@ s32 func_80030680(Unk80030680 *point, Unk80030680 *quad) {
     }
     do {
         swapped = 0;
-        a = xs;
+        s = xs;
         b = xs + 1;
         for (i = n - 1; i > 0; i--) {
-            if (*b < *a) {
-                s32 t = *a;
+            if (*b < *s) {
+                s32 t = *s;
                 swapped = 1;
-                *a = *b;
+                *s = *b;
                 *b = t;
             }
-            a++;
+            s++;
             b++;
         }
     } while (swapped);
@@ -118,10 +117,10 @@ s32 func_80030680(Unk80030680 *point, Unk80030680 *quad) {
         n--;
     }
     if (n == 1) {
-        if (px == s[0]) {
-            return 1;
+        if (px != s[0]) {
+            return 0;
         }
-        return 0;
+        return 1;
     }
     do {
         if (s[0] <= px && px <= s[1]) {

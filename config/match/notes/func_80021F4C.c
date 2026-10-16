@@ -15,7 +15,7 @@ extern s32 D_80060820;
 extern s32 D_800608CC;
 extern s32 D_800608D4;
 extern s32 D_800608E0;
-extern volatile s32 D_800608F8;
+extern s32 D_800608F8;
 extern s32 D_80060914;
 
 void func_80021F4C(s32 *arg0, s32 arg1) {
@@ -43,7 +43,11 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
     } else if (s0 >= 0x201) {
         s0 = 0x200;
     }
-    p = &D_8005B9AC;
+    if (s0 < 0) {
+        p = &D_800608F8;
+    } else {
+        p = &D_8005B9AC;
+    }
     D_80060914 = s0;
     if (*p != 0x1001) {
         s0 = func_800312CC(*p, s0, 0x80);
