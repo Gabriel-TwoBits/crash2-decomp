@@ -4941,8 +4941,8 @@
     ]
   },
   "func_80016A60": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 01:39",
+    "outcome": "landed",
+    "time": "2026-10-16 03:19",
     "summary": "0 of 42 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -4963,8 +4963,7 @@
         "turns": 7,
         "minutes": 0.3
       }
-    ],
-    "reason": "defines Unk80063458 otherwise than src/game/800158E0.c"
+    ]
   },
   "func_80018AA8": {
     "outcome": "landed",
