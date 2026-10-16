@@ -29,11 +29,14 @@ void func_8002706C(void) {
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800270C4);
 
 
-void func_8002719C(s32 *arg0) {
+s32 func_8002719C(s32 *arg0) {
+    s32 result;
+
     arg0[0] = -0x100;
     arg0[5] = 0;
-    func_800271D8(arg0, 1);
+    result = func_800271D8(arg0, 1);
     arg0[0] = 0;
+    return result;
 }
 
 typedef struct Unk800271D8List {
