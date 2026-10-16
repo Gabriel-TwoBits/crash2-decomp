@@ -46,6 +46,32 @@ Only the probe's zero differing words and the unchanged SHA-1. "Equivalent" code
 obviously equivalent. The assembly is never edited to fit the C, and the build never swaps a function's object for the retail
 one.
 
+## The equivalent track
+
+A function too costly to match can get C that behaves the same, kept out of the default build:
+
+```c
+#ifdef NON_MATCHING
+s32 func_X(char *text) { /* behaviour-equivalent C */ }
+#else
+INCLUDE_ASM("asm/nonmatchings/game/<file>", func_X);
+#endif
+```
+
+The block keeps exactly that shape, with no conditional of its own inside: `tools/progress.py` counts the function as
+equivalent, never as in C, and `tools/match.py land` replaces the whole block once the function matches. splat extracts
+the assembly of every `INCLUDE_ASM` line whatever surrounds it, so `ninja` still builds and checks the retail bytes.
+
+`ninja nonmatching` builds `build/nonmatching/SCUS_941.54.exe` with `NON_MATCHING` defined: its own C objects, the
+default build's assembly, no SHA-1 check. With no equivalent function it is the retail executable byte for byte. A
+function of another size moves what follows it; the linker script is sequential, so the link holds, and `configure.py`
+writes a variant of splat's for it: the header's entry point and `.text` size taken from the link, splat's pinned
+addresses left to the labels that define them, the end of `.bss` where it is linked. Words of data splat left as
+numbers (addresses it found no symbol for) keep their retail values and go stale once anything before them changes size.
+
+A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function (to be
+written), agrees on every trial.
+
 ## Matching C and this project's style
 
 The C has to compile to the retail bytes, so the original's shape wins over style: a missing `else`, an early `return` in

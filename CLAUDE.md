@@ -24,6 +24,9 @@ matched), docs/COMPILER.md (what is proven about the toolchain), docs/TARGET.md 
 - **Matched means proven.** A function is matched only when `tools/probe_compiler.py` reports no differing word for it and
   the build's SHA-1 check passes with it in `src/`, both run in this session. Never report a match from reading the code,
   from "equivalent" logic, or from a partial diff.
+- **Equivalent means tested.** C that behaves like a function without matching it lives only under `#ifdef NON_MATCHING`,
+  its `INCLUDE_ASM` under `#else` (docs/WORKFLOW.md, "The equivalent track"), and the default build stays green. Such a
+  function is called equivalent, never matched, and only once `tools/equiv.py` (to be written) agrees on every trial.
 - **Never bend the target.** Don't edit the assembly, the expected objects or the linker script to make C match, and don't
   link a retail object in place of a compiled one.
 - **Don't copy code from projects without a compatible licence.** c2c, Crash2Recomp, CrashEdit and the Crash Bandicoot 1
@@ -36,7 +39,7 @@ matched), docs/COMPILER.md (what is proven about the toolchain), docs/TARGET.md 
 
 `.venv/bin/python configure.py` (splits with splat, writes `build.ninja`), then `.venv/bin/ninja`, which builds
 `build/SCUS_941.54.exe` and fails unless its SHA-1 is the retail one. Run it after every change; a red check is never
-committed.
+committed. `.venv/bin/ninja nonmatching` builds the equivalent track's executable, unchecked (docs/WORKFLOW.md).
 
 ## Working on functions
 

@@ -213,6 +213,10 @@ Function by function, by subsystem: the startup and main loop, the NSF paging, t
 rendering, audio. Names and types come with understanding (docs/WORKFLOW.md, "Naming"). Progress is the share of the
 compiled code's bytes matching (`tools/progress.py`); the assembly part stays assembly.
 
+A function too costly to match gets behaviour-equivalent C under `NON_MATCHING` (docs/WORKFLOW.md, "The equivalent
+track"). Done: the convention, `ninja nonmatching` and `tools/progress.py` counting equivalent functions apart. Next: the
+differential tester, `tools/equiv.py`.
+
 ## 5. Beyond matching
 
 With the game in C, a native port (the way Crash Twinsanity's PS2 decomp got its PC port) becomes possible. Not before the
