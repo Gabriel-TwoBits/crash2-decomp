@@ -9,6 +9,7 @@ docs/COMPILER.md's facts get proven: a match under one configuration and no othe
 The C file holds the function (and what it needs declared); FUNCTION is its name in the split (func_80011E98).
 """
 import argparse
+import difflib
 import re
 import struct
 import subprocess
@@ -37,6 +38,8 @@ SPLIT_WORD = re.compile(r"/\* [0-9A-F]+ [0-9A-F]{8} ([0-9A-F]{8}) \*/")
 # objdump -dr: an instruction line ("  1c:	27bdffe8 	addiu ...") and a relocation line ("			1c: R_MIPS_26	sprintf")
 DUMP_WORD = re.compile(r"^\s*([0-9a-f]+):\s+([0-9a-f]{8})\s")
 DUMP_RELOCATION = re.compile(r"^\s*([0-9a-f]+): (R_MIPS_\w+)\s")
+# A register operand in rabbitizer's disassembly ("$s0", "$v1", "$31"), "$gp" and "$sp" aside
+REGISTER = re.compile(r"\$(?!gp\b|sp\b)\w+")
 
 
 def retail_assembly(function):
@@ -102,12 +105,26 @@ def show_diff(gcc, aspsx, source, cflags, function, target):
         if error is not None:
             sys.exit(f"{gcc.name} aspsx {aspsx}: {error}")
         words, masks = compiled_words(obj, function)
+    shapes = ([], [])
     for index in range(max(len(target), len(words))):
         expected = rabbitizer.Instruction(target[index]).disassemble() if index < len(target) else ""
         actual = rabbitizer.Instruction(words[index]).disassemble() if index < len(words) else ""
         mask = ~masks.get(index, 0) & 0xFFFFFFFF
         same = index < len(target) and index < len(words) and target[index] & mask == words[index] & mask
         print(f"{'  ' if same else '! '}{index * INSTRUCTION_SIZE:4X}  {expected:40} {actual}")
+        for side, text in zip(shapes, (expected, actual)):
+            if not text:
+                continue
+            elif index in masks:
+                # A relocated field holds 0 in the compiled object: only the mnemonic compares
+                side.append(text.split()[0])
+            else:
+                side.append(REGISTER.sub("$r", text))
+    # Registers aside and aligned, so that one extra instruction doesn't shift all that follow: what differs in the
+    # instructions themselves, their order and their constants
+    aligned = difflib.SequenceMatcher(None, *shapes, autojunk=False)
+    unmatched = len(shapes[0]) - sum(block.size for block in aligned.get_matching_blocks())
+    print(f"{unmatched} of {len(target)} instructions without a counterpart, registers aside")
     print(f"{score(target, words, masks)} of {len(target)} words differ")
 
 

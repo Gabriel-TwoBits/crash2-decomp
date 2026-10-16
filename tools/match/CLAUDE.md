@@ -13,7 +13,10 @@ C89: declarations at the start of a block, no `//` comments, no C99 features.
 - Never edit `target.s` or `target.o`, never use inline assembly (`asm`, `__asm__`), never pin registers
   (`register ... asm("$s0")`). A match has to come from plain C.
 - `./score.sh FILE.c` is the only judge: it compiles the file and prints the retail and compiled instructions side by side,
-  `!` on each differing word, then how many differ. Matched means `0 of N words differ`.
+  `!` on each differing word, then how many differ. Matched means `0 of N words differ`. The line before it counts the
+  retail instructions with no counterpart once registers are set aside and the two sides aligned: the shape of the code.
+  One register allocated otherwise changes most words of a large function, so that line is the one to bring down first;
+  at 0, only registers differ.
 - `./permute.sh FILE.c MINUTES` runs decomp-permuter on a near miss and prints its best candidates with their real count
   from the probe. The permuter's own score ignores `nop`s, so a permuter "0" is not a match until `./score.sh` says so.
 
@@ -26,7 +29,7 @@ C89: declarations at the start of a block, no `//` comments, no C99 features.
    control flow first (the branches and loops line up), then the register and scheduling differences.
 3. Score after every change. Keep each attempt in its own file (`attempt1.c`, `attempt2.c`, ...), and copy the best so far
    to `best.c` each time the count drops: the session has a time limit, and what isn't in a file when it ends is lost.
-4. Stop when it matches, or after about three attempts that don't lower the count, or when the remaining difference is a
+4. Stop when it matches, or after about three attempts that lower neither count, or when the remaining difference is a
    register swap the permuter can't close in 5 minutes.
 
 What tends to matter with this GCC: `goto`-built loops are not hoisted like `for`/`while` ones (a constant kept in a saved
