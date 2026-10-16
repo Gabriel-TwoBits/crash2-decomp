@@ -6102,8 +6102,8 @@
     ]
   },
   "func_80038E14": {
-    "outcome": "matched, not landed",
-    "time": "2026-10-16 03:41",
+    "outcome": "landed",
+    "time": "2026-10-16 05:45",
     "summary": "0 of 59 words differ",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -6124,8 +6124,7 @@
         "turns": 7,
         "minutes": 0.4
       }
-    ],
-    "reason": "defines Obj otherwise than src/game/80038700.c"
+    ]
   },
   "func_80013AE8": {
     "outcome": "matched, not landed",

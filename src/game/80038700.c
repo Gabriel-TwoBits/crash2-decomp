@@ -72,4 +72,10 @@ void func_80038D08(Obj *obj, u32 op) {
     obj->result = func_80032F18(val, flags, dst, obj);
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038E14);
+void func_80038E14(Obj *obj, u32 arg1) {
+    s32 *a;
+    s32 *b;
+    a = operand_address(obj, (arg1 >> 12) & 0xFFF);
+    b = operand_address(obj, arg1 & 0xFFF);
+    func_80025FDC(*b, a);
+}
