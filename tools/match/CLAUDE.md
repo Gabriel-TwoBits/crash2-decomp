@@ -38,7 +38,8 @@ C89: declarations at the start of a block, no `//` comments, no C99 features.
 What tends to matter with this GCC: `goto`-built loops are not hoisted like `for`/`while` ones (a constant kept in a saved
 register means the original was a `for`/`while`); the order of statements and of declared locals changes register
 allocation; a local array or struct sets the frame size; `x / 4` (signed) differs from `x >> 2`; an unused temporary can be
-what restores the original's register.
+what restores the original's register; a global's address kept in a saved register (`lui`/`addiu`, then `0x0($sN)`)
+means an array, `extern s32 D_X[]` used as `D_X[0]`.
 
 ## When you stop
 

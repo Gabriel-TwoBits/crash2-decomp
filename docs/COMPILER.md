@@ -69,6 +69,12 @@ files"), and maspsx at `-G8` does the same:
   file that defines it, and its C defines it too. The two matches above prove it: as `extern`, their variables compile to
   `lui`/`lw`.
 - **An address never** (`la`): `&x` is `lui`/`addiu` even in the defining file (`func_800125F8` with `D_8005F1B0`).
+- **An array's address is kept, a scalar's is not**: an `extern s32 x[]` read and written as `x[0]` around a call gets its
+  address (`lui`/`addiu`) once, in a saved register, and `0x0($sN)` after; an `extern s32 x` gets a `lui` at each access.
+  `func_80021F4C` with `D_8005B9AC` shows both (a scalar, a pointer to it and `volatile` never gave the retail's `$s1`).
+  Matched functions declare `D_800608D4` and `D_800608D8` as arrays for the same reason. A structure over neighbouring
+  variables is not the same thing: `D_800608CC` to `D_80060914` as one structure moved its base into a saved register
+  where retail has a `lui` per variable (34 instructions without a counterpart became 56).
 
 How the build follows it:
 
