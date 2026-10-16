@@ -5769,5 +5769,83 @@
         "minutes": 0.5
       }
     ]
+  },
+  "func_8003147C": {
+    "outcome": "gave up",
+    "time": "2026-10-16 02:53",
+    "summary": "10 of 56 words differ",
+    "best": "attempt5.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 3.9,
+    "cost_usd": 0.3113344,
+    "turns": 2,
+    "minutes": 0.1,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "10 of 56 words differ",
+        "best": "attempt5.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.9,
+        "cost_usd": 0.3113344,
+        "turns": 2,
+        "minutes": 0.1
+      }
+    ]
+  },
+  "func_80031578": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 02:54",
+    "summary": "0 of 56 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.26472319999999994,
+    "turns": 19,
+    "minutes": 1.0,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 56 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.26472319999999994,
+        "turns": 19,
+        "minutes": 1.0
+      }
+    ],
+    "reason": "[19/215] cc src/game/80031578.c\nFAILED: [code=1] build/src/game/80031578.o \n.venv/bin/python tools/psx_cc.py src/game/80031578.c -o build/src/game/80031578.o\ninclude/game.h:54: previous declaration of `func_80031578'\n[20/215] cc src/game/8002E884.c\n[21/215] cc src/game/80026CA0.c\n[22/215] cc src/game/80029884.c\n[23/215] cc src/game/8002FB84.c\n[24/215] cc src/game/8003147C.c\n[25/215] cc src/game/8002FE58.c\n[26/215] cc src/game/800316EC.c\nninja: build stopped: subcommand failed."
+  },
+  "func_800324A8": {
+    "outcome": "landed",
+    "time": "2026-10-16 02:59",
+    "summary": "0 of 56 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 4.5,
+    "cost_usd": 0.3312282,
+    "turns": 24,
+    "minutes": 4.5,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 56 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 4.5,
+        "cost_usd": 0.3312282,
+        "turns": 24,
+        "minutes": 4.5
+      }
+    ]
   }
 }
