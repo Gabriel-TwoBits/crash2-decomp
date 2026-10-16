@@ -511,6 +511,13 @@ def commit_records():
         commit("chore: record the matching runs")
 
 
+def near_miss(entry):
+    """Whether the run that gave the function up came within NEAR_MISS of a match"""
+    counted = DIFFERING.search(entry.get("summary", ""))
+    return (entry["outcome"] == "gave up" and counted is not None
+            and int(counted.group(1)) <= NEAR_MISS * int(counted.group(2)))
+
+
 def report():
     ledger = load_ledger()
     outcomes = {}
@@ -523,10 +530,8 @@ def report():
             stats["runs"] += 1
             stats["matched"] += attempt["outcome"] == "matched"
             stats["cost_usd"] += attempt.get("cost_usd") or 0
-        counted = DIFFERING.search(entry.get("summary", ""))
-        if entry["outcome"] == "gave up" and counted is not None:
-            if int(counted.group(1)) <= NEAR_MISS * int(counted.group(2)):
-                near.append(f"{name} ({entry['summary']})")
+        if near_miss(entry):
+            near.append(f"{name} ({entry['summary']})")
         elif entry["outcome"] in ("matched, blocked", "matched, not landed"):
             # The reason's first compiler error says more than ninja's closing line
             lines = entry.get("reason", "").splitlines()
@@ -555,7 +560,7 @@ def main():
     parser.add_argument("--minutes", type=float, default=DEFAULT_MINUTES, help="the agent's time limit per function")
     parser.add_argument("--model", help="the agent's model (default: Claude Code's)")
     parser.add_argument("--count", type=int, default=1, help="loop: how many functions")
-    parser.add_argument("--retry-model", help="loop: a second model for what the first doesn't match")
+    parser.add_argument("--retry-model", help="loop: a second model for near misses of the first")
     arguments = parser.parse_args()
 
     if arguments.command == "next":
@@ -569,7 +574,8 @@ def main():
                 print("nothing left to try")
                 break
             matched = run(name, arguments.minutes, arguments.model)
-            if not matched and arguments.retry_model:
+            # The second model only where the first came close: elsewhere it rarely matched, at several times the cost
+            if not matched and arguments.retry_model and near_miss(load_ledger()[name]):
                 matched = run(name, arguments.minutes, arguments.retry_model)
             landed = matched and land(name)
             print(f"{name}: {'landed' if landed else load_ledger()[name]['outcome']}", flush=True)
