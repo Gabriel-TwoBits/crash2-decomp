@@ -8238,9 +8238,9 @@
     ]
   },
   "func_80026EF4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 10:34",
-    "summary": "21 of 94 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 20:51",
+    "summary": "2000 of 2000 trials agree, 1796 compared",
     "best": "attempt10.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
