@@ -4912,5 +4912,83 @@
         "minutes": 0.2
       }
     ]
+  },
+  "func_80030E1C": {
+    "outcome": "gave up",
+    "time": "2026-10-16 01:38",
+    "summary": "41 of 41 words differ",
+    "best": "attempt1.c",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.2558114000000001,
+    "turns": 18,
+    "minutes": 0.9,
+    "runs": [
+      {
+        "outcome": "gave up",
+        "summary": "41 of 41 words differ",
+        "best": "attempt1.c",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.2558114000000001,
+        "turns": 18,
+        "minutes": 0.9
+      }
+    ]
+  },
+  "func_80016A60": {
+    "outcome": "matched, not landed",
+    "time": "2026-10-16 01:39",
+    "summary": "0 of 42 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.16765009999999997,
+    "turns": 7,
+    "minutes": 0.3,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 42 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.16765009999999997,
+        "turns": 7,
+        "minutes": 0.3
+      }
+    ],
+    "reason": "defines Unk80063458 otherwise than src/game/800158E0.c"
+  },
+  "func_80018AA8": {
+    "outcome": "landed",
+    "time": "2026-10-16 01:39",
+    "summary": "0 of 42 words differ",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.17431069999999999,
+    "turns": 10,
+    "minutes": 0.5,
+    "runs": [
+      {
+        "outcome": "matched",
+        "summary": "0 of 42 words differ",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.17431069999999999,
+        "turns": 10,
+        "minutes": 0.5
+      }
+    ]
   }
 }
