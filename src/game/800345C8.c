@@ -700,7 +700,9 @@ s32 func_800360CC(s32 arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_8003613C);
+s32 func_8003613C(void) {
+    return D_8005F264[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036150);
 
