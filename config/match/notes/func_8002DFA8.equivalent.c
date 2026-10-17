@@ -35,7 +35,6 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
     s32 v;
 
     sp40 = arg0;
-    s1 = 0; fp = 0; s7 = 0; s6 = 0; d[0] = 0; d[1] = 0; d[2] = 0;
     i = 0;
     cnt = 0;
     if (D_80068FE8 > 0) {
