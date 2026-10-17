@@ -11781,19 +11781,19 @@
     ]
   },
   "func_800316EC": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 19:05",
-    "summary": "500 of 500 trials agree, 500 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-17 20:00",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
-    "model": "claude-sonnet-5-5",
+    "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 0.8,
-    "cost_usd": 0.28697300000000003,
-    "turns": 10,
-    "minutes": 0.7,
+    "wall_minutes": 4.1,
+    "cost_usd": 1.3058313999999998,
+    "turns": 35,
+    "minutes": 4.1,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -11849,6 +11849,19 @@
         "cost_usd": 0.28697300000000003,
         "turns": 10,
         "minutes": 0.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 4.1,
+        "cost_usd": 1.3058313999999998,
+        "turns": 35,
+        "minutes": 4.1
       }
     ]
   },
@@ -12056,19 +12069,19 @@
     ]
   },
   "func_8002FFFC": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 19:06",
-    "summary": "trial 5 disagrees: $a0=0xfffffff1 $a1=0x80107f78 $a2=0x80100ba0 $a3=0x801067e4, stack 0x80107838 0x80106f74 0x00000000 0x80107530\nthe retail code ended by access to unmapped 0x8020031c, the candidate by access to unmapped 0x80200324\n462 of 500 trials agree",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 19:56",
+    "summary": "500 of 500 trials agree, 14 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
-    "model": "claude-sonnet-5-5",
+    "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.8,
-    "cost_usd": 0.4143667000000001,
-    "turns": 19,
-    "minutes": 1.7,
+    "wall_minutes": 2.5,
+    "cost_usd": 0.8849741999999998,
+    "turns": 22,
+    "minutes": 2.4,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -12125,8 +12138,22 @@
         "cost_usd": 0.4143667000000001,
         "turns": 19,
         "minutes": 1.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 14 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.5,
+        "cost_usd": 0.8849741999999998,
+        "turns": 22,
+        "minutes": 2.4
       }
-    ]
+    ],
+    "reason": "2000 of 2000 trials agree, 82 compared: fewer than 5% of the trials compared"
   },
   "func_80029D0C": {
     "outcome": "equivalent",

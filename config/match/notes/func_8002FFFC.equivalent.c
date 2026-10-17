@@ -27,7 +27,7 @@ extern s8 D_8005BC98[];
 s32 func_8002FFFC(s32 arg0, Unk8002FFFCVec *arg1, Unk8002FFFCVec *arg2) {
     Unk8002FFFCVec *pts[POLY_CORNERS];
     Unk8002FFFCSlot slots[SLOT_COUNT];
-    s8 used[POLY_EDGES];
+    s8 used[SLOT_COUNT];
     Unk8002FFFCVec *prev;
     Unk8002FFFCVec *cur;
     Unk8002FFFCVec *first_on;
@@ -51,10 +51,10 @@ s32 func_8002FFFC(s32 arg0, Unk8002FFFCVec *arg1, Unk8002FFFCVec *arg2) {
             pts[i] = &arg1[*idx++];
         }
         prev = pts[0];
-        ylo = prev->y;
         for (i = 0; i < POLY_EDGES; i++) {
             s->hit = 0;
             cur = pts[i + 1];
+            ylo = prev->y;
             yhi = cur->y;
             if (yhi >= ylo) {
                 if (ylo < arg0 && arg0 < yhi) {
@@ -77,15 +77,14 @@ s32 func_8002FFFC(s32 arg0, Unk8002FFFCVec *arg1, Unk8002FFFCVec *arg2) {
             }
             s++;
             prev = cur;
-            ylo = yhi;
         }
     }
 
     idx = D_8005BBB8;
     count = 0;
-    used[0] = 0;
-    used[1] = 0;
-    used[2] = 0;
+    for (i = 0; i < SLOT_COUNT; i++) {
+        used[i] = 0;
+    }
     for (g = 0; g < POLY_OUT_GROUPS; g++) {
         first_hit = 0;
         first_on = 0;
