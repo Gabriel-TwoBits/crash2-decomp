@@ -865,6 +865,8 @@ class Call:
 class Run:
     status: str = None
     unsupported: str = None
+    # Where an exception stopped it
+    fault_pc: int = None
     registers: dict = field(default_factory=dict)
     calls: list = field(default_factory=list)
     regions: dict = field(default_factory=dict)
@@ -1228,6 +1230,7 @@ class Machine:
             outcome.status = outcome.unsupported
         elif number in EXCEPTIONS:
             outcome.status = EXCEPTIONS[number]
+            outcome.fault_pc = uc.reg_read(mips.UC_MIPS_REG_PC)
         else:
             outcome.status = f"exception {number}"
         uc.emu_stop()
@@ -1318,6 +1321,25 @@ def compare(memory, retail, declared, expected, actual, restored=()):
     return differences
 
 
+def depends_on_unset(memory, retail, declared, first, second):
+    """Whether two retail runs of one trial, (outcome, entry registers) each, the second's registers that aren't
+    arguments flipped, end otherwise: the code read a register it never set. A register left as each run got it is
+    the flip, not a difference; two runs stopped by the same exception also compare where it stopped and their
+    registers there, which an address error's status doesn't tell"""
+    (one, one_entry), (two, two_entry) = first, second
+    kept = [name for name in REGISTER_NAMES if one.registers[name] == one_entry.get(REGISTERS[name])
+            and two.registers[name] == two_entry.get(REGISTERS[name])]
+    if compare(memory, retail, declared, one, two, [name for name in CALLEE_SAVED if name in kept]):
+        return True
+    elif one.status in (RETURNED, LIMIT):
+        # Compared whole above
+        return False
+    else:
+        # The same exception after the same calls
+        return one.fault_pc != two.fault_pc or any(one.registers[name] != two.registers[name]
+                                                    for name in REGISTER_NAMES if name not in kept)
+
+
 def describe_inputs(fuzz, retail):
     """The trial's arguments: $a0-$a3 and the words on the caller's stack, then its repairs"""
     values = fuzz.arguments()
@@ -1388,10 +1410,8 @@ def main():
                 again_machine = Machine(base, retail, retail_entry, retail_size, declared.callee_arguments)
             other = fuzz.with_other_registers()
             again = again_machine.run(memory, other)
-            entry, other_entry = entry_registers(fuzz), entry_registers(other)
-            restored = [name for name in CALLEE_SAVED if expected.registers[name] == entry.get(REGISTERS[name])
-                        and again.registers[name] == other_entry.get(REGISTERS[name])]
-            depends = bool(compare(memory, retail, declared, expected, again, restored))
+            depends = depends_on_unset(memory, retail, declared, (expected, entry_registers(fuzz)),
+                                       (again, entry_registers(other)))
         else:
             depends = False
         if depends:

@@ -118,7 +118,8 @@ candidate does, as one where both take the same exception (reported, not compare
 are compared); a candidate reaching the limit where the retail code returned disagrees. A disagreeing trial's retail code runs again with
 every bit flipped in the registers that aren't arguments: when its result changes, it depends on registers its caller
 left (a path reading one it never set, which C can't name: `func_80017380` uses the caller's `$s0` for an entry type it
-doesn't handle), and the trial agrees, reported and not compared. The first disagreement is printed with its trial's arguments and
+doesn't handle), and the trial agrees, reported and not compared. Two runs stopped by the same address error compare
+where it stopped and their registers there. The first disagreement is printed with its trial's arguments and
 repairs; the last line is `N of M trials agree`, and the exit status 0 only when all do. A 500-trial run takes 1 to 2
 seconds, 5 to 25 for a function whose trials often reach the limit or fault after thousands of instructions (a repair
 follows the retail run instruction by instruction, in Python: `func_8002F6C8`, 24 seconds).
