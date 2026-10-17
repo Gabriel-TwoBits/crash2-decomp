@@ -757,8 +757,10 @@ def placement(name, text, equivalent):
         elif types[kind].start() < insertion:
             text = text.replace(definition.group(0), "")
         elif equivalent and not in_block(types[kind]):
-            # Both builds keep seeing it there; a type emits no code, so the default build's bytes stay
-            below = below.replace(types[kind].group(0), "", 1)
+            # Both builds keep seeing it there; a type emits no code, so the default build's bytes stay. The blank line
+            # after it goes with it
+            moved = types[kind].group(0)
+            below = below.replace(moved + "\n" if moved + "\n" in below else moved, "", 1)
             hoisted.append(types[kind].group(0).rstrip("\n") + "\n")
             text = text.replace(definition.group(0), "")
         else:
