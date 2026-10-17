@@ -451,14 +451,14 @@
   },
   "func_80022E74": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:50",
-    "summary": "3 of 57 words differ",
+    "time": "2026-10-16 21:19",
+    "summary": "500 of 500 trials agree, 402 compared",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "cost_usd": 0.24997810000000004,
-    "turns": 17,
-    "minutes": 3.7,
+    "cost_usd": 0.2128612,
+    "turns": 11,
+    "minutes": 0.7,
     "runs": [
       {
         "outcome": "gave up",
@@ -491,11 +491,24 @@
         "cost_usd": 0.24997810000000004,
         "turns": 17,
         "minutes": 3.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 402 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.2128612,
+        "turns": 11,
+        "minutes": 0.7
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
-    "wall_minutes": 3.8,
-    "reason": "declares `Outer *func_80014260(s8 *, s32, s32)`, include/game.h `void *func_80014260(void *, s32, s32)`"
+    "wall_minutes": 0.7,
+    "mode": "equivalent",
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/80020A24.o \nsrc/game/80020A24.c:260: conflicting types for `D_800608CC'"
   },
   "func_80038C14": {
     "outcome": "landed",
@@ -5782,17 +5795,17 @@
     ]
   },
   "func_8002FCF8": {
-    "outcome": "gave up",
-    "time": "2026-10-16 02:34",
-    "summary": "33 of 53 words differ",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 21:16",
+    "summary": "500 of 500 trials agree, 115 compared",
     "best": "base.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.0,
-    "cost_usd": 0.25177309999999997,
-    "turns": 10,
-    "minutes": 1.0,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.2072758,
+    "turns": 7,
+    "minutes": 0.6,
     "runs": [
       {
         "outcome": "gave up",
@@ -5805,8 +5818,22 @@
         "cost_usd": 0.25177309999999997,
         "turns": 10,
         "minutes": 1.0
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 115 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.2072758,
+        "turns": 7,
+        "minutes": 0.6
       }
-    ]
+    ],
+    "mode": "equivalent",
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/8002FB84.o \nsrc/game/8002FB84.c:125: conflicting types for `D_8005F3D8'"
   },
   "func_80039104": {
     "outcome": "landed",
@@ -5835,15 +5862,15 @@
   },
   "func_80014148": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:44",
-    "summary": "40 of 54 words differ",
+    "time": "2026-10-16 21:17",
+    "summary": "500 of 500 trials agree, 500 compared",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
     "wall_minutes": 1.0,
-    "cost_usd": 0.2892303,
-    "turns": 14,
+    "cost_usd": 0.2933935,
+    "turns": 21,
     "minutes": 1.0,
     "runs": [
       {
@@ -5857,22 +5884,35 @@
         "cost_usd": 0.2892303,
         "turns": 14,
         "minutes": 1.0
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.2933935,
+        "turns": 21,
+        "minutes": 1.0
       }
     ],
-    "reason": "defines Unk80014148 otherwise than src/game/800123F0.c"
+    "mode": "equivalent",
+    "reason": "src/game/800123F0.c defines Unk80014148 further down: moved into the NON_MATCHING block, it would leave the default build"
   },
   "func_80019D30": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:46",
-    "summary": "6 of 54 words differ",
+    "time": "2026-10-16 21:17",
+    "summary": "500 of 500 trials agree, 500 compared",
     "best": "a2.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.0,
-    "cost_usd": 0.2503605,
-    "turns": 15,
-    "minutes": 1.0,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.158477,
+    "turns": 6,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -5885,9 +5925,22 @@
         "cost_usd": 0.2503605,
         "turns": 15,
         "minutes": 1.0
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.158477,
+        "turns": 6,
+        "minutes": 0.4
       }
     ],
-    "reason": "FAILED: [code=1] build/src/game/80019098.o \nsrc/game/80019098.c:93: `func_80019D30' redeclared as different kind of symbol"
+    "mode": "equivalent",
+    "reason": "FAILED: [code=1] build/src/game/80019098.o \nsrc/game/80019098.c:108: `func_80019D30' redeclared as different kind of symbol"
   },
   "func_800270C4": {
     "outcome": "landed",
@@ -5966,16 +6019,16 @@
   },
   "func_80013888": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:43",
-    "summary": "8 of 56 words differ",
+    "time": "2026-10-16 21:18",
+    "summary": "500 of 500 trials agree, 500 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 6.7,
-    "cost_usd": 0.4450846,
-    "turns": 8,
-    "minutes": 0.4,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.1802333,
+    "turns": 6,
+    "minutes": 0.5,
     "runs": [
       {
         "outcome": "gave up",
@@ -5988,9 +6041,22 @@
         "cost_usd": 0.4450846,
         "turns": 8,
         "minutes": 0.4
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.1802333,
+        "turns": 6,
+        "minutes": 0.5
       }
     ],
-    "reason": "declares `void func_80013968()`, include/game.h `s32 func_80013968(s32)`"
+    "mode": "equivalent",
+    "reason": "src/game/800123F0.c defines Unk80062D70 further down: moved into the NON_MATCHING block, it would leave the default build"
   },
   "func_80027420": {
     "outcome": "landed",
@@ -6159,17 +6225,17 @@
     ]
   },
   "func_8001A054": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:46",
-    "summary": "55 of 58 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:19",
+    "summary": "2000 of 2000 trials agree, 1732 compared",
     "best": "a3.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.4,
-    "cost_usd": 0.34048770000000006,
-    "turns": 21,
-    "minutes": 1.3,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.18899570000000002,
+    "turns": 9,
+    "minutes": 0.5,
     "runs": [
       {
         "outcome": "gave up",
@@ -6182,9 +6248,21 @@
         "cost_usd": 0.34048770000000006,
         "turns": 21,
         "minutes": 1.3
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 428 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.18899570000000002,
+        "turns": 9,
+        "minutes": 0.5
       }
     ],
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/8001A014.o \nsrc/game/8001A014.c:31: conflicting types for `D_80063034'"
+    "mode": "equivalent"
   },
   "func_8002CB68": {
     "outcome": "landed",
