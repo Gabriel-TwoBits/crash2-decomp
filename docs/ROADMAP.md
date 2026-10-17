@@ -343,9 +343,17 @@ The four functions the 5% floor had refused (`func_8001F9C4`, `func_8002F6C8`, `
 with their earlier drafts, unchanged: 2,000 of 2,000 trials agree on both seeds, 229 to 1,634 compared. 171 equivalent
 functions, 32 left as assembly.
 
+In the game, the 170 equivalents without `func_80027CD0` now display otherwise from frame 2,867: there the equivalent
+executable shows retail's previous frame, by frame 3,150 it lags 15 to 17 frames, and the inputs then land elsewhere.
+Two groups each agree with retail on all 8,000 frames on their own: the equivalents of the first 15 source files
+(`800111B0.c` to `80023B04.c`), and those of the other 15. Disabling any one of the last 8 landed changes nothing. The
+difference is their sum's timing, as with the decompressor (above); PCSX-Redux 436 has no CPU overclock that would hide
+it.
+
 Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 32 functions left as
-assembly (the largest; two with GTE instructions equiv.py can't run), each batch checked in the game too; a run_game
-comparison that tolerates timing (the decompressor's calls, or the game's state at checkpoints).
+assembly (the largest; two with GTE instructions equiv.py can't run), each batch checked in the game too (by groups
+that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates timing (the game's state at checkpoints, or
+inputs keyed to it rather than to frame numbers).
 
 ## 5. Readable C (in progress)
 

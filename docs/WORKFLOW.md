@@ -207,6 +207,11 @@ program counter sampled at each vsync moves by a few cycles), so a difference co
 necessarily from its C, though: the game is sensitive to timing (the retail executable under PCSX-Redux's interpreter
 instead of its recompiler displays otherwise from frame 2,004) and to where its data sits (docs/ROADMAP.md, section 4).
 
+Slower or faster functions add up: with enough equivalents in, a load ends a frame later and the inputs then land on
+another state of the game. Such a difference is told from a wrong function by splitting the equivalents (by source
+file, a block's declarations being shared with its neighbours: `#ifdef NON_MATCHING` turned to `#if 0` for the others):
+when each group alone agrees on every frame, every function ran right and only their sum's timing differs.
+
 ## Matching C and this project's style
 
 The C has to compile to the retail bytes, so the original's shape wins over style: a missing `else`, an early `return` in
