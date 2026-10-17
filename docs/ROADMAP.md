@@ -211,7 +211,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The last 32 functions** as equivalent C (section 4, "Next").
+1. **The last 22 functions** as equivalent C (section 4, "Next").
 2. **Readable C, R1**: the first 40 to 60 names, those with evidence of grade A (section 5).
 
 ## 4. The engine in C
@@ -350,7 +350,16 @@ Two groups each agree with retail on all 8,000 frames on their own: the equivale
 difference is their sum's timing, as with the decompressor (above); PCSX-Redux 436 has no CPU overclock that would hide
 it.
 
-Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 32 functions left as
+A second `run --equivalent` on the 30 functions left without GTE instructions (Sonnet, US$10.13; 169 equivalent runs,
+US$60.45 in all by the ledger), each retry told why its earlier draft wasn't landed, landed 7. Three more failed to
+compile in place, matched C declaring them as data to pass their address (`extern char func_80019D30[];`): declared as
+functions without a prototype, the SHA-1 holds and two landed. `func_80015344` landed once a trial where the retail run
+reaches equiv.py's limit is left uncompared (docs/WORKFLOW.md). Five agreed on the agent's 500 trials and failed
+landing's 2,000 on one to four trials of seeds 1 and 2: agents now run landing's check before stopping. 181 equivalent
+functions, 22 left as assembly; in the game, as above, the two halves each agree with retail on all 8,000 frames and
+together lag from frame 2,867.
+
+Next: find what in the disc's data holds the executable's addresses; `run --equivalent` again on the 22 functions left as
 assembly (the largest; two with GTE instructions equiv.py can't run), each batch checked in the game too (by groups
 that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates timing (the game's state at checkpoints, or
 inputs keyed to it rather than to frame numbers).
