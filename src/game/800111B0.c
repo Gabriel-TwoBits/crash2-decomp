@@ -221,7 +221,9 @@ s32 func_8001148C(s32 arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_8001148C);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_800116C0);
+void func_800116C0(s32 arg0) {
+    ((s32 *)arg0)[-1] |= 1;
+}
 
 #ifdef NON_MATCHING
 void bcopy(s32, s32, s32);
