@@ -10714,17 +10714,17 @@
     ]
   },
   "func_8001CEDC": {
-    "outcome": "gave up",
-    "time": "2026-10-16 14:28",
-    "summary": "120 of 174 words differ",
-    "best": "attempt2.c",
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-16 22:25",
+    "summary": "build/match/func_8001CEDC/placed/8001CEDC.c: build/match/func_8001CEDC/placed/8001CEDC.c:93: `func_8001CEDC' redeclared as different kind of symbol",
+    "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 2.0,
-    "cost_usd": 0.4318230000000001,
-    "turns": 27,
-    "minutes": 2.0,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.28128090000000006,
+    "turns": 19,
+    "minutes": 0.9,
     "runs": [
       {
         "outcome": "gave up",
@@ -10737,21 +10737,37 @@
         "cost_usd": 0.4318230000000001,
         "turns": 27,
         "minutes": 2.0
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "build/match/func_8001CEDC/placed/8001CEDC.c: build/match/func_8001CEDC/placed/8001CEDC.c:93: `func_8001CEDC' redeclared as different kind of symbol",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.28128090000000006,
+        "turns": 19,
+        "minutes": 0.9
       }
-    ]
+    ],
+    "mode": "equivalent",
+    "scored": "in place"
   },
   "func_8001BFDC": {
-    "outcome": "gave up",
-    "time": "2026-10-16 14:30",
-    "summary": "46 of 176 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:26",
+    "summary": "2000 of 2000 trials agree, 1562 compared",
     "best": "attempt4.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.9,
-    "cost_usd": 0.46502819999999995,
-    "turns": 35,
-    "minutes": 1.8,
+    "wall_minutes": 1.4,
+    "cost_usd": 0.33331330000000003,
+    "turns": 17,
+    "minutes": 1.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -10764,8 +10780,23 @@
         "cost_usd": 0.46502819999999995,
         "turns": 35,
         "minutes": 1.8
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 393 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.4,
+        "cost_usd": 0.33331330000000003,
+        "turns": 17,
+        "minutes": 1.4
       }
-    ]
+    ],
+    "mode": "equivalent",
+    "scored": "in place"
   },
   "func_80025D18": {
     "outcome": "equivalent, not landed",
