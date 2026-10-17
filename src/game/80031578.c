@@ -31,7 +31,14 @@ void func_80031658(void) {
     D_8005F224 = RANDOM_RESET_SEED;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80031578", func_80031668);
+s32 func_80031668(s32 arg0, s32 arg1) {
+    s32 diff = arg0 - arg1;
+
+    if (diff < 0) {
+        diff = arg1 - arg0;
+    }
+    return diff;
+}
 
 int CdIntToPos(int, unsigned char *);
 int CdRead(int, unsigned long *, int);
