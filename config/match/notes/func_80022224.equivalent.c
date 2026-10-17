@@ -11,7 +11,7 @@
 #define ENTRY_VARIANT_OFFSET 0x10
 #define VARIANT_DEFAULT 1
 
-extern u8 *D_800608CC;
+extern s32 D_800608CC[];
 extern s32 D_800608D4;
 extern s32 D_800608D8[];
 extern s32 D_800608DC;
@@ -26,12 +26,12 @@ void func_80022224(s32 arg0) {
     if (D_800608D4 == 0) {
         return;
     }
-    table = D_800608CC;
+    table = (u8 *)D_800608CC[0];
     if (table == 0) {
         return;
     }
     slot = func_800321D4(D_800608D4, UNK_CALL_ARG, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
-    table = D_800608CC;
+    table = (u8 *)D_800608CC[0];
     value = *(s32 *)(table + (slot + *(s32 *)(*(u8 **)(table + SUBTABLE_OFFSET) + BASE_INDEX_OFFSET)) * 4 + ENTRY_DEFAULT_OFFSET);
     D_800608D8[0] = value;
     if (arg0 == VARIANT_DEFAULT) {
