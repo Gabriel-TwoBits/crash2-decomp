@@ -140,3 +140,19 @@ Most of the game is data, not code. The `S0` to `S3` folders hold 38 levels' and
 models, textures, sounds, and the GOOL bytecode that drives the objects) with their `.NSD` indexes. The executable holds the
 engine: the GOOL interpreter, rendering, collision, the paging of NSF entries from the disc, and the SDK. CrashEdit documents
 the formats (docs/REFERENCES.md).
+
+## Addresses from the disc
+
+The disc's data seems to name some of the executable's variables by address. Heap objects read through `CdGetSector`
+hold 0x8005F340, inside `D_8005F338` in `.bss`, and keep it whatever the executable's layout; the disc image holds that
+word 21 times. Moving the data breaks the game where moving the code doesn't (`tools/run_game.py`, PCSX-Redux):
+
+- With the default build's C and 8 bytes of padding at the start of `.data`, the display differs from retail's from
+  frame 1,390 and the game crashes in the first warp room (frame 4,124, a jump to 0x68); 32 bytes crash at frame 1,941.
+  The same padding in the code gives the same frames and crashes, since it moves the data too.
+- Moving only the heap's start changes nothing. With the data in place, the equivalent build's code, 568 bytes shorter
+  and everything after its first equivalent function moved, displays what retail does up to a difference of timing
+  (docs/ROADMAP.md, section 4).
+
+The equivalent build keeps the data at its retail addresses (docs/WORKFLOW.md, "The equivalent track"). Which entries
+hold such addresses, and what the engine does with them, is still open.

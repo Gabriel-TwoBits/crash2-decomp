@@ -74,6 +74,12 @@ relocation writes: the equivalent build assembles a copy, `build/nonmatching/asm
 pairs is a `lui`/`addiu` of the function's symbol (found by address in splat's `.splat/splat_symbols.csv`), and
 `configure.py` stops unless it finds all 21 and leaves no such number.
 
+Only the code moves. The game reads some of its data by absolute address (docs/TARGET.md, "Addresses from the disc"):
+with no equivalent function, `.data` moved by 8 bytes displays otherwise from frame 1,390 of `tools/run_game.py` and
+crashes in the first warp room. So the equivalent build pads the end of the code to `.data`'s retail start (the main
+segment's data subsegment in `config/SCUS_941.54.yaml`), and `ninja nonmatching` stops, with the number of bytes over,
+when the equivalent code outgrows the retail code, or when `.data` or the end of `.bss` lands elsewhere.
+
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
 every trial.
 

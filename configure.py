@@ -2,8 +2,8 @@
 """Splits the executable with splat (config/SCUS_941.54.yaml) and writes build.ninja, which compiles src/'s C
 (tools/psx_cc.py: the original compiler, its INCLUDE_ASM functions taken from asm/nonmatchings/) and assembles the rest of the
 split, links it with splat's linker script into build/SCUS_941.54.exe and checks that file's SHA-1 against the retail one.
-`ninja nonmatching` builds build/nonmatching/SCUS_941.54.exe with NON_MATCHING defined, unchecked: the equivalent track
-(docs/WORKFLOW.md).
+`ninja nonmatching` builds build/nonmatching/SCUS_941.54.exe with NON_MATCHING defined, its data at the retail addresses
+and nothing else checked: the equivalent track (docs/WORKFLOW.md).
 
     .venv/bin/python configure.py
     .venv/bin/ninja
@@ -18,6 +18,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 HERE = Path(__file__).resolve().parent
 NAME = "SCUS_941.54"
@@ -84,6 +86,15 @@ HEXADECIMAL = 16
 FUNCTION_TYPE = "func"
 # The equivalent build's own copies of the split's assembly, by the default build's object
 NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: NONMATCHING_HANDWRITTEN}
+# The game reads some of its data by absolute address (docs/TARGET.md, "Addresses from the disc"), so the equivalent build
+# keeps .data, .sdata, .sbss and .bss where they are in retail: the code's end is padded to .data's retail start, the
+# main segment's first data subsegment in the split configuration
+MAIN_SEGMENT = "main"
+DATA_SUBSEGMENT_TYPES = ("data", ".data")
+TEXT_END = "        main_TEXT_END = .;"
+NONMATCHING_CODE_END = "nonmatching_CODE_END"
+LAYOUT_CHECK = "check-layout"
+NONMATCHING_LAYOUT_STAMP = NONMATCHING_BUILD / "layout.stamp"
 
 
 def split():
@@ -177,6 +188,51 @@ def nonmatching_handwritten():
     return code
 
 
+def retail_data_start():
+    """.data's retail address: the main segment's address plus its first data subsegment's offset into it"""
+    config = yaml.safe_load((HERE / SPLAT_CONFIG).read_text())
+    for segment in config.get("segments", []):
+        if isinstance(segment, dict) and segment.get("name") == MAIN_SEGMENT:
+            for subsegment in segment.get("subsegments", []):
+                if isinstance(subsegment, list) and len(subsegment) > 1 and subsegment[1] in DATA_SUBSEGMENT_TYPES:
+                    return segment["vram"] + subsegment[0] - segment["start"]
+                else:
+                    # Code or read-only data, before .data
+                    continue
+            sys.exit(f"{SPLAT_CONFIG.name}: the {MAIN_SEGMENT} segment has no data subsegment")
+        else:
+            # Another segment (the header)
+            continue
+    sys.exit(f"{SPLAT_CONFIG.name}: no {MAIN_SEGMENT} segment")
+
+
+def check_layout(elf):
+    """Stops unless the equivalent build's data sits at its retail addresses: its code may not outgrow the retail code"""
+    symbols = {}
+    listing = subprocess.run([BINUTILS_PREFIX + "nm", str(elf)], capture_output=True, text=True, check=True).stdout
+    for line in listing.splitlines():
+        fields = line.split()
+        if len(fields) == len(("address", "type", "name")):
+            symbols[fields[2]] = int(fields[0], HEXADECIMAL)
+        else:
+            # An undefined symbol, listed without an address
+            continue
+    wanted = (NONMATCHING_CODE_END, "main_DATA_START", BSS_END)
+    missing = [name for name in wanted if name not in symbols]
+    if missing:
+        sys.exit(f"{elf} has no {', '.join(missing)}")
+    data_start = retail_data_start()
+    over = symbols[NONMATCHING_CODE_END] - data_start
+    if over > 0:
+        sys.exit(f"the equivalent build's code ends {over} bytes past .data's retail start ({data_start:#x}): the game "
+                 "reads its data by absolute address, so .data can't move; the equivalent C must shrink by that much")
+    elif symbols["main_DATA_START"] != data_start or symbols[BSS_END] != IMAGE_END:
+        sys.exit(f"{elf}: .data starts at {symbols['main_DATA_START']:#x} and .bss ends at {symbols[BSS_END]:#x}, not at "
+                 f"their retail {data_start:#x} and {IMAGE_END:#x}")
+    else:
+        print(f"{elf}: data at its retail addresses, {-over} bytes of padding after the code")
+
+
 def nonmatching_link_files():
     """Writes the equivalent build's header, handwritten code, linker script and symbol files, from splat's, for a
     layout whose sizes may differ from the retail one. _gp keeps its retail value: the startup code loads $gp from the
@@ -188,8 +244,12 @@ def nonmatching_link_files():
     script = (HERE / LINKER_SCRIPT).read_text()
     if LINKER_SCRIPT_END not in script:
         sys.exit(f"{LINKER_SCRIPT} has no {LINKER_SCRIPT_END.strip()} section")
+    if TEXT_END not in script:
+        sys.exit(f"{LINKER_SCRIPT} has no `{TEXT_END.strip()}`")
+    # Inside the section the location counter counts from its start; check_layout stops a build whose code outgrows it
+    padding = f"        {NONMATCHING_CODE_END} = .;\n        . = MAX(., {retail_data_start() - IMAGE_START:#x});\n"
     script = script.replace(f"{BUILD}/src/", f"{NONMATCHING_BUILD}/src/").replace(
-        LINKER_SCRIPT_END, f"    {TEXT_SIZE}\n{LINKER_SCRIPT_END}", 1)
+        LINKER_SCRIPT_END, f"    {TEXT_SIZE}\n{LINKER_SCRIPT_END}", 1).replace(TEXT_END, padding + TEXT_END, 1)
     for obj in NONMATCHING_ASSEMBLY:
         if f"{obj}(" not in script:
             sys.exit(f"{LINKER_SCRIPT} doesn't link {obj}")
@@ -232,7 +292,7 @@ def nonmatching_objects(linked):
 
 
 def write_ninja(linked):
-    binutils = {tool: BINUTILS_PREFIX + tool for tool in ("as", "ld", "objcopy")}
+    binutils = {tool: BINUTILS_PREFIX + tool for tool in ("as", "ld", "objcopy", "nm")}
     missing = [command for command in binutils.values() if shutil.which(command) is None]
     if missing:
         sys.exit(f"missing {', '.join(missing)}: sudo apt install binutils-mipsel-linux-gnu")
@@ -269,6 +329,10 @@ def write_ninja(linked):
         "rule check",
         "  command = sha1sum --quiet -c $in && touch $out",
         "  description = check $out",
+        "",
+        "rule layout",
+        f"  command = {sys.executable} configure.py {LAYOUT_CHECK} $in && touch $out",
+        "  description = check the layout of $in",
         "",
         f"build build.ninja: configure | configure.py {SPLAT_CONFIG.relative_to(HERE)}",
         "",
@@ -310,13 +374,22 @@ def write_ninja(linked):
         "  symbols = " + " ".join(f"-T {path}" for path in nonmatching_symbols),
         f"  map = {NONMATCHING_BUILD / NAME}.map",
         f"build {NONMATCHING_EXE}: exe_nonmatching {NONMATCHING_ELF}",
-        f"build nonmatching: phony {NONMATCHING_EXE}",
+        f"build {NONMATCHING_LAYOUT_STAMP}: layout {NONMATCHING_ELF} | configure.py {SPLAT_CONFIG.relative_to(HERE)}",
+        f"build nonmatching: phony {NONMATCHING_EXE} {NONMATCHING_LAYOUT_STAMP}",
         "",
     ]
     (HERE / "build.ninja").write_text("\n".join(lines))
 
 
 def main():
+    if len(sys.argv) == len(("configure.py", LAYOUT_CHECK, "elf")) and sys.argv[1] == LAYOUT_CHECK:
+        check_layout(Path(sys.argv[2]))
+        return
+    elif len(sys.argv) > 1:
+        sys.exit(f"usage: configure.py, or configure.py {LAYOUT_CHECK} ELF (which ninja nonmatching runs)")
+    else:
+        # Split and write build.ninja
+        pass
     split()
     check_numeric_addresses()
     linked = objects()
