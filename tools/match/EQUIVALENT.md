@@ -13,11 +13,16 @@ of a block, no `//` comments, no C99 features.
 - Work only in this directory. Edit `base.c`, or write new `*.c` files here; nothing else. Never edit `target.s`.
 - Plain C only: no inline assembly (`asm`, `__asm__`), no `INCLUDE_ASM`, no `M2C_` macro or type (no `m2c_macros.h`), no
   `#if`/`#ifdef` of its own.
-- `./score.sh FILE.c` is the only judge: `tools/equiv.py` runs the file's function and the retail one in an emulator from
-  the same random memory and arguments, trial by trial, and compares how each ended, the return value, the callee-saved
-  registers, every call out (target and arguments, in order) and every word of memory changed. It prints the first
-  disagreeing trial with its arguments and differences, then `N of M trials agree`. `./score.sh FILE.c --seed 1` runs
-  other trials; `--trials 2000` more of them.
+- `./score.sh FILE.c` is the only judge, and it judges the file as it would land. It first puts it into a copy of the
+  function's file (`placed/<file>.c`, beside the `placed/game.h` landing would write) the way landing does: in a
+  `NON_MATCHING` block, with a copy of a declaration the file already has dropped and new prototypes of basic types moved
+  into `game.h`. A file landing would refuse prints `not landable as it is: ...` with why; a declaration that conflicts
+  with the file's, or with another file's calls, is a compile error naming a line of `placed/` (read it there). Then
+  `tools/equiv.py` runs that copy's function and the retail one in an emulator from the same random memory and
+  arguments, trial by trial, and compares how each ended, the return value, the callee-saved registers, every call out
+  (target and arguments, in order) and every word of memory changed. It prints the first disagreeing trial with its
+  arguments and differences, then `N of M trials agree`. `./score.sh FILE.c --seed 1` runs other trials;
+  `--trials 2000` more of them.
 - The C must do what the assembly does, not what passes the tester. Callees aren't run (each call is recorded and gets a
   made-up return value), random inputs rarely reach every path, and trials ending at the instruction limit or in the
   same exception aren't compared. None of that is room to leave a path out, guess a callee's effect, or simplify a
@@ -60,9 +65,9 @@ this project's C (docs/WORKFLOW.md, "Naming"):
     assembly and its parameter list (`(void)` for none, never `()`): landing moves it into `game.h` when it uses only
     basic types.
   - What BRIEF.md lists as declared already for the function and its data holds: the function's signature and each
-    variable's type are those (matched callers compile against them). `score.sh` compiles `equivalent.c` alone and
-    can't see a conflict; landing it in its file fails on one.
-  - A structure its file already defines is copied from the file as it is, never defined otherwise.
+    variable's type are those (matched callers compile against them); `score.sh` fails to compile on a conflict.
+  - A structure its file already defines is copied from the file as it is, never defined otherwise; landing keeps the
+    file's own definition, above the function's block when it was further down.
   - Data is `extern` (`extern s32 D_8005F304;`), never defined: the build resolves it to the split's symbol. A string or
     constant in `.rodata` (`D_800100D0`) too (`extern char D_800100D0[];`), never a literal.
 - Otherwise: copy the best attempt to `best.c`.

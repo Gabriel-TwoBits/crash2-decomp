@@ -8,6 +8,8 @@ and the result checked and landed by this script, never taken on the agent's wor
     python tools/match.py land FUNCTION            match.c into its file in src/game/, build, commit when the SHA-1 holds
     python tools/match.py loop [--count N] [--minutes 30] [--model MODEL] [--retry-model MODEL]
     python tools/match.py report                   outcomes, models, costs, near misses
+    python tools/match.py score FUNCTION FILE.c [--trials 500] [--seed 0]
+                                                   an equivalent draft as it would land, judged by equiv.py (score.sh)
 
 With --equivalent, next, prepare, run, land and loop work on the equivalent track (docs/WORKFLOW.md): the agent writes
 behaviour-equivalent C (tools/match/EQUIVALENT.md), judged by tools/equiv.py, and land puts it into a NON_MATCHING block
@@ -29,10 +31,10 @@ import sys
 import time
 from pathlib import Path
 
-from equiv import DEFAULT_TRIALS, EXIT_UNSUPPORTED, GTE_OPCODES, OPCODE_SHIFT
+from equiv import DEFAULT_TRIALS, EXIT_DISAGREE, EXIT_UNSUPPORTED, GTE_OPCODES, NONMATCHING_MACRO, OPCODE_SHIFT
 from probe_compiler import retail_assembly, retail_words
 from progress import EQUIVALENT
-from psx_cc import AS, ASFLAGS, DEFAULT_CFLAGS, HERE
+from psx_cc import AS, ASFLAGS, DEFAULT_ASPSX, DEFAULT_CFLAGS, DEFAULT_GCC, HERE, compile_c, compiler
 
 SCRATCH = HERE / "build" / "match"
 RECORDS = HERE / "config" / "match"
@@ -117,6 +119,8 @@ EQUIVALENT_MODE = "equivalent"
 EQUIVALENT_NOTES = ".equivalent"
 # Equivalent C that didn't land, from a run or the notes
 EQUIVALENT_REFUSED = "equivalent, not landed"
+# An equivalent draft as it would land: a scratch copy of its file and of include/game.h, in its scratch directory
+PLACED = "placed"
 # The outcomes after which an equivalent run may take a function: the matching loop is done with it, or its notes' C
 # didn't land as equivalent (a run fixes what the builds refused). A match that didn't land ("matched, not landed") is
 # fixed by hand instead
@@ -397,9 +401,9 @@ def prepare(name, equivalent=False):
                     'fi\n'
                     'exit $status\n')
     if equivalent:
-        # Arguments after the file go to equiv.py: --seed N, --trials N
+        # The draft as it would land (score); arguments after the file go to equiv.py: --seed N, --trials N
         scripts = {
-            "score.sh": (f'#!/bin/sh\nsource="$1"\nshift\n"{python}" "{EQUIV}" "$source" {name} "$@"\nstatus=$?\n'
+            "score.sh": (f'#!/bin/sh\n"{python}" "{HERE / "tools" / "match.py"}" score {name} "$@"\nstatus=$?\n'
                          + minutes_left),
         }
     else:
@@ -543,6 +547,63 @@ def equivalence(source, name, trials, seed):
         return False, 0, "\n".join(shown + [agreeing.group(0)])
 
 
+def placed_copy(name, text):
+    """An equivalent draft as it would land, src/ and include/ left alone: placement() into a scratch copy of its file
+    beside a scratch include/game.h, which a quoted `#include "game.h"` finds first. The other files calling a function
+    whose prototype the landing changes are compiled there too. The copy's path; raises NotLanded"""
+    reason = unfit(text)
+    if reason is not None:
+        raise NotLanded(reason)
+    source, updated, updated_header = placement(name, text, True)
+    folder = SCRATCH / name / PLACED
+    if folder.exists():
+        shutil.rmtree(folder)
+    folder.mkdir(parents=True)
+    (folder / GAME_H.name).write_text(updated_header)
+    placed = folder / source.name
+    placed.write_text(updated)
+    before = {prototype.group("name"): prototype.group("declaration")
+              for prototype in PROTOTYPE.finditer(GAME_H.read_text())}
+    changed = [prototype.group("name") for prototype in PROTOTYPE.finditer(updated_header)
+               if before.get(prototype.group("name")) != prototype.group("declaration")]
+    for other in sources():
+        content = other.read_text()
+        if other == source or not any(re.search(rf"\b{callee}\b", content) for callee in changed):
+            continue
+        copy = folder / other.name
+        copy.write_text(content)
+        # With NON_MATCHING: the nonmatching build compiles every declaration the default one does, and more
+        error = compile_c(compiler(DEFAULT_GCC), DEFAULT_ASPSX, copy, DEFAULT_CFLAGS, copy.with_suffix(".o"),
+                          (NONMATCHING_MACRO,))
+        if error is not None:
+            raise NotLanded(error)
+    return placed
+
+
+def judged_in_place(name, draft, trials, seed):
+    """equiv.py's verdict on an equivalent draft as it would land: (whether every trial agrees, its summary or why not)"""
+    try:
+        placed = placed_copy(name, draft.read_text())
+    except NotLanded as refusal:
+        return False, f"not landable as it is: {refusal.reason}"
+    agrees, _, summary = equivalence(placed, name, trials, seed)
+    return agrees, summary
+
+
+def score_in_place(name, draft, trials, seed):
+    """score.sh in equivalent mode: equiv.py's whole output on the draft as it would land, or why it can't; its exit
+    status"""
+    if not draft.exists():
+        sys.exit(f"{draft} is missing")
+    try:
+        placed = placed_copy(name, draft.read_text())
+    except NotLanded as refusal:
+        print(f"not landable as it is: {refusal.reason}")
+        return EXIT_DISAGREE
+    command = [sys.executable, str(EQUIV), str(placed), name, "--trials", str(trials), "--seed", str(seed)]
+    return subprocess.run(command, cwd=HERE).returncode
+
+
 def run_equivalent(name, minutes, model):
     """An agent run on the equivalent track; True when its equivalent.c agrees on every trial of equiv.py's default run"""
     folder = prepare(name, equivalent=True)
@@ -556,7 +617,7 @@ def run_equivalent(name, minutes, model):
         if reason is not None:
             record(name, "equivalent, rejected", reason=f"equivalent.c: {reason}", **session)
             return False
-        agrees, _, summary = equivalence(candidate, name, DEFAULT_TRIALS, RUN_SEED)
+        agrees, summary = judged_in_place(name, candidate, DEFAULT_TRIALS, RUN_SEED)
         if agrees:
             record(name, "equivalent, agrees", summary=summary, **session)
             return True
@@ -564,7 +625,7 @@ def run_equivalent(name, minutes, model):
         return False
     best = "best.c" if (folder / "best.c").exists() else None
     keep_notes(name, folder, best, stem)
-    summary = "no attempt kept" if best is None else equivalence(folder / best, name, DEFAULT_TRIALS, RUN_SEED)[2]
+    summary = "no attempt kept" if best is None else judged_in_place(name, folder / best, DEFAULT_TRIALS, RUN_SEED)[1]
     record(name, "equivalent, gave up", summary=summary, best=best, **session)
     return False
 
@@ -899,12 +960,15 @@ def report():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "prepare", "run", "land", "loop", "report"])
+    parser.add_argument("command", choices=["next", "prepare", "run", "land", "loop", "report", "score"])
     parser.add_argument("function", nargs="?")
+    parser.add_argument("draft", nargs="?", help="score: the equivalent draft to judge")
     parser.add_argument("--minutes", type=float, default=DEFAULT_MINUTES, help="the agent's time limit per function")
     parser.add_argument("--model", help="the agent's model (default: Claude Code's)")
     parser.add_argument("--count", type=int, default=1, help="loop: how many functions")
     parser.add_argument("--retry-model", help="loop: a second model for near misses of the first")
+    parser.add_argument("--trials", type=int, default=DEFAULT_TRIALS, help="score: equiv.py's trials")
+    parser.add_argument("--seed", type=int, default=RUN_SEED, help="score: equiv.py's seed")
     parser.add_argument("--equivalent", action="store_true",
                         help="next, prepare, run, land, loop: the equivalent track (behaviour-equivalent C under NON_MATCHING)")
     arguments = parser.parse_args()
@@ -947,6 +1011,10 @@ def main():
         sys.exit(f"{arguments.command} needs a FUNCTION")
     elif arguments.command == "prepare":
         print(prepare(arguments.function, arguments.equivalent))
+    elif arguments.command == "score" and arguments.draft is None:
+        sys.exit("score needs a FUNCTION and a FILE.c")
+    elif arguments.command == "score":
+        sys.exit(score_in_place(arguments.function, Path(arguments.draft).resolve(), arguments.trials, arguments.seed))
     elif arguments.command == "run" and arguments.equivalent:
         agrees = run_equivalent(arguments.function, arguments.minutes, arguments.model)
         print(f"{arguments.function}: {load_ledger()[arguments.function]}")
