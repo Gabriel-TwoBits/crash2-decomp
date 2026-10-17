@@ -80,6 +80,7 @@ s32 func_8001C340(void *, s32, s32, s32 *);
 s32 func_8001C620(u8 *, s32, s32);
 s32 func_8001C688(u8 *, u32 *);
 s32 func_8001CC10(s32, s32, s32, s32, void *);
+s32 func_8001D194(s32, s32, s32, s32, s32);
 s32 func_8001D22C(void *, u16, s32, s32 *);
 void func_8001D2C4(s32 *, s32 *, s32 *);
 s32 func_8001E3DC(s32, s32, s32, s32 *);

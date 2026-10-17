@@ -9220,17 +9220,17 @@
     ]
   },
   "func_80039684": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:57",
-    "summary": "93 of 102 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:02",
+    "summary": "2000 of 2000 trials agree, 1183 compared",
     "best": "a5.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.4,
-    "cost_usd": 0.3206709,
-    "turns": 19,
-    "minutes": 1.3,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.2900960000000001,
+    "turns": 23,
+    "minutes": 0.9,
     "runs": [
       {
         "outcome": "gave up",
@@ -9243,9 +9243,23 @@
         "cost_usd": 0.3206709,
         "turns": 19,
         "minutes": 1.3
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 307 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.2900960000000001,
+        "turns": 23,
+        "minutes": 0.9
       }
     ],
-    "reason": "declares `s32 *func_80036D0C(Obj *, s32)`, include/game.h `s32 *func_80036D0C(struct Obj *, s32)`"
+    "mode": "equivalent",
+    "scored": "in place"
   },
   "func_80018294": {
     "outcome": "equivalent, not landed",
