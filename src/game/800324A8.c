@@ -558,7 +558,12 @@ void func_80033D10(void) {
     SsSetReservedVoice((u8)D_8005F304);
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80033DD0);
+/* Added to the master volume (D_8005F2FC) on each update of func_800334A0: full volume to silence in 24 */
+#define VOLUME_FADE_OUT_STEP -0x2AA
+
+void func_80033DD0(void) {
+    D_8005F300 = VOLUME_FADE_OUT_STEP;
+}
 
 s32 func_800344B0(Unk80033DE0 *, s32, s32);
 void func_80056304(s16, s16);
