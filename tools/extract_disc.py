@@ -11,6 +11,7 @@ import hashlib
 import re
 import struct
 import sys
+from collections import namedtuple
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
@@ -37,6 +38,8 @@ RECORD_EXTENT = 2
 RECORD_SIZE = 10
 RECORD_NAME_LENGTH = 32
 RECORD_NAME = 33
+# A file's directory record: its extent's first sector and size, and where the record sits (sector, offset in its user data)
+Record = namedtuple("Record", "first size sector offset")
 
 
 def first_track(cue):
@@ -69,13 +72,14 @@ class Disc:
         return b"".join(self.sector(first + index) for index in range(sectors))[:size]
 
 
-def root_files(disc):
-    """{name without its version (";1"): (first sector, size)} of the root directory's files"""
+def root_records(disc):
+    """{name without its version (";1"): Record} of the root directory's files"""
     volume = disc.sector(PRIMARY_VOLUME_SECTOR)
     if volume[1:1 + len(VOLUME_IDENTIFIER)] != VOLUME_IDENTIFIER:
         sys.exit("no ISO 9660 volume: not this game's disc image, or another sector layout")
     root = volume[ROOT_RECORD_OFFSET:]
-    directory = disc.extent(struct.unpack_from("<I", root, RECORD_EXTENT)[0], struct.unpack_from("<I", root, RECORD_SIZE)[0])
+    directory_sector = struct.unpack_from("<I", root, RECORD_EXTENT)[0]
+    directory = disc.extent(directory_sector, struct.unpack_from("<I", root, RECORD_SIZE)[0])
     found = {}
     position = 0
     while position < len(directory):
@@ -86,10 +90,16 @@ def root_files(disc):
             continue
         name_length = directory[position + RECORD_NAME_LENGTH]
         name = directory[position + RECORD_NAME:position + RECORD_NAME + name_length].decode("ascii", "replace")
-        found[name.split(";")[0]] = (struct.unpack_from("<I", directory, position + RECORD_EXTENT)[0],
-                                     struct.unpack_from("<I", directory, position + RECORD_SIZE)[0])
+        found[name.split(";")[0]] = Record(struct.unpack_from("<I", directory, position + RECORD_EXTENT)[0],
+                                           struct.unpack_from("<I", directory, position + RECORD_SIZE)[0],
+                                           directory_sector + position // USER_DATA, position % USER_DATA)
         position += length
     return found
+
+
+def root_files(disc):
+    """{name without its version (";1"): (first sector, size)} of the root directory's files"""
+    return {name: (record.first, record.size) for name, record in root_records(disc).items()}
 
 
 def main():
