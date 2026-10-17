@@ -19,15 +19,13 @@ extern u8 *D_800675A0;
 extern s32 D_800675A8;
 
 s32 CdControlF(s32 cmd, u8 *param);
-void CdIntToPos(s32 i, u8 *pos);
-s32 CdRead(s32 sectors, u32 *buf, s32 mode);
 s32 CdSync(s32 mode, u8 *result);
 
 s32 func_80012F24(u8 *arg0, s32 arg1) {
     u8 pos[16];
     s32 sector;
     s32 count;
-    u32 *buf;
+    s32 buf;
     s32 index;
     s32 poll;
     s32 block;
@@ -37,12 +35,12 @@ s32 func_80012F24(u8 *arg0, s32 arg1) {
         s32 off = *(s16 *)(arg0 + 8);
 
         count = (arg1 << SECTORS_SHIFT) - off;
-        buf = (u32 *)(*(s32 *)arg0 + (off << SHIFT_2K));
+        buf = *(s32 *)arg0 + (off << SHIFT_2K);
         sector = D_800675A8 +
                  (*(u32 *)(D_800675A0 + (index >> 1) * (1 << WORD_SIZE_SHIFT) + UNK_OFFSET_SECTOR_TABLE) >> SECTOR_TABLE_SHIFT);
     } else {
         count = arg1 << SECTORS_SHIFT;
-        buf = *(u32 **)arg0;
+        buf = *(s32 *)arg0;
         sector = D_800675A8 + *(s32 *)(D_800675A0 + UNK_OFFSET_SECTOR_BASE) + ((index >> 1) << SECTORS_SHIFT);
     }
 
