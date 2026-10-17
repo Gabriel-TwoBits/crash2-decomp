@@ -60,7 +60,7 @@ def read_table(path):
         sys.exit(f"{path} is missing")
     renames = []
     with path.open(newline="") as table:
-        for number, row in enumerate(csv.reader(table, delimiter="\t"), start=1):
+        for number, row in enumerate(csv.reader(table, delimiter="\t", quoting=csv.QUOTE_NONE), start=1):
             if not row or not "".join(row).strip() or row[0].startswith(COMMENT):
                 continue
             elif len(row) != len(COLUMNS):
@@ -78,6 +78,7 @@ def source_files():
 
 
 def whole_word(names):
+    """A pattern of these names as whole words"""
     return re.compile(r"\b(" + "|".join(re.escape(name) for name in names) + r")\b")
 
 
@@ -216,12 +217,13 @@ def rename(renames, allow_equivalent_change):
         symbols.by_address.cache_clear()
         missing = [f"{old} -> {new}" for old, new, _ in renames if new not in symbols.table() or old in symbols.table()]
         changed = []
+        same_code = error is None and sha1(NONMATCHING_EXE) == before_sha1
         if error is not None:
             # A build failed: its cause is the reason
             pass
         elif missing:
             error = f"splat's table doesn't have the new names: {', '.join(missing)}"
-        elif sha1(NONMATCHING_EXE) == before_sha1:
+        elif same_code:
             # A pure rename: the same code
             pass
         elif allow_equivalent_change:
@@ -240,11 +242,11 @@ def rename(renames, allow_equivalent_change):
     remove_split_files(list(new_names))
     print(f"renamed {len(renames)}: {len(originals) - 1} files of src/ and include/ and "
           f"{SYMBOL_ADDRS.relative_to(HERE)}; the retail SHA-1 holds")
-    if changed:
-        print("the equivalent executable changed, in: " + ", ".join(changed))
-        print("judge them with tools/equiv.py (2 seeds of 2,000 trials) and tools/run_game.py")
-    else:
+    if same_code:
         print(f"the equivalent executable is byte for byte what it was ({before_sha1})")
+    else:
+        print("the equivalent executable changed, in: " + (", ".join(changed) or "no function's code, relocations masked"))
+        print("judge them with tools/equiv.py (2 seeds of 2,000 trials) and tools/run_game.py")
 
 
 def restore(originals, renames):
