@@ -139,9 +139,10 @@ DISAGREEMENT_LINES = 2
 UNSUPPORTED = "unsupported"
 # What an agent's run is checked with: equiv.py's defaults, as score.sh runs it
 RUN_SEED = 0
-# The landing check: more trials and another seed than the agent's score.sh
+# The landing check: more trials and other seeds than the agent's score.sh. One seed of 2,000 let through two functions
+# a third seed caught (a call's argument narrowed, two stores through possibly aliased pointers swapped)
 LANDING_TRIALS = 2000
-LANDING_SEED = 1
+LANDING_SEEDS = (1, 2)
 # TRADEOFF: a heuristic floor against vacuous agreement, when nearly every trial agrees only by both runs reaching the
 # limit or taking the same exception; a function whose paths random inputs rarely reach needs inputs built for it
 MIN_COMPARED_SHARE = 0.05
@@ -893,14 +894,17 @@ def land(name, equivalent=False):
     summary = None
     if error is None and equivalent:
         # The landed file, not the candidate: its own definitions and include/game.h's prototypes compile the function
-        agrees, compared, summary = equivalence(source, name, LANDING_TRIALS, LANDING_SEED)
-        if not agrees:
-            error = summary
-        elif compared < MIN_COMPARED_SHARE * LANDING_TRIALS:
-            error = f"{summary}: fewer than {MIN_COMPARED_SHARE:.0%} of the trials compared"
-        else:
-            # Every trial agrees, enough of them compared
-            pass
+        for seed in LANDING_SEEDS:
+            agrees, compared, summary = equivalence(source, name, LANDING_TRIALS, seed)
+            if not agrees:
+                error = summary
+                break
+            elif compared < MIN_COMPARED_SHARE * LANDING_TRIALS:
+                error = f"{summary}: fewer than {MIN_COMPARED_SHARE:.0%} of the trials compared"
+                break
+            else:
+                # Every trial of this seed agrees, enough of them compared
+                continue
     if error is not None:
         source.write_text(original)
         GAME_H.write_text(header)

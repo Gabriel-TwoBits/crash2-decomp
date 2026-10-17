@@ -127,7 +127,7 @@ has a block gets its C replaced. A structure the file defines further down moves
 both builds see it (a type emits no code). Refused before building: m2c's macros, inline assembly, an `INCLUDE_ASM`
 line, a conditional of its own, and a variable the file defines further down (moved, it would change the data's
 layout; into the block, it would leave the default build). Then `configure.py`, `ninja` (the SHA-1), `ninja nonmatching`, and `tools/equiv.py` on the landed file, not the
-candidate (the file's declarations and `include/game.h` compile it), at 2,000 trials and seed 1: every trial has to
+candidate (the file's declarations and `include/game.h` compile it), at 2,000 trials for each of seeds 1 and 2: every trial has to
 agree, and at least 5% of them compared, not agreeing by both reaching the limit or taking the same exception. A failure
 restores the file and `include/game.h` and is recorded as `equivalent, not landed` with its cause (a function whose block
 stays keeps `equivalent`); a landing is recorded as `equivalent` with equiv.py's count (`2000 of 2000 trials agree, 1119
