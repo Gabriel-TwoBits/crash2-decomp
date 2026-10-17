@@ -3,6 +3,9 @@
 
 #include "common.h"
 
+/* What the game's functions return when they succeed; their errors are other negative values (-0x12, -0x10) */
+#define SUCCESS -0xFF
+
 /* The game's functions that C calls, declared once so every file calls them alike. A parameter whose structure is known
    only in one file is a void pointer here until the structure is shared */
 
@@ -67,6 +70,7 @@ void func_80018294(s32 *);
 void func_80018474(void *, void *);
 void func_8001856C(s32, s32, void *, s32 *, s32);
 void func_800186D8(void *, void *, s32, void *, s32 *, s32, s32);
+s32 func_800189C4(void);
 s32 func_80018BE4(u8 *, void *, s32);
 s32 func_80018D28(void *, void *, void *);
 void func_80018DD0(void *, void *, void *);

@@ -1112,7 +1112,9 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_8001856C);
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800186D8);
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800189C4);
+s32 func_800189C4(void) {
+    return SUCCESS;
+}
 
 typedef struct Node {
     s32 unk0;
