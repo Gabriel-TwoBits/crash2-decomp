@@ -724,7 +724,6 @@ typedef struct Unk80062BB4 {
 #define PTR_SLOT 0x10
 
 extern Unk80062BB4 D_80062BB4[];
-s32 func_80013084(Unk800130A0 *);
 s32 func_80051238(u8 *, s32);
 s32 func_80051298(s32, s32);
 extern char D_800100D0[];
@@ -786,7 +785,7 @@ loop:
         } else if (r == ERR_RETRY) {
             printf(D_8005F1C0);
             D_80067FB4[0] = 0;
-            func_80013084(s0);
+            func_80013084((Unk80013084 *)s0);
             goto loop;
         } else {
             return;

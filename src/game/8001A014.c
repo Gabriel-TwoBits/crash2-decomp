@@ -668,6 +668,6 @@ typedef struct {
     /* 0x24 */ s16 unk24;
 } Unk8001BFD4;
 
-void func_8001BFD4(Unk8001BFD4 *arg0, s32 arg1) {
-    arg0->unk24 = 0;
+void func_8001BFD4(void *arg0, s32 arg1) {
+    ((Unk8001BFD4 *)arg0)->unk24 = 0;
 }
