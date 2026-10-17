@@ -3668,16 +3668,16 @@
     "mode": "equivalent"
   },
   "func_80018CAC": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:46",
-    "summary": "6 of 31 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:05",
+    "summary": "2000 of 2000 trials agree, 752 compared",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "wall_minutes": 5.6,
-    "cost_usd": 0.20682559999999997,
-    "turns": 16,
-    "minutes": 5.6,
+    "wall_minutes": 0.7,
+    "cost_usd": 0.18571140000000003,
+    "turns": 12,
+    "minutes": 0.6,
     "runs": [
       {
         "outcome": "gave up",
@@ -3701,10 +3701,22 @@
         "cost_usd": 0.20682559999999997,
         "turns": 16,
         "minutes": 5.6
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 188 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.18571140000000003,
+        "turns": 12,
+        "minutes": 0.6
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
-    "reason": "defines Node otherwise than src/game/800158E0.c"
+    "mode": "equivalent"
   },
   "func_8001FF50": {
     "outcome": "equivalent",

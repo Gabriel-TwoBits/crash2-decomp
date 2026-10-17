@@ -744,7 +744,39 @@ s32 func_80018BE4(u8 *arg0, void *arg1, s32 arg2) {
     return r;
 }
 
+#ifdef NON_MATCHING
+#define NODE_KIND_LIST4 2
+
+
+
+typedef struct Unk80018CAC {
+    s32 kind;
+    Unk80018AA8 *children4;
+    u8 pad[0x44];
+    Unk80018AA8 *children;
+} Unk80018CAC;
+
+s32 func_80018AA8(Unk80018AA8 *arg0, Cb80018AA8 arg1, void *arg2);
+
+s32 func_80018CAC(Unk80018CAC *arg0, Cb80018AA8 arg1, void *arg2) {
+    Unk80018AA8 *node;
+    Unk80018AA8 *next;
+
+    if (arg0->kind == NODE_KIND_LIST4) {
+        node = arg0->children4;
+    } else {
+        node = arg0->children;
+    }
+    while (node != 0) {
+        next = node->next;
+        func_80018AA8(node, arg1, arg2);
+        node = next;
+    }
+    return -0xFF;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018CAC);
+#endif
 
 #ifdef NON_MATCHING
 s32 func_80018B50(void *arg0, s32 (*arg1)(void *, s32), s32 arg2);
