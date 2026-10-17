@@ -1259,7 +1259,8 @@ u8 *func_80013F5C(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 
     entry = (Unk80013F5C *)D_80067FC4[arg0 >> 1];
     if ((s32)entry == SLOT_EMPTY) {
-        return func_80013BD8(arg0, arg1, arg2, arg3);
+        /* The retail call passes arg3 as a whole register, not narrowed to the definition's s8 */
+        return ((u8 *(*)(s32, s32, s32, s32))func_80013BD8)(arg0, arg1, arg2, arg3);
     } else if ((s32)entry == SLOT_RESERVED) {
         return (u8 *)entry;
     } else {
