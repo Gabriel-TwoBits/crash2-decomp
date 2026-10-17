@@ -11,9 +11,10 @@ plane `y == arg0` and writes line segments (two vertices each) to `arg2`; return
   corner on the plane gives a segment (the corner is dereferenced even when null, as the retail code does); a lone corner
   on the plane writes it twice and returns 1 at once.
 
-Result: `best.c` (same as `attempt2.c`) agrees on 462 of 500 trials (seeds 0 and 1: 462, 463). All the disagreements
-are the same kind: both versions take an access fault but at different addresses (retail at a vertex's y, the candidate
-at the x of the next vertex, 12 bytes on). Four attempts (carrying the previous y, struct copies field by field, explicit
-x/z load order in the interpolation) did not change it; the generated assembly could not be inspected in this session. The
-logic of every branch of the assembly has its counterpart in the C; the remaining difference is probably the order of
-two loads the compiler schedules differently.
+Result: `best.c` (`earlier.c` with the previous-corner index kept in a variable) agrees on 462 of 500 trials, the same as
+`earlier.c`. All disagreements are the same kind: both versions take an access fault but at different addresses (trial 5:
+retail at 0x8020031c, candidate at 0x80200324, the x of the next vertex). The previous run's four attempts and this one
+(indexing `(i - 1) & 3` through a variable) did not change it. The generated assembly could not be inspected (compiler
+and probe commands were not runnable in this session), so the cause is unconfirmed; probably the order of two loads the
+compiler schedules differently. Every branch of the assembly has its counterpart in the C, so `equivalent.c` is not written:
+not every trial agrees.

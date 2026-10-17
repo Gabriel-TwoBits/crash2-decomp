@@ -38,6 +38,7 @@ s32 func_8002FFFC(s32 arg0, Unk8002FFFCVec *arg1, Unk8002FFFCVec *arg2) {
     s32 count;
     s32 g;
     s32 i;
+    s32 k;
     s32 t;
     s32 ylo;
     s32 yhi;
@@ -114,8 +115,9 @@ s32 func_8002FFFC(s32 arg0, Unk8002FFFCVec *arg1, Unk8002FFFCVec *arg2) {
                     first_on = cur;
                     continue;
                 }
-                if (pts[(i - 1) & 3]->y == arg0) {
-                    s8 *u = &used[flag[(i - 1) & 3]];
+                k = (i - 1) & 3;
+                if (pts[k]->y == arg0) {
+                    s8 *u = &used[flag[k]];
                     if (*u != 0) {
                         goto next_group;
                     } else {
