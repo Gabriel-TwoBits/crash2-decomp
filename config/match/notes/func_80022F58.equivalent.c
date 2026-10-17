@@ -5,7 +5,14 @@
 #define STATUS_DONE 5
 #define SEARCH_FOUND 1
 
-s32 func_800267C4(s32 *, s32 *, s32, s32);
+typedef struct {
+    s32 unk_0;
+    s32 unk_4;
+    s32 unk_8;
+    s32 unk_C;
+} Unk80022F58;
+
+s32 func_800267C4(s32 *, Unk80022F58 *, s32, s32);
 extern s8 D_8005B994;
 extern s32 D_800608CC[];
 
@@ -23,14 +30,14 @@ extern s32 D_800608CC[];
 
 void func_80022F58(s32 *arg0) {
     s32 out[3];
-    s32 in[4];
+    Unk80022F58 in;
 
     do {
-        in[0] = D_800608CC[IDX_A];
-        in[1] = D_800608CC[IDX_B];
-        in[2] = D_800608CC[IDX_C];
-        in[3] = D_800608CC[IDX_D];
-        if (func_800267C4(out, in, D_800608CC[IDX_C], D_800608CC[IDX_D]) == SEARCH_FOUND) {
+        in.unk_0 = D_800608CC[IDX_A];
+        in.unk_4 = D_800608CC[IDX_B];
+        in.unk_8 = D_800608CC[IDX_C];
+        in.unk_C = D_800608CC[IDX_D];
+        if (func_800267C4(out, &in, D_800608CC[IDX_C], D_800608CC[IDX_D]) == SEARCH_FOUND) {
             func_800200A8(out[0], out[1], out[2], 0);
             if (func_800321D4(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != D_800608CC[IDX_EXPECTED]) {
                 D_8005B994 = STATUS_DONE;
