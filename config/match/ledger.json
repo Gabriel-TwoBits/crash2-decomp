@@ -4283,16 +4283,16 @@
     "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_80033C84": {
-    "outcome": "gave up",
-    "time": "2026-10-16 00:34",
-    "summary": "9 of 35 words differ",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 21:08",
+    "summary": "500 of 500 trials agree, 498 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "wall_minutes": 5.4,
-    "cost_usd": 0.40237760000000017,
-    "turns": 29,
-    "minutes": 5.4,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.17867119999999997,
+    "turns": 7,
+    "minutes": 0.5,
     "runs": [
       {
         "outcome": "gave up",
@@ -4316,21 +4316,35 @@
         "cost_usd": 0.40237760000000017,
         "turns": 29,
         "minutes": 5.4
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 498 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.17867119999999997,
+        "turns": 7,
+        "minutes": 0.5
       }
     ],
-    "cflags": "-O2 -G8 -mcpu=r8000"
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "mode": "equivalent",
+    "reason": "src/game/800324A8.c defines Unk80033DE0 further down: moved into the NON_MATCHING block, it would leave the default build"
   },
   "func_80035CBC": {
-    "outcome": "gave up",
-    "time": "2026-10-16 00:38",
-    "summary": "11 of 35 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:08",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "wall_minutes": 4.8,
-    "cost_usd": 0.22160029999999997,
-    "turns": 11,
-    "minutes": 4.7,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.16075840000000002,
+    "turns": 8,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -4354,9 +4368,22 @@
         "cost_usd": 0.22160029999999997,
         "turns": 11,
         "minutes": 4.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.16075840000000002,
+        "turns": 8,
+        "minutes": 0.4
       }
     ],
-    "cflags": "-O2 -G8 -mcpu=r8000"
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "mode": "equivalent"
   },
   "func_800116D4": {
     "outcome": "equivalent",
