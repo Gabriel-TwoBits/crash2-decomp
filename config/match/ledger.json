@@ -5915,17 +5915,17 @@
     ]
   },
   "func_8002FCF8": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-17 18:02",
-    "summary": "500 of 500 trials agree, 499 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:10",
+    "summary": "2000 of 2000 trials agree, 1990 compared",
     "best": "base.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 0.6,
-    "cost_usd": 0.2040172,
-    "turns": 10,
-    "minutes": 0.5,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.2181339,
+    "turns": 9,
+    "minutes": 0.9,
     "runs": [
       {
         "outcome": "gave up",
@@ -5976,11 +5976,23 @@
         "cost_usd": 0.2040172,
         "turns": 10,
         "minutes": 0.5
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 499 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.2181339,
+        "turns": 9,
+        "minutes": 0.9
       }
     ],
     "mode": "equivalent",
-    "scored": "in place",
-    "reason": "trial 1925 disagrees: $a0=0x801006b8 $a1=0x00000019 $a2=0xfffffffe $a3=0xffffffff, stack 0x00000005 0x00000023 0x20788eb5 0x801006e4\nthe retail code ended by returned, the candidate by address error on store\n1999 of 2000 trials agree"
+    "scored": "in place"
   },
   "func_80039104": {
     "outcome": "landed",
