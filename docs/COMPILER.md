@@ -86,3 +86,9 @@ How the build follows it:
   (`--use-comm-section`) that resolves to the split's symbol, so nothing moves.
 - `tools/psx_cc.py` ends a C file's data sections on a word: the linker script packs sections at 2 bytes (`SUBALIGN(2)`),
   while each file's data starts on a word in retail.
+
+## `main`
+
+GCC 2.7.2 calls `__main` first in a function named `main`, by itself. Proven by `main` (`0x800117BC`): retail starts with
+`jal __main`, and the C without the call compiles to it, the build's SHA-1 holding; while it was `func_800117BC` the C
+called `__main()` explicitly, and the same body named `main` with that call kept compiled to two `jal __main`.

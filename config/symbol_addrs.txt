@@ -570,6 +570,10 @@ D_80044830 = 0x80044830; // type:alabel
 // Names, each with its evidence on the line above it (docs/WORKFLOW.md, "Naming"). A rename replaces
 // the symbol's line, never adds a second name at its address
 
+// called by libsn's startup (snmain) and calling __main first, as GCC's main does; it sets g_UseCd, then runs
+// the init, the game loop and the shutdown and returns 0
+main = 0x800117BC; // type:func
+
 // calls InitPAD on its two receive buffers, then StartPAD and ChangeClearPAD
 Input_Init = 0x80015828; // type:func
 
@@ -735,7 +739,7 @@ g_SinTable = 0x8005BCB0;
 // the 64 characters 0-9, a-z, A-Z, '_' and '!' that func_80011E98 and func_80011F78 map EIDs through
 g_EidAlphabet = 0x8005B198;
 
-// func_800117BC (main) sets it; when 0 the init skips CdInit and the file names take the PC path "c:/src/crash2/target/" instead of the CD's
+// main sets it; when 0 the init skips CdInit and the file names take the PC path "c:/src/crash2/target/" instead of the CD's
 g_UseCd = 0x8005F1A4;
 
 // 12 bytes per level: the .NSD's sector and size and the .NSF's sector, filled by func_800316EC and read by func_80014C68

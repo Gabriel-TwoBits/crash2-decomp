@@ -271,11 +271,10 @@ s32 *Heap_AllocZeroed(s32 count, s32 size) {
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", Heap_AllocZeroed);
 #endif
 
-void __main(void);
 extern s32 g_UseCd;
 
-s32 func_800117BC(void) {
-    __main();
+/* GCC calls __main at the start of a function named main */
+s32 main(void) {
     g_UseCd = 1;
     func_80015614();
     func_80011800(0x3C);
