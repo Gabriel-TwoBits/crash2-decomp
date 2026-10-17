@@ -558,7 +558,7 @@ void func_80033D10(void) {
     SsSetReservedVoice((u8)D_8005F304);
 }
 
-/* Added to the master volume (D_8005F2FC) on each update of func_800334A0: full volume to silence in 24 */
+/* Added to the master volume (D_8005F2FC, at most 0x3FFF) on each update of func_800334A0, until it reaches 0 */
 #define VOLUME_FADE_OUT_STEP -0x2AA
 
 void func_80033DD0(void) {
