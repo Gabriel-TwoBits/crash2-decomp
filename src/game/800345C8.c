@@ -1191,4 +1191,9 @@ s32 func_80036C40(s32 arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036CF8);
+#define BITS_PER_WORD 32
+
+/* The low `bits` bits of value, sign-extended */
+s32 func_80036CF8(s32 value, s32 bits) {
+    return (value << (BITS_PER_WORD - bits)) >> (BITS_PER_WORD - bits);
+}
