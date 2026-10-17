@@ -83,6 +83,7 @@ void func_8001E8E4(s32 *, s32 *, s32 *, s32, s32 *);
 void func_8001E9EC(void *, void *, void *);
 void func_8001EAD8(s32 *, s32 *);
 s32 func_8001EC2C(s32 *, s32 *, s32);
+s32 func_8001EE64(void);
 void func_8001F8B4(s32);
 void func_8001F94C(s32);
 s32 func_8001FF50(s32, s32 *);
