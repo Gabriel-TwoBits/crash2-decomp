@@ -8,7 +8,19 @@ INCLUDE_RODATA("asm/nonmatchings/game/80023B04", D_80010400);
 
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023B04);
 
+#ifdef NON_MATCHING
+#define UNK_ARG1 0x130
+#define UNK_ARG6 0x120
+
+extern s32 D_800608D4[];
+extern s32 D_800608E0;
+
+void func_80023D7C(void) {
+    func_800321D4(*D_800608D4, UNK_ARG1, D_800608E0, 0, 0, 3, UNK_ARG6);
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023D7C);
+#endif
 
 #ifdef NON_MATCHING
 extern s32 D_8005BA4C;
