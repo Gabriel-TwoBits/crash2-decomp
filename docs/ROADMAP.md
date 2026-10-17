@@ -212,7 +212,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **The last 4 functions** as equivalent C (section 4, "Next"): two need a decision on how C states the GTE.
-2. **Readable C, R1**: the first 40 to 60 names, those with evidence of grade A (section 5).
+2. **Readable C, R2**: `GoolObject`, the game object's shared type (section 5).
 
 ## 4. The engine in C
 
@@ -422,9 +422,14 @@ Steps, in order:
   functions whose notes' C calls the old name stayed a no-op; a second batch corrected two names and their evidence.
   A build failure injected after the rename put every file back. `tools/progress.py` starts at 0 of 564 game functions and 0 of
   1,112 data symbols named, 127 structures in `src/game/`, 192 fields read at a raw offset.
-- **R1, anchor names**: 40 to 60 of grade A. `main` (`func_800117BC`), its initialisation, loop and shutdown, the heap,
-  the CD, the NSF lookups, an entry's type from its EID, the random generator, the sine, the GOOL interpreter's and its
-  operands' entry points, the frame counter, the draw buffers, the player's pointer.
+- **R1, anchor names (done).** 69 names of grade A, each with its evidence in `config/symbol_addrs.txt`: 56 game
+  functions and 13 data symbols, the equivalent executable byte for byte as before. `main` and the system's init, game
+  loop, shutdown and timer (`Sys_`), the CD reads (`Cd_`, the two prefixes added for them), the heap, the graphics init,
+  frame end and buffers, the pads' init, the two random generators, the sine and cosine (the table checked against
+  round(4096 sin)), the sound and sequencer calls, the memory card's, and the NSF's EIDs, file names, level open and
+  close, page reads and relocation. `main` needed its C's explicit `__main()` call dropped (docs/COMPILER.md, "`main`").
+  Left for R2 and R3, without a grade A proof yet: the GOOL interpreter's and its operands' entry points, the player's
+  pointer; left as code reading only: the heap's init and growth, the game loop's exit flag.
 - **R2, `GoolObject`**: the game object, which 50 functions in 13 files read at offsets 0xA8 to 0x12C, through 9
   partial structures.
 - **R3**: the NSF types.
