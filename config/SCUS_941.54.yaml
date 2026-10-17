@@ -34,6 +34,8 @@ options:
     - config/symbol_addrs.txt
   undefined_funcs_auto_path: build/undefined_funcs_auto.txt
   undefined_syms_auto_path: build/undefined_syms_auto.txt
+  # Every symbol's address, name and type in .splat/splat_symbols.csv: configure.py finds functions by address there
+  dump_symbols: True
 
   subalign: 2
 

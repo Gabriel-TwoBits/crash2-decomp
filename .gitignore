@@ -4,6 +4,7 @@
 # What splat makes from the retail executable (its code and data as assembly and binary)
 /asm/
 /assets/
+/.splat/
 
 # Build output and the downloaded toolchain (tools/setup_toolchain.py)
 /build/

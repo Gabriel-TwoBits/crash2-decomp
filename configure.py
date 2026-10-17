@@ -12,6 +12,7 @@ split, links it with splat's linker script into build/SCUS_941.54.exe and checks
 build.ninja runs this again when the splat configuration or this file change. Needs orig/USA/SCUS_941.54
 (tools/extract_disc.py) and binutils for little-endian MIPS (CONTRIBUTING.md).
 """
+import csv
 import re
 import shutil
 import subprocess
@@ -63,6 +64,26 @@ BSS_END = "main_BSS_END"
 NUMERIC_WORD = re.compile(r"\.word (0x[0-9A-Fa-f]+)\b")
 # Not checked for numbers: the header's layout fields are rewritten for the equivalent build, and .text's start stays
 SPLIT_HEADER = Path("asm") / "header.s"
+# The handwritten code (docs/TARGET.md) loads the addresses of 20 of the game's functions as numbers in 21 pairs, a lui
+# then an ori in the delay slot of the branch between them, which no relocation writes for an ori (%hi assumes a signed
+# low half). The equivalent build assembles a copy where each pair is a lui/addiu of the function's symbol: same size,
+# same address
+HANDWRITTEN = Path("asm") / "game" / "80039D2C.s"
+HANDWRITTEN_OBJECT = BUILD / "asm" / "game" / "80039D2C.o"
+NONMATCHING_HANDWRITTEN = NONMATCHING_BUILD / HANDWRITTEN
+ADDRESS_PAIR = re.compile(r"^(?P<lui>[ ]*/\*[^*]*\*/ +lui +)(?P<register>\$\w+), \((?P<address>0x[0-9A-F]{8}) >> 16\)\n"
+                          r"(?P<branch>[ ]*/\*[^*]*\*/ +[bj]\w* [^\n]*\n)"
+                          r"(?P<ori>[ ]*/\*[^*]*\*/ +)ori +(?P=register), (?P=register), \((?P=address) & 0xFFFF\)$",
+                          re.MULTILINE)
+ADDRESS_PAIRS = 21
+# The high half of a number loaded with lui, left by the rewrite
+NUMERIC_HIGH_HALF = re.compile(r"\blui +\$\w+, \((0x[0-9A-F]+) >> 16\)")
+# splat's symbols (dump_symbols in config/SCUS_941.54.yaml): each one's address in hexadecimal, name and type
+SPLAT_SYMBOLS = Path(".splat") / "splat_symbols.csv"
+HEXADECIMAL = 16
+FUNCTION_TYPE = "func"
+# The equivalent build's own copies of the split's assembly, by the default build's object
+NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: NONMATCHING_HANDWRITTEN}
 
 
 def split():
@@ -114,13 +135,52 @@ def c_dependencies(source):
     return [path.relative_to(HERE) for path in included + headers] + [Path("tools") / "psx_cc.py"]
 
 
+def functions_by_address():
+    """{address: names} of the functions splat knows, in C or in assembly"""
+    functions = {}
+    with (HERE / SPLAT_SYMBOLS).open(newline="") as table:
+        for row in csv.DictReader(table):
+            if row["type"] == FUNCTION_TYPE:
+                functions.setdefault(int(row["vram_start"], HEXADECIMAL), []).append(row["name"])
+    if not functions:
+        sys.exit(f"{SPLAT_SYMBOLS} lists no function")
+    return functions
+
+
+def nonmatching_handwritten():
+    """The handwritten code with each lui/ori pair of a function's address made a lui/addiu pair of its symbol"""
+    functions = functions_by_address()
+    pairs = 0
+
+    def symbolic(pair):
+        nonlocal pairs
+        address = int(pair.group("address"), 0)
+        names = functions.get(address, [])
+        if not IMAGE_START <= address < IMAGE_END:
+            # A constant, not an address
+            return pair.group(0)
+        elif len(names) != 1:
+            sys.exit(f"{HANDWRITTEN}: a lui/ori pair loads {pair.group('address')}, the start of no single function "
+                     f"({', '.join(names) or 'none'})")
+        else:
+            pairs += 1
+            register = pair.group("register")
+            return (f"{pair.group('lui')}{register}, %hi({names[0]})\n{pair.group('branch')}"
+                    f"{pair.group('ori')}addiu {register}, {register}, %lo({names[0]})")
+
+    code = ADDRESS_PAIR.sub(symbolic, (HERE / HANDWRITTEN).read_text())
+    if pairs != ADDRESS_PAIRS:
+        sys.exit(f"{HANDWRITTEN}: {pairs} lui/ori pairs of a function's address, not {ADDRESS_PAIRS}")
+    left = [high for high in NUMERIC_HIGH_HALF.findall(code) if IMAGE_START <= int(high, 0) < IMAGE_END]
+    if left:
+        sys.exit(f"{HANDWRITTEN}: lui of addresses into the image left as numbers: {', '.join(left)}")
+    return code
+
+
 def nonmatching_link_files():
-    """Writes the equivalent build's header, linker script and symbol files, from splat's, for a layout whose sizes may
-    differ from the retail one. _gp keeps its retail value: the startup code loads $gp from the symbol the linker measures
-    its offsets from"""
-    # TRADEOFF: the handwritten code loads 20 of the game's function addresses as lui/ori pairs of numbers
-    # (asm/game/80039D2C.s), which no relocation can write: they keep their retail values, stale once the C before them
-    # changes size, until this build rewrites them as lui/addiu pairs of symbols
+    """Writes the equivalent build's header, handwritten code, linker script and symbol files, from splat's, for a
+    layout whose sizes may differ from the retail one. _gp keeps its retail value: the startup code loads $gp from the
+    symbol the linker measures its offsets from"""
     header, fields = HEADER_FIELD.subn(lambda match: f".word {HEADER_SYMBOLS[match.group('field')]}{match.group('comment')}",
                                        (HERE / "asm" / "header.s").read_text())
     if fields != len(HEADER_SYMBOLS):
@@ -129,10 +189,15 @@ def nonmatching_link_files():
     if LINKER_SCRIPT_END not in script:
         sys.exit(f"{LINKER_SCRIPT} has no {LINKER_SCRIPT_END.strip()} section")
     script = script.replace(f"{BUILD}/src/", f"{NONMATCHING_BUILD}/src/").replace(
-        f"{HEADER_OBJECT}(", f"{NONMATCHING_BUILD / HEADER_OBJECT.relative_to(BUILD)}(").replace(
         LINKER_SCRIPT_END, f"    {TEXT_SIZE}\n{LINKER_SCRIPT_END}", 1)
+    for obj in NONMATCHING_ASSEMBLY:
+        if f"{obj}(" not in script:
+            sys.exit(f"{LINKER_SCRIPT} doesn't link {obj}")
+        script = script.replace(f"{obj}(", f"{NONMATCHING_BUILD / obj.relative_to(BUILD)}(")
     (HERE / NONMATCHING_HEADER).parent.mkdir(parents=True, exist_ok=True)
     (HERE / NONMATCHING_HEADER).write_text(header)
+    (HERE / NONMATCHING_HANDWRITTEN).parent.mkdir(parents=True, exist_ok=True)
+    (HERE / NONMATCHING_HANDWRITTEN).write_text(nonmatching_handwritten())
     (HERE / NONMATCHING_LINKER_SCRIPT).write_text(script)
     bss_end_found = False
     for path in UNDEFINED_SYMBOLS:
@@ -159,8 +224,8 @@ def nonmatching_objects(linked):
     for obj, source in linked:
         if source.suffix == ".c":
             found.append((NONMATCHING_BUILD / obj.relative_to(BUILD), source, True))
-        elif obj == HEADER_OBJECT:
-            found.append((NONMATCHING_BUILD / obj.relative_to(BUILD), NONMATCHING_HEADER, True))
+        elif obj in NONMATCHING_ASSEMBLY:
+            found.append((NONMATCHING_BUILD / obj.relative_to(BUILD), NONMATCHING_ASSEMBLY[obj], True))
         else:
             found.append((obj, source, False))
     return found
