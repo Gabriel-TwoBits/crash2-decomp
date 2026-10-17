@@ -50,7 +50,7 @@ void func_8002E884(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3) {
     }
     memset(&name[NAME_PAD_OFFSET], 0, NAME_PAD_LEN);
     name[NAME_TAG_OFFSET] = func_800120EC(D_8006758C);
-    key[0] = func_80011F78(name);
+    key[0] = Nsf_NameToEid(name);
     map = *(s32 **)((char *)func_80014260(key, 1, 0) + MAP_DATA_OFFSET);
     cells = (s32 *)((char *)map + MAP_CELLS_OFFSET);
     cellW = map[3];
@@ -325,7 +325,7 @@ extern s32 D_8006CBF8;
 extern s32 D_8006CBFC;
 extern s32 D_8006CC80;
 extern s32 D_8006CCEC;
-extern s32 D_8006CCF0;
+extern s32 g_FrameCount;
 extern s32 D_8006CD24;
 extern s32 D_8006CD3C;
 extern s32 D_8006CDCC;
@@ -353,7 +353,7 @@ void func_8002EFE4(void) {
     D_8006CC80 = 0;
     D_8006CD24 = 0;
     D_8006CD3C = 0;
-    D_8006CCF0 = 0;
+    g_FrameCount = 0;
     D_8006CDE8 = 0;
     D_8006CDCC = 0;
     D_8006CDD8 = 0;
@@ -651,7 +651,7 @@ extern s32 D_8005F3B4;
 extern s32 D_80060884;
 extern s32 D_800608D0;
 extern s32 D_80060944;
-extern void *D_80063458;
+extern void *g_BuildBuffer;
 extern s32 D_8006CB78;
 extern s32 D_8006CB80;
 extern s32 D_8006CC60;
@@ -700,7 +700,7 @@ void func_8002F6C8(u8 *arg0) {
             }
         }
         func_80014790((u32 *)(arg0 + 0x1040));
-        func_800163B4(D_80063458);
+        func_800163B4(g_BuildBuffer);
     }
     D_800608CC = 0;
     D_800608D4 = 0;

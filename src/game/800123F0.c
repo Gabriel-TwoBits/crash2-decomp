@@ -6,7 +6,7 @@ INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100D0);
 INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100F0);
 INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_80010110);
 
-s32 D_8005F1A4 = 1;
+s32 g_UseCd = 1;
 char D_8005F1A8[] = "hde\n";
 RECT D_8005F1B0 = { 0, 0, 0x100, 0x80 };
 char D_8005F1B8[] = "de ls\n";
@@ -27,7 +27,7 @@ s32 func_800123F0(s32 *a0, s32 arg1, s32 arg2) {
     s32 *arg0;
     s32 ret;
 
-    ret = D_8005F1A4;
+    ret = g_UseCd;
     if (ret == 0) {
         goto end;
     }
@@ -38,7 +38,7 @@ s32 func_800123F0(s32 *a0, s32 arg1, s32 arg2) {
     arg0 = a0;
     if (arg1 == 0) {
         s2 = (((arg0[1] & 0x1FFFF) + 0x7FF) / 2048) << 11;
-        arg1 = func_8001148C(s2);
+        arg1 = Heap_Alloc(s2);
         if (arg1 == 0) {
             return -0xF;
         }
@@ -53,7 +53,7 @@ loop:
         goto loop;
     }
     if (s2 != 0 && s2 != (arg0[1] & 0x1FFFF)) {
-        arg1 = func_800116D4(arg1, arg0[1] & 0x1FFFF);
+        arg1 = Heap_Realloc(arg1, arg0[1] & 0x1FFFF);
     }
     ret = arg1;
 end:
@@ -63,7 +63,7 @@ end:
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_800123F0);
 #endif
 
-s32 func_8001254C(u8 *base) {
+s32 Nsf_RelocatePage(u8 *base) {
     s32 count;
     s32 i;
     s32 j;
@@ -234,7 +234,7 @@ s32 func_800125F8(s32 arg0) {
         slot->unk_4 = STATE_READY;
         slot->unk_18 = entry->unk_0->unk_4;
         slot->unk_14 = entry->unk_14;
-        slot->unk_20 = (Unk800125F8Slot *)func_80014B44(slot->unk_18);
+        slot->unk_20 = (Unk800125F8Slot *)Nsf_LookupEid(slot->unk_18);
         slot->unk_F = entry->unk_F;
         slot->unk_E = entry->unk_E;
         slot->unk_20->unk0 = slot->unk_1C;
@@ -420,7 +420,7 @@ void func_80012BC4(s32 arg0) {
             }
             if (found != -1) {
                 sp18 = 1;
-                if (D_8005F1A4 != 0) {
+                if (g_UseCd != 0) {
                     idx = key >> 1;
                     lim = *(s32 *)(D_800675A0 + CHANNEL_TABLE_LIMIT_OFFSET) - 1;
                     if (idx < lim) {
@@ -469,14 +469,14 @@ void func_80012DC0(void) {
 }
 
 extern int D_80067FB4[];
-extern int D_80069034[];
+extern int g_LevelFiles[];
 
 void func_80012E4C(s32 arg0) {
     char sp10[8];
     int v;
 
-    if (D_8005F1A4 != 0 && D_80067FB4[0] == 0 && CdSync(1, 0) == 0) {
-        v = D_80069034[v = arg0 * 3];
+    if (g_UseCd != 0 && D_80067FB4[0] == 0 && CdSync(1, 0) == 0) {
+        v = g_LevelFiles[v = arg0 * 3];
         v = 0x7FFFFF & v;
         CdIntToPos(v, sp10);
         CdControlF(0x15, sp10);
@@ -515,12 +515,12 @@ s32 func_80012ED0(s32 wait) {
 #define LOAD_RESULT -0xFF
 
 extern u8 *D_800675A0;
-extern s32 D_800675A8;
+extern s32 g_NsfStartSector;
 
 s32 CdControlF(s32 cmd, u8 *param);
 s32 CdSync(s32 mode, u8 *result);
 
-s32 func_80012F24(u8 *arg0, s32 arg1) {
+s32 Nsf_ReadPages(u8 *arg0, s32 arg1) {
     u8 pos[16];
     s32 sector;
     s32 count;
@@ -535,12 +535,12 @@ s32 func_80012F24(u8 *arg0, s32 arg1) {
 
         count = (arg1 << SECTORS_SHIFT) - off;
         buf = *(s32 *)arg0 + (off << SHIFT_2K);
-        sector = D_800675A8 +
+        sector = g_NsfStartSector +
                  (*(u32 *)(D_800675A0 + (index >> 1) * (1 << WORD_SIZE_SHIFT) + UNK_OFFSET_SECTOR_TABLE) >> SECTOR_TABLE_SHIFT);
     } else {
         count = arg1 << SECTORS_SHIFT;
         buf = *(s32 *)arg0;
-        sector = D_800675A8 + *(s32 *)(D_800675A0 + UNK_OFFSET_SECTOR_BASE) + ((index >> 1) << SECTORS_SHIFT);
+        sector = g_NsfStartSector + *(s32 *)(D_800675A0 + UNK_OFFSET_SECTOR_BASE) + ((index >> 1) << SECTORS_SHIFT);
     }
 
     /* Seek, wait for the seek to finish and issue the read; any failure retries from the seek. */
@@ -564,7 +564,7 @@ s32 func_80012F24(u8 *arg0, s32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80012F24);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_ReadPages);
 #endif
 
 typedef struct {
@@ -648,7 +648,7 @@ Unk800130A0 *func_800130A0(Unk800130A0 *arg0) {
     off = 0;
     if (state == 3 || state == 13) {
         p->state = 4;
-        func_8001254C(p->base);
+        Nsf_RelocatePage(p->base);
         return 0;
     }
     flag = 0;
@@ -757,7 +757,7 @@ loop:
             return;
         }
         D_80067FC0 = s0->index;
-        if (D_8005F1A4 == 0) {
+        if (g_UseCd == 0) {
             goto cancel;
         }
         if (CdSync(1, 0) != CD_SYNC_NOT_BUSY && arg1 == NO_FILTER) {
@@ -766,11 +766,11 @@ loop:
         next = func_800130A0(s0);
         D_80067FB4[0] = (int)s0;
         do {
-        } while (func_80012F24((u8 *)next, s0->count) >= READ_POLL_LIMIT);
+        } while (Nsf_ReadPages((u8 *)next, s0->count) >= READ_POLL_LIMIT);
         s0 = next;
         goto loop;
     case 1:
-        if (D_8005F1A4 == 0 || D_80067FB4[0] != (int)s0) {
+        if (g_UseCd == 0 || D_80067FB4[0] != (int)s0) {
             goto cancel;
         }
         r = func_80012ED0(0);
@@ -1095,7 +1095,7 @@ s32 func_80013AE8(s32 arg0, s32 arg1) {
     return -12;
 }
 
-extern s32 D_8003BEA4;
+extern s32 g_TimerTicks;
 extern Unk80013BD8Table D_80067950;
 
 void *func_80013BD8(s32 arg0, s32 arg1, s32 arg2, s8 arg3) {
@@ -1115,7 +1115,7 @@ void *func_80013BD8(s32 arg0, s32 arg1, s32 arg2, s8 arg3) {
             }
             do {
                 p->f_18 = arg1;
-                p->f_28 = D_8003BEA4;
+                p->f_28 = g_TimerTicks;
             } while (0);
             D_80067FC4[arg0 >> 1] = (s32)p;
             *(s32 *)((u8 *)&D_80067950 + 0x660) += 1;
@@ -1409,7 +1409,7 @@ void *func_80014260(void *a0, s32 arg1, s32 arg2) {
             return (void *)-0xA;
         }
         if (v & 1) {
-            p = (u32 *)func_80014B44(v);
+            p = (u32 *)Nsf_LookupEid(v);
             *arg0 = (u32)p;
         } else {
             p = (u32 *)v;
@@ -1462,7 +1462,7 @@ call:
     return r;
 }
 
-struct Unk80014B44 *func_80014B44(u32);
+struct Unk80014B44 *Nsf_LookupEid(u32);
 
 s32 func_800143C0(void *a, s32 arg1) {
     u32 *arg0 = a;
@@ -1471,7 +1471,7 @@ s32 func_800143C0(void *a, s32 arg1) {
 
     t = *arg0;
     if (t & 1) {
-        v = (u32)func_80014B44(t);
+        v = (u32)Nsf_LookupEid(t);
         *arg0 = v;
     } else {
         v = t;
@@ -1639,7 +1639,7 @@ s32 func_80014918(u32 **arg0, s32 arg1) {
         do {
             r = (u32 *)**in;
             if ((u32)r & 1) {
-                r = (u32 *)func_80014B44((u32)r);
+                r = (u32 *)Nsf_LookupEid((u32)r);
                 **in = (u32)r;
             }
             w = *r;
@@ -1694,7 +1694,7 @@ typedef struct Unk80014B44 {
 
 extern Unk80014B44 **D_80067590;
 
-Unk80014B44 *func_80014B44(u32 arg0) {
+Unk80014B44 *Nsf_LookupEid(u32 arg0) {
     Unk80014B44 **table;
     Unk80014B44 *p;
 
@@ -1744,9 +1744,9 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014B90);
 s32 func_80014C08(void) {
     s32 temp_v0;
 
-    temp_v0 = func_8001148C(4);
+    temp_v0 = Heap_Alloc(4);
     if (temp_v0 != 0) {
-        func_800116C0(temp_v0);
+        Heap_Free(temp_v0);
     }
     return temp_v0;
 }
@@ -1848,7 +1848,7 @@ typedef struct Unk8005B1E0 {
 
 typedef char *(*NameLookupFn)(s32, s32);
 /* The declared prototype returns void; the callee leaves a string pointer in v0. */
-#define func_8001214C_str(a, b) (((NameLookupFn)func_8001214C)((a), (b)))
+#define func_8001214C_str(a, b) (((NameLookupFn)Nsf_FileName)((a), (b)))
 extern int printf(const char *, ...);
 extern char D_80010110[];
 extern Unk8005B1E0 D_8005B1E0[];
@@ -1857,7 +1857,7 @@ extern s32 D_8005F3EC;
 extern s32 D_8005F3F0;
 extern s32 D_8006903C[];
 
-s32 func_80014C68(Unk80014C68 *arg0, s32 arg1) {
+s32 Nsf_OpenLevel(Unk80014C68 *arg0, s32 arg1) {
     char name[0x100];
     s32 i;
     s32 count;
@@ -1890,8 +1890,8 @@ s32 func_80014C68(Unk80014C68 *arg0, s32 arg1) {
     arg0->f_A38 = 0;
     arg0->f_A40 = 1;
     strcpy(name, func_8001214C_str(0, arg1));
-    if (D_8005F1A4 != 0) {
-        a0 = (s32)&D_80069034[arg1 * 3];
+    if (g_UseCd != 0) {
+        a0 = (s32)&g_LevelFiles[arg1 * 3];
         a2 = 1;
     } else {
         a0 = (s32)name;
@@ -1904,7 +1904,7 @@ s32 func_80014C68(Unk80014C68 *arg0, s32 arg1) {
     arg0->tblC = arg0->file + FILE_ENTRIES_OFFSET;
     arg0->ptr14 = (s32 *)(file + *(s32 *)(file + FILE_COUNT_OFFSET) * 8 + FILE_ENTRIES_OFFSET);
     file = arg0->file;
-    arg0->file = func_800116D4(file, *(s32 *)(file + FILE_COUNT_OFFSET) * 8 + (*arg0->ptr14 - 1) * FILE_SIZE_STRIDE + FILE_SIZE_BASE);
+    arg0->file = Heap_Realloc(file, *(s32 *)(file + FILE_COUNT_OFFSET) * 8 + (*arg0->ptr14 - 1) * FILE_SIZE_STRIDE + FILE_SIZE_BASE);
     i = 0;
     do {
         p = &arg0->tbl8[i];
@@ -1912,10 +1912,10 @@ s32 func_80014C68(Unk80014C68 *arg0, s32 arg1) {
         *p = arg0->tblC + *p * 8;
     } while (i < FILE_TABLE_COUNT);
     strcpy(name, func_8001214C_str(1, arg1));
-    if (D_8005F1A4 != 0) {
-        D_800675A8 = D_8006903C[arg1 * 3] & ADDR_MASK;
+    if (g_UseCd != 0) {
+        g_NsfStartSector = D_8006903C[arg1 * 3] & ADDR_MASK;
     }
-    arg0->f_A3C = func_8001148C(*(s32 *)(arg0->file + FILE_WORDS_OFFSET) * 4);
+    arg0->f_A3C = Heap_Alloc(*(s32 *)(arg0->file + FILE_WORDS_OFFSET) * 4);
     i = 0;
     if (*(s32 *)(arg0->file + FILE_WORDS_OFFSET) > 0) {
         do {
@@ -1931,7 +1931,7 @@ s32 func_80014C68(Unk80014C68 *arg0, s32 arg1) {
     arg0->countA = ENTRY_A_MAX;
     count = ENTRY_A_MAX;
     do {
-        *(s32 *)((u8 *)arg0 + ENTRY_A_OFFSET) = func_8001148C(count << ENTRY_A_SHIFT);
+        *(s32 *)((u8 *)arg0 + ENTRY_A_OFFSET) = Heap_Alloc(count << ENTRY_A_SHIFT);
         if (*(s32 *)((u8 *)arg0 + ENTRY_A_OFFSET) != 0) {
             break;
         }
@@ -2008,7 +2008,7 @@ s32 func_80014C68(Unk80014C68 *arg0, s32 arg1) {
     } while (++i < SLOT_COUNT);
     scale = SCALE_DEFAULT;
     mode = SCALE_UNSET;
-    span = func_80012294((char *)arg0, SPAN_ARG) * SPAN_MUL - SPAN_BASE;
+    span = Nsf_CountEntriesOfType((char *)arg0, SPAN_ARG) * SPAN_MUL - SPAN_BASE;
     switch (arg1) {
     case LEVEL_9:
         scale = SCALE_HALF;
@@ -2040,7 +2040,7 @@ s32 func_80014C68(Unk80014C68 *arg0, s32 arg1) {
     return RET_DONE;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014C68);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_OpenLevel);
 #endif
 
 extern void func_80051328(int);
@@ -2049,15 +2049,15 @@ extern Entry D_8005B1F0[];
 extern int D_80067FB4[];
 extern int D_80067FBC[];
 
-int func_8001521C(int *p) {
+int Nsf_CloseLevel(int *p) {
     int i;
     int off;
     char buf[8];
     if (p[0] == 1) {
-        if (D_8005F1A4 != 0 && D_80067FB4[0] != 0) func_80012ED0(1);
+        if (g_UseCd != 0 && D_80067FB4[0] != 0) func_80012ED0(1);
         if (D_80067FBC[0] != 0) func_80051328(1);
         i = 0;
-        func_80034394();
+        Snd_ShutdownSequencer();
         off = 0;
         func_80032588();
         do {
@@ -2073,9 +2073,9 @@ int func_8001521C(int *p) {
                 i++;
             } while (i < p[10]);
         }
-        func_800116C0(p[11]);
-        func_800116C0(p[0xA3C / 4]);
-        func_800116C0(p[6]);
+        Heap_Free(p[11]);
+        Heap_Free(p[0xA3C / 4]);
+        Heap_Free(p[6]);
         i = -0xFF;
         p[0] = 0;
         return i;

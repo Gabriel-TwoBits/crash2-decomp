@@ -31,11 +31,11 @@ void func_80011E90(void) {
 
 extern char D_8005F3F4[];
 extern char D_8005F198[];
-extern unsigned char D_8005B198[];
+extern unsigned char g_EidAlphabet[];
 
-/* An odd value becomes five characters of D_8005B198's 64, six bits each from the top, the low bit dropped; an even one is
+/* An odd value becomes five characters of g_EidAlphabet's 64, six bits each from the top, the low bit dropped; an even one is
    printed with the format at D_8005F198. Returns the static buffer */
-char *func_80011E98(unsigned int value)
+char *Nsf_EidToName(unsigned int value)
 {
     int i;
 
@@ -43,7 +43,7 @@ char *func_80011E98(unsigned int value)
         D_8005F3F4[5] = 0;
         value >>= 1;
         for (i = 4; i >= 0; i--) {
-            D_8005F3F4[i] = D_8005B198[value & 0x3F];
+            D_8005F3F4[i] = g_EidAlphabet[value & 0x3F];
             value >>= 6;
         }
     } else {
@@ -70,7 +70,7 @@ char *func_80011F1C(s32 arg0) {
 #define ALPHABET_SIZE 64
 #define PAD_CODE 0x3E
 
-s32 func_80011F78(char *arg0) {
+s32 Nsf_NameToEid(char *arg0) {
     s32 packed;
     s32 remaining;
     s32 code;
@@ -87,7 +87,7 @@ s32 func_80011F78(char *arg0) {
             break;
         }
         for (code = 0; code != ALPHABET_SIZE; code++) {
-            if (D_8005B198[code] == c) {
+            if (g_EidAlphabet[code] == c) {
                 break;
             }
         }
@@ -99,5 +99,5 @@ s32 func_80011F78(char *arg0) {
     return (packed << 1) | 1;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80011E24", func_80011F78);
+INCLUDE_ASM("asm/nonmatchings/game/80011E24", Nsf_NameToEid);
 #endif

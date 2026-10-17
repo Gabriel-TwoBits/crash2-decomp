@@ -25,7 +25,7 @@ s32 D_8005F1F8 = 1;
 #define SLOT_NOT_FOUND 3
 #define SLOT_FIRST 1
 
-extern s32 D_8003BEA4;
+extern s32 g_TimerTicks;
 extern s32 D_8005B914[];
 extern s32 D_8005F388;
 extern s32 D_8005F3B0;
@@ -183,7 +183,7 @@ s32 func_8001F9C4(void) {
     D_8006094D = 0;
     D_8006094E = 0;
     D_8006094F = 0;
-    D_80060954 = D_8003BEA4;
+    D_80060954 = g_TimerTicks;
     if (D_8006CBB4 == MODE_600) {
         func_8002FE58(&D_8005F388);
     }

@@ -148,7 +148,7 @@ extern s32 *D_80062BAC;
 /* Heap block header at p: bit 0 set = free, upper bits = payload size in bytes; -2 ends a chunk. */
 #define HEAP_AT(p, off) ((s32 *)((u8 *)(p) + (off)))
 
-s32 func_8001148C(s32 arg0) {
+s32 Heap_Alloc(s32 arg0) {
     s32 passes;
     u32 size;
     u32 want;
@@ -218,31 +218,31 @@ s32 func_8001148C(s32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_8001148C);
+INCLUDE_ASM("asm/nonmatchings/game/800111B0", Heap_Alloc);
 #endif
 
-void func_800116C0(s32 arg0) {
+void Heap_Free(s32 arg0) {
     ((s32 *)arg0)[-1] |= 1;
 }
 
 #ifdef NON_MATCHING
 void bcopy(s32, s32, s32);
 
-s32 func_800116D4(s32 arg0, s32 arg1) {
+s32 Heap_Realloc(s32 arg0, s32 arg1) {
     s32 r;
 
     if (arg0 == 0) {
-        r = func_8001148C(arg1);
+        r = Heap_Alloc(arg1);
     } else {
         if (arg1 == 0) {
-            func_800116C0(arg0);
+            Heap_Free(arg0);
         } else {
             r = func_800112A4(arg0, arg1);
             if (r == 0) {
-                r = func_8001148C(arg1);
+                r = Heap_Alloc(arg1);
                 if (r != 0) {
                     bcopy(arg0, r, arg1);
-                    func_800116C0(arg0);
+                    Heap_Free(arg0);
                 }
             }
         }
@@ -250,17 +250,17 @@ s32 func_800116D4(s32 arg0, s32 arg1) {
     return r;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_800116D4);
+INCLUDE_ASM("asm/nonmatchings/game/800111B0", Heap_Realloc);
 #endif
 
 #ifdef NON_MATCHING
-/* count elements of size bytes from func_8001148C, zeroed; 0 when it returns none */
-s32 *func_80011764(s32 count, s32 size) {
+/* count elements of size bytes from Heap_Alloc, zeroed; 0 when it returns none */
+s32 *Heap_AllocZeroed(s32 count, s32 size) {
     s32 total;
     s32 *block;
 
     total = size * count;
-    block = (s32 *)func_8001148C(total);
+    block = (s32 *)Heap_Alloc(total);
     if (block == 0) {
         return 0;
     }
@@ -268,15 +268,15 @@ s32 *func_80011764(s32 count, s32 size) {
     return block;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_80011764);
+INCLUDE_ASM("asm/nonmatchings/game/800111B0", Heap_AllocZeroed);
 #endif
 
 void __main(void);
-extern s32 D_8005F1A4;
+extern s32 g_UseCd;
 
 s32 func_800117BC(void) {
     __main();
-    D_8005F1A4 = 1;
+    g_UseCd = 1;
     func_80015614();
     func_80011800(0x3C);
     func_800157A0();
@@ -303,7 +303,7 @@ s32 func_800117BC(void) {
 #define BUF_FIELD_2088 0x2088
 #define CD14(off) (*(s32 *)(D_8006CD14 + (off)))
 
-extern s32 D_8003BEA4;
+extern s32 g_TimerTicks;
 extern s32 D_8005F180;
 extern s32 D_8005F18C;
 extern char D_8005F190[];
@@ -325,8 +325,8 @@ extern char D_80062A18[];
 extern s32 D_80062A90;
 extern s32 D_80062AA0;
 extern s32 D_80062AD8;
-extern void *D_80063454;
-extern void *D_80063458;
+extern void *g_DrawBuffer;
+extern void *g_BuildBuffer;
 extern char D_80067588[];
 extern void *D_8006759C;
 extern s32 D_80069944;
@@ -340,7 +340,7 @@ extern s32 D_8006CD7C;
 
 void SetRotMatrix(void *);
 /* func_80041E5C stays undeclared: 800158E0.c declares it void, but its v0 is stored below (implicit int). */
-/* func_80014C68 stays undeclared: 800123F0.c defines it over a struct type unknown here (implicit int). */
+/* Nsf_OpenLevel stays undeclared: 800123F0.c defines it over a struct type unknown here (implicit int). */
 int printf(const char *, ...);
 
 void func_80011800(s32 arg0) {
@@ -353,7 +353,7 @@ void func_80011800(s32 arg0) {
     s32 *list;
 
     func_8002EFE4();
-    func_80014C68(D_80067588, arg0);
+    Nsf_OpenLevel(D_80067588, arg0);
     func_8002EE48();
     do {
         if (((D_80069944 & POWER_BUTTON_MASK) || ((D_8005F180 == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
@@ -367,8 +367,8 @@ void func_80011800(s32 arg0) {
                         D_8005F18C = 0;
                     } else {
                         D_8005F18C = 1;
-                        D_8005F2C4 = D_8003BEA4;
-                        D_8005F2C8 = *(s32 *)((char *)D_80063454 + 0xC);
+                        D_8005F2C4 = g_TimerTicks;
+                        D_8005F2C8 = *(s32 *)((char *)g_DrawBuffer + 0xC);
                     }
                 } else {
                     /* flag state kept; nothing to do */
@@ -379,8 +379,8 @@ void func_80011800(s32 arg0) {
                 D_8005F180 = 1;
             } else {
                 D_8005F18C = -1;
-                D_8003BEA4 = D_8005F2C4;
-                *(s32 *)((char *)D_80063454 + 0xC) = D_8005F2C8;
+                g_TimerTicks = D_8005F2C4;
+                *(s32 *)((char *)g_DrawBuffer + 0xC) = D_8005F2C8;
             }
         } else {
             D_8005F18C = 0;
@@ -412,7 +412,7 @@ void func_80011800(s32 arg0) {
                 D_8005F1F4 = 0;
             }
             *(s32 *)(D_80067588 + 0x24) = 2;
-            func_8001521C((int *)D_80067588);
+            Nsf_CloseLevel((int *)D_80067588);
             D_8005F180 = 0;
             D_8005F3B8 = 0;
             if ((state == 2) || ((u32)(state - STATE_DEAD) < 2U)) {
@@ -420,7 +420,7 @@ void func_80011800(s32 arg0) {
             } else {
                 /* other states keep the saved level */
             }
-            func_80014C68(D_80067588, state);
+            Nsf_OpenLevel(D_80067588, state);
             func_8002EE48();
             if (pending != 0) {
                 D_8005F3F0 = STATE_NONE;
@@ -464,18 +464,18 @@ void func_80011800(s32 arg0) {
                 /* empty list */
             }
             func_8002FB84(0);
-            D_8006CCB8 = func_80041E5C(D_8005F390, D_80063458, D_80062A18, D_80060944);
+            D_8006CCB8 = func_80041E5C(D_8005F390, g_BuildBuffer, D_80062A18, D_80060944);
         } else {
-            func_8003BC5C((u8 *)D_80063458 + PAUSE_BUF_OFFSET, PAUSE_BUF_SIZE);
+            func_8003BC5C((u8 *)g_BuildBuffer + PAUSE_BUF_OFFSET, PAUSE_BUF_SIZE);
         }
         if (D_8006CB94 & SAVE_FLAGS_MASK) {
             if ((D_80062A90 != 0) && (D_80062AD8 & FLAG_16)) {
-                func_80044F54(D_80062A90, D_80063458, D_80062A18);
+                func_80044F54(D_80062A90, g_BuildBuffer, D_80062A18);
             } else {
                 /* skipped */
             }
             if ((D_80062AA0 != 0) && (D_80062AD8 & FLAG_400000)) {
-                func_80045218(D_80062AA0, D_80063458, D_80062A18);
+                func_80045218(D_80062AA0, g_BuildBuffer, D_80062A18);
             } else {
                 /* skipped */
             }
@@ -484,14 +484,14 @@ void func_80011800(s32 arg0) {
         }
         func_8001C29C((void *)(D_8005F180 == 0));
         func_80011E88();
-        func_8003DB94(*(s32 *)((char *)D_80063458 + BUF_FIELD_2088), D_80063458, D_80062A18);
-        func_8001645C();
+        func_8003DB94(*(s32 *)((char *)g_BuildBuffer + BUF_FIELD_2088), g_BuildBuffer, D_80062A18);
+        Gfx_EndFrame();
         func_80011E90();
     } while (D_8005F1D0 == 0);
     D_8006CB94 = 0;
-    func_8001645C();
-    func_8001645C();
-    func_8001521C((int *)D_80067588);
+    Gfx_EndFrame();
+    Gfx_EndFrame();
+    Nsf_CloseLevel((int *)D_80067588);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_80011800);

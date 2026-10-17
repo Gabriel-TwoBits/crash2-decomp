@@ -363,7 +363,8 @@ D_8005F288 = 0x8005F288; // size:0x6
 
 // Entries into handwritten code that other files reach: a counter word between two functions, and the GTE routine
 // func_80042420's entry points, which func_80011E24 stores as function pointers
-D_8003BEA4 = 0x8003BEA4; // type:s32
+// incremented by the handler func_80015614 attaches with OpenEvent to root counter 2's interrupt, set by SetRCnt to a target of 0x1000
+g_TimerTicks = 0x8003BEA4; // type:s32
 func_80042420 = 0x80042420; // type:func
 func_80042548 = 0x80042548; // type:func
 func_800426A0 = 0x800426A0; // type:func
@@ -565,3 +566,180 @@ func_800445B8 = 0x800445B8; // type:func size:0x5FC
 D_800446F0 = 0x800446F0; // type:alabel
 D_800447DC = 0x800447DC; // type:alabel
 D_80044830 = 0x80044830; // type:alabel
+
+// Names, each with its evidence on the line above it (docs/WORKFLOW.md, "Naming"). A rename replaces
+// the symbol's line, never adds a second name at its address
+
+// calls InitPAD on its two receive buffers, then StartPAD and ChangeClearPAD
+Input_Init = 0x80015828; // type:func
+
+// calls ResetGraph and SetGraphDebug, sets two buffers with SetDefDispEnv and SetDefDrawEnv, then PutDispEnv, PutDrawEnv and SetDispMask(1)
+Gfx_Init = 0x800160B0; // type:func
+
+// puts a 1024x512 draw environment and draws a black GPU fill (command 0x02) of 0x3FF by 0x1FF from 0,0 with DrawPrim
+Gfx_ClearVram = 0x8001601C; // type:func
+
+// waits DrawSync and VSync, swaps the buffer pointers, puts their display and draw environments and starts DrawOTag on the drawn buffer's ordering table
+Gfx_EndFrame = 0x8001645C; // type:func
+
+// writes a GPU fill primitive (length 3, command 0x02) at the given rectangle and colour and links it with AddPrim
+Gfx_AddFillRect = 0x80016A60; // type:func
+
+// returns the memory func_80011764 clears with bzero, func_800116D4 copies into with bcopy and func_800316EC reads a CD sector into with CdRead
+Heap_Alloc = 0x8001148C; // type:func
+
+// sets bit 0 of the block's header word; func_800116D4 calls it on the old block after bcopy, func_800316EC on its sector buffer once read
+Heap_Free = 0x800116C0; // type:func
+
+// allocates when the block is null, frees when the size is 0, else resizes in place or allocates, copies with bcopy and frees the old block
+Heap_Realloc = 0x800116D4; // type:func
+
+// allocates count times size bytes and clears them with bzero, 0 when the allocation fails
+Heap_AllocZeroed = 0x80011764; // type:func
+
+// steps the seed with the LCG seed * 0x41C64E6D + 0x3039 and returns the result's magnitude modulo its argument
+Rand_Below = 0x80031578; // type:func
+
+// sets the seed func_80031578's LCG steps to 0x3039
+Rand_ResetSeed = 0x80031658; // type:func
+
+// the LCG of func_80031578 (seed * 0x41C64E6D + 0x3039) on a second seed, the result modulo its argument
+Rand_BelowAlt = 0x8003147C; // type:func
+
+// sets the seed func_8003147C's LCG steps to 0x3039
+Rand_ResetSeedAlt = 0x8003155C; // type:func
+
+// sets the seed func_8003147C's LCG steps to its argument
+Rand_SetSeedAlt = 0x8003156C; // type:func
+
+// reads a 12-bit angle's value from the quarter-wave table at 0x8005BCB0 by quadrant, negated in the second half turn
+Math_Sin = 0x8003D2EC; // type:func
+
+// reads the quarter-wave table at 0x8005BCB0 a quarter turn ahead of func_8003D2EC, negated in the middle half turn
+Math_Cos = 0x8003D360; // type:func
+
+// calls SsInit, SsSetTableSize, SpuInitMalloc and SsSetMVol(0x7F, 0x7F)
+Snd_Init = 0x800324A8; // type:func
+
+// calls SsSetTickMode and SsSetReservedVoice and sets the flag func_80034394 tests before SsEnd
+Snd_InitSequencer = 0x80033D10; // type:func
+
+// closes the open sequence and its VAB, then calls SsEnd, once func_80033D10 has run
+Snd_ShutdownSequencer = 0x80034394; // type:func
+
+// calls SsSepClose on the sequence it is given and SsVabClose on the open VAB
+Snd_CloseSequence = 0x8003444C; // type:func
+
+// opens a VAB with SsVabFakeHead and SsVabFakeBody, calls SsStart, opens the sequence with SsSepOpen and starts it through func_800344B0
+Snd_LoadSequence = 0x80033EE0; // type:func
+
+// by command calls SsSepPlay, the stop at 0x80056304, SsSepPause, SsSepReplay, or sets the sequence's volume
+Snd_ControlSequence = 0x800344B0; // type:func
+
+// fills a reverb attribute (mode, depths, and delay and feedback for modes 7 and 8) and calls SpuSetReverbDepth
+Snd_SetReverb = 0x800325DC; // type:func
+
+// opens and enables the memory card events (SwCARD 0xF4000001, HwCARD 0xF0000011) and calls InitCARD, StartCARD and _bu_init
+Save_InitCard = 0x80036164; // type:func
+
+// calls StopCARD; the shutdown at 0x800157A0 calls it
+Save_StopCard = 0x80036304; // type:func
+
+// reads a card's sector 0 with _card_read and checks its first two bytes are the header 'M', 'C'
+Save_IsCardFormatted = 0x80036414; // type:func
+
+// calls TestEvent on the four SwCARD events func_80036164 opens and returns which fired
+Save_TestSwEvents = 0x80035AB8; // type:func
+
+// calls TestEvent on each of the four SwCARD events func_80036164 opens, discarding the results
+Save_ClearSwEvents = 0x80035B70; // type:func
+
+// calls TestEvent on the four HwCARD events func_80036164 opens and returns which fired
+Save_TestHwEvents = 0x80035BB8; // type:func
+
+// calls TestEvent on each of the four HwCARD events func_80036164 opens, discarding the results
+Save_ClearHwEvents = 0x80035C74; // type:func
+
+// appends '*' to the path and fills its entries with firstfile and nextfile, returning their count
+Save_ListFiles = 0x80035CBC; // type:func
+
+// calls close on the descriptor when it is open and sets it to -1
+Save_CloseFile = 0x80035F2C; // type:func
+
+// calls format on "bu00:"
+Save_FormatCard = 0x800359F0; // type:func
+
+// turns an odd value into five characters of the 64-character EID alphabet at 0x8005B198, six bits each
+Nsf_EidToName = 0x80011E98; // type:func
+
+// packs five characters as their index in the EID alphabet at 0x8005B198, six bits each, shifted left with bit 0 set; callers pass strings such as "DirnD"
+Nsf_NameToEid = 0x80011F78; // type:func
+
+// maps the EID's fifth character (bits 1 to 6, through the EID alphabet) to an entry type number
+Nsf_EidType = 0x80012010; // type:func
+
+// an NSD record's entry type: the loaded entry's header word at 8, else func_80012010 on the record's EID
+Nsf_EntryType = 0x80012250; // type:func
+
+// counts the NSD's records (count at 0x404, 8-byte records from 0x520) whose entry type is its argument
+Nsf_CountEntriesOfType = 0x80012294; // type:func
+
+// sprintf of "\S%X\S%07X.NSD" or ".NSF" for the level (on the PC, "%s%ss%07x.nsd" or ".nsf")
+Nsf_FormatFileName = 0x80012170; // type:func
+
+// calls func_80012170 for the file kind and level it is given
+Nsf_FileName = 0x8001214C; // type:func
+
+// reads the level's file named \S%X\S%07X.NSD, links its hash table, records the .NSF's sector and allocates the page buffers
+Nsf_OpenLevel = 0x80014C68; // type:func
+
+// undoes func_80014C68 on the same structure: calls the 22 handlers of the table at 0x8005B1F0, frees the page buffers and the NSD, clears its open flag
+Nsf_CloseLevel = 0x8001521C; // type:func
+
+// checks a page's magic 0x1234, skips type 1 pages and turns its entry offsets and each entry's item offsets into pointers
+Nsf_RelocatePage = 0x8001254C; // type:func
+
+// CdRead of 32 sectors per page from the .NSF's sector func_80014C68 records, after a CdlSetloc to it
+Nsf_ReadPages = 0x80012F24; // type:func
+
+// reads the ISO 9660 volume ("CD001" at sector 16) and records each S*.NSD's sector and size and each .NSF's sector by level
+Nsf_ScanDisc = 0x800316EC; // type:func
+
+// scans the NSD hash table's bucket (EID >> 15) & 0xFF for the 8-byte record whose second word is the EID
+Nsf_LookupEid = 0x80014B44; // type:func
+
+// the two buffers func_800160B0 sets with SetDefDispEnv and SetDefDrawEnv, each with an ordering table, after their count and three pointers
+g_FrameBuffers = 0x8006344C;
+
+// the buffer whose display environment func_8001645C passes to PutDispEnv
+g_DisplayBuffer = 0x80063450;
+
+// the buffer whose draw environment func_8001645C passes to PutDrawEnv and whose ordering table it passes to DrawOTag
+g_DrawBuffer = 0x80063454;
+
+// the buffer whose ordering table AddPrim links new primitives into (func_80016A60)
+g_BuildBuffer = 0x80063458;
+
+// incremented once per frame by func_8001645C, which waits VSync; zeroed when the game loop starts
+g_FrameCount = 0x8006CCF0;
+
+// the seed func_80031578 steps with the LCG seed * 0x41C64E6D + 0x3039
+g_RandSeed = 0x8005F224;
+
+// the seed func_8003147C steps with the LCG seed * 0x41C64E6D + 0x3039
+g_RandSeedAlt = 0x8005F220;
+
+// 1,025 halfwords of round(4096 * sin(2 * pi * i / 4096)), 0 to 4096, read by func_8003D2EC and func_8003D360
+g_SinTable = 0x8005BCB0;
+
+// the 64 characters 0-9, a-z, A-Z, '_' and '!' that func_80011E98 and func_80011F78 map EIDs through
+g_EidAlphabet = 0x8005B198;
+
+// func_800117BC (main) sets it; when 0 the init skips CdInit and the file names take the PC path "c:/src/crash2/target/" instead of the CD's
+g_UseCd = 0x8005F1A4;
+
+// 12 bytes per level: the .NSD's sector and size and the .NSF's sector, filled by func_800316EC and read by func_80014C68
+g_LevelFiles = 0x80069034;
+
+// the .NSF's sector func_80014C68 takes from the level's file record; func_80012F24 adds the page's offset to it for CdRead
+g_NsfStartSector = 0x800675A8;

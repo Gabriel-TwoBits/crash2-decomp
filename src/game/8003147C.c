@@ -2,10 +2,10 @@
 #include "sdk.h"
 #include "game.h"
 
-s32 D_8005F220 = 1;
+s32 g_RandSeedAlt = 1;
 
 #ifdef NON_MATCHING
-s32 func_8003147C(s32 arg0) {
+s32 Rand_BelowAlt(s32 arg0) {
     u32 s;
     u32 a;
     s32 v;
@@ -13,9 +13,9 @@ s32 func_8003147C(s32 arg0) {
     if (arg0 == 0) {
         return 0;
     }
-    s = D_8005F220 * 0x41C64E6D + 0x3039;
+    s = g_RandSeedAlt * 0x41C64E6D + 0x3039;
     a = s / 15;
-    D_8005F220 = s;
+    g_RandSeedAlt = s;
     v = a - a / 0x7FFFFFF * 0x7FFFFFF;
     if (v >= 0) {
         return v % arg0;
@@ -23,16 +23,16 @@ s32 func_8003147C(s32 arg0) {
     return -v % arg0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8003147C", func_8003147C);
+INCLUDE_ASM("asm/nonmatchings/game/8003147C", Rand_BelowAlt);
 #endif
 
-/* The seed func_8003155C restores, also the generator's increment */
+/* The seed Rand_ResetSeedAlt restores, also the generator's increment */
 #define RANDOM_RESET_SEED 0x3039
 
-void func_8003155C(void) {
-    D_8005F220 = RANDOM_RESET_SEED;
+void Rand_ResetSeedAlt(void) {
+    g_RandSeedAlt = RANDOM_RESET_SEED;
 }
 
-void func_8003156C(s32 seed) {
-    D_8005F220 = seed;
+void Rand_SetSeedAlt(s32 seed) {
+    g_RandSeedAlt = seed;
 }

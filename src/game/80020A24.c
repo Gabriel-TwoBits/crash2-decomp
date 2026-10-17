@@ -392,7 +392,7 @@ void func_80020A24(void) {
         D_80062A38 = D_80043EA0;
     }
     if (D_8006CB94 & GLOBAL_FLAG_1000000) {
-        frame[6] = func_80011F78(D_8005F1FC);
+        frame[6] = Nsf_NameToEid(D_8005F1FC);
         D_80062A28 = D_80045C18;
         D_80062A2C = D_80045D88;
         D_80062A30 = D_80045F40;
@@ -1335,7 +1335,7 @@ typedef struct Unk8005B9C4 {
     Unk80060918 unkC;
 } Unk8005B9C4;
 
-extern s32 D_8003BEA4;
+extern s32 g_TimerTicks;
 extern Unk80060918 D_80060918;
 
 void func_80023154(void) {
@@ -1343,7 +1343,7 @@ void func_80023154(void) {
 
     state->unk0 = 1;
     state->unk8 = 0x155;
-    state->unk4 = D_8003BEA4;
+    state->unk4 = g_TimerTicks;
     state->unkC = D_80060918;
 }
 
@@ -1447,7 +1447,7 @@ void func_800231B0(s32 *arg0) {
         }
         var_s1 = (var_s1 + func_80023DC4()) & ANGLE_MASK;
         if (D_8005B9C4 != 0) {
-            temp_s0 = D_8003BEA4 - D_8005B9C8;
+            temp_s0 = g_TimerTicks - D_8005B9C8;
             if (temp_s0 >= D_8005B9CC) {
                 D_8005B9C4 = 0;
             } else {

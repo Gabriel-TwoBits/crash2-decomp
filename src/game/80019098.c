@@ -539,14 +539,14 @@ void func_80019E5C(void) {
 extern char D_8005C514[];
 extern char D_8005C650[];
 extern s32 D_80060944;
-extern u32 *D_80063450;
+extern u32 *g_DisplayBuffer;
 extern char D_8006CB70[];
 
 void func_80019F08(void) {
     u32 n;
     u32 *p;
 
-    n = D_80063450[5];
+    n = g_DisplayBuffer[5];
     *(s32 *)0x1F800050 = D_80060944;
     p = (u32 *)0x1F800054;
     if (n >= 0x67) {

@@ -85,7 +85,7 @@ extern s32 D_8005F180;
 extern s32 *D_8005F374;
 extern u8 *D_8005F3D8;
 extern s32 *D_800608CC;
-extern u8 *D_80063450;
+extern u8 *g_DisplayBuffer;
 extern s32 D_8006CB80;
 extern s32 D_8006CB94;
 extern s32 D_8006CCA0;
@@ -220,7 +220,7 @@ void func_800158E0(void) {
                 p->unk_40 = DIR_NEUTRAL;
                 sel = p->unk_28;
                 if ((u8 *)D_8005F374 == D_8005F3D8 + STREAM_END_OFFSET) {
-                    *(s32 *)(D_80063450 + STREAM_RESTART_DST) = *(s32 *)(D_8005F3D8 + STREAM_RESTART_OFFSET);
+                    *(s32 *)(g_DisplayBuffer + STREAM_RESTART_DST) = *(s32 *)(D_8005F3D8 + STREAM_RESTART_OFFSET);
                 } else {
                     /* not at the first record */
                 }
@@ -325,7 +325,7 @@ typedef struct {
     s16 w, h;
 } Fill;
 
-void func_8001601C(void) {
+void Gfx_ClearVram(void) {
     u8 env[0x60];
     Fill f;
 
@@ -364,8 +364,8 @@ typedef struct {
     Unk800160B0Entry e[1];
 } Unk800160B0Gfx;
 
-extern Unk800160B0Gfx D_8006344C;
-extern s32 D_8003BEA4;
+extern Unk800160B0Gfx g_FrameBuffers;
+extern s32 g_TimerTicks;
 extern s32 D_8006CCDC;
 extern s32 D_80060944;
 void PutDispEnv(void *env);
@@ -373,16 +373,16 @@ void SetDefDispEnv(void *env, s32 x, s32 y, s32 w, s32 h);
 void SetDispMask(s32 mask);
 void SetGraphDebug(s32 level);
 
-void func_800160B0(void) {
+void Gfx_Init(void) {
     s32 i;
     Unk800160B0Entry *e;
     D_80060944 = 0;
     ResetGraph(0);
     SetGraphDebug(0);
-    func_8001601C();
-    D_8006344C.count = 2;
-    for (i = 0; i < D_8006344C.count; i++) {
-        e = &D_8006344C.e[i];
+    Gfx_ClearVram();
+    g_FrameBuffers.count = 2;
+    for (i = 0; i < g_FrameBuffers.count; i++) {
+        e = &g_FrameBuffers.e[i];
         e->idx = i;
         e->f0C = 0;
         SetDefDispEnv(e->disp, i << 9, 0, 0x200, 0xF0);
@@ -394,17 +394,17 @@ void func_800160B0(void) {
         e->draw[0x16] = 1;
         e->draw[0x17] = 0;
         if (i == 0) {
-            D_8006344C.first = e;
-            D_8006344C.cur = e;
+            g_FrameBuffers.first = e;
+            g_FrameBuffers.cur = e;
         }
         if (i == 1) {
-            D_8006344C.other = e;
+            g_FrameBuffers.other = e;
         }
         e->f14 = 0x22;
-        e->f0C = D_8003BEA4;
+        e->f0C = g_TimerTicks;
     }
-    PutDispEnv(D_8006344C.cur->disp);
-    PutDrawEnv(D_8006344C.other->draw);
+    PutDispEnv(g_FrameBuffers.cur->disp);
+    PutDrawEnv(g_FrameBuffers.other->draw);
     SetDispMask(1);
 }
 
@@ -421,7 +421,7 @@ typedef struct {
 } Unk80063458;
 
 #ifdef NON_MATCHING
-extern Unk80063458 *D_80063458[];
+extern Unk80063458 *g_BuildBuffer[];
 #define RETAIL_STATE_LOAD 2
 #define RETAIL_STATE_PAL 0x28
 #define CLEAR_OFFSET 0x18
@@ -436,7 +436,7 @@ extern Unk80063458 *D_80063458[];
 
 extern void exit(s32);
 extern s32 D_8005F3EC;
-extern u8 *D_80063454;
+extern u8 *g_DrawBuffer;
 
 s32 func_800161F8(void) {
     s32 i;
@@ -448,27 +448,27 @@ s32 func_800161F8(void) {
     if (D_8005F3EC == RETAIL_STATE_LOAD) {
         func_80036368();
     }
-    func_8003BC5C((u8 *)D_80063458[0] + CLEAR_OFFSET, CLEAR_BYTES);
-    func_8003BC5C(D_80063454 + CLEAR_OFFSET, CLEAR_BYTES);
+    func_8003BC5C((u8 *)g_BuildBuffer[0] + CLEAR_OFFSET, CLEAR_BYTES);
+    func_8003BC5C(g_DrawBuffer + CLEAR_OFFSET, CLEAR_BYTES);
     i = 0;
-    shared = func_8001148C(SHARED_BUF_BYTES);
-    if (D_8006344C.count > 0) {
-        entry = (u8 *)D_8006344C.e;
+    shared = Heap_Alloc(SHARED_BUF_BYTES);
+    if (g_FrameBuffers.count > 0) {
+        entry = (u8 *)g_FrameBuffers.e;
         do {
             size = ENTRY_BUF_BYTES;
             *(s32 *)(entry + ENTRY_SHARED_OFFSET) = shared;
             if (D_8005F3EC == RETAIL_STATE_PAL) {
                 size = ENTRY_BUF_BYTES_PAL;
             }
-            buf = func_8001148C(size);
+            buf = Heap_Alloc(size);
             *(s32 *)(entry + ENTRY_BUF_OFFSET) = buf;
             if (buf == 0) {
                 exit(ALLOC_FAIL_EXIT_CODE);
             }
             func_800163C4((s32 *)entry);
             i++;
-            entry += sizeof(*D_8006344C.e);
-        } while (i < D_8006344C.count);
+            entry += sizeof(*g_FrameBuffers.e);
+        } while (i < g_FrameBuffers.count);
     }
     return RETURN_VALUE;
 }
@@ -487,14 +487,14 @@ s32 func_800162FC(void) {
     s32 i;
 
     i = 0;
-    func_800163B4(D_80063458[0]);
+    func_800163B4(g_BuildBuffer[0]);
     DrawSync(0);
-    func_800116C0(D_800654E8);
-    if (D_8006344C.count > 0) {
+    Heap_Free(D_800654E8);
+    if (g_FrameBuffers.count > 0) {
         do {
-            func_800116C0(D_8006344C.e[i].pad4[0]);
+            Heap_Free(g_FrameBuffers.e[i].pad4[0]);
             i++;
-        } while (i < D_8006344C.count);
+        } while (i < g_FrameBuffers.count);
     }
     if (D_8005F3EC == STATE_FLUSH) {
         func_800363D0();
@@ -518,31 +518,31 @@ void func_800163C4(s32 *arg0) {
 }
 
 
-extern Unk80063458 *D_80063458[];
+extern Unk80063458 *g_BuildBuffer[];
 
 void func_800163E8(s32 arg0) {
     s32 sum;
 
-    sum = D_80063458[0]->unk8 + arg0;
+    sum = g_BuildBuffer[0]->unk8 + arg0;
     /* Both branches store the same value; the branch is what puts the sum in $a0. */
-    if (D_80063458[0]->unk8) {
-        D_80063458[0]->unk8 = sum;
+    if (g_BuildBuffer[0]->unk8) {
+        g_BuildBuffer[0]->unk8 = sum;
     } else {
-        D_80063458[0]->unk8 = sum;
+        g_BuildBuffer[0]->unk8 = sum;
     }
 }
 
 s32 *func_80016408(void) {
-    return &D_80063458[0]->unk8;
+    return &g_BuildBuffer[0]->unk8;
 }
 
 void *func_80016418(s32 arg0) {
     void **temp;
 
-    temp = (void **)D_80063458[0]->unk2090;
-    D_80063458[0]->unk2090 = (char *)temp + arg0;
-    *temp = D_80063458[0]->unk2088;
-    D_80063458[0]->unk2088 = temp;
+    temp = (void **)g_BuildBuffer[0]->unk2090;
+    g_BuildBuffer[0]->unk2090 = (char *)temp + arg0;
+    *temp = g_BuildBuffer[0]->unk2088;
+    g_BuildBuffer[0]->unk2088 = temp;
     return temp;
 }
 
@@ -599,20 +599,20 @@ extern s32 *D_8005F374;
 extern s32 *D_800608CC;
 extern s32 D_800608D8;
 extern s32 D_800608E0;
-extern u8 *D_80063450;
+extern u8 *g_DisplayBuffer;
 extern s32 D_800675AC;
 extern s32 D_8006CB80;
 extern s32 D_8006CB94;
 extern s32 D_8006CC1C;
 extern s32 D_8006CC94;
-extern s32 D_8006CCF0;
+extern s32 g_FrameCount;
 extern s32 D_8006CD14;
 extern s32 D_8006CD18;
 extern s32 D_8006CD1C;
 extern s32 D_8005F1D4;
 extern s32 D_8005F1D8;
 
-int func_8001645C(void) {
+int Gfx_EndFrame(void) {
     s32 sp28;
     s32 *res;
     s32 mode;
@@ -622,7 +622,7 @@ int func_8001645C(void) {
     u8 *tmp;
     s32 fade;
 
-    D_8006CCF0 += 1;
+    g_FrameCount += 1;
     if ((D_8005F180 == 0) && (D_8006CB94 & FLAG_COUNT_FRAMES)) {
         D_80060944 += 1;
     }
@@ -671,7 +671,7 @@ int func_8001645C(void) {
             }
         }
         if (mode == BAND_MODE_SPLIT) {
-            y = ((D_80060884.a * (func_8003D2EC(D_80060800) * BAND_SCALE)) >> BAND_SHIFT) - (y - BAND_CENTER_OFFSET);
+            y = ((D_80060884.a * (Math_Sin(D_80060800) * BAND_SCALE)) >> BAND_SHIFT) - (y - BAND_CENTER_OFFSET);
             if (D_8006CC94 != 0) {
                 y -= (D_8006CC94 * PAN_SCALE) >> PAN_SHIFT;
             }
@@ -686,11 +686,11 @@ int func_8001645C(void) {
         }
         switch (mode) {
         case BAND_MODE_SPLIT:
-            func_80016A60(0, 0, BAND_WIDTH, (s16)(y + 1), color & BYTE_MASK, (color >> BITS_PER_BYTE) & BYTE_MASK, (color >> BITS_PER_SHORT) & BYTE_MASK);
-            func_80016A60(0, (s16)(y + 1), BAND_WIDTH, BAND_LAST_ROW - y, color2 & BYTE_MASK, (color2 >> BITS_PER_BYTE) & BYTE_MASK, (color2 >> BITS_PER_SHORT) & BYTE_MASK);
+            Gfx_AddFillRect(0, 0, BAND_WIDTH, (s16)(y + 1), color & BYTE_MASK, (color >> BITS_PER_BYTE) & BYTE_MASK, (color >> BITS_PER_SHORT) & BYTE_MASK);
+            Gfx_AddFillRect(0, (s16)(y + 1), BAND_WIDTH, BAND_LAST_ROW - y, color2 & BYTE_MASK, (color2 >> BITS_PER_BYTE) & BYTE_MASK, (color2 >> BITS_PER_SHORT) & BYTE_MASK);
             break;
         case BAND_MODE_FULL:
-            func_80016A60(0, 0, BAND_WIDTH, BAND_HEIGHT, color & BYTE_MASK, (color >> BITS_PER_BYTE) & BYTE_MASK, (color >> BITS_PER_SHORT) & BYTE_MASK);
+            Gfx_AddFillRect(0, 0, BAND_WIDTH, BAND_HEIGHT, color & BYTE_MASK, (color >> BITS_PER_BYTE) & BYTE_MASK, (color >> BITS_PER_SHORT) & BYTE_MASK);
             break;
         default:
             /* other modes draw nothing */
@@ -698,21 +698,21 @@ int func_8001645C(void) {
         }
     }
     func_800334A0();
-    FRAME_FIELD(D_80063454, FRAME_END_TIME_OFFSET, s32) = D_8003BEA4;
+    FRAME_FIELD(g_DrawBuffer, FRAME_END_TIME_OFFSET, s32) = g_TimerTicks;
     DrawSync(0);
     if (D_8006CD14 == 0) {
-        D_8006CC1C = D_8003BEA4 - FRAME_FIELD(D_80063454, FRAME_TIME_OFFSET, s32);
+        D_8006CC1C = g_TimerTicks - FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32);
     } else {
         D_8006CC1C = FRAME_TIME_DEFAULT;
     }
     if (D_800675AC == 0) {
-        tmp = D_80063454;
-        D_80063450 = tmp;
-        D_80063454 = (u8 *)D_80063458[0];
-        D_80063458[0] = (Unk80063458 *)tmp;
+        tmp = g_DrawBuffer;
+        g_DisplayBuffer = tmp;
+        g_DrawBuffer = (u8 *)g_BuildBuffer[0];
+        g_BuildBuffer[0] = (Unk80063458 *)tmp;
     }
     VSync(0);
-    if ((u32)(D_8003BEA4 - FRAME_FIELD(D_80063450, FRAME_TIME_OFFSET, s32)) < FRAME_TIME_LIMIT) {
+    if ((u32)(g_TimerTicks - FRAME_FIELD(g_DisplayBuffer, FRAME_TIME_OFFSET, s32)) < FRAME_TIME_LIMIT) {
         VSync(0);
     }
     if (D_8006CB94 & FLAG_RCNT_STOP) {
@@ -723,7 +723,7 @@ int func_8001645C(void) {
         }
         D_8005F1D8 = 1;
         func_800345C8();
-        D_8003BEA4 += FRAME_TIME_PENALTY;
+        g_TimerTicks += FRAME_TIME_PENALTY;
     } else {
         if (D_8005F1D8 != 0) {
             EnterCriticalSection();
@@ -734,14 +734,14 @@ int func_8001645C(void) {
     }
     EnterCriticalSection();
     if (D_8006CD14 == 2) {
-        D_8003BEA4 = *D_8005F374;
+        g_TimerTicks = *D_8005F374;
     }
-    FRAME_FIELD(D_80063454, FRAME_TIME_OFFSET, s32) = D_8003BEA4;
+    FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32) = g_TimerTicks;
     ExitCriticalSection();
-    FRAME_FIELD(D_80063450, FRAME_DURATION_OFFSET, s32) = func_80016F04(FRAME_FIELD(D_80063454, FRAME_TIME_OFFSET, s32) - FRAME_FIELD(D_80063450, FRAME_TIME_OFFSET, s32));
-    FRAME_FIELD(D_80063450, FRAME_DISP_FLAG_OFFSET, s16) = (s16)D_8006CCDC;
-    PutDispEnv(D_80063450 + FRAME_DISP_ENV_OFFSET);
-    PutDrawEnv(D_80063454 + FRAME_DRAW_ENV_OFFSET);
+    FRAME_FIELD(g_DisplayBuffer, FRAME_DURATION_OFFSET, s32) = func_80016F04(FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32) - FRAME_FIELD(g_DisplayBuffer, FRAME_TIME_OFFSET, s32));
+    FRAME_FIELD(g_DisplayBuffer, FRAME_DISP_FLAG_OFFSET, s16) = (s16)D_8006CCDC;
+    PutDispEnv(g_DisplayBuffer + FRAME_DISP_ENV_OFFSET);
+    PutDrawEnv(g_DrawBuffer + FRAME_DRAW_ENV_OFFSET);
     if (D_800675AC > 0) {
         D_800675AC -= 1;
     }
@@ -749,14 +749,14 @@ int func_8001645C(void) {
         if (D_8006CB94 & FLAG_PRE_DRAW) {
             func_8002706C();
         }
-        DrawOTag(D_80063454 + FRAME_OT_OFFSET);
+        DrawOTag(g_DrawBuffer + FRAME_OT_OFFSET);
     }
-    func_800163C4((s32 *)D_80063458[0]);
+    func_800163C4((s32 *)g_BuildBuffer[0]);
     D_8006CB94 = D_8006CB80;
     return D_8006CB80;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_8001645C);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_EndFrame);
 #endif
 
 typedef struct {
@@ -769,11 +769,11 @@ typedef struct {
 } Unk80016A60;
 
 
-void func_80016A60(s32 arg0, s32 arg1, s16 arg2, s16 arg3, u8 arg4, u8 arg5, u8 arg6) {
+void Gfx_AddFillRect(s32 arg0, s32 arg1, s16 arg2, s16 arg3, u8 arg4, u8 arg5, u8 arg6) {
     Unk80016A60 *p;
 
-    p = (Unk80016A60 *)D_80063458[0]->unk8;
-    D_80063458[0]->unk8 = (s32)((u8 *)p + 0x10);
+    p = (Unk80016A60 *)g_BuildBuffer[0]->unk8;
+    g_BuildBuffer[0]->unk8 = (s32)((u8 *)p + 0x10);
     p->len = 3;
     p->code = 2;
     p->w = arg2;
@@ -781,9 +781,9 @@ void func_80016A60(s32 arg0, s32 arg1, s16 arg2, s16 arg3, u8 arg4, u8 arg5, u8 
     p->r = arg4;
     p->g = arg5;
     p->b = arg6;
-    p->x = D_80063458[0]->unk202C + arg0;
-    p->y = D_80063458[0]->unk202E + arg1;
-    AddPrim(&D_80063458[0]->padC[0xC], p);
+    p->x = g_BuildBuffer[0]->unk202C + arg0;
+    p->y = g_BuildBuffer[0]->unk202E + arg1;
+    AddPrim(&g_BuildBuffer[0]->padC[0xC], p);
 }
 
 #ifdef NON_MATCHING
@@ -801,10 +801,10 @@ void func_80016B08(u32 arg0) {
     s32 lo;
     s32 hi;
 
-    q = (u8 *)D_80063458[0]->unk8;
-    D_80063458[0]->unk8 = (s32)(q + 0xC);
-    p = (u8 *)D_80063458[0]->unk8;
-    D_80063458[0]->unk8 = (s32)(p + 0x18);
+    q = (u8 *)g_BuildBuffer[0]->unk8;
+    g_BuildBuffer[0]->unk8 = (s32)(q + 0xC);
+    p = (u8 *)g_BuildBuffer[0]->unk8;
+    g_BuildBuffer[0]->unk8 = (s32)(p + 0x18);
     if (arg0 != 0) {
         t = D_8005B500 + (arg0 >> 4);
         lo = t[0];
@@ -823,9 +823,9 @@ void func_80016B08(u32 arg0) {
         p[6] = arg0;
         SetPolyF4(p);
         SetSemiTrans(p, 1);
-        AddPrim(&D_80063458[0]->padC[0x2008], p);
+        AddPrim(&g_BuildBuffer[0]->padC[0x2008], p);
         SetDrawMode(q, 1, 0, GetTPage(0, (D_8006CB94 & 0x800000) ? 1 : 2, 0, 0) & 0xFFFF, 0);
-        AddPrim(&D_80063458[0]->padC[0x2008], q);
+        AddPrim(&g_BuildBuffer[0]->padC[0x2008], q);
     }
 }
 #else
@@ -860,16 +860,16 @@ void func_80016C58(s32 arg0, s32 arg1) {
     s16 right, left, top, bot, mid;
     s32 ret;
 
-    p = (PolyF4 *)D_80063458[0]->unk8;
+    p = (PolyF4 *)g_BuildBuffer[0]->unk8;
     w = arg0 * 25;
     x = (u32)(arg0 * 100) >> 3;
-    D_80063458[0]->unk8 += PRIM_SIZE;
-    if (*(s32 *)D_80063454 == SCREEN_MODE_ALT) {
-        *(s16 *)(D_80063454 + SCREEN_X_OFFSET) = SCREEN_CENTER_X - x;
+    g_BuildBuffer[0]->unk8 += PRIM_SIZE;
+    if (*(s32 *)g_DrawBuffer == SCREEN_MODE_ALT) {
+        *(s16 *)(g_DrawBuffer + SCREEN_X_OFFSET) = SCREEN_CENTER_X - x;
     } else {
-        *(s16 *)(D_80063454 + SCREEN_X_OFFSET) = -x;
+        *(s16 *)(g_DrawBuffer + SCREEN_X_OFFSET) = -x;
     }
-    *(s16 *)(D_80063454 + SCREEN_Y_OFFSET) =0xC - ((u32)(arg0 * 60) >> 3);
+    *(s16 *)(g_DrawBuffer + SCREEN_Y_OFFSET) =0xC - ((u32)(arg0 * 60) >> 3);
     if (arg0 != 0) {
         if (arg1 == 0) {
             y = 0;
@@ -886,24 +886,24 @@ void func_80016C58(s32 arg0, s32 arg1) {
         p->x2 = left; p->y2 = bot; p->x3 = right; p->y3 = bot;
         p->r = 0; p->g = 0; p->b = 0;
         SetPolyF4(p);
-        AddPrim(&D_80063458[0]->padC[OT_OFFSET], p);
-        p = (PolyF4 *)D_80063458[0]->unk8;
-        D_80063458[0]->unk8 += PRIM_SIZE;
+        AddPrim(&g_BuildBuffer[0]->padC[OT_OFFSET], p);
+        p = (PolyF4 *)g_BuildBuffer[0]->unk8;
+        g_BuildBuffer[0]->unk8 += PRIM_SIZE;
         mid = bot - arg0 * 15;
         p->x0 = x; p->y0 = mid; p->x1 = left; p->y1 = mid;
         p->x2 = x; p->y2 = bot; p->x3 = left; p->y3 = bot;
         p->r = 0; p->g = 0; p->b = 0;
         SetPolyF4(p);
-        AddPrim(&D_80063458[0]->padC[OT_OFFSET], p);
-        p = (PolyF4 *)D_80063458[0]->unk8;
+        AddPrim(&g_BuildBuffer[0]->padC[OT_OFFSET], p);
+        p = (PolyF4 *)g_BuildBuffer[0]->unk8;
         w = (u32)(arg0 * 9) >> 3;
-        D_80063458[0]->unk8 += PRIM_SIZE;
+        g_BuildBuffer[0]->unk8 += PRIM_SIZE;
         right = x + w;
         p->x0 = x; p->y0 = top; p->x1 = right; p->y1 = top;
         p->x2 = x; p->y2 = bot; p->x3 = right; p->y3 = bot;
         p->r = 0; p->g = 0; p->b = 0;
         SetPolyF4(p);
-        AddPrim(&D_80063458[0]->padC[OT_OFFSET], p);
+        AddPrim(&g_BuildBuffer[0]->padC[OT_OFFSET], p);
     }
     ret = ((s32 (*)(void))func_80023D7C)();
     ret = ret - (ret / 24) * arg0;
@@ -1428,8 +1428,8 @@ void func_80017BC4(void) {
     s32 s, c, t, i, a;
 
     func_80020A24();
-    s = func_8003D2EC(-D_80060808);
-    c = func_8003D360(-D_80060808);
+    s = Math_Sin(-D_80060808);
+    c = Math_Cos(-D_80060808);
     view->a = c;
     view->b = -s;
     view->c = 0;
@@ -1440,8 +1440,8 @@ void func_80017BC4(void) {
     view->h = 0;
     view->i = ONE_Q12;
 
-    s = func_8003D2EC(-D_80060800);
-    c = func_8003D360(-D_80060800);
+    s = Math_Sin(-D_80060800);
+    c = Math_Cos(-D_80060800);
     rot[0] = ONE_Q12;
     rot[1] = 0;
     rot[2] = 0;
@@ -1453,8 +1453,8 @@ void func_80017BC4(void) {
     rot[8] = c;
     MulMatrix(view, rot);
 
-    s = func_8003D2EC(-D_80060804);
-    c = func_8003D360(-D_80060804);
+    s = Math_Sin(-D_80060804);
+    c = Math_Cos(-D_80060804);
     rot[0] = c;
     rot[1] = 0;
     rot[2] = s;
@@ -1492,8 +1492,8 @@ void func_80017BC4(void) {
         } else {
             D_80060840 = ANGLE_BASE - t;
         }
-        s = func_8003D2EC(TILT_ANGLE);
-        c = func_8003D360(TILT_ANGLE);
+        s = Math_Sin(TILT_ANGLE);
+        c = Math_Cos(TILT_ANGLE);
         D_800607B4.a = ONE_Q12;
         D_800607B4.b = 0;
         D_800607B4.c = 0;
@@ -1549,9 +1549,9 @@ void func_80017BC4(void) {
         D_80060914 = 0;
     }
     D_8006CBAC = D_80060914;
-    D_80060930 = func_8003D2EC(D_80060914) >> SINCOS_SHIFT;
+    D_80060930 = Math_Sin(D_80060914) >> SINCOS_SHIFT;
     D_80060934 = 0;
-    D_80060938 = func_8003D360(D_80060914) >> SINCOS_SHIFT;
+    D_80060938 = Math_Cos(D_80060914) >> SINCOS_SHIFT;
     func_80018294(*(s32 **)((char *)D_800608CC + LIGHT_BASE_OFFSET));
 }
 #else
@@ -1647,7 +1647,7 @@ extern s32 D_80062A18;
 void func_80041E5C(s32, Unk80063458 *, void *, s32);
 
 void func_80018434(void) {
-    func_80041E5C(D_8005F390, D_80063458[0], &D_80062A18, D_80060944);
+    func_80041E5C(D_8005F390, g_BuildBuffer[0], &D_80062A18, D_80060944);
 }
 
 #ifdef NON_MATCHING

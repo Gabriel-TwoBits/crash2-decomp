@@ -181,7 +181,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001CEDC", func_8001D22C);
 #ifdef NON_MATCHING
 int abs(int);
 extern s32 D_80060914;
-extern s32 *D_80063450;
+extern s32 *g_DisplayBuffer;
 extern s32 D_80069958;
 extern s32 D_8006995C;
 extern s32 D_80069960;
@@ -226,14 +226,14 @@ void func_8001D2C4(s32 *arg0, s32 *arg1, s32 *arg2) {
             }
         }
     }
-    frames = D_80063450[0x14 / 4];
+    frames = g_DisplayBuffer[0x14 / 4];
     if (frames >= 0x67) {
         frames = 0x66;
     }
     speed = (speed * ((s32)(arg1[0] * frames) / 1024)) >> 8;
-    in[0] = ((func_8003D2EC(angle) >> 4) * speed) >> 8;
+    in[0] = ((Math_Sin(angle) >> 4) * speed) >> 8;
     in[1] = 0;
-    in[2] = ((func_8003D360(angle) >> 4) * speed) >> 8;
+    in[2] = ((Math_Cos(angle) >> 4) * speed) >> 8;
     func_8001EAD8(in, out);
     arg0[0x84 / 4] += out[0];
     arg0[0x8C / 4] += out[2];

@@ -10,7 +10,7 @@ extern char D_80067588[];
 extern s32 D_8006758C, D_800675AC, D_8006CBB4, D_8006CD14, D_8005F3EC;
 void func_8002FE58(s32 *arg0) {
     char buf[8];
-    s32 r = func_80012294(D_80067588, 0x13);
+    s32 r = Nsf_CountEntriesOfType(D_80067588, 0x13);
     s32 t;
     *(S6 *)buf = *(S6 *)D_8005F218;
     memset(buf + 6, 0, 2);
@@ -21,9 +21,9 @@ void func_8002FE58(s32 *arg0) {
             D_8006CBB4 = 0;
         }
     } else {
-        buf[2] = func_80031578(r) + 0x30;
+        buf[2] = Rand_Below(r) + 0x30;
         buf[3] = func_800120EC(D_8006758C);
-        *arg0 = func_80011F78(buf);
+        *arg0 = Nsf_NameToEid(buf);
         D_800675AC = -1;
         D_8006CD14 = 3;
     }
@@ -34,12 +34,12 @@ void func_8002FF54(s32 *arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 b;
     s32 t;
 
-    t = (arg1 >> 8) * func_8003D2EC(arg2);
+    t = (arg1 >> 8) * Math_Sin(arg2);
     arg0[1] = t >> 4;
     a = arg1 >> 8;
-    b = a * func_8003D360(arg2);
-    arg0[0] = ((b >> 12) * func_8003D2EC(arg3)) >> 4;
-    arg0[2] = ((b >> 12) * func_8003D360(arg3)) >> 4;
+    b = a * Math_Cos(arg2);
+    arg0[0] = ((b >> 12) * Math_Sin(arg3)) >> 4;
+    arg0[2] = ((b >> 12) * Math_Cos(arg3)) >> 4;
 }
 
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_8002FFFC);
@@ -530,9 +530,9 @@ block_4:
     FIELD(arg0, 4) = temp_s1;
     if (var_v0 < 0x801U) {
         temp_s1_2 = -temp_s1;
-        temp_s0_2 = ((s32)((temp_s4 >> 8) * func_8003D360(temp_s1_2)) >> 4) - ((s32)((temp_s5 >> 8) * func_8003D2EC(temp_s1_2)) >> 4);
-        func_8003D2EC(temp_s1_2);
-        func_8003D360(temp_s1_2);
+        temp_s0_2 = ((s32)((temp_s4 >> 8) * Math_Cos(temp_s1_2)) >> 4) - ((s32)((temp_s5 >> 8) * Math_Sin(temp_s1_2)) >> 4);
+        Math_Sin(temp_s1_2);
+        Math_Cos(temp_s1_2);
         var_v0_2 = ratan2(FIELD(arg1, 4), temp_s0_2) & mask;
     } else {
         var_v0_2 = -0x400;

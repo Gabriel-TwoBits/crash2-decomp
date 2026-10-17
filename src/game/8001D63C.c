@@ -124,7 +124,7 @@ s32 D_8005F1F0 = 0x80;
 #define PARAMS_LOCKED_EXTRA 0x50
 #define PARAMS_FAST_SLIDE_EXTRA 0x78
 
-extern s32 *D_80063450;
+extern s32 *g_DisplayBuffer;
 extern s32 D_8005F38C;
 extern u8 D_8005B7B0[];
 extern u8 D_8005B7D8[];
@@ -150,7 +150,7 @@ s32 func_8001F054(struct Obj *, u32, s32 *);
 static inline u32 tick_step(void) {
     u32 n;
 
-    n = FIELD_U(D_80063450, GLOBAL_TICK);
+    n = FIELD_U(g_DisplayBuffer, GLOBAL_TICK);
     if (n >= TICK_CAP + 1) {
         n = TICK_CAP;
     }
@@ -271,7 +271,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
                 diff = ANGLE_FULL - diff;
             }
             if (FIELD(arg0, OBJ_FLAGS_C) & C_WALK) {
-                cosv = func_8003D360(diff);
+                cosv = Math_Cos(diff);
                 n = tick_step();
                 delta = scale_div(params[0] * n);
                 FIELD(arg0, OBJ_SPEED) += ((delta * (cosv >> SIN_STEP_SHIFT)) >> SIN_STEP_SHIFT);
@@ -321,8 +321,8 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
             }
         }
         steer = (steer * FIELD(arg0, OBJ_SPEED)) >> FIXED_ONE_SHIFT;
-        FIELD(arg0, OBJ_VEL_X) = ((func_8003D2EC(FIELD(arg0, OBJ_ANGLE)) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
-        FIELD(arg0, OBJ_VEL_Z) = ((func_8003D360(FIELD(arg0, OBJ_ANGLE)) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
+        FIELD(arg0, OBJ_VEL_X) = ((Math_Sin(FIELD(arg0, OBJ_ANGLE)) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
+        FIELD(arg0, OBJ_VEL_Z) = ((Math_Cos(FIELD(arg0, OBJ_ANGLE)) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
     } else {
         /* Not steerable this frame: nothing to do. */
     }
@@ -461,7 +461,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
 INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001D63C);
 #endif
 
-extern s32 *D_80063450;
+extern s32 *g_DisplayBuffer;
 
 s32 func_8001E3DC(s32 arg0, s32 arg1, s32 arg2, s32 *arg3) {
     u32 n;
@@ -471,7 +471,7 @@ s32 func_8001E3DC(s32 arg0, s32 arg1, s32 arg2, s32 *arg3) {
     s32 dist;
     s32 res;
 
-    n = D_80063450[5];
+    n = g_DisplayBuffer[5];
     if (n >= 0x67) {
         n = 0x66;
     }
@@ -537,7 +537,7 @@ s32 func_8001E544(s32 arg0, s32 arg1, s32 arg2, void *arg3) {
     s32 dist;
     s32 snap;
 
-    scale = *(u32 *)((u8 *)D_80063450 + SCALE_OFFSET);
+    scale = *(u32 *)((u8 *)g_DisplayBuffer + SCALE_OFFSET);
     if (scale > SCALE_CAP) {
         scale = SCALE_CAP;
     }
@@ -596,7 +596,7 @@ s32 func_8001E640(s32 arg0, s32 arg1, s32 arg2) {
 
     a = arg0 & 0xFFF;
     sh = (arg1 > 0xFFFF) * 2;
-    v = (func_8003D2EC(((a % arg1) << 11) / arg1 - 0x400) * arg2) >> 12;
+    v = (Math_Sin(((a % arg1) << 11) / arg1 - 0x400) * arg2) >> 12;
     if (v < 0x1000) {
         c = -0x1000;
         if (v >= -0x1000) {
@@ -622,8 +622,8 @@ void func_8001E780(s16 *arg0, s32 *arg1, s32 arg2) {
     s32 one;
 
     one = 0x1000;
-    s = func_8003D2EC(arg1[2] & 0xFFF);
-    c = func_8003D360(arg1[2] & 0xFFF);
+    s = Math_Sin(arg1[2] & 0xFFF);
+    c = Math_Cos(arg1[2] & 0xFFF);
     arg0[0] = c;
     arg0[1] = 0;
     arg0[2] = s;
@@ -633,8 +633,8 @@ void func_8001E780(s16 *arg0, s32 *arg1, s32 arg2) {
     arg0[6] = -s;
     arg0[7] = 0;
     arg0[8] = c;
-    s = func_8003D2EC(arg1[0]);
-    c = func_8003D360(arg1[0]);
+    s = Math_Sin(arg1[0]);
+    c = Math_Cos(arg1[0]);
     sp[0] = one;
     sp[1] = 0;
     sp[2] = 0;
@@ -645,8 +645,8 @@ void func_8001E780(s16 *arg0, s32 *arg1, s32 arg2) {
     sp[7] = s;
     sp[8] = c;
     MulMatrix(arg0, sp);
-    s = func_8003D2EC(-((arg1[2] - arg1[1]) & 0xFFF));
-    c = func_8003D360(-((arg1[2] - arg1[1]) & 0xFFF));
+    s = Math_Sin(-((arg1[2] - arg1[1]) & 0xFFF));
+    c = Math_Cos(-((arg1[2] - arg1[1]) & 0xFFF));
     sp[0] = c;
     sp[1] = 0;
     sp[2] = s;
@@ -730,14 +730,14 @@ void func_8001EAD8(s32 *arg0, s32 *arg1) {
     s32 s;
     s32 c;
 
-    s = func_8003D2EC(-D_80060808);
-    c = func_8003D360(-D_80060808);
+    s = Math_Sin(-D_80060808);
+    c = Math_Cos(-D_80060808);
     a[0] = c; a[1] = -s; a[2] = 0;
     a[3] = s; a[4] = c;  a[5] = 0;
     a[6] = 0; a[7] = 0;  a[8] = MATRIX_ONE;
 
-    s = func_8003D2EC(-D_80060914);
-    c = func_8003D360(-D_80060914);
+    s = Math_Sin(-D_80060914);
+    c = Math_Cos(-D_80060914);
     b[0] = c; b[1] = 0;          b[2] = s;
     b[3] = 0; b[4] = MATRIX_ONE; b[5] = 0;
     b[6] = -s; b[7] = 0;         b[8] = c;
@@ -882,8 +882,8 @@ s32 func_8001EE64(void) {
     s32 *p;
 
     D_8005F38C = 0;
-    D_8006CB14 = func_8001148C(POOL_BYTES);
-    D_8006CB10 = func_8001148C(HEADER_BYTES);
+    D_8006CB14 = Heap_Alloc(POOL_BYTES);
+    D_8006CB10 = Heap_Alloc(HEADER_BYTES);
     if (D_8006CB14 == 0 || D_8006CB10 == 0) {
         return ERR_ALLOC;
     }
@@ -930,9 +930,9 @@ extern s32 D_8006CB10;
 extern s32 D_8006CB14;
 
 void func_8001EFD8(void) {
-    func_800116C0(D_8006CB14);
+    Heap_Free(D_8006CB14);
     D_8005F38C = 0;
-    func_800116C0(D_8006CB10);
+    Heap_Free(D_8006CB10);
 }
 
 extern void *D_8006759C;

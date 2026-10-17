@@ -2,9 +2,9 @@
 #include "sdk.h"
 #include "game.h"
 
-s32 D_8005F224 = 1;
+s32 g_RandSeed = 1;
 
-s32 func_80031578(s32 arg0) {
+s32 Rand_Below(s32 arg0) {
     s32 seed;
     u32 q;
     s32 v;
@@ -12,8 +12,8 @@ s32 func_80031578(s32 arg0) {
     if (arg0 == 0) {
         return 0;
     }
-    seed = D_8005F224 * 0x41C64E6D + 0x3039;
-    D_8005F224 = seed;
+    seed = g_RandSeed * 0x41C64E6D + 0x3039;
+    g_RandSeed = seed;
     q = (u32)seed / 15;
     v = q % 0x7FFFFFF;
     if (v >= 0) {
@@ -24,11 +24,11 @@ s32 func_80031578(s32 arg0) {
     return r;
 }
 
-/* The seed func_80031658 restores, also the generator's increment */
+/* The seed Rand_ResetSeed restores, also the generator's increment */
 #define RANDOM_RESET_SEED 0x3039
 
-void func_80031658(void) {
-    D_8005F224 = RANDOM_RESET_SEED;
+void Rand_ResetSeed(void) {
+    g_RandSeed = RANDOM_RESET_SEED;
 }
 
 s32 func_80031668(s32 arg0, s32 arg1) {

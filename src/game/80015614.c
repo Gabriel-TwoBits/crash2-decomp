@@ -17,7 +17,7 @@
 #define VIDEO_FLAG_LOW 0x1000
 #define VIDEO_FLAG_HIGH 0x1016
 
-extern s32 D_8005F1A4;
+extern s32 g_UseCd;
 extern s32 D_8005F3DC;
 extern s32 D_8006015C;
 extern char D_80062D84[];
@@ -50,13 +50,13 @@ void func_80015614(void) {
     } while (i >= 0);
     SetVideoMode(0);
     InitGeom();
-    if (D_8005F1A4 != 0) {
+    if (g_UseCd != 0) {
         ResetCallback();
         CdInit();
         CdSetDebug(1);
     }
-    func_800160B0();
-    func_8003155C();
+    Gfx_Init();
+    Rand_ResetSeedAlt();
     D_800675AC = 0;
     q = &D_8006015C;
     i = FILL_WORDS - 1;
@@ -70,8 +70,8 @@ void func_80015614(void) {
         *(s32 *)(D_80062D84 + i) = TABLE_FILL;
         i -= STRIDE_TABLE_STRIDE;
     } while (i >= 0);
-    func_80015828(2);
-    func_80036164();
+    Input_Init(2);
+    Save_InitCard();
     EnterCriticalSection();
     StopRCnt(ROOT_COUNTER_VBLANK);
     D_8005F3DC = OpenEvent(ROOT_COUNTER_VBLANK, EVENT_SPEC_INTERRUPT, EVENT_MODE_CALLBACK, func_8003BE88);
@@ -79,8 +79,8 @@ void func_80015614(void) {
     SetRCnt(ROOT_COUNTER_VBLANK, RCNT_TARGET, RCNT_TARGET);
     StartRCnt(ROOT_COUNTER_VBLANK);
     ExitCriticalSection();
-    if (D_8005F1A4 != 0) {
-        func_800316EC();
+    if (g_UseCd != 0) {
+        Nsf_ScanDisc();
     }
     t = GetGraphType();
     if (t < GRAPH_TYPE_THRESHOLD) {
@@ -94,15 +94,15 @@ void func_80015614(void) {
 INCLUDE_ASM("asm/nonmatchings/game/80015614", func_80015614);
 #endif
 
-extern s32 D_8005F1A4;
+extern s32 g_UseCd;
 s32 D_8005F3DC;
 
 s32 func_800157A0(void) {
-    if (D_8005F1A4 != 0) {
+    if (g_UseCd != 0) {
         CdControl(8, 0, 0);
         StopCallback();
     }
-    func_80036304();
+    Save_StopCard();
     StopPAD();
     ResetGraph(3);
     EnterCriticalSection();
@@ -121,7 +121,7 @@ extern int InitPAD(void *, int, void *, int);
 extern void StartPAD(void);
 extern void ChangeClearPAD(int);
 
-void func_80015828(s32 arg0) {
+void Input_Init(s32 arg0) {
     Slot *p;
     char *base;
     s32 i;
@@ -150,5 +150,5 @@ void func_80015828(s32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80015614", func_80015828);
+INCLUDE_ASM("asm/nonmatchings/game/80015614", Input_Init);
 #endif

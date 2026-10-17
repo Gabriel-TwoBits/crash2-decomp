@@ -9,10 +9,10 @@ INCLUDE_RODATA("asm/nonmatchings/game/80012010", D_80010038);
 INCLUDE_RODATA("asm/nonmatchings/game/80012010", D_80010044);
 INCLUDE_RODATA("asm/nonmatchings/game/80012010", D_80010054);
 
-extern u8 D_8005B198[];
+extern u8 g_EidAlphabet[];
 
-s32 func_80012010(s32 arg0) {
-    switch (D_8005B198[((u32)arg0 >> 1) & 0x3F]) {
+s32 Nsf_EidType(s32 arg0) {
+    switch (g_EidAlphabet[((u32)arg0 >> 1) & 0x3F]) {
     case 'V': return 1;
     case 'S': return 4;
     case 'G': return 2;
@@ -36,17 +36,17 @@ s32 func_80012010(s32 arg0) {
 }
 
 u8 func_800120EC(s32 arg0) {
-    return D_8005B198[arg0];
+    return g_EidAlphabet[arg0];
 }
 
-extern u8 D_8005B198[];
+extern u8 g_EidAlphabet[];
 
 s32 func_80012100(s32 arg0) {
     s32 i;
     u8 c = arg0;
 
     for (i = 0; i < 0x40; i++) {
-        if (D_8005B198[i] == c) {
+        if (g_EidAlphabet[i] == c) {
             return i;
         }
     }
@@ -57,8 +57,8 @@ s32 func_80012100(s32 arg0) {
 }
 
 
-void func_8001214C(s32 a0, s32 a1) {
-    func_80012170(a0, a1, 0, 0);
+void Nsf_FileName(s32 a0, s32 a1) {
+    Nsf_FormatFileName(a0, a1, 0, 0);
 }
 
 extern char D_80010000[];
@@ -67,21 +67,21 @@ extern char D_80010020[];
 extern char D_80010038[];
 extern char D_80010044[];
 extern char D_80010054[];
-extern s32 D_8005F1A4;
+extern s32 g_UseCd;
 extern char D_8005F414[];
 
 
-char *func_80012170(s32 a0, u32 a1, s32 a2, s32 a3) {
+char *Nsf_FormatFileName(s32 a0, u32 a1, s32 a2, s32 a3) {
     switch (a0) {
     case 0:
-        if (D_8005F1A4 != 0) {
+        if (g_UseCd != 0) {
             sprintf(D_8005F414, D_80010000, a1 >> 4, a1);
         } else {
             sprintf(D_8005F414, D_80010010, D_80010020, D_80010038, a1);
         }
         break;
     case 1:
-        if (D_8005F1A4 != 0) {
+        if (g_UseCd != 0) {
             sprintf(D_8005F414, D_80010044, a1 >> 4, a1);
         } else {
             sprintf(D_8005F414, D_80010054, D_80010020, D_80010038, a1);
@@ -93,13 +93,13 @@ char *func_80012170(s32 a0, u32 a1, s32 a2, s32 a3) {
     return D_8005F414;
 }
 
-s32 func_80012250(s32 *arg0) {
+s32 Nsf_EntryType(s32 *arg0) {
     s32 v;
     s32 r;
 
     v = arg0[0];
     if (v & 3) {
-        r = func_80012010(arg0[1]);
+        r = Nsf_EidType(arg0[1]);
     } else {
         r = ((s32 *)v)[2];
     }
@@ -112,7 +112,7 @@ s32 func_80012250(s32 *arg0) {
 #define ENTRIES_OFFSET 0x520
 #define ENTRY_SIZE 8
 
-s32 func_80012294(char *arg0, s32 arg1) {
+s32 Nsf_CountEntriesOfType(char *arg0, s32 arg1) {
     s32 i;
     s32 matches;
     s32 offset;
@@ -122,7 +122,7 @@ s32 func_80012294(char *arg0, s32 arg1) {
     offset = ENTRIES_OFFSET;
     for (i = 0; i < *(s32 *)((char *)(*(char **)(arg0 + OWNER_OFFSET)) + COUNT_OFFSET); i++) {
         owner = *(char **)(arg0 + OWNER_OFFSET);
-        if (func_80012250((s32 *)(owner + offset)) == arg1) {
+        if (Nsf_EntryType((s32 *)(owner + offset)) == arg1) {
             matches++;
         }
         offset += ENTRY_SIZE;
@@ -130,7 +130,7 @@ s32 func_80012294(char *arg0, s32 arg1) {
     return matches;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80012010", func_80012294);
+INCLUDE_ASM("asm/nonmatchings/game/80012010", Nsf_CountEntriesOfType);
 #endif
 
 #ifdef NON_MATCHING

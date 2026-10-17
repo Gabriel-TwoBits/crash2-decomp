@@ -63,7 +63,7 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 #define SLOT(obj, arg1) FIELD(obj, (((arg1) >> SLOT_SHIFT) & SLOT_MASK) + OBJ_SLOTS, u8 *)
 #define PROP(dst) D_8006B1C4[(u32)*(dst) >> VALUE_SHIFT]
 
-extern u32 D_8003BEA4;
+extern u32 g_TimerTicks;
 extern s32 D_8005F38C;
 extern u32 D_8005F3F0;
 extern s32 D_800608CC;
@@ -300,10 +300,10 @@ void func_80037698(u8 *obj, u32 arg1) {
             func_8002F0DC(1);
             return;
         case 12:
-            *dst = D_8003BEA4;
+            *dst = g_TimerTicks;
             return;
         case 13:
-            D_8003BEA4 = *dst;
+            g_TimerTicks = *dst;
             return;
         case 14:
             FIELD(SLOT(obj, arg1), 0x14, s32) = *dst;
@@ -477,11 +477,11 @@ void func_8003817C(struct Obj *obj, u32 arg1) {
         }
         return;
     case OP_SCALE_TRIG:
-        dst[0] = ((func_8003D2EC(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
+        dst[0] = ((Math_Sin(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
         if ((u32)(F(o, 0x120, u8) - OP_STATE_FIRST) >= OP_STATE_COUNT) {
-            dst[2] = ((func_8003D360(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
+            dst[2] = ((Math_Cos(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
         } else {
-            dst[1] = ((func_8003D360(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
+            dst[1] = ((Math_Cos(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
         }
         F(o, 0x104, s32) = src[0];
         return;

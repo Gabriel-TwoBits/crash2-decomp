@@ -135,7 +135,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026EF4);
 
 extern u8 *D_80069358;
 
-extern u8 *D_80063454;
+extern u8 *g_DrawBuffer;
 
 void func_8002706C(void) {
     RECT rect;
@@ -149,7 +149,7 @@ void func_8002706C(void) {
         w = *(s32 *)(p + 0x18);
         rect.h = 0xF0;
         rect.w = w;
-        MoveImage(&rect, *(s16 *)(D_80063454 + 0x202C), 0);
+        MoveImage(&rect, *(s16 *)(g_DrawBuffer + 0x202C), 0);
     }
 }
 
@@ -672,7 +672,7 @@ s32 func_80027A38(void) {
     D_80069358 = 0;
     if (D_8005F3EC == MODE_A || D_8005F3EC == MODE_B) {
         g[0] = POOL_SLOTS;
-        p = (s32 *)func_8001148C(SLOT_TABLE_BYTES);
+        p = (s32 *)Heap_Alloc(SLOT_TABLE_BYTES);
         g[1] = (s32)p;
         if (p != 0) {
             for (i = 0; i < g[0]; i++) {
@@ -681,7 +681,7 @@ s32 func_80027A38(void) {
                 p += SLOT_STRIDE_WORDS;
             }
             size = g[0] * SLOT_BUFFER_BYTES + BUFFER_EXTRA_BYTES;
-            buf = func_8001148C(size);
+            buf = Heap_Alloc(size);
             D_8006933C = buf;
             if (buf != 0) {
                 pad = buf & BUFFER_ALIGN_MASK;
@@ -722,11 +722,11 @@ extern s32 D_8006933C;
 s32 func_80027B9C(void) {
     D_80069334 = 0;
     if (D_8006933C != 0) {
-        func_800116C0(D_8006933C);
+        Heap_Free(D_8006933C);
         D_8006933C = 0;
     }
     if (D_80069338 != 0) {
-        func_800116C0(D_80069338);
+        Heap_Free(D_80069338);
         D_80069338 = 0;
     }
     return -0xFF;
@@ -1613,12 +1613,12 @@ extern s32 D_8005F3D0;
 s32 func_80029768(void) {
     s16 *p;
 
-    p = (s16 *)func_8001148C(0xBE4);
+    p = (s16 *)Heap_Alloc(0xBE4);
     D_8005F390 = (s32)p;
     D_8005F3D0 = (s32)p;
     if (p != 0) {
         p[1] = 0;
-        p = (s16 *)func_8001148C(0xBE4);
+        p = (s16 *)Heap_Alloc(0xBE4);
         D_8005F398 = (s32)p;
         if (p != 0) {
             p[1] = 0;
@@ -1632,8 +1632,8 @@ extern s32 D_8005F398;
 extern s32 D_8005F3D0;
 
 s32 func_800297C8(void) {
-    func_800116C0(D_8005F3D0);
-    func_800116C0(D_8005F398);
+    Heap_Free(D_8005F3D0);
+    Heap_Free(D_8005F398);
     return -0xFF;
 }
 

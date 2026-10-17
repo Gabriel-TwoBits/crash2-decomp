@@ -54,7 +54,7 @@ typedef struct {
     u32 dataSize;
 } Func800316ECLocals;
 
-extern u32 D_80069034;
+extern u32 g_LevelFiles;
 extern u32 D_80069038;
 extern u32 D_8006903C;
 extern s32 strncmp(char *, char *, s32);
@@ -62,7 +62,7 @@ extern s32 strlen(char *);
 extern void *memcpy(void *, void *, s32);
 extern int printf(char *, ...);
 
-void func_800316EC(void) {
+void Nsf_ScanDisc(void) {
     Func800316ECLocals l;
     u8 *sector;
     u8 *rec;
@@ -71,17 +71,17 @@ void func_800316EC(void) {
     s32 index;
     u32 *entry;
 
-    sector = (u8 *)func_8001148C(SECTOR_SIZE);
+    sector = (u8 *)Heap_Alloc(SECTOR_SIZE);
     if (func_80031680(1, PVD_SECTOR, (unsigned long *)sector) != SECTOR_READ_OK
         || strncmp((char *)sector + ISO_ID_OFFSET, D_8005F228, ISO_ID_LENGTH) != 0) {
-        func_800116C0((s32)sector);
+        Heap_Free((s32)sector);
         return;
     } else {
         printf(D_8005F230);
     }
     l.extent = READ_U32(sector + ISO_ROOT_RECORD_OFFSET);
     if (func_80031680(1, l.extent, (unsigned long *)sector) != SECTOR_READ_OK) {
-        func_800116C0((s32)sector);
+        Heap_Free((s32)sector);
         return;
     }
     for (i = SECTOR_COUNT_TABLE - 1; i >= 0; i--) {
@@ -106,7 +106,7 @@ void func_800316EC(void) {
     }
     for (i = 0; i < SECTOR_COUNT_TABLE; i++) {
         if (l.table[i] != NO_SECTOR && func_80031680(1, l.table[i], (unsigned long *)sector) != SECTOR_READ_OK) {
-            func_800116C0((s32)sector);
+            Heap_Free((s32)sector);
             return;
         }
         rec = sector;
@@ -137,7 +137,7 @@ void func_800316EC(void) {
                     }
                     index += l.name[NAME_LO_INDEX];
                     if (l.name[NAME_TYPE_INDEX] == CHAR_UPPER_D || l.name[NAME_TYPE_INDEX] == CHAR_LOWER_D) {
-                        entry = (u32 *)((u8 *)&D_80069034 + index * TOC_ENTRY_SIZE);
+                        entry = (u32 *)((u8 *)&g_LevelFiles + index * TOC_ENTRY_SIZE);
                         entry[0] = (entry[0] & ~EXTENT_MASK_A) | (l.extent & EXTENT_MASK_A);
                         entry[1] = (entry[1] & ~SIZE_MASK_A) | (l.dataSize & SIZE_MASK_A);
                     } else {
@@ -152,8 +152,8 @@ void func_800316EC(void) {
             } while (count < MAX_DIR_RECORDS && rec < sector + SECTOR_SIZE);
         }
     }
-    func_800116C0((s32)sector);
+    Heap_Free((s32)sector);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800316EC", func_800316EC);
+INCLUDE_ASM("asm/nonmatchings/game/800316EC", Nsf_ScanDisc);
 #endif

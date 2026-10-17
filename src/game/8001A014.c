@@ -432,7 +432,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001AA80);
 #define MODE_B 19
 #define MODE_C 6
 
-extern void *D_80063458;
+extern void *g_BuildBuffer;
 extern void *D_800608CC;
 extern s32 D_8006CCE4;
 extern s32 D_80060944;
@@ -458,7 +458,7 @@ extern s32 D_8005B770;
 extern char D_80041E50[];
 
 void func_8001ABF8(u8 *arg0, void *arg1) {
-    u8 *list = D_80063458;
+    u8 *list = g_BuildBuffer;
     u8 *prim = FLD(u8 *, list, PACKET_LIST_FREE);
     u8 *data = FLD(u8 *, arg0, 0xE8);
     u32 frame = FLD(u32, arg0, 0xEC) >> 8;
@@ -480,10 +480,10 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
         u8 *hdr;
 
         func_80018474(data + (frame * 0x10 + 8) + 4, data + 4);
-        prim = FLD(u8 *, D_80063458, PACKET_LIST_FREE);
-        FLD(u8 *, D_80063458, PACKET_LIST_FREE) = prim + 0x2C;
-        FLD(s32, prim, 0) = FLD(s32, D_80063458, PACKET_LIST_HEAD);
-        FLD(u8 *, D_80063458, PACKET_LIST_HEAD) = prim;
+        prim = FLD(u8 *, g_BuildBuffer, PACKET_LIST_FREE);
+        FLD(u8 *, g_BuildBuffer, PACKET_LIST_FREE) = prim + 0x2C;
+        FLD(s32, prim, 0) = FLD(s32, g_BuildBuffer, PACKET_LIST_HEAD);
+        FLD(u8 *, g_BuildBuffer, PACKET_LIST_HEAD) = prim;
         flags = FLD(u32, arg0, 0x120);
         hdr = arg0 + 0x20;
         idx = (flags >> 8) & 0xFF;
@@ -525,7 +525,7 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
         } else {
             /* keep */
         }
-        func_8001BD84(arg0, (char *)data, frame, (s32)((u8 *)D_80063458 + 0x18), dir);
+        func_8001BD84(arg0, (char *)data, frame, (s32)((u8 *)g_BuildBuffer + 0x18), dir);
         return;
     } else if (kind == KIND_FIVE) {
         u8 *src = data + (frame * FLD(s32, data, 8) * 0x18 + 0xC);
@@ -542,10 +542,10 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
         } else {
             /* no entries to copy */
         }
-        prim = FLD(u8 *, D_80063458, PACKET_LIST_FREE);
-        FLD(u8 *, D_80063458, PACKET_LIST_FREE) = prim + 0x30;
-        FLD(s32, prim, 0) = FLD(s32, D_80063458, PACKET_LIST_HEAD);
-        FLD(u8 *, D_80063458, PACKET_LIST_HEAD) = prim;
+        prim = FLD(u8 *, g_BuildBuffer, PACKET_LIST_FREE);
+        FLD(u8 *, g_BuildBuffer, PACKET_LIST_FREE) = prim + 0x30;
+        FLD(s32, prim, 0) = FLD(s32, g_BuildBuffer, PACKET_LIST_HEAD);
+        FLD(u8 *, g_BuildBuffer, PACKET_LIST_HEAD) = prim;
         FLD(s32, prim, 0x14) = FLD(s32, arg0, 8);
         FLD(s32, prim, 4) = FLD(s32, arg1, 0);
         FLD(s32, prim, 8) = D_8005B770;
@@ -568,8 +568,8 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
         s32 v;
 
         FLD(u8 *, list, PACKET_LIST_FREE) = prim + 0x64;
-        FLD(s32, prim, 0) = FLD(s32, D_80063458, PACKET_LIST_HEAD);
-        FLD(u8 *, D_80063458, PACKET_LIST_HEAD) = prim;
+        FLD(s32, prim, 0) = FLD(s32, g_BuildBuffer, PACKET_LIST_HEAD);
+        FLD(u8 *, g_BuildBuffer, PACKET_LIST_HEAD) = prim;
         obj = FLD(u8 *, arg0, 8);
         mode = FLD(u8, arg0, 0x121);
         model = FLD(u8 *, obj, 0x28);

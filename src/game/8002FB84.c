@@ -100,7 +100,7 @@ extern void *D_8005F374;
 extern Unk8002FCF8Holder *D_8005F38C;
 #define BLOCK ((Unk8002FCF8Block *)D_8005F3D8)
 extern s32 D_80060944;
-extern Unk8002FCF8Cam *D_80063454;
+extern Unk8002FCF8Cam *g_DrawBuffer;
 extern s32 D_8006CBF0;
 extern s32 D_8006CC00;
 extern s32 D_8006CC84;
@@ -113,11 +113,11 @@ void func_8002FCF8(void) {
 
     D_8006CD14 = STATE_LOADING;
     D_8005F374 = BLOCK->unk_1090;
-    func_8003156C(BLOCK->unk_0004);
+    Rand_SetSeedAlt(BLOCK->unk_0004);
     block = BLOCK;
     D_80060944 = block->unk_000C;
     holder = D_8005F38C;
-    D_80063454->unk_0C = block->unk_1070;
+    g_DrawBuffer->unk_0C = block->unk_1070;
     dst = holder->unk_08;
     w0 = block->unk_1074[0];
     w1 = block->unk_1074[1];

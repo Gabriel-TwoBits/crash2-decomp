@@ -461,8 +461,8 @@ s32 func_8002433C(s32 *arg0, s32 *arg1, s32 *a2, s32 *a3, s32 *a4) {
         if (a4 != 0) {
             *a4 = ang2;
         }
-        s = func_8003D360(ang2);
-        c = func_8003D2EC(ang2);
+        s = Math_Cos(ang2);
+        c = Math_Sin(ang2);
         if (mode == MODE_ROTATE_ADD) {
             r = ((dz >> FIXED_SHIFT) * c >> TRIG_SHIFT) + ((dx >> FIXED_SHIFT) * s >> TRIG_SHIFT);
         } else {
@@ -529,8 +529,8 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     f.type = kind;
     /* For SKIP_TYPE, hi and lo stay what the caller left in the registers */
     if (f.type != SKIP_TYPE) {
-        hi = func_8003D360(arg4);
-        lo = func_8003D2EC(arg4);
+        hi = Math_Cos(arg4);
+        lo = Math_Sin(arg4);
     }
     if (f.slot == FIRST_SLOT) {
         if (f.a3 != 0) {
@@ -579,8 +579,8 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
                     return f.slot;
                 }
                 if (kind != SKIP_TYPE) {
-                    hi = func_8003D360(f.altC);
-                    lo = func_8003D2EC(f.altC);
+                    hi = Math_Cos(f.altC);
+                    lo = Math_Sin(f.altC);
                 }
                 if (f.a3 < 0) {
                     other = func_800254D4(cand, (s32)arg1, (s32 *)f.altB, hi, lo, kind, &f.out);
@@ -1164,8 +1164,8 @@ void func_80025D18(Unk80025D18Pos *arg0) {
         dx = arg0->x - D_800607F4;
         dz = arg0->z - D_800607FC;
         negAngle = -D_80060828;
-        sin = func_8003D360(negAngle);
-        cos = func_8003D2EC(negAngle);
+        sin = Math_Cos(negAngle);
+        cos = Math_Sin(negAngle);
         rotX = (((dz >> FIXED_SHIFT) * cos) >> TRIG_SHIFT) + (((dx >> FIXED_SHIFT) * sin) >> TRIG_SHIFT);
         rotZ = (((dx >> FIXED_SHIFT) * cos) >> TRIG_SHIFT) - (((dz >> FIXED_SHIFT) * sin) >> TRIG_SHIFT);
         if (xRange != 0 && (rotX < (xMin << FIXED_SHIFT) || (xMax << FIXED_SHIFT) < rotX)) {

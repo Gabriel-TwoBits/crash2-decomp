@@ -26,7 +26,7 @@ extern s32 D_8005F4F0[];
 extern u8 D_8005FCF8[];
 extern s32 D_8006CBF8;
 
-void func_800324A8(void) {
+void Snd_Init(void) {
     Unk800324A8 cfg;
     s32 i;
     s32 *p;
@@ -91,7 +91,7 @@ void func_800325D0(s32 arg0) {
 
 extern void SpuSetReverbDepth(Unk80032588 *);
 
-s32 func_800325DC(s32 arg0, s16 arg1, s16 arg2, s32 arg3, s32 arg4) {
+s32 Snd_SetReverb(s32 arg0, s16 arg1, s16 arg2, s32 arg3, s32 arg4) {
     Unk80032588 s;
 
     s.a = 7;
@@ -129,7 +129,7 @@ s16 *func_8003264C(s32 *arg0, s32 arg1) {
         D_8005F2E4 = arg1;
         goto set6;
     }
-    a = func_8003D360(ratan2(y, x)) + 0x1000;
+    a = Math_Cos(ratan2(y, x)) + 0x1000;
     lo = (arg1 << 15) / d;
     hi = lo;
     if (D_8006CBF4 == 0) {
@@ -278,7 +278,7 @@ s32 func_800328D4(void) {
                 }
             }
         }
-        if (min == D_8005FC9D && dist >= 0x800 && func_80031578(0x64) >= 0x32) {
+        if (min == D_8005FC9D && dist >= 0x800 && Rand_Below(0x64) >= 0x32) {
             ret = -1;
         }
     }
@@ -867,13 +867,13 @@ void func_800334A0(void) {
     if (D_8005F18C == 1) {
         D_8005F300 = MIX_FADE_OUT_STEP;
         if (D_8005F308 != 0 && D_8005F2F8 >= MIX_SEQ_MIN_MODE && D_8005F39C == MIX_SEQ_PLAYING) {
-            func_800344B0((Unk80033DE0 *)&D_8005FCE4, MIX_CMD_FADE_OUT, 0);
+            Snd_ControlSequence((Unk80033DE0 *)&D_8005FCE4, MIX_CMD_FADE_OUT, 0);
         }
     }
     if (D_8005F18C == -1) {
         D_8005F300 = MIX_FADE_IN_STEP;
         if (D_8005F308 != 0 && D_8005F2F8 >= MIX_SEQ_MIN_MODE && D_8005F39C == MIX_SEQ_PLAYING) {
-            func_800344B0((Unk80033DE0 *)&D_8005FCE4, MIX_CMD_FADE_IN, 0);
+            Snd_ControlSequence((Unk80033DE0 *)&D_8005FCE4, MIX_CMD_FADE_IN, 0);
         }
     }
     func_8005182C(D_8005FC6C);
@@ -1087,7 +1087,7 @@ s32 D_8005F39C;
 s16 D_8005F3E4;
 s16 D_8005F3E0;
 
-void func_80033D10(void) {
+void Snd_InitSequencer(void) {
     D_8005F24C = 1;
     SsSetTickMode(1);
     func_80033C84((D_8006CBFC * 0x3FFF) << 8 >> 16);
@@ -1121,7 +1121,7 @@ void func_80033DD0(void) {
     D_8005F300 = VOLUME_FADE_OUT_STEP;
 }
 
-s32 func_800344B0(Unk80033DE0 *, s32, s32);
+s32 Snd_ControlSequence(Unk80033DE0 *, s32, s32);
 void func_80056304(s16, s16);
 void func_80056760(s16, s16, s16, s16);
 extern Unk80033DE0 D_8005FCD0[];
@@ -1138,8 +1138,8 @@ void func_80033DE0(s32 arg0) {
         if (D_8005F39C == 3) {
             if (a <= 0 || a < 3 || a != D_8005F39C) {
                 p = &D_8005FCD0[1];
-                func_800344B0(p, 1, 0);
-                func_800344B0(p - 1, 3, 0);
+                Snd_ControlSequence(p, 1, 0);
+                Snd_ControlSequence(p - 1, 3, 0);
                 D_8005F308 = 0;
             } else {
                 if (D_8006CBFC != 0 || D_8006CBF8 != 0) {
@@ -1148,8 +1148,8 @@ void func_80033DE0(s32 arg0) {
                     D_8005F308 = 0;
                 }
                 p = &D_8005FCD0[0];
-                func_800344B0(p, 2, 0);
-                func_800344B0(p + 1, 0, 1);
+                Snd_ControlSequence(p, 2, 0);
+                Snd_ControlSequence(p + 1, 0, 1);
             }
             func_80056760(D_8005F3E4, D_8005FCE4, D_8005F308, D_8005F308);
         }
@@ -1189,7 +1189,7 @@ extern s32 D_80067FB8;
 
 #define NONE 0x6396347F
 
-s32 func_80033EE0(s32 addr) {
+s32 Snd_LoadSequence(s32 addr) {
     s32 *arg0 = (s32 *)addr;
     s32 tmp;
     s32 fresh;
@@ -1269,11 +1269,11 @@ s32 func_80033EE0(s32 addr) {
             func_800528C4(D_8005F3E4, D_8005FCD0[i].seq, v, 0x1E);
         }
     }
-    func_800344B0(D_8005FCD0, 0, 0);
+    Snd_ControlSequence(D_8005FCD0, 0, 0);
     return 0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80033EE0);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_LoadSequence);
 #endif
 
 void func_80034238(void *arg0, s32 arg1, void *arg2, void *arg3) {
@@ -1342,7 +1342,7 @@ void func_80034254(s32 arg0) {
             /* nothing to start */
         }
     } else if (D_8005F39C < STATE_PENDING && D_8005F39C > 0) {
-        func_80033EE0(arg0);
+        Snd_LoadSequence(arg0);
     } else {
         /* no per-frame update in this state */
     }
@@ -1351,11 +1351,11 @@ void func_80034254(s32 arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80034254);
 #endif
 
-void func_8003444C(s16 a, s32 b);
+void Snd_CloseSequence(s16 a, s32 b);
 
-void func_80034394(void) {
+void Snd_ShutdownSequencer(void) {
     if (D_8005F24C != 0) {
-        func_8003444C(D_8005F3E4, 1);
+        Snd_CloseSequence(D_8005F3E4, 1);
         SsEnd();
         D_8005F24C = 0;
     }
@@ -1391,7 +1391,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800343CC);
 void SsSepClose(s16);
 void SsVabClose(s16);
 
-void func_8003444C(s16 a, s32 b) {
+void Snd_CloseSequence(s16 a, s32 b) {
     if (a != -1) {
         SsSepClose(a);
     }
@@ -1401,7 +1401,7 @@ void func_8003444C(s16 a, s32 b) {
 }
 
 /* Returns nothing, yet declared s32: as void, GCC fills the delay slot before the jump table otherwise. */
-s32 func_800344B0(Unk80033DE0 *obj, s32 cmd, s32 vol) {
+s32 Snd_ControlSequence(Unk80033DE0 *obj, s32 cmd, s32 vol) {
     s32 i;
     s32 pad[2];
 

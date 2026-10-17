@@ -49,7 +49,7 @@ void func_800345C8(void) {
         func_80035444(func_8003613C());
         break;
     case 3:
-        func_800359F0();
+        Save_FormatCard();
         break;
     case 4:
         func_80034810();
@@ -71,7 +71,7 @@ void func_800346E8(void) {
         D_8005F264[6] = 0;
         _card_info(0);
     }
-    switch (func_80035AB8()) {
+    switch (Save_TestSwEvents()) {
     case 1:
         func_800360CC(0);
         func_80036084(2);
@@ -82,7 +82,7 @@ void func_800346E8(void) {
             return;
         }
     case 3:
-        func_80035C74();
+        Save_ClearHwEvents();
         _card_clear(0);
         if (func_80035C40() == 0) {
             func_800360AC(6);
@@ -102,7 +102,7 @@ void func_800346E8(void) {
 
 s32 func_80034810(void) {
     D_8005F264[6] = 0;
-    if (func_80036414(0) == 1) {
+    if (Save_IsCardFormatted(0) == 1) {
         func_800360AC(0xA);
         func_800360CC(0);
         func_80035FD8();
@@ -128,12 +128,12 @@ void func_80034898(void) {
 
     if (D_8005F264[6] != 0) {
         D_8005F264[6] = 0;
-        func_80035B70();
+        Save_ClearSwEvents();
         _card_load(0);
     }
-    switch (func_80035AB8()) {
+    switch (Save_TestSwEvents()) {
     case 0:
-        r = func_80035CBC(D_8005F274, (char *)D_8005F264 + 0x49C);
+        r = Save_ListFiles(D_8005F274, (char *)D_8005F264 + 0x49C);
         func_80035D48((Unk80035D48 *)((char *)D_8005F264 + 0x49C), r);
         if (r <= 0) {
             D_8005F264[7]++;
@@ -203,7 +203,7 @@ void func_80034A2C(s32 *arg0) {
             func_80036850();
         }
     }
-    func_80035F2C((s32 *)arg0[0]);
+    Save_CloseFile((s32 *)arg0[0]);
 }
 
 s32 VSync(s32);
@@ -229,7 +229,7 @@ void func_80034AC4(Unk80034AC4 *arg0) {
         func_80036084(2);
         func_800360CC(0);
     }
-    func_80035F2C(arg0->f0);
+    Save_CloseFile(arg0->f0);
     if (*arg0->f8 != 0) {
         VSync(0x3C);
         for (i = 0; i < 9; i++) {
@@ -436,7 +436,7 @@ void func_80034BB8(void) {
         }
     } else {
     }
-    func_80035F2C(&fd);
+    Save_CloseFile(&fd);
     if (failed != 0) {
         if (((Unk80034BB8 *)D_8005F264 + slot)->unk_28 != 0) {
             func_80036084(UNK_STATE_80);
@@ -673,7 +673,7 @@ void func_80035444(s32 arg0) {
         entry = 0;
     }
     if (mode == MODE_ERASE) {
-        D_8005F31C = func_80031578(SLOT_SERIAL_START);
+        D_8005F31C = Rand_Below(SLOT_SERIAL_START);
         D_8005F314 = 0;
         D_8005F318 = 0;
     }
@@ -749,7 +749,7 @@ void func_80035444(s32 arg0) {
         } while (tries < MAX_TRIES);
         if (func_800349F8(tries, MAX_TRIES, (void (*)(s32))func_80034AC4, (s32)ctx) == 0) {
             printf(D_800106AC, fd);
-            func_80035F2C(&fd);
+            Save_CloseFile(&fd);
             D_8005F314 = 1;
             func_800360CC(8);
         } else {
@@ -844,7 +844,7 @@ void func_80035444(s32 arg0) {
     }
     func_800369F4();
     D_8005F318 = 0;
-    func_80035F2C(&fd);
+    Save_CloseFile(&fd);
     func_800360AC(2);
     func_800360CC(0);
     func_80035FD8();
@@ -854,15 +854,15 @@ void func_80035444(s32 arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035444);
 #endif
 
-extern volatile u32 D_8003BEA4;
+extern volatile u32 g_TimerTicks;
 extern char D_8005F274[];
 s32 format(char *);
 
-void func_800359F0(void) {
+void Save_FormatCard(void) {
     s32 r;
-    D_8003BEA4;
+    g_TimerTicks;
     r = format(D_8005F274);
-    D_8003BEA4;
+    g_TimerTicks;
     if (r == 1) {
         func_800360AC(2);
         func_80036084(4);
@@ -900,8 +900,8 @@ s32 D_8005F3A4;
 s32 D_8005F3A8;
 s32 D_8005F3AC;
 
-s32 func_80035AB8(void) {
-    func_80031578(0x3E7);
+s32 Save_TestSwEvents(void) {
+    Rand_Below(0x3E7);
     if (TestEvent(D_8005F3A0) == 1) {
         return 0;
     }
@@ -922,13 +922,13 @@ s32 func_80035B3C(void) {
     s32 result;
 
     do {
-        result = func_80035AB8();
+        result = Save_TestSwEvents();
     } while (result == -1);
     return result;
 }
 
 
-void func_80035B70(void) {
+void Save_ClearSwEvents(void) {
     TestEvent(D_8005F3A0);
     TestEvent(D_8005F3A4);
     TestEvent(D_8005F3A8);
@@ -940,8 +940,8 @@ s32 D_8005F3C0;
 s32 D_8005F3C8;
 s32 D_8005F3CC;
 
-s32 func_80035BB8(void) {
-    func_80031578(0x3E7);
+s32 Save_TestHwEvents(void) {
+    Rand_Below(0x3E7);
     if (TestEvent(D_8005F3BC) == 1) {
         return 0;
     }
@@ -961,13 +961,13 @@ s32 func_80035C40(void) {
     s32 result;
 
     do {
-        result = func_80035BB8();
+        result = Save_TestHwEvents();
     } while (result == -1);
     return result;
 }
 
 
-void func_80035C74(void) {
+void Save_ClearHwEvents(void) {
     TestEvent(D_8005F3BC);
     TestEvent(D_8005F3C0);
     TestEvent(D_8005F3C8);
@@ -983,7 +983,7 @@ s32 firstfile(char *, void *);
 s32 nextfile(void *);
 char *strcat(char *, const char *);
 
-s32 func_80035CBC(char *path, void *entries) {
+s32 Save_ListFiles(char *path, void *entries) {
     char pattern[0x80];
     char *entry;
     s32 count;
@@ -1009,7 +1009,7 @@ s32 func_80035CBC(char *path, void *entries) {
     return count;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035CBC);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_ListFiles);
 #endif
 
 s32 strcmp(char *, char *);
@@ -1060,7 +1060,7 @@ s32 func_80035F00(char *arg0) {
     return strncmp(D_8001069C, arg0, 12) == 0;
 }
 
-void func_80035F2C(s32 *arg0) {
+void Save_CloseFile(s32 *arg0) {
     s32 temp_a0;
 
     temp_a0 = *arg0;
@@ -1070,13 +1070,13 @@ void func_80035F2C(s32 *arg0) {
     *arg0 = -1;
 }
 
-extern volatile u32 D_8003BEA4;
+extern volatile u32 g_TimerTicks;
 
 void func_80035F70(u32 arg0) {
     u32 start;
 
-    start = D_8003BEA4;
-    while (start - D_8003BEA4 < arg0) {
+    start = g_TimerTicks;
+    while (start - g_TimerTicks < arg0) {
     }
 }
 
@@ -1168,7 +1168,7 @@ s32 OpenEvent(s32, s32, s32, s32);
 void StartCARD(void);
 void _bu_init(void);
 
-void func_80036164(void) {
+void Save_InitCard(void) {
     EnterCriticalSection();
     D_8005F3A0 = OpenEvent(0xF4000001, 4, 0x2000, 0);
     D_8005F3A4 = OpenEvent(0xF4000001, 0x8000, 0x2000, 0);
@@ -1196,7 +1196,7 @@ void func_80036164(void) {
     EnableEvent(D_8005F3CC);
 }
 
-s32 func_80036304(void) {
+s32 Save_StopCard(void) {
     StopCARD();
     return 0;
 }
@@ -1213,7 +1213,7 @@ extern s32 *D_8006CCE8;
 s32 func_80036368(void) {
     s32 *p;
 
-    p = func_80011764(1, 0x11F4);
+    p = Heap_AllocZeroed(1, 0x11F4);
     D_8005F264 = p;
     D_8006CCE8 = p + 0x1BD;
     if (D_8005F268 != 0) {
@@ -1232,7 +1232,7 @@ s32 func_800363D0(void) {
     do { } while (0); has_ptr = D_8005F264 != 0;
     D_8005F268 = (v >> 4) & 1;
     if (has_ptr) {
-        func_800116C0((s32)D_8005F264);
+        Heap_Free((s32)D_8005F264);
         D_8005F264 = 0;
     }
     return 0;
@@ -1241,11 +1241,11 @@ s32 func_800363D0(void) {
 #ifdef NON_MATCHING
 s32 _card_read(s32, s32, u8 *);
 
-s32 func_80036414(s32 arg0) {
+s32 Save_IsCardFormatted(s32 arg0) {
     u8 buf[0x80];
 
     bzero(buf, 0x80);
-    func_80035C74();
+    Save_ClearHwEvents();
     _new_card();
     _card_read(arg0, 0, buf);
     if (func_80035C40() == 0) {
@@ -1259,7 +1259,7 @@ s32 func_80036414(s32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036414);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_IsCardFormatted);
 #endif
 
 s32 func_8003649C(s32 arg0) {
@@ -1294,7 +1294,7 @@ s32 func_8003653C(void) {
         v = D_8005F268;
     }
     if (v == 0) {
-        func_80035B70();
+        Save_ClearSwEvents();
         _card_info(0);
         return func_80035B3C() != 0;
     }
@@ -1314,7 +1314,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036598);
 
 #ifdef NON_MATCHING
 s32 func_800365E4(void) {
-    func_80035B70();
+    Save_ClearSwEvents();
     _card_info(0);
     if (func_80035B3C() == 2) {
         return 1;
@@ -1352,7 +1352,7 @@ s32 func_800366B4(void) {
     bzero(buf, 0x80);
     buf[1] = 0xFF;
     buf[0] = 0xFF;
-    func_80035C74();
+    Save_ClearHwEvents();
     _new_card();
     _card_write(0, 0, buf);
     return -(func_80035C40() != 0);
@@ -1481,7 +1481,7 @@ void func_80036978(void) {
     s32 buffer;
 
     *(s32 *)((char *)pool + POOL_SLOT_BASE) = POOL_COUNT_INIT;
-    buffer = func_80031578(POOL_BUFFER_SIZE);
+    buffer = Rand_Below(POOL_BUFFER_SIZE);
     slots = (s32 *)((char *)pool + POOL_SLOT_BASE);
     *(s32 *)((char *)pool + POOL_BUFFER_PTR) = buffer;
     *(s32 *)((char *)pool + POOL_SLOT_HANDLE) = 0;
