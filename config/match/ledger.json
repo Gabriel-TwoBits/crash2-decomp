@@ -3533,7 +3533,7 @@
   },
   "func_80014B90": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:47",
+    "time": "2026-10-17 17:15",
     "summary": "500 of 500 trials agree, 105 compared",
     "best": "a3.c",
     "model": "claude-sonnet-5-5",
@@ -3595,7 +3595,7 @@
     "cflags": "-O2 -G8 -mcpu=r8000",
     "mode": "equivalent",
     "scored": "in place",
-    "reason": "trial 1417 disagrees: $a0=0x80100fec $a1=0x000000a8 $a2=0x00000000 $a3=0x000003fd, stack 0xffffffff 0x00000003 0x00000000 0x00000000\nthe retail code ended by returned, the candidate by the limit\n1999 of 2000 trials agree"
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/800123F0.o \nsrc/game/800123F0.c:1720: conflicting types for `func_80014B90'"
   },
   "func_80018DD0": {
     "outcome": "landed",
@@ -5890,7 +5890,7 @@
   },
   "func_8002FCF8": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:51",
+    "time": "2026-10-17 17:15",
     "summary": "500 of 500 trials agree, 115 compared",
     "best": "base.c",
     "model": "claude-sonnet-5-5",
@@ -5941,7 +5941,7 @@
     ],
     "mode": "equivalent",
     "scored": "in place",
-    "reason": "trial 1925 disagrees: $a0=0x801006b8 $a1=0x00000019 $a2=0xfffffffe $a3=0xffffffff, stack 0x00000005 0x00000023 0x20788eb5 0x801006e4\nthe retail code ended by returned, the candidate by address error on store\n1999 of 2000 trials agree"
+    "reason": "declares `s32 func_8002F6C8(void *, s32, s32, s32)`, include/game.h `void func_8002F6C8(u8 *)`"
   },
   "func_80039104": {
     "outcome": "landed",
@@ -10119,7 +10119,7 @@
   },
   "func_80015344": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 22:15",
+    "time": "2026-10-17 17:15",
     "summary": "500 of 500 trials agree, 224 compared",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
@@ -10158,7 +10158,7 @@
     ],
     "mode": "equivalent",
     "scored": "in place",
-    "reason": "unsupported: trial 319: the retail code raised reserved instruction; it has an instruction Unicorn lacks"
+    "reason": "trial 1553 disagrees: $a0=0x801030f8 $a1=0x00000000 $a2=0x6a3c41d7 $a3=0xfffffffc, stack 0x00000001 0x00000000 0x691632fb 0x80101a20\nthe retail code ended by the limit, the candidate by returned\n1999 of 2000 trials agree"
   },
   "func_800260F4": {
     "outcome": "equivalent",
@@ -11383,7 +11383,7 @@
   },
   "func_80028C48": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 22:40",
+    "time": "2026-10-17 17:15",
     "summary": "500 of 500 trials agree, 424 compared",
     "mode": "equivalent",
     "scored": "in place",
@@ -11409,7 +11409,7 @@
         "minutes": 0.8
       }
     ],
-    "reason": "trial 1915 disagrees: $a0=0x80106214 $a1=0x80107600 $a2=0x8010430c $a3=0x80105a54, stack 0x801066f0 0x8010392c 0x0000004c 0x80060000\nthe retail code ended by access to unmapped 0x3b9b0000, the candidate by access to unmapped 0x3b9b0004\n1999 of 2000 trials agree"
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/80038700.o \nsrc/game/80038700.c:87: too many arguments to function `func_80028C48'"
   },
   "func_80032B7C": {
     "outcome": "equivalent",
@@ -11855,8 +11855,8 @@
     ]
   },
   "func_80028FE0": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-16 23:15",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:15",
     "summary": "500 of 500 trials agree, 275 compared",
     "best": "best.c",
     "mode": "equivalent",
@@ -11883,7 +11883,8 @@
         "turns": 34,
         "minutes": 4.8
       }
-    ]
+    ],
+    "reason": "trial 147 disagrees: $a0=0x80102078 $a1=0x80100eec $a2=0x00000000 $a3=0x00000000, stack 0x00000030 0x80100554 0x801001cc 0x8010416c, memory at D_8006F1F0+0x922a8 (0x80101498) repaired to 0x80100390\nthe retail code ended by returned, the candidate by address error on load\n1980 of 2000 trials agree"
   },
   "func_8001C718": {
     "outcome": "equivalent, gave up",
@@ -12436,7 +12437,7 @@
   },
   "func_8002B57C": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 00:05",
+    "time": "2026-10-17 17:15",
     "summary": "500 of 500 trials agree, 69 compared",
     "mode": "equivalent",
     "scored": "in place",
@@ -12462,7 +12463,7 @@
         "minutes": 2.0
       }
     ],
-    "reason": "trial 1244 disagrees: $a0=0x801045dc $a1=0x801056b4 $a2=0x80101fa0 $a3=0x00000001, stack 0xffffffb5 0x00000000 0xffffff80 0x00000001\ncall 2 to func_8001CC10 (0x8001cc10): stack argument 0 is a frame address holding 0x00006400 0x00000000 0x00000000 0x00000000 in the retail code, a frame address holding 0x00006400 0x00000000 0x801045dc 0x00000000 in the candidate\n1999 of 2000 trials agree"
+    "reason": "trial 51 disagrees: $a0=0x801041fc $a1=0x80104138 $a2=0x80100510 $a3=0x00000000, stack 0x00000001 0x00000000 0x00000000 0x00000000, memory at D_8006CDFC (0x8006cdfc) repaired to 0x80104e24, memory at D_8006F1F0+0x95c38 (0x80104e28) repaired to 0x801016a4, memory at D_8006CDFC+0x4 (0x8006ce00) repaired to 0x80107430, memory at D_8006CDFC+0x8 (0x8006ce04) repaired to 0x80100320, memory at D_80000004+0x94 (0x80000098) repaired to 0x80106f2c, memory at D_80000004 (0x80000004) repaired to 0x80106a10, memory at D_8006CDFC+0x18 (0x8006ce14) repaired to 0x80106df4, memory at D_8006F1F0+0x97c08 (0x80106df8) repaired to 0x801047a4, memory at D_8006CDFC+0x1c (0x8006ce18) repaired to 0x80100aac, memory at D_8006F1F0+0x918c0 (0x80100ab0) repaired to 0x80105ea8\ncall 2 to func_8001CC10 (0x8001cc10): stack argument 0 is a frame address holding 0x00006400 0x00000000 0x00000000 0x00000000 in the retail code, a frame address holding 0x00006400 0x00000000 0x801041fc 0x00000000 in the candidate\n1969 of 2000 trials agree"
   },
   "func_80031AE8": {
     "outcome": "equivalent",
@@ -12674,8 +12675,8 @@
     ]
   },
   "func_80027F3C": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 13:30",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:14",
     "summary": "500 of 500 trials agree, 500 compared",
     "best": "best.c",
     "mode": "equivalent",
@@ -12702,7 +12703,8 @@
         "turns": 13,
         "minutes": 2.1
       }
-    ]
+    ],
+    "reason": "trial 27 disagrees: $a0=0x80106f88 $a1=0x00000059 $a2=0x801028cc $a3=0x801036d4, stack 0x80101a20 0x0000000b 0x00000000 0x00000000\nmemory at D_8006F1F0+0x944e8 (0x801036d8) is 0xffffffdc after the retail code, 0x00000000 after the candidate\n1996 of 2000 trials agree"
   },
   "func_80024B6C": {
     "outcome": "equivalent, gave up",
@@ -12765,8 +12767,8 @@
     ]
   },
   "func_8002A8D0": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 13:56",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:14",
     "summary": "500 of 500 trials agree, 365 compared",
     "best": "best.c",
     "mode": "equivalent",
@@ -12793,7 +12795,8 @@
         "turns": 57,
         "minutes": 12.1
       }
-    ]
+    ],
+    "reason": "trial 985 disagrees: $a0=0x80105680 $a1=0x00000000 $a2=0x00000000 $a3=0xfffffff5, stack 0xffffffe0 0xffffffff 0x000000e7 0x00000000, memory at D_8006F1F0+0x96494 (0x80105684) repaired to 0x8010092c, memory at D_8005BBB8+0x8 (0x8005bbc0) repaired to 0x00000006\ncall 1 to func_80030680 (0x80030680): $a0 is a frame address holding 0xfff7caad 0xff968b99 0x00000000 0x00000000 in the retail code, a frame address holding 0xfff7cab9 0xffd693bf 0x00000000 0x00000000 in the candidate\n1998 of 2000 trials agree"
   },
   "func_800200A8": {
     "outcome": "equivalent",
@@ -12885,8 +12888,8 @@
     ]
   },
   "func_8001ABF8": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 14:54",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:14",
     "summary": "500 of 500 trials agree, 259 compared",
     "best": "best.c",
     "mode": "equivalent",
@@ -12913,7 +12916,8 @@
         "turns": 27,
         "minutes": 6.3
       }
-    ]
+    ],
+    "reason": "trial 767 disagrees: $a0=0x80102b7c $a1=0x8010128c $a2=0x80107fe4 $a3=0x000000a7, stack 0x80103c18 0x80107ce4 0xffffff78 0x00000000, memory at D_8006F1F0+0x93a74 (0x80102c64) repaired to 0x8010283c, memory at D_8006F1F0+0x93994 (0x80102b84) repaired to 0x80100e94\nmemory at D_80000004+0x4 (0x80000008) is 0x80102c7c after the retail code, 0x00000004 after the candidate\n1999 of 2000 trials agree"
   },
   "func_8001D63C": {
     "outcome": "equivalent, gave up",
