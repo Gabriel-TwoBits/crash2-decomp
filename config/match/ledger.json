@@ -10216,17 +10216,17 @@
     "scored": "in place"
   },
   "func_800267C4": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:51",
-    "summary": "1 of 145 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:17",
+    "summary": "2000 of 2000 trials agree, 999 compared",
     "best": "best.c",
-    "model": "claude-opus-5-5",
+    "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 7.7,
-    "cost_usd": 1.1364649999999996,
-    "turns": 4,
-    "minutes": 0.4,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.25345940000000006,
+    "turns": 11,
+    "minutes": 0.6,
     "runs": [
       {
         "outcome": "gave up",
@@ -10251,9 +10251,23 @@
         "cost_usd": 1.1364649999999996,
         "turns": 4,
         "minutes": 0.4
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 241 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.25345940000000006,
+        "turns": 11,
+        "minutes": 0.6
       }
     ],
-    "reason": "defines Arg otherwise than src/game/8002648C.c"
+    "mode": "equivalent",
+    "scored": "in place"
   },
   "func_8001BD84": {
     "outcome": "equivalent",
