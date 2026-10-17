@@ -120,6 +120,7 @@ s32 func_8001ED60(s32 *, s32 *);
 s32 func_8001EE64(void);
 void func_8001F8B4(s32);
 void func_8001F94C(s32);
+s32 func_8001F9C4(void);
 s32 func_8001FF50(s32, s32 *);
 void func_8002001C(char *);
 void func_800200A8(s32, s32, s32, s32);
