@@ -66,8 +66,11 @@ the assembly of every `INCLUDE_ASM` line whatever surrounds it, so `ninja` still
 default build's assembly, no SHA-1 check. With no equivalent function it is the retail executable byte for byte. A
 function of another size moves what follows it; the linker script is sequential, so the link holds, and `configure.py`
 writes a variant of splat's for it: the header's entry point and `.text` size taken from the link, splat's pinned
-addresses left to the labels that define them, the end of `.bss` where it is linked. Words of data splat left as
-numbers (addresses it found no symbol for) keep their retail values and go stale once anything before them changes size.
+addresses left to the labels that define them, the end of `.bss` where it is linked. Every address the split's data
+holds is a symbol, relocated in both builds: `config/symbol_addrs.txt` names those splat found no symbol at, and
+`configure.py` stops on a word left as a number that points into the image. Still stale: 20 `lui`/`ori` pairs of
+numbers in the handwritten code (`asm/game/80039D2C.s`) that load addresses of the game's functions, which keep their
+retail values once the C before them changes size.
 
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
 every trial.
