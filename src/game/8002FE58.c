@@ -549,7 +549,13 @@ block_4:
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80031340);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_8003145C);
+#define ANGLE_MASK 0xFFF
+#define ANGLE_SIGN_SHIFT 20
+
+/* The 12-bit angle halfway from arg0 to arg1, the shorter way round */
+s32 func_8003145C(s32 arg0, s32 arg1) {
+    return (arg0 + (((arg1 - arg0) << ANGLE_SIGN_SHIFT) >> (ANGLE_SIGN_SHIFT + 1))) & ANGLE_MASK;
+}
 
 void func_80031474(void) {
 }
