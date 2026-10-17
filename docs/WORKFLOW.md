@@ -89,7 +89,9 @@ every trial.
 
 It compiles the file as `ninja nonmatching` does and relocates FUNCTION's code into a scratch area: every name the
 retail executable knows (`build/SCUS_941.54.elf`, so the build comes first) resolves to its retail address, the file's
-own `.sdata`/`.sbss` variables and `$gp` included; jump tables and literals without a name go to scratch copies. Then
+own `.sdata`/`.sbss` variables and `$gp` included; jump tables and literals without a name go to scratch copies. The
+file's `static` functions come along as the candidate's own code, not calls out: they stand for code the retail function
+has inline (`func_80029D0C`'s helper was compared as a call before). Then
 Unicorn runs the candidate and the retail function from the same state, trial by trial: RAM and the scratchpad filled
 with random words (zeros, small numbers, pointers into an arena of such words, the function's own constants), each word
 of the executable's data either its retail value or random, random arguments (an arena pointer for a parameter the C

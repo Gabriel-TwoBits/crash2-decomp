@@ -83,6 +83,7 @@ SHN_ABS = 0xFFF1
 SHN_COMMON = 0xFFF2
 STB_LOCAL = 0
 STT_NOTYPE = 0
+STT_FUNC = 2
 STT_SECTION = 3
 STT_FILE = 4
 SYMBOL_BIND_SHIFT = 4
@@ -424,9 +425,11 @@ class Retail:
 
 @dataclass
 class Candidate:
-    """The C's function relocated into the scratch area"""
+    """The C's function relocated into the scratch area, with the file's static functions it may call: its own code runs
+    from start for size bytes, entered at entry"""
     image: bytes
     entry: int
+    start: int
     size: int
 
 
@@ -452,6 +455,12 @@ def compile_candidate(source, function, retail):
         sys.exit(f"{function} is in {text.name}, not in code")
     if entry_symbol.size == 0:
         sys.exit(f"{function} has no size in the compiled object")
+    # The file's static functions in the same section: a helper the C calls stands for code the retail function has
+    # inline, so it runs as the candidate's own code, not as a call out
+    own = [entry_symbol] + [symbol for symbol in elf.symbols if symbol.bind == STB_LOCAL and symbol.type == STT_FUNC
+                            and symbol.shndx == entry_symbol.shndx and symbol.size > 0]
+    own_start = min(symbol.value for symbol in own)
+    own_end = max(symbol.value + symbol.size for symbol in own)
 
     # Every allocated section of the object, one after another
     bases = {}
@@ -505,9 +514,10 @@ def compile_candidate(source, function, retail):
     for target, base in bases.items():
         relocations = elf.relocations(target)
         if target == entry_symbol.shndx:
-            # Of the code, only the function's: the file's other functions are reached at their retail addresses
+            # Of the code, only the function's and its static helpers': the file's other functions are reached at their
+            # retail addresses
             relocations = [relocation for relocation in relocations
-                           if entry_symbol.value <= relocation[0] < entry_symbol.value + entry_symbol.size]
+                           if any(symbol.value <= relocation[0] < symbol.value + symbol.size for symbol in own)]
         pending_high = []
         for offset, kind, symbol_index in relocations:
             if kind == R_MIPS_NONE:
@@ -546,7 +556,8 @@ def compile_candidate(source, function, retail):
                 sys.exit(f"{source}: relocation type {kind} isn't handled")
         if pending_high:
             sys.exit(f"{source}: a HI16 relocation in {elf.sections[target].name} has no LO16")
-    return Candidate(bytes(image), bases[entry_symbol.shndx] + entry_symbol.value, entry_symbol.size)
+    base = bases[entry_symbol.shndx]
+    return Candidate(bytes(image), base + entry_symbol.value, base + own_start, own_end - own_start)
 
 
 def align(value, alignment):
@@ -1064,9 +1075,11 @@ class Machine:
     (the candidate's, in the scratch area) flushes it. A Tracer, if made with one, follows each of the function's
     instructions"""
 
-    def __init__(self, memory, retail, entry, size, arguments, traced=False):
+    def __init__(self, memory, retail, entry, size, arguments, traced=False, start=None):
         self.retail = retail
         self.entry = entry
+        # The function's own code, where a jump isn't a call out: from its entry unless it has static helpers before it
+        self.start = entry if start is None else start
         self.size = size
         self.code = memory.code
         self.traced_hook = traced
@@ -1093,9 +1106,9 @@ class Machine:
         emulator.hook_add(UC_HOOK_MEM_UNMAPPED, self.unmapped)
         emulator.hook_add(UC_HOOK_MEM_WRITE_PROT, self.store_to_code)
         if self.traced_hook:
-            emulator.hook_add(UC_HOOK_CODE, self.traced, begin=self.entry, end=self.entry + self.size - 1)
-        emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=0, end=self.entry - 1)
-        emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=self.entry + self.size, end=WORD_MASK)
+            emulator.hook_add(UC_HOOK_CODE, self.traced, begin=self.start, end=self.start + self.size - 1)
+        emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=0, end=self.start - 1)
+        emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=self.start + self.size, end=WORD_MASK)
         emulator.hook_add(UC_HOOK_INTR, self.exception)
         return emulator, emulator.context_save()
 
@@ -1125,7 +1138,7 @@ class Machine:
             outcome.status = RETURNED if emulator.reg_read(mips.UC_MIPS_REG_PC) == SENTINEL_RETURN else LIMIT
         outcome.registers = {name: emulator.reg_read(REGISTERS[name]) for name in REGISTER_NAMES}
         outcome.regions = self.buffers
-        code = physical(self.entry)
+        code = physical(self.start)
         for start, buffer in self.buffers.items():
             if start <= code < start + len(buffer) and buffer[code - start:code - start + self.size] != \
                     memory.regions[start][code - start:code - start + self.size]:
@@ -1315,7 +1328,7 @@ def main():
     candidate = compile_candidate(source, arguments.function, retail)
     declared = declarations(source, arguments.function, retail)
     retail_code = retail.kept[retail_entry - retail.kept_start:retail_entry - retail.kept_start + retail_size]
-    candidate_code = candidate.image[candidate.entry - SCRATCH_BASE:candidate.entry - SCRATCH_BASE + candidate.size]
+    candidate_code = candidate.image[candidate.start - SCRATCH_BASE:candidate.start - SCRATCH_BASE + candidate.size]
 
     agreeing = 0
     repaired = 0
@@ -1334,14 +1347,15 @@ def main():
             # The retail code's, the tracing one's, the candidate's
             machines = (Machine(base, retail, retail_entry, retail_size, declared.callee_arguments),
                         Machine(base, retail, retail_entry, retail_size, declared.callee_arguments, traced=True),
-                        Machine(base, retail, candidate.entry, candidate.size, declared.callee_arguments))
+                        Machine(base, retail, candidate.entry, candidate.size, declared.callee_arguments,
+                                start=candidate.start))
         memory, expected = repaired_run(fuzz, base, machines[0], machines[1], decoded)
         actual = machines[2].run(memory, fuzz)
         if fuzz.repairs:
             repaired += 1
             replaced += len(fuzz.repairs)
         for side, outcome, code, address in (("retail code", expected, retail_code, retail_entry),
-                                             ("candidate", actual, candidate_code, candidate.entry)):
+                                             ("candidate", actual, candidate_code, candidate.start)):
             if outcome.unsupported is not None:
                 found = gte_instructions(code, address)
                 more = f" and {len(found) - GTE_SHOWN} more" if len(found) > GTE_SHOWN else ""
