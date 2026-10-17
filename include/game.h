@@ -123,6 +123,7 @@ void func_8002BC38(void *, s32 *, s32 *, void *);
 s32 func_8002BF58(void *, void *);
 void func_8002C0F0(void *, void *, s32 *, s32 *, s32 *);
 void func_8002DE08(s32 *, s32 *, void *, void *);
+s32 func_8002DF68(u32, u32);
 s32 func_8002E280(s32 *, s32, s32, s32 *, s32 *, void *, s32);
 void func_8002E6E0(s32 *, s32 *, s32, s32, s32, s32);
 void func_8002EFE4(void);
