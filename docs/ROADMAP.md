@@ -380,6 +380,12 @@ trials compared, under the 5% floor), and the two handwritten GTE routines `func
 `rtps`), which wait on how the C states the GTE: PsyQ's inline-assembly macros, or a GTE in C as a port needs. In the
 game, the two halves each agree with retail on all 8,000 frames.
 
+Running a callee's retail code instead of answering it, tried on `func_8002CC50` (whose made-up `func_8002FFFC` counts
+run its loops past 12 points), took it from 10 to 1 of 2,000 trials disagreeing, but most trials then faulted inside the
+callee, in random memory repairs don't reach (1,500 of 2,000 compared by their calls only), and the last disagreement
+was again a frame word the two layouts place apart. Not kept; `func_800334A0`'s callee, the other candidate, has GTE
+instructions.
+
 Next: find what in the disc's data holds the executable's addresses; `func_8002CC50` and `func_8002FFFC` (inputs built
 for the latter's paths); the GTE decision, then its two routines; each batch checked in the game too (by groups that
 each agree, docs/WORKFLOW.md); a run_game comparison that tolerates timing (the game's state at checkpoints, or inputs
