@@ -5,7 +5,8 @@ checked out at its commit:
 - the PSX builds of GCC (decompals/old-gcc): every version the game may have been built with (docs/COMPILER.md);
 - objdiff-cli, which compares the built objects with the retail ones;
 - maspsx (stands in for Sony's ASPSX assembler), m2c (the C drafts) and decomp-permuter (random rewrites until one matches);
-- PsyQ's library signatures, which tools/find_psyq.py looks for in the executable.
+- PsyQ's library signatures, which tools/find_psyq.py looks for in the executable;
+- PCSX-Redux, the emulator tools/run_game.py runs the game in (its AppImage, extracted).
 
     python tools/setup_toolchain.py
 
@@ -17,6 +18,7 @@ import subprocess
 import sys
 import tarfile
 import urllib.request
+import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
@@ -41,8 +43,22 @@ REPOSITORIES = {
     # Byte signatures of PsyQ's library objects, per SDK version (tools/find_psyq.py); no licence, so fetched, never vendored
     "psx_psyq_signatures": ("https://github.com/lab313ru/psx_psyq_signatures", "e9e46e7e133ef275a79bfce650924f98edb086bc"),
 }
+# PCSX-Redux has no releases: its builds are published at distrib.app, one zip holding the AppImage per build; this is
+# build 436 of the dev channel, commit 8d405b66. Its 2024 build 124 crashes on this game within 10 seconds.
+# TRADEOFF: the dev channel keeps about its last 100 builds (three weeks); once this one is gone, pin a newer one from
+# https://distrib.app/storage/manifests/pcsx-redux/dev-linux-x64/manifest.json (its manifest-<id>.json gives the path)
+PCSX_REDUX_URL = ("https://distrib.app/storage/assets/18b/f1f/2b3/3350a8c62bc975807e58429625d0380a679c8181cc1840fea16cc4f/"
+                  "PCSX-Redux-8d405b66-linux-x86_64.zip")
+PCSX_REDUX_SHA256 = "690889d6053b5e5008e829ef21733fb983d4aae2ab42b962b75ac65c2b453fc5"
+PCSX_REDUX_APPIMAGE = "PCSX-Redux-HEAD-x86_64.AppImage"
+PCSX_REDUX = TOOLCHAIN / "pcsx-redux"
+PCSX_REDUX_BINARY = PCSX_REDUX / "usr" / "bin" / "pcsx-redux"
+# The folder an AppImage extracts itself into, in the working directory
+APPIMAGE_EXTRACTED = "squashfs-root"
 BINUTILS_PREFIX = "mipsel-linux-gnu-"
 BINUTILS_TOOLS = ("as", "ld", "objcopy", "objdump")
+# distrib.app refuses Python's default User-Agent
+USER_AGENT = "crash2-decomp-setup"
 # rwxr-xr-x: the downloaded programs run
 EXECUTABLE_MODE = 0o755
 
@@ -52,7 +68,8 @@ def download(url, target, sha256):
         print(f"downloading {url}", flush=True)
         target.parent.mkdir(parents=True, exist_ok=True)
         partial = target.with_suffix(target.suffix + ".part")
-        with urllib.request.urlopen(url) as response, open(partial, "wb") as out:
+        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(request) as response, open(partial, "wb") as out:
             shutil.copyfileobj(response, out)
         partial.rename(target)
     actual = hashlib.sha256(target.read_bytes()).hexdigest()
@@ -83,6 +100,27 @@ def repository(name, url, commit):
         subprocess.run(["git", "-C", str(folder), "checkout", "--quiet", "--detach", commit], check=True)
 
 
+def pcsx_redux():
+    """The AppImage out of its checked zip, extracted by itself: running the extracted binary needs no FUSE"""
+    if PCSX_REDUX_BINARY.exists():
+        return
+    archive = TOOLCHAIN / "downloads" / PCSX_REDUX_URL.rsplit("/", 1)[1]
+    download(PCSX_REDUX_URL, archive, PCSX_REDUX_SHA256)
+    work = TOOLCHAIN / "pcsx-redux.part"
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir()
+    with zipfile.ZipFile(archive) as zipped:
+        zipped.extract(PCSX_REDUX_APPIMAGE, work)
+    appimage = work / PCSX_REDUX_APPIMAGE
+    appimage.chmod(EXECUTABLE_MODE)
+    subprocess.run([str(appimage), "--appimage-extract"], cwd=work, stdout=subprocess.DEVNULL, check=True)
+    (work / APPIMAGE_EXTRACTED).rename(PCSX_REDUX)
+    shutil.rmtree(work)
+    if not PCSX_REDUX_BINARY.exists():
+        sys.exit(f"{PCSX_REDUX_APPIMAGE} has no usr/bin/pcsx-redux")
+
+
 def main():
     if shutil.which("git") is None:
         sys.exit("git isn't installed")
@@ -93,6 +131,7 @@ def main():
     objdiff.chmod(EXECUTABLE_MODE)
     for name, (url, commit) in REPOSITORIES.items():
         repository(name, url, commit)
+    pcsx_redux()
 
     missing = [BINUTILS_PREFIX + tool for tool in BINUTILS_TOOLS if shutil.which(BINUTILS_PREFIX + tool) is None]
     if missing:
