@@ -236,9 +236,11 @@ file and the history alone.
 The equivalent executable moves what follows a function of another size; 194 words of `.data` splat had left as numbers
 (pointers to the libraries' strings, entries into the handwritten code from dispatch tables) kept their retail values.
 They have symbols now (`config/symbol_addrs.txt`) and `configure.py` stops on any such word: with a function and a
-string added under `NON_MATCHING`, all 194 follow their targets, where before they all kept the retail value. Still
-stale: the handwritten code's 20 `lui`/`ori` pairs loading the addresses of the game's functions (`func_80037440` to
-`func_80039C08`), which a relocation can't write; the equivalent build would have to rewrite them as `lui`/`addiu`.
+string added under `NON_MATCHING`, all 194 follow their targets, where before they all kept the retail value. The
+handwritten code's 21 `lui`/`ori` pairs loading the addresses of 20 of the game's functions (`func_80037440` to
+`func_80039C08`), which no relocation writes, become `lui`/`addiu` pairs of their symbols in the equivalent build only:
+with 0xC00 bytes of code added under `NON_MATCHING` before them, all 21 load their function's linked address, across a
+low half's sign (`func_80037448` at 0x80038008).
 
 Next: `loop --equivalent` on the refused and the remaining given-up functions, in batches.
 

@@ -68,9 +68,11 @@ function of another size moves what follows it; the linker script is sequential,
 writes a variant of splat's for it: the header's entry point and `.text` size taken from the link, splat's pinned
 addresses left to the labels that define them, the end of `.bss` where it is linked. Every address the split's data
 holds is a symbol, relocated in both builds: `config/symbol_addrs.txt` names those splat found no symbol at, and
-`configure.py` stops on a word left as a number that points into the image. Still stale: 20 `lui`/`ori` pairs of
-numbers in the handwritten code (`asm/game/80039D2C.s`) that load addresses of the game's functions, which keep their
-retail values once the C before them changes size.
+`configure.py` stops on a word left as a number that points into the image. The handwritten code
+(`asm/game/80039D2C.s`) loads the addresses of 20 of the game's functions as `lui`/`ori` pairs of numbers, which no
+relocation writes: the equivalent build assembles a copy, `build/nonmatching/asm/game/80039D2C.s`, where each of the 21
+pairs is a `lui`/`addiu` of the function's symbol (found by address in splat's `.splat/splat_symbols.csv`), and
+`configure.py` stops unless it finds all 21 and leaves no such number.
 
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
 every trial.
