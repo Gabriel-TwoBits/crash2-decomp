@@ -9114,17 +9114,17 @@
     "scored": "in place"
   },
   "func_80015614": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:44",
-    "summary": "18 of 99 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:01",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "attempt5.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.8,
-    "cost_usd": 0.380332,
-    "turns": 31,
-    "minutes": 1.7,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.2418576,
+    "turns": 15,
+    "minutes": 0.7,
     "runs": [
       {
         "outcome": "gave up",
@@ -9137,9 +9137,23 @@
         "cost_usd": 0.380332,
         "turns": 31,
         "minutes": 1.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.2418576,
+        "turns": 15,
+        "minutes": 0.7
       }
     ],
-    "reason": "src/game/80015614.c defines D_8005F3DC further down: moved into the NON_MATCHING block, it would leave the default build"
+    "mode": "equivalent",
+    "scored": "in place"
   },
   "func_80022314": {
     "outcome": "equivalent",
