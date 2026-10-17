@@ -51,7 +51,13 @@ s32 func_8002FC78(void *arg0, s32 arg1, s32 arg2) {
     return p[arg1 * 2 + arg2] + 3;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/8002FB84", func_8002FCD0);
+extern s32 D_8005F3D8;
+extern s32 D_8006CD14;
+
+void func_8002FCD0(void) {
+    D_8005F3D8 = 0;
+    D_8006CD14 = 0;
+}
 
 void func_8002FCE8(void) {
 }
