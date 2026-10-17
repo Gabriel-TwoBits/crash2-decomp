@@ -12645,5 +12645,187 @@
         "minutes": 3.2
       }
     ]
+  },
+  "func_8001F054": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 13:28",
+    "summary": "trial 1 disagrees: $a0=0x80107aa4 $a1=0xffffff57 $a2=0x801002b0 $a3=0xfffffff8, stack 0x801069c8 0x0000004b 0xfffffff1 0x00000e10\nthe retail code ended by returned, the candidate by address error on load\n470 of 500 trials agree",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.2,
+    "cost_usd": 0.5761270999999999,
+    "turns": 21,
+    "minutes": 2.1,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 1 disagrees: $a0=0x80107aa4 $a1=0xffffff57 $a2=0x801002b0 $a3=0xfffffff8, stack 0x801069c8 0x0000004b 0xfffffff1 0x00000e10\nthe retail code ended by returned, the candidate by address error on load\n470 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.2,
+        "cost_usd": 0.5761270999999999,
+        "turns": 21,
+        "minutes": 2.1
+      }
+    ]
+  },
+  "func_80027F3C": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 13:30",
+    "summary": "500 of 500 trials agree, 500 compared",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.1,
+    "cost_usd": 0.4639765,
+    "turns": 13,
+    "minutes": 2.1,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.1,
+        "cost_usd": 0.4639765,
+        "turns": 13,
+        "minutes": 2.1
+      }
+    ]
+  },
+  "func_80024B6C": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 13:34",
+    "summary": "trial 192 disagrees: $a0=0x801008e0 $a1=0x80107418 $a2=0x80100bd0 $a3=0x00000001, stack 0x80104bc0 0x00000000 0x80103a78 0x7ed9423a\nthe retail code ended by address error on load, the candidate by TLB miss on load\n499 of 500 trials agree",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 3.8,
+    "cost_usd": 0.47493490000000005,
+    "turns": 16,
+    "minutes": 3.7,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 192 disagrees: $a0=0x801008e0 $a1=0x80107418 $a2=0x80100bd0 $a3=0x00000001, stack 0x80104bc0 0x00000000 0x80103a78 0x7ed9423a\nthe retail code ended by address error on load, the candidate by TLB miss on load\n499 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.8,
+        "cost_usd": 0.47493490000000005,
+        "turns": 16,
+        "minutes": 3.7
+      }
+    ]
+  },
+  "func_800254D4": {
+    "outcome": "equivalent, rejected",
+    "time": "2026-10-17 13:43",
+    "reason": "equivalent.c disagrees: trial 192 disagrees: $a0=0x801008e0 $a1=0x80107418 $a2=0x80100bd0 $a3=0x00000001, stack 0x00000025 0x00000000 0x80104bc0 0x7ed9423a\nthe retail code ended by address error on load, the candidate by TLB miss on load\n499 of 500 trials agree",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 8.0,
+    "cost_usd": 0.6907067999999998,
+    "turns": 29,
+    "minutes": 7.9,
+    "runs": [
+      {
+        "outcome": "equivalent, rejected",
+        "reason": "equivalent.c disagrees: trial 192 disagrees: $a0=0x801008e0 $a1=0x80107418 $a2=0x80100bd0 $a3=0x00000001, stack 0x00000025 0x00000000 0x80104bc0 0x7ed9423a\nthe retail code ended by address error on load, the candidate by TLB miss on load\n499 of 500 trials agree",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 8.0,
+        "cost_usd": 0.6907067999999998,
+        "turns": 29,
+        "minutes": 7.9
+      }
+    ]
+  },
+  "func_8002A8D0": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 13:56",
+    "summary": "500 of 500 trials agree, 365 compared",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 12.3,
+    "cost_usd": 1.1143489999999998,
+    "turns": 57,
+    "minutes": 12.1,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "500 of 500 trials agree, 365 compared",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 12.3,
+        "cost_usd": 1.1143489999999998,
+        "turns": 57,
+        "minutes": 12.1
+      }
+    ]
+  },
+  "func_800200A8": {
+    "outcome": "equivalent",
+    "time": "2026-10-17 14:09",
+    "summary": "2000 of 2000 trials agree, 516 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 8.3,
+    "cost_usd": 0.6574769,
+    "turns": 2,
+    "minutes": 0.1,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 137 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 8.3,
+        "cost_usd": 0.6574769,
+        "turns": 2,
+        "minutes": 0.1
+      }
+    ]
   }
 }

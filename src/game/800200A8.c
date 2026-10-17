@@ -2,7 +2,277 @@
 #include "sdk.h"
 #include "game.h"
 
+#ifdef NON_MATCHING
+#define FLAG_ANY_RELOAD 0x7
+#define FLAG_OBJECT 0x1
+#define FLAG_TARGET 0x2
+#define FLAG_POSITION 0x4
+#define FLAG_SEGMENT 0x8
+#define FLAG_FIELD_48 0x10
+
+#define ARG_KEEP_SCREEN 0x2
+#define ARG_FORCE 0x8
+#define ARG_SKIP_PREPASS 0x10
+
+#define OBJ_DATA 0x10
+#define DATA_COUNT 0x190
+#define DATA_ENTRIES 0x194
+#define DATA_FLAGS 0x1B4
+#define DATA_FLAG_ACTIVE 0x10
+#define DATA_SUB 0x280
+#define DATA_FLAG_OFF 0x27C
+#define ENTRY_STRIDE 4
+
+#define SEGMENT_SHIFT 8
+#define SCREEN_MODE_PENDING 0x600
+#define SAVE_MAGIC 0x6396347F
+#define NO_VALUE 0xFFFF /* stored unsigned when the lookup finds nothing */
+
+#define FIELD(p, T, off) (*(T *)((u8 *)(p) + (off)))
+
+
+extern void *D_800608CC;
+extern s32 D_800608D0;
+extern s32 D_800608D4;
+extern s32 D_800608E0;
+extern s32 D_800608E4;
+extern s32 D_800608E8;
+extern s32 D_800608EC;
+extern s32 D_800608F0;
+extern s32 D_800608FC;
+extern s32 D_80060900;
+extern s32 D_80060904;
+extern s32 D_80060884;
+extern s32 D_80060888;
+extern s32 D_800607F4[];
+extern s32 D_80060800[];
+extern s32 D_80060918[];
+extern s32 D_8005F38C;
+extern s32 D_8005F390;
+extern s32 D_8005F398;
+extern s32 D_8005F3D0;
+extern s32 D_8006CBB4;
+extern s32 D_8006CC84;
+extern s32 D_8006CD7C;
+extern s32 D_8006CB48;
+extern void *D_8006759C;
+extern s32 D_80067FC8;
+
+void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    s32 flags;
+    s32 keepScreen;
+    s32 target;
+    s32 maxPos;
+    s32 oldField48;
+    s32 field48;
+    s32 count;
+    s32 seg;
+    s32 i;
+    s32 steps;
+    s32 idx;
+    s32 dist;
+    s32 tmp;
+    s32 res;
+    s32 *list;
+    s32 *p;
+    s32 obj;
+    s32 data;
+    s32 sub;
+    s32 geom;
+    s32 shortVal;
+    void *entry;
+
+    flags = -((arg3 & ARG_FORCE) != 0) & FLAG_ANY_RELOAD;
+    keepScreen = 1;
+    target = arg2;
+    if (arg1 != 0 && arg0 != 0) {
+        if (arg0 != (s32)D_800608CC) {
+            flags |= FLAG_OBJECT;
+            if (D_800608CC != 0) {
+                keepScreen = arg3 & ARG_KEEP_SCREEN;
+                if (!(arg3 & ARG_SKIP_PREPASS)) {
+                    data = FIELD(D_800608CC, s32, OBJ_DATA);
+                    D_800608D0 = arg0;
+                    for (i = 0; i < FIELD(data, s32, DATA_COUNT); i++) {
+                        if (FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) {
+                            sub = data + DATA_ENTRIES + i * ENTRY_STRIDE;
+                            if (func_800143C0((void *)sub, 0) != 0) {
+                                entry = func_80014260((void *)sub, 1, 0);
+                                if (func_8001FF50(arg0, (s32 *)entry) == 0) {
+                                    func_8002001C((char *)entry);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (arg1 != D_800608D4 || (arg3 & ARG_FORCE)) {
+            flags |= FLAG_TARGET;
+            count = func_800322C0(arg1, 0x4B, 0, 2);
+            maxPos = (count - 1) << SEGMENT_SHIFT;
+            field48 = func_800321D4(arg1, 0x29, 0, 0, 0, 2, 0);
+        } else {
+            count = D_800608EC;
+            maxPos = D_800608E4;
+            field48 = D_800608F0;
+        }
+        oldField48 = D_800608F0;
+        if (field48 != oldField48) {
+            flags |= FLAG_FIELD_48;
+        }
+        if (target < 0) {
+            target = 0;
+        } else if (maxPos < target) {
+            target = maxPos;
+        }
+        if (target != D_800608E0) {
+            flags |= FLAG_POSITION;
+        }
+        seg = target >> SEGMENT_SHIFT;
+        if (seg != D_800608E8) {
+            flags |= FLAG_SEGMENT;
+        }
+        D_80060918[0] = D_80060800[0];
+        D_80060918[1] = D_80060800[1];
+        D_80060918[2] = D_80060800[2];
+
+        if (*FIELD(arg0, s32 *, OBJ_DATA) != 0 && (flags & FLAG_ANY_RELOAD)) {
+            list = (s32 *)func_80014260(func_80031AE8(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1, 1);
+            steps = seg - D_800608E8;
+            dist = steps;
+            if (steps < 0) {
+                dist = -steps;
+            }
+            idx = seg;
+            if ((flags & FLAG_TARGET) || seg < dist || (count - (seg + 1)) < dist) {
+                ((void (*)(s32))func_8001A014)(D_800608E8);
+                func_80014420();
+                tmp = D_8005F398;
+                D_8005F398 = D_8005F3D0;
+                D_8005F3D0 = tmp;
+                if (seg < (count >> 1)) {
+                    idx = 0;
+                    D_8005F390 = (s32)func_80029800((u16 *)list[0 + OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 1);
+                    func_800217F8(arg1, 0, 2);
+                    func_8001A13C(arg1, 0, 2);
+                    steps = seg - idx;
+                } else {
+                    idx = count - 1;
+                    D_8005F390 = (s32)func_80029800((u16 *)list[count + OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 0);
+                    func_800217F8(arg1, idx << SEGMENT_SHIFT, 1);
+                    func_8001A13C(arg1, idx << SEGMENT_SHIFT, 1);
+                    steps = seg - idx;
+                }
+            } else {
+                idx = D_800608E8;
+            }
+            p = list + idx;
+            while (steps != 0) {
+                tmp = D_8005F398;
+                D_8005F398 = D_8005F3D0;
+                D_8005F3D0 = tmp;
+                if (steps > 0) {
+                    p++;
+                    idx++;
+                    steps--;
+                    D_8005F390 = (s32)func_80029800((u16 *)p[OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 1);
+                    func_800217F8(arg1, idx << SEGMENT_SHIFT, 2);
+                    func_8001A13C(arg1, idx << SEGMENT_SHIFT, 2);
+                } else {
+                    D_8005F390 = (s32)func_80029800((u16 *)p[OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 0);
+                    p--;
+                    idx--;
+                    steps++;
+                    func_800217F8(arg1, idx << SEGMENT_SHIFT, 1);
+                    func_8001A13C(arg1, idx << SEGMENT_SHIFT, 1);
+                }
+            }
+            func_800143C0((void *)func_80031AE8(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1);
+            func_8001A23C(FIELD(arg1, void *, 4), 0x13B);
+        }
+
+        if (flags & FLAG_ANY_RELOAD) {
+            if (flags & FLAG_OBJECT) {
+                data = FIELD(arg0, s32, OBJ_DATA);
+                if (D_8006CBB4 == SCREEN_MODE_PENDING && !(arg3 & ARG_KEEP_SCREEN)) {
+                    keepScreen = 0;
+                }
+                D_800608CC = (void *)arg0;
+                D_800608E0 = target;
+                D_800608D4 = arg1;
+                D_800608E8 = seg;
+                D_800608EC = count;
+                D_800608E4 = maxPos;
+                D_800608F0 = field48;
+                func_80020998((void *)(data + DATA_SUB), arg3);
+                if (keepScreen != 0) {
+                    func_80012DC0();
+                }
+                for (i = 0; i < FIELD(data, s32, DATA_COUNT); i++) {
+                    sub = data + DATA_ENTRIES + i * ENTRY_STRIDE;
+                    if ((FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) && func_800143C0((void *)sub, 0) != 0) {
+                        entry = func_80014260((void *)sub, 1, 0);
+                        if (!(FIELD(FIELD(entry, s32, OBJ_DATA), s32, DATA_FLAG_OFF) & 1)) {
+                            func_8001FFCC(entry);
+                        }
+                    }
+                }
+            } else {
+                D_800608CC = (void *)arg0;
+                D_800608E0 = target;
+                D_800608D4 = arg1;
+                D_800608E8 = seg;
+                D_800608EC = count;
+                D_800608E4 = maxPos;
+                D_800608F0 = field48;
+            }
+            if (flags & FLAG_FIELD_48) {
+                ((void (*)(s32))func_800221DC)(oldField48);
+            }
+            func_80022224(D_800608FC);
+            ((void (*)(s32 *, s32, s32 *, s32 *, s32))func_80026A08)((s32 *)D_800608D4, D_800608E0, (s32 *)((u8 *)&D_800608FC - 0xE4), (s32 *)((u8 *)&D_800608FC + 0x28), 1);
+            D_80060888 = func_800321D4(D_800608D4, 0x1AA, D_800608E0, 0, 0, 3, 0);
+            shortVal = NO_VALUE;
+            if (flags & (FLAG_OBJECT | FLAG_TARGET)) {
+                res = func_80031AE8(D_800608D4, 0x176, 0, 0, 0, 1, 0, 0, 0);
+                if (res != 0) {
+                    shortVal = *(s16 *)res;
+                }
+                D_80060900 = shortVal;
+                shortVal = NO_VALUE;
+                res = func_80031AE8(D_800608D4, 0x176, D_800608E4, 0, 0, 1, 0, 0, 0);
+                if (res != 0) {
+                    shortVal = *(s16 *)res;
+                }
+                D_80060904 = shortVal;
+            }
+            func_8001A23C(D_800608CC, -1);
+        }
+        for (i = 0; i < 9; i++) {
+            D_800607F4[i] = D_800607F4[i + 9];
+        }
+        geom = ((s32 (*)(void))func_80023D7C)();
+        if (D_80060884 != geom) {
+            D_80060884 = geom;
+            SetGeomScreen(geom);
+        }
+    }
+    D_80067FC8 = 0;
+    if (D_8005F38C == 0 && FIELD(D_8006759C, s32, OBJ_DATA) != SAVE_MAGIC) {
+        func_80019800(&D_8006CB48, 0, 0, 0, 0, 1);
+        data = (s32)D_8006759C + D_8006CD7C * 0x18;
+        FIELD(D_8005F38C, s32, 0x60) = FIELD(data, s32, 0x1E8);
+        FIELD(D_8005F38C, s32, 0x64) = FIELD(data, s32, 0x1EC);
+        FIELD(D_8005F38C, s32, 0x68) = FIELD(data, s32, 0x1F0);
+        FIELD(D_8005F38C, void *, 0x18) = D_800608CC;
+        D_8006CC84 = -1;
+        func_8002F34C((u8 *)D_8005F38C, (u8 *)&D_800608CC + 0x8C, 1, 0);
+    }
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800200A8", func_800200A8);
+#endif
 
 #ifdef NON_MATCHING
 typedef struct { char b[4]; } V4;
