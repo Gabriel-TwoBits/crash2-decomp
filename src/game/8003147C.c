@@ -33,4 +33,6 @@ void func_8003155C(void) {
     D_8005F220 = RANDOM_RESET_SEED;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/8003147C", func_8003156C);
+void func_8003156C(s32 seed) {
+    D_8005F220 = seed;
+}
