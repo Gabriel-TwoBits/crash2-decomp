@@ -20,7 +20,7 @@ typedef struct Unk8002FCF8Block {
     /* 0x0004 */ s32 unk_0004;
     /* 0x0008 */ s32 unk_0008;
     /* 0x000C */ s32 unk_000C;
-    /* 0x0010 */ char unk_0010[0x1060];
+    /* 0x0010 */ u8 unk_0010[0x1060];
     /* 0x1070 */ s32 unk_1070;
     /* 0x1074 */ s32 unk_1074[6];
     /* 0x108C */ char unk_108C[4];
@@ -32,18 +32,14 @@ typedef struct Unk8002FCF8Holder {
     /* 0x08 */ Unk8002FCF8Dst *unk_08;
 } Unk8002FCF8Holder;
 
-extern s32 func_8002F6C8(void *, s32, s32, s32);
-extern s32 func_8003156C(s32);
 extern void *D_8005F374;
 extern Unk8002FCF8Holder *D_8005F38C;
-extern s32 D_8005F3D8;
 #define BLOCK ((Unk8002FCF8Block *)D_8005F3D8)
 extern s32 D_80060944;
 extern Unk8002FCF8Cam *D_80063454;
 extern s32 D_8006CBF0;
 extern s32 D_8006CC00;
 extern s32 D_8006CC84;
-extern s32 D_8006CD14;
 
 void func_8002FCF8(void) {
     D_8006CD14 = STATE_LOADING;
@@ -58,7 +54,7 @@ void func_8002FCF8(void) {
     D_8005F38C->unk_08->unk_30[4] = BLOCK->unk_1074[4];
     D_8005F38C->unk_08->unk_30[5] = BLOCK->unk_1074[5];
     D_8006CC84 = NO_ENTRY;
-    func_8002F6C8(BLOCK->unk_0010, BLOCK->unk_1074[5], BLOCK->unk_1074[2], BLOCK->unk_1074[3]);
+    func_8002F6C8(BLOCK->unk_0010);
     D_8006CC00 = 0;
     D_8006CBF0 = 0;
 }

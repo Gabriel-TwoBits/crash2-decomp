@@ -10,10 +10,6 @@
 
 extern s32 ReadSZfifo3(s32 *, s32 *, s32 *);
 extern s32 RotTransPers(s16 *, s32 *, s32 *, s32 *);
-extern void SetRotMatrix(void *);
-extern void SetTransMatrix(void *);
-extern char D_80060130[];
-extern char D_80060774[];
 extern s32 D_800607F4;
 extern s32 D_800607F8;
 extern s32 D_800607FC;
@@ -22,7 +18,7 @@ s32 func_8001ED60(s32 *arg0, s32 *arg1) {
     /* One struct pins the stack slots the callees see. */
     struct {
         s16 vec[3];
-        s32 pos[3];
+        s32 pos[4];
         s32 sxy;
         s32 p;
         s32 flag;
@@ -33,8 +29,8 @@ s32 func_8001ED60(s32 *arg0, s32 *arg1) {
     l.pos[0] = arg0[0];
     l.pos[1] = arg0[1];
     l.pos[2] = arg0[2];
-    SetRotMatrix(D_80060774);
-    SetTransMatrix(D_80060130);
+    SetRotMatrix(&D_80060774);
+    SetTransMatrix(&D_80060130);
     l.vec[2] = (l.pos[2] - D_800607FC) >> POS_SHIFT;
     l.vec[0] = (l.pos[0] - D_800607F4) >> POS_SHIFT;
     l.vec[1] = (l.pos[1] - D_800607F8) >> POS_SHIFT;

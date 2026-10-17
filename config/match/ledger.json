@@ -3533,15 +3533,15 @@
   },
   "func_80014B90": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:15",
-    "summary": "500 of 500 trials agree, 105 compared",
-    "best": "a3.c",
+    "time": "2026-10-17 17:19",
+    "summary": "trial 7 disagrees: $a0=0x801003ac $a1=0x000000a0 $a2=0x80104290 $a3=0x00000001, stack 0x00000003 0x00000000 0xffffff24 0x80102488, memory at D_8006F1F0+0x94850 (0x80103a40) repaired to 0x80101e88\nthe retail code ended by returned, the candidate by the limit\n499 of 500 trials agree",
+    "best": "best.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "wall_minutes": 0.5,
-    "cost_usd": 0.17818930000000002,
-    "turns": 12,
-    "minutes": 0.4,
+    "wall_minutes": 1.5,
+    "cost_usd": 0.3139051,
+    "turns": 27,
+    "minutes": 1.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -3590,12 +3590,26 @@
         "cost_usd": 0.17818930000000002,
         "turns": 12,
         "minutes": 0.4
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 7 disagrees: $a0=0x801003ac $a1=0x000000a0 $a2=0x80104290 $a3=0x00000001, stack 0x00000003 0x00000000 0xffffff24 0x80102488, memory at D_8006F1F0+0x94850 (0x80103a40) repaired to 0x80101e88\nthe retail code ended by returned, the candidate by the limit\n499 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.5,
+        "cost_usd": 0.3139051,
+        "turns": 27,
+        "minutes": 1.4
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
     "mode": "equivalent",
     "scored": "in place",
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/800123F0.o \nsrc/game/800123F0.c:1720: conflicting types for `func_80014B90'"
+    "reason": "trial 400 disagrees: $a0=0x80100ca0 $a1=0x8010584c $a2=0x00000000 $a3=0x80104e3c, stack 0xffffffff 0xffffff6c 0x8010367c 0xfffffffc, memory at D_80000004+0x7c (0x80000080) repaired to 0x80107320\nthe retail code ended by returned, the candidate by the limit\n1995 of 2000 trials agree"
   },
   "func_80018DD0": {
     "outcome": "landed",
@@ -5890,16 +5904,16 @@
   },
   "func_8002FCF8": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:15",
-    "summary": "500 of 500 trials agree, 115 compared",
+    "time": "2026-10-17 17:20",
+    "summary": "500 of 500 trials agree, 499 compared",
     "best": "base.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 0.7,
-    "cost_usd": 0.23380439999999997,
-    "turns": 16,
-    "minutes": 0.6,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.2040172,
+    "turns": 10,
+    "minutes": 0.5,
     "runs": [
       {
         "outcome": "gave up",
@@ -5937,11 +5951,24 @@
         "cost_usd": 0.23380439999999997,
         "turns": 16,
         "minutes": 0.6
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 499 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.2040172,
+        "turns": 10,
+        "minutes": 0.5
       }
     ],
     "mode": "equivalent",
     "scored": "in place",
-    "reason": "declares `s32 func_8002F6C8(void *, s32, s32, s32)`, include/game.h `void func_8002F6C8(u8 *)`"
+    "reason": "trial 1925 disagrees: $a0=0x801006b8 $a1=0x00000019 $a2=0xfffffffe $a3=0xffffffff, stack 0x00000005 0x00000023 0x20788eb5 0x801006e4\nthe retail code ended by returned, the candidate by address error on store\n1999 of 2000 trials agree"
   },
   "func_80039104": {
     "outcome": "landed",
@@ -6009,15 +6036,15 @@
     "mode": "equivalent"
   },
   "func_80019D30": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-16 21:51",
-    "summary": "build/match/func_80019D30/placed/80019098.c: build/match/func_80019D30/placed/80019098.c:108: `func_80019D30' redeclared as different kind of symbol",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:20",
+    "summary": "build/match/func_80019D30/placed/80019098.c: build/match/func_80019D30/placed/80019098.c:288: `func_80019D30' redeclared as different kind of symbol",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
     "wall_minutes": 0.4,
-    "cost_usd": 0.18778229999999999,
+    "cost_usd": 0.1726449,
     "turns": 9,
     "minutes": 0.4,
     "runs": [
@@ -6058,10 +6085,25 @@
         "cost_usd": 0.18778229999999999,
         "turns": 9,
         "minutes": 0.4
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "build/match/func_80019D30/placed/80019098.c: build/match/func_80019D30/placed/80019098.c:288: `func_80019D30' redeclared as different kind of symbol",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.1726449,
+        "turns": 9,
+        "minutes": 0.4
       }
     ],
     "mode": "equivalent",
-    "scored": "in place"
+    "scored": "in place",
+    "reason": "FAILED: [code=1] build/src/game/80019098.o \nsrc/game/80019098.c:288: `func_80019D30' redeclared as different kind of symbol"
   },
   "func_800270C4": {
     "outcome": "landed",
@@ -7091,17 +7133,17 @@
     "scored": "in place"
   },
   "func_8001ED60": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-16 21:26",
-    "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0x80101068 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000002f 0xfffffff3 0x801035e8\ncall 3 to ReadSZfifo3 (0x8004efa8): $a2 is a frame address holding 0x00000000 0x00000000 0x00000000 0x00000003 in the retail code, a frame address holding 0x00000000 0x00000000 0x00000000 0x00000000 in the candidate\n127 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 17:22",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 3.4,
-    "cost_usd": 0.5392768000000001,
-    "turns": 32,
-    "minutes": 3.3,
+    "wall_minutes": 1.1,
+    "cost_usd": 0.3139401,
+    "turns": 28,
+    "minutes": 1.1,
     "runs": [
       {
         "outcome": "gave up",
@@ -7127,9 +7169,23 @@
         "cost_usd": 0.5392768000000001,
         "turns": 32,
         "minutes": 3.3
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.1,
+        "cost_usd": 0.3139401,
+        "turns": 28,
+        "minutes": 1.1
       }
     ],
-    "mode": "equivalent"
+    "mode": "equivalent",
+    "scored": "in place"
   },
   "func_8001E8E4": {
     "outcome": "equivalent",
