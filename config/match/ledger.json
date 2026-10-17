@@ -13543,18 +13543,18 @@
   },
   "func_8002CC50": {
     "outcome": "equivalent, gave up",
-    "time": "2026-10-17 19:09",
-    "summary": "trial 179 disagrees: $a0=0x80100ff0 $a1=0x80102dd4 $a2=0x801036dc $a3=0x00000000, stack 0x00000001 0x0000006a 0x00000000 0x00000000\n$v0 is 0x03ff4004 after the retail code, 0xffffa003 after the candidate\n499 of 500 trials agree",
+    "time": "2026-10-17 19:39",
+    "summary": "500 of 500 trials agree, 402 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
-    "model": "claude-sonnet-5-5",
+    "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 0.5,
-    "cost_usd": 0.23015020000000003,
-    "turns": 8,
-    "minutes": 0.5,
+    "wall_minutes": 6.5,
+    "cost_usd": 2.0105118,
+    "turns": 59,
+    "minutes": 6.4,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -13611,6 +13611,20 @@
         "cost_usd": 0.23015020000000003,
         "turns": 8,
         "minutes": 0.5
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "500 of 500 trials agree, 402 compared",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 6.5,
+        "cost_usd": 2.0105118,
+        "turns": 59,
+        "minutes": 6.4
       }
     ]
   },
@@ -13688,19 +13702,19 @@
     ]
   },
   "func_8001D63C": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 19:10",
-    "summary": "trial 7 disagrees: $a0=0x80107de0 $a1=0x80107df8 $a2=0x80104cb0 $a3=0x00000001, stack 0x00000003 0x00000000 0xffffff24 0x80102488, memory at D_8006F1F0+0x98bfc (0x80107dec) repaired to 0x80101e88, memory at D_8006F1F0+0x92ca8 (0x80101e98) repaired to 0x80106af8, memory at D_80063450 (0x80063450) repaired to 0x80104208\ncall 5 to func_8002CAB8 (0x8002cab8): $a0 is 0x000199ab in the retail code, 0x80104208 in the candidate\n420 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 19:41",
+    "summary": "2000 of 2000 trials agree, 1998 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
-    "model": "claude-sonnet-5-5",
+    "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.0,
-    "cost_usd": 0.32647709999999996,
-    "turns": 19,
-    "minutes": 0.9,
+    "wall_minutes": 1.6,
+    "cost_usd": 0.85746,
+    "turns": 28,
+    "minutes": 1.6,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -13757,6 +13771,19 @@
         "cost_usd": 0.32647709999999996,
         "turns": 19,
         "minutes": 0.9
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 499 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.6,
+        "cost_usd": 0.85746,
+        "turns": 28,
+        "minutes": 1.6
       }
     ]
   },

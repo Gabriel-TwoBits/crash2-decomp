@@ -140,8 +140,8 @@ extern s32 D_8006CD54;
 extern s32 D_8006CD58;
 extern s32 D_8006CD5C;
 
-struct Obj;
 s32 func_8001F054(struct Obj *, u32, s32 *);
+s32 func_8002CAB8(void);
 
 static inline u32 tick_step(void) {
     u32 n;
@@ -173,7 +173,8 @@ static inline s32 clamp_sym(s32 v, s32 lim) {
     }
 }
 
-void func_8001D63C(s32 *arg0, void *arg1, s32 *arg2) {
+void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
+    s32 *arg0 = obj;
     s32 sp18[3];
     s32 sp28[3];
     s32 sp38[4];

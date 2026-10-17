@@ -75,33 +75,19 @@ typedef struct {
     s32 corners[NUM_BOX_CORNERS * POINT_WORDS];
     s32 pts[POINT_WORDS * 12];
     s8 tbl[GRID_ROWS * 2];
-    s32 *arg2;
-    s32 pad_14C;
-    s32 arg3;
-    s32 pad_154;
-    s32 lvlEnd;
-    s32 pad_15C;
-    s32 lvlMid;
-    s32 pad_164;
-    s32 lvl;
-    s32 pad_16C;
-    s32 pendZ;
-    s32 pad_174;
-    s32 pad_178;
-    s32 pad_17C[10];
 } Frame8002CC50;
 #define corners f.corners
 #define pts f.pts
 #define tbl f.tbl
-#define arg2 f.arg2
-#define arg3 f.arg3
-#define lvlEnd f.lvlEnd
-#define lvlMid f.lvlMid
-#define lvl f.lvl
-#define pendZ f.pendZ
 
 s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
     Frame8002CC50 f;
+    s32 *arg2;
+    s32 arg3;
+    s32 lvlEnd;
+    s32 lvlMid;
+    s32 lvl;
+    s32 pendZ;
     Unk8002CC50 *obj;
     s32 *words;
     s32 *p;
@@ -122,7 +108,6 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
 
     arg2 = p2;
     arg3 = p3;
-    f.pad_178 = (s32)tbl;
     obj = arg0;
     ret = func_80030EC0(arg1, &obj->unk_2C);
     if (ret == 0) {
@@ -445,8 +430,11 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
                     if (hi >= GRID_ROWS && lo < GRID_ROWS) {
                         hi = GRID_LAST;
                     }
-                    if ((u32)lo >= GRID_ROWS || (u32)hi >= GRID_ROWS) {
-                        ret = 0;
+                    /* An off-grid span leaves the delay slot's value in $v0. */
+                    if ((u32)lo >= GRID_ROWS) {
+                        ret = (u32)hi < GRID_ROWS;
+                    } else if ((u32)hi >= GRID_ROWS) {
+                        ret = -1U >> lo;
                     } else {
                         mask = (-1U >> lo) & (-1 << (GRID_LAST - hi));
                         *bits |= mask;
