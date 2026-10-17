@@ -11695,19 +11695,19 @@
     ]
   },
   "func_80024658": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 19:04",
-    "summary": "trial 45 disagrees: $a0=0x80100b10 $a1=0x80107318 $a2=0x44d5eb26 $a3=0xb210d7da, stack 0x80107b4c 0x00000001 0x80107998 0x00000000\nthe retail code makes 9 calls, the candidate 6\n484 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 19:53",
+    "summary": "2000 of 2000 trials agree, 1950 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
-    "model": "claude-sonnet-5-5",
+    "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 0.4,
-    "cost_usd": 0.2141708,
-    "turns": 5,
-    "minutes": 0.4,
+    "wall_minutes": 3.3,
+    "cost_usd": 1.1407664,
+    "turns": 33,
+    "minutes": 3.2,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -11764,6 +11764,19 @@
         "cost_usd": 0.2141708,
         "turns": 5,
         "minutes": 0.4
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 489 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.3,
+        "cost_usd": 1.1407664,
+        "turns": 33,
+        "minutes": 3.2
       }
     ]
   },

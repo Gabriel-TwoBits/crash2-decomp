@@ -9,16 +9,17 @@
 #define LIST_WORDS 28
 #define SKIP_TYPE 2
 
-s32 func_8002433C(s32 *, s32 *, s32 *, s32 *, s32 *);
-s32 func_80024A48(void *, s32, s32 *, s32, void *, s32, s32 *);
-s32 func_80024B6C(void *, s32, s32 *, s32, void *, s32, s32 *);
-s32 func_800253B0(void *, s32, s32 *, s32, s32, s32, s32 *);
-s32 func_800254D4(void *, s32, s32 *, s32, s32, s32, s32 *);
+/* The candidate list func_800267C4 fills */
+typedef struct {
+    s32 list[LIST_WORDS];
+} Unk80024658;
+
+s32 func_800267C4(Unk80024658 *, s32);
 
 s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     /* The candidate list, the result words and the saved arguments share one stack area; a long list runs into them. */
     struct {
-        s32 list[LIST_WORDS];
+        Unk80024658 list;
         s32 out;
         s32 altA;
         s32 altB;
@@ -39,7 +40,6 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     s32 score;
     s32 other;
     s32 count;
-    s32 i;
     s32 hi;
     s32 lo;
 
@@ -50,6 +50,7 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     entry = arg0 + (f.slot - FIRST_SLOT) * ENTRY_WORDS;
     kind = func_800242F8(func_800321D4(entry[1], QUERY_KIND, 0, 0, 0, SKIP_TYPE, 0));
     f.type = kind;
+    /* For SKIP_TYPE, hi and lo stay what the caller left in the registers */
     if (f.type != SKIP_TYPE) {
         hi = func_8003D360(arg4);
         lo = func_8003D2EC(arg4);
@@ -78,12 +79,10 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     } else if (arg5 != FIRST_SLOT) {
         return f.slot;
     } else {
-        count = func_800267C4(f.list, arg0);
-        cand = f.list;
-        if (count == 0) {
-            return f.slot;
-        }
-        for (i = 0; i < count; i++, cand += ENTRY_WORDS) {
+        count = func_800267C4(&f.list, (s32)arg0);
+        cand = f.list.list;
+        /* The count is unsigned: any non-zero value runs that many entries */
+        for (; count-- != 0; cand += ENTRY_WORDS) {
             kind = func_800242F8(func_800321D4(cand[1], QUERY_KIND, 0, 0, 0, SKIP_TYPE, 0));
             if (f.type == kind) {
                 if (f.a3 != 0) {
