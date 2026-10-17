@@ -6,7 +6,7 @@
 #define STRING_INDEX_SHIFT 8
 #define ASCII_SPACE 0x20
 
-void func_800175D8(u8 *arg0, s32 arg1, u8 *arg2, s32 arg3) {
+void func_800175D8(u8 *arg0, s32 arg1, u8 *arg2, s32 arg3, s32 arg4) {
     s32 skip;
     s32 i;
     s32 pos;
