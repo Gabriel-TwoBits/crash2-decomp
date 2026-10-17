@@ -12061,9 +12061,9 @@
     ]
   },
   "func_80029D0C": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 18:21",
-    "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0x80103d70 $a2=0x80101068 $a3=0x80101d4c, stack 0x00000001 0x00000047 0xfffffff3 0x801035e8, $a1 repaired to 0x80103d70\ncall 0: the retail code calls func_8002C0F0 (0x8002c0f0), the candidate D_8006F1F0+0x391278 (0x80400468)\n343 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:55",
+    "summary": "2000 of 2000 trials agree, 641 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
