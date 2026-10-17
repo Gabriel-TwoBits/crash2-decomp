@@ -12887,5 +12887,96 @@
         "minutes": 13.1
       }
     ]
+  },
+  "func_8001ABF8": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 14:54",
+    "summary": "500 of 500 trials agree, 259 compared",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 6.5,
+    "cost_usd": 0.6534729,
+    "turns": 27,
+    "minutes": 6.3,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "500 of 500 trials agree, 259 compared",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 6.5,
+        "cost_usd": 0.6534729,
+        "turns": 27,
+        "minutes": 6.3
+      }
+    ]
+  },
+  "func_8001D63C": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 15:05",
+    "summary": "trial 36 disagrees: $a0=0x80104d38 $a1=0x80102d54 $a2=0x80103100 $a3=0x80104d74, stack 0x00000000 0x0000000b 0x53595c1a 0x00002001\ncall 5 to func_8002CAB8 (0x8002cab8): $a0 is 0x00000002 in the retail code, 0x801013b8 in the candidate\n482 of 500 trials agree",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 10.3,
+    "cost_usd": 1.4206912999999999,
+    "turns": 71,
+    "minutes": 10.2,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 36 disagrees: $a0=0x80104d38 $a1=0x80102d54 $a2=0x80103100 $a3=0x80104d74, stack 0x00000000 0x0000000b 0x53595c1a 0x00002001\ncall 5 to func_8002CAB8 (0x8002cab8): $a0 is 0x00000002 in the retail code, 0x801013b8 in the candidate\n482 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 10.3,
+        "cost_usd": 1.4206912999999999,
+        "turns": 71,
+        "minutes": 10.2
+      }
+    ]
+  },
+  "func_80020A24": {
+    "outcome": "equivalent",
+    "time": "2026-10-17 15:11",
+    "summary": "2000 of 2000 trials agree, 599 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 4.9,
+    "cost_usd": 0.8301046999999998,
+    "turns": 52,
+    "minutes": 4.8,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 157 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 4.9,
+        "cost_usd": 0.8301046999999998,
+        "turns": 52,
+        "minutes": 4.8
+      }
+    ]
   }
 }
