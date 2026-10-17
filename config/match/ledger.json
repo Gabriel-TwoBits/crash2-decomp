@@ -5387,17 +5387,17 @@
     "mode": "equivalent"
   },
   "func_80027980": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:51",
-    "summary": "7 of 46 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:14",
+    "summary": "2000 of 2000 trials agree, 1066 compared",
     "best": "attempt2.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 5.0,
-    "cost_usd": 0.2795526,
-    "turns": 20,
-    "minutes": 4.9,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.14796520000000002,
+    "turns": 4,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -5410,9 +5410,21 @@
         "cost_usd": 0.2795526,
         "turns": 20,
         "minutes": 4.9
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 268 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.14796520000000002,
+        "turns": 4,
+        "minutes": 0.4
       }
     ],
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/80026CA0.o \nsrc/game/80026CA0.c:476: conflicting types for `D_80069338'"
+    "mode": "equivalent"
   },
   "func_8002E628": {
     "outcome": "equivalent",
