@@ -209,6 +209,7 @@ s32 func_800322C0(s32, s32, s32, s32);
 void func_8003230C(s32, s32, s32, s32);
 void func_80032314(s32, s32, s32, s32);
 void func_8003231C(s32, s32, s32, s32);
+void func_80032324(s32, s32, s32, s32);
 void func_800323AC(void);
 void func_80032588(void);
 s16 *func_8003264C(s32 *, s32);
