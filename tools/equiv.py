@@ -8,14 +8,17 @@ called equivalent only when every trial agrees; random trials are evidence, not 
 FILE.c is compiled as the build compiles it, with NON_MATCHING defined, and FUNCTION's code relocated into a scratch area:
 every name the retail executable knows resolves to its retail address (the file's own .sdata and .sbss variables
 included), what has no retail name (jump tables, labels, literals) to the scratch copies. Calls out of the function are
-recorded and answered, not run. Compared after each trial: how it ended, the return value, the callee-saved registers,
-each call's target and arguments, and every byte either side changed outside its own stack frame.
+recorded and answered, not run. A trial whose retail run faults on a memory access through a word of its inputs gets
+that word replaced and starts over (MAX_REPAIRS), before the candidate runs from the same repaired state. Compared
+after each trial: how it ended, the return value, the callee-saved registers, each call's target and arguments, and
+every byte either side changed outside its own stack frame.
 
 Exit status: 0 when every trial agrees, 1 on a disagreement or an error, 2 when the code needs what the emulator lacks
 (the GTE). Needs the build (build/SCUS_941.54.elf) and orig/USA/SCUS_941.54.
 """
 import argparse
 import bisect
+import ctypes
 import random
 import re
 import struct
@@ -25,8 +28,8 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from unicorn import UC_ARCH_MIPS, UC_HOOK_CODE, UC_HOOK_INTR, UC_HOOK_MEM_UNMAPPED, UC_MODE_LITTLE_ENDIAN, UC_MODE_MIPS32
-from unicorn import Uc, UcError
+from unicorn import UC_ARCH_MIPS, UC_HOOK_CODE, UC_HOOK_INTR, UC_HOOK_MEM_UNMAPPED, UC_HOOK_MEM_WRITE_PROT
+from unicorn import UC_MODE_LITTLE_ENDIAN, UC_MODE_MIPS32, UC_PROT_ALL, UC_PROT_EXEC, UC_PROT_READ, Uc, UcError
 from unicorn import mips_const as mips
 
 from psx_cc import DEFAULT_ASPSX, DEFAULT_CFLAGS, DEFAULT_GCC, HERE, compile_c, compiler, cpp_command
@@ -53,6 +56,9 @@ GP_SYMBOL = "_gp"
 LINKER_MARKER = re.compile(r"^(?:main|header)_|^_gp$")
 KEPT_START_SYMBOL = "main_VRAM"
 KEPT_END_SYMBOL = "main_DATA_START"
+KEPT_BIT = "1"
+# memoryview's format for a word, copied as it is (no byte order involved)
+WORD_FORMAT = "I"
 
 # ELF32, little-endian
 ELF_MAGIC = b"\x7fELF"
@@ -110,8 +116,11 @@ GTE_SHOWN = 3
 # Address space. Unicorn maps kseg0 and kseg1 to physical memory as the PS1 does (address & 0x1FFFFFFF) and kuseg to
 # itself; its memory calls and hooks take physical addresses, its code hooks virtual ones. kseg2 needs a TLB and faults.
 # Every region is mapped and filled before a run, none on demand: Unicorn 2.1.4 resumes a store in a taken branch's delay
-# slot without the branch once a memory hook has run on it (a reserved-instruction exception follows)
+# slot without the branch once a memory hook has run on it (a reserved-instruction exception follows). The retail
+# code and read-only data are read-only: a store through a wild pointer would otherwise rewrite the retail function as
+# it runs (func_80015344's table index went negative into its own code) and not the candidate's copy
 PAGE_SIZE = 0x1000
+CHUNK_SIZE = 0x10000
 KSEG0 = 0x80000000
 KSEG2 = 0xC0000000
 PHYSICAL_MASK = 0x1FFFFFFF
@@ -119,6 +128,8 @@ PHYSICAL_MASK = 0x1FFFFFFF
 RAM_BASE = 0x80000000
 RAM_SIZE = 0x200000
 SCRATCHPAD_BASE = 0x1F800000
+# The regions whose words a repair may replace (Memory.repairable)
+REPAIRABLE_REGIONS = (RAM_BASE & PHYSICAL_MASK, SCRATCHPAD_BASE)
 # The candidate's sections, past RAM; mapped in both runs alike
 SCRATCH_BASE = 0x80400000
 SECTION_ALIGNMENT = 16
@@ -139,6 +150,60 @@ NULL_POINTER_ODDS = 10
 # A run stops at either: a loop waiting on what a callee would change spins until then
 MAX_INSTRUCTIONS = 500_000
 MAX_CALLS = 1_000
+
+# Repairs. A retail run ending on a memory access fault whose address comes from a word of the trial's inputs (a word
+# of memory read as it was on entry, $a0-$a3, a register a callee returned) is run again with that word replaced: a
+# pointer into the arena where the word is the address's base, a small aligned offset where it is added to an address
+# already in memory, a small count where it is shifted or multiplied first; a count or an offset still faulting is set
+# to zero once. Both sides then run from the repaired state. Random words make most dereferenced words bad pointers:
+# two global pointers read in a row are both arena pointers in one trial in sixteen
+MAX_REPAIRS = 16
+# Instructions a traced run follows to find the faulting access's word: a fault later than this isn't repaired
+TRACE_LIMIT = 20_000
+REPAIR_OFFSET_LIMIT = 0x100
+REPAIR_COUNT_LIMIT = 8
+# What a word is to the faulting address
+ROLE_BASE, ROLE_OFFSET, ROLE_COUNT = "base", "offset", "count"
+# Instruction fields
+RS_SHIFT = 21
+RT_SHIFT = 16
+RD_SHIFT = 11
+REGISTER_FIELD = 0x1F
+FUNCT_MASK = 0x3F
+OP_SPECIAL = 0x00
+OP_REGIMM = 0x01
+OP_JAL = 0x03
+OP_ADDI = 0x08
+OP_ADDIU = 0x09
+OP_COP0 = 0x10
+OP_COP2 = 0x12
+OP_LW = 0x23
+LOAD_OPCODES = range(0x20, 0x27)
+STORE_OPCODES = range(0x28, 0x2F)
+# Immediate arithmetic and logic but addi/addiu, and lui: the result isn't the input word any more
+IMMEDIATE_ALU_OPCODES = range(0x0A, 0x10)
+# REGIMM's bltzal and bgezal write $ra
+REGIMM_LINKS = {0x10, 0x11}
+# mfc and cfc write rt
+COPROCESSOR_MOVES_TO_GPR = {0x00, 0x02}
+FUNCT_ADD = 0x20
+FUNCT_ADDU = 0x21
+FUNCT_OR = 0x25
+# sub and subu, followed as additions
+FUNCT_SUBTRACTS = {0x22, 0x23}
+# SPECIAL: shifts by an immediate or a register (of rt); mult, multu, div and divu; mfhi and mflo; mthi and mtlo
+FUNCT_SHIFTS = {0x00, 0x02, 0x03, 0x04, 0x06, 0x07}
+FUNCT_MULTIPLIES = {0x18, 0x19, 0x1A, 0x1B}
+FUNCT_FROM_MULTIPLY = {0x10, 0x12}
+FUNCT_TO_MULTIPLY = {0x11, 0x13}
+# SPECIAL instructions writing no general register, $hi or $lo: jr, syscall, break
+FUNCT_NO_DESTINATION = {0x08, 0x0C, 0x0D}
+RA_NUMBER = 31
+# What an instruction does to the registers' origins (Tracer): nothing, drop its destination's, copy its source's, load
+# a word (the word's own if as it was on entry), add, shift, multiply, move from or to $hi/$lo
+(EFFECT_NONE, EFFECT_DROP, EFFECT_MOVE, EFFECT_LW, EFFECT_SUM, EFFECT_SCALE, EFFECT_MULTIPLY, EFFECT_FROM_MULTIPLY,
+ EFFECT_TO_MULTIPLY) = range(9)
+WRITING_EFFECTS = {EFFECT_DROP, EFFECT_MOVE, EFFECT_LW, EFFECT_SUM, EFFECT_SCALE, EFFECT_FROM_MULTIPLY}
 
 # Random words: zeros, small numbers either side of zero, pointers into an arena whose own words are drawn the same way
 # (so that pointer chasing goes several levels deep), and any 32 bits. RAM outside the retail code and read-only data,
@@ -162,6 +227,8 @@ POOL_WORDS = 0x40000
 REGISTER_NAMES = ("at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2",
                   "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra")
 REGISTERS = {name: getattr(mips, f"UC_MIPS_REG_{name.upper()}") for name in REGISTER_NAMES}
+# Unicorn's registers by number, $zero first
+REGISTER_NUMBERS = [mips.UC_MIPS_REG_ZERO] + [REGISTERS[name] for name in REGISTER_NAMES]
 # Set at random on entry: all but $zero, $gp, $sp, $ra
 RANDOM_ON_ENTRY = [name for name in REGISTER_NAMES if name not in ("gp", "sp", "ra")]
 # What a call may change: set at random after each call out
@@ -176,6 +243,12 @@ LIMIT = "the limit"
 EXCEPTIONS = {12: "address error on load", 13: "address error on store", 17: "syscall", 18: "break", 21: "overflow",
               22: "trap", 26: "TLB miss on load", 27: "TLB miss on store"}
 UNSUPPORTED_EXCEPTIONS = {19: "coprocessor unusable", 20: "reserved instruction"}
+# Followed by the address, in a run's ending
+UNMAPPED = "access to unmapped"
+STORE_TO_CODE = "store to the retail code or read-only data at"
+# The endings a repair may lift: address errors and TLB misses, then the two above
+ACCESS_EXCEPTIONS = {EXCEPTIONS[12], EXCEPTIONS[13], EXCEPTIONS[26], EXCEPTIONS[27]}
+ACCESS_PREFIXES = (UNMAPPED, STORE_TO_CODE)
 
 # A name followed by an argument list, in the preprocessed C: a prototype, a definition or a call
 NAME_BEFORE_PARENTHESIS = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
@@ -321,6 +394,8 @@ class Retail:
         image = exe[EXE_HEADER_SIZE:EXE_HEADER_SIZE + load_size]
         self.kept = image[self.kept_start - load_address:self.kept_end - load_address]
         self.data = image[self.kept_end - load_address:]
+        if len(self.data) % WORD or self.kept_end % WORD:
+            sys.exit(f"{RETAIL_EXE}'s data from {KEPT_END_SYMBOL} isn't whole words")
 
     def function(self, name):
         """(address, size) of a retail function"""
@@ -559,6 +634,28 @@ def declarations(source, function, retail):
                         pointer_parameters or ())
 
 
+ROOT_MEMORY, ROOT_ARGUMENT, ROOT_CALL = "memory", "argument", "call"
+
+
+@dataclass(frozen=True)
+class Root:
+    """A word of a trial's inputs: of memory (key: its physical address), an argument register (its index), or a
+    register a call out returned (the call's index and the register's name)"""
+    kind: str
+    key: object
+
+    def describe(self, retail):
+        if self.kind == ROOT_MEMORY:
+            return f"memory at {retail.describe(virtual(self.key))}"
+        elif self.kind == ROOT_ARGUMENT:
+            return f"$a{self.key}"
+        elif self.kind == ROOT_CALL:
+            call, register = self.key
+            return f"${register} returned by call {call}"
+        else:
+            raise ValueError(f"root kind {self.kind}")
+
+
 class Fuzz:
     """A trial's random values, each drawn from a generator seeded by the trial and what it is for"""
 
@@ -566,6 +663,8 @@ class Fuzz:
         self.key = f"{seed}:{trial}"
         self.constants = constants
         self.pointer_parameters = pointer_parameters
+        # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
+        self.repairs = {}
 
     def generator(self, *purpose):
         return random.Random(":".join([self.key, *(str(part) for part in purpose)]))
@@ -575,7 +674,7 @@ class Fuzz:
 
     def arguments(self):
         """The function's arguments, in parameter order: a pointer parameter gets a pointer into the arena, or now and
-        then NULL; the others any random word"""
+        then NULL; the others any random word. Repaired registers take their replacement"""
         generator = self.generator("arguments")
         values = []
         for index, word in enumerate(self.words(generator, ARGUMENT_WORDS)):
@@ -584,7 +683,25 @@ class Fuzz:
                 values.append(0 if null else ARENA_BASE + generator.randrange(ARENA_SIZE // WORD) * WORD)
             else:
                 values.append(word)
+        for index in range(len(ARGUMENT_REGISTERS)):
+            values[index] = self.repairs.get(Root(ROOT_ARGUMENT, index), values[index])
         return values
+
+    def repair(self, root, role):
+        """Replaces an input word by what its role takes (MAX_REPAIRS)"""
+        generator = self.generator("repair", len(self.repairs))
+        if role == ROLE_BASE:
+            self.repairs[root] = ARENA_BASE + generator.randrange(ARENA_SIZE // WORD) * WORD
+        elif role == ROLE_OFFSET:
+            self.repairs[root] = generator.randrange(REPAIR_OFFSET_LIMIT // WORD) * WORD
+        elif role == ROLE_COUNT:
+            self.repairs[root] = generator.randrange(REPAIR_COUNT_LIMIT)
+        else:
+            raise ValueError(f"role {role}")
+
+    def memory_repairs(self):
+        """{physical address: word} of the repaired words of memory"""
+        return {root.key: value for root, value in self.repairs.items() if root.kind == ROOT_MEMORY}
 
 
 def draw(generator, count, constants):
@@ -641,7 +758,8 @@ class Memory:
         # RAM's pages, then the scratchpad's
         pages = RAM_SIZE // PAGE_SIZE + 1
         offsets = [generator.randrange(POOL_WORDS - PAGE_SIZE // WORD) * WORD for _ in range(pages)]
-        ram = bytearray(b"".join(pool[offset:offset + PAGE_SIZE] for offset in offsets[:-1]))
+        pool_view = memoryview(pool)
+        ram = bytearray().join(pool_view[offset:offset + PAGE_SIZE] for offset in offsets[:-1])
         kept = physical(retail.kept_start) - physical(RAM_BASE)
         ram[kept:kept + len(retail.kept)] = retail.kept
         # Zeros below the entry $sp: whatever a frame leaves uninitialised reads alike however it is laid out
@@ -650,28 +768,58 @@ class Memory:
         stack_arguments = fuzz.arguments()[len(ARGUMENT_REGISTERS):]
         ram[stack + ARGUMENT_HOME_SIZE:stack + ARGUMENT_HOME_SIZE + len(stack_arguments) * WORD] = struct.pack(
             f"<{len(stack_arguments)}I", *stack_arguments)
-        data = kept + len(retail.kept)
-        retail_words = generator.getrandbits(len(retail.data) // WORD)
-        for index in range(0, len(retail.data), WORD):
-            if retail_words >> (index // WORD) & 1:
-                ram[data + index:data + index + WORD] = retail.data[index:index + WORD]
-            else:
-                continue
+        # Bit n of the draw keeps word n's retail value
+        words = len(retail.data) // WORD
+        kept_words = format(generator.getrandbits(words), f"0{words}b")[::-1]
+        first = (kept + len(retail.kept)) // WORD
+        with memoryview(ram) as ram_view, memoryview(retail.data) as data_view:
+            ram_words, data_words = ram_view.cast(WORD_FORMAT), data_view.cast(WORD_FORMAT)
+            for index, bit in enumerate(kept_words):
+                if bit == KEPT_BIT:
+                    ram_words[first + index] = data_words[index]
+                else:
+                    continue
+            ram_words.release()
+            data_words.release()
         self.regions = {
-            physical(RAM_BASE): bytes(ram),
+            physical(RAM_BASE): ram,
             SCRATCHPAD_BASE: pool[offsets[-1]:offsets[-1] + PAGE_SIZE],
             physical(SCRATCH_BASE): candidate.image + bytes(align(len(candidate.image), PAGE_SIZE) - len(candidate.image)),
             physical(SENTINEL_RETURN): bytes(PAGE_SIZE),
         }
+        self.code = (physical(retail.kept_start), physical(retail.kept_end))
 
-    def word(self, address):
-        """The initial word at a physical address"""
+    def patched(self, words):
+        """A copy with {physical address: word} written over"""
+        copy = object.__new__(Memory)
+        copy.code = self.code
+        copy.regions = dict(self.regions)
         for start, content in self.regions.items():
-            if start <= address < start + len(content):
-                return read_word(content, address - start)
+            inside = {address: word for address, word in words.items() if start <= address < start + len(content)}
+            if inside:
+                patched = bytearray(content)
+                for address, word in inside.items():
+                    write_word(patched, address - start, word)
+                copy.regions[start] = patched
             else:
                 continue
-        raise ValueError(f"{address:#x} isn't in a mapped region")
+        return copy
+
+    def repairable(self, address):
+        """Whether a word of memory may be repaired: random on entry, in RAM or the scratchpad, outside the retail code
+        and read-only data and below-$sp frame (whose zeros either side reads alike however it lays its frame out)"""
+        if address % WORD:
+            return False
+        elif self.code[0] <= address < self.code[1]:
+            return False
+        elif physical(ENTRY_SP - STACK_RESERVE) <= address < physical(ENTRY_SP):
+            return False
+        elif physical(RAM_BASE) <= address < physical(RAM_BASE) + RAM_SIZE:
+            return True
+        elif SCRATCHPAD_BASE <= address < SCRATCHPAD_BASE + PAGE_SIZE:
+            return True
+        else:
+            return False
 
 
 @dataclass(frozen=True)
@@ -707,24 +855,302 @@ def entry_registers(fuzz):
     return values
 
 
-def run(memory, fuzz, retail, entry, size, arguments):
-    """Runs the code at entry (size bytes) on the trial's memory and registers: how it ended, its registers, its calls out
-    and its final memory"""
-    outcome = Run()
-    emulator = Uc(UC_ARCH_MIPS, UC_MODE_MIPS32 | UC_MODE_LITTLE_ENDIAN)
-    for start, content in memory.regions.items():
-        emulator.mem_map(start, len(content))
-        emulator.mem_write(start, content)
+def register_value(uc, number):
+    """A general register's value, by its number"""
+    return uc.reg_read(REGISTER_NUMBERS[number]) if number else 0
 
-    def unmapped(uc, access, address, size, value, data):
-        # Ends the run: mapping on demand isn't safe (PAGE_SIZE's comment)
-        outcome.status = f"access to unmapped {virtual(address):#010x}"
+
+def points_to_memory(value):
+    """Whether a word is an address in RAM through kseg0 or kseg1, or in the scratchpad"""
+    address = physical(value)
+    if SCRATCHPAD_BASE <= address < SCRATCHPAD_BASE + PAGE_SIZE:
+        return True
+    elif KSEG0 <= value < KSEG2:
+        return physical(RAM_BASE) <= address < physical(RAM_BASE) + RAM_SIZE
+    else:
         return False
 
-    # The values calls return, drawn in call order: the same for the same calls on both sides
-    returned = fuzz.generator("calls")
 
-    def call_out(uc, address, size, data):
+def as_offset(origin):
+    """An origin added to an address in memory: an offset, unless a count already"""
+    if origin is None:
+        return None
+    elif origin[1] == ROLE_COUNT:
+        return origin
+    else:
+        return origin[0], ROLE_OFFSET
+
+
+def access_fault(status):
+    """Whether a run ended on a memory access fault, which a repair may lift"""
+    return status in ACCESS_EXCEPTIONS or status.startswith(ACCESS_PREFIXES)
+
+
+def decode(code):
+    """What each instruction of a function's code does to the registers' origins (Tracer): (effect, the base register
+    if it accesses memory else $zero, source register, other source, destination register, immediate)"""
+    decoded = []
+    for position in range(0, len(code), WORD):
+        word = read_word(code, position)
+        opcode = word >> OPCODE_SHIFT
+        rs = (word >> RS_SHIFT) & REGISTER_FIELD
+        rt = (word >> RT_SHIFT) & REGISTER_FIELD
+        rd = (word >> RD_SHIFT) & REGISTER_FIELD
+        funct = word & FUNCT_MASK
+        access = rs if opcode in LOAD_OPCODES or opcode in STORE_OPCODES else 0
+        source, other, destination = 0, 0, 0
+        if opcode == OP_LW:
+            effect, source, destination = EFFECT_LW, rs, rt
+        elif opcode in LOAD_OPCODES:
+            effect, destination = EFFECT_DROP, rt
+        elif opcode in (OP_ADDI, OP_ADDIU):
+            effect, source, destination = EFFECT_MOVE, rs, rt
+        elif opcode in IMMEDIATE_ALU_OPCODES:
+            effect, destination = EFFECT_DROP, rt
+        elif opcode == OP_JAL or (opcode == OP_REGIMM and rt in REGIMM_LINKS):
+            effect, destination = EFFECT_DROP, RA_NUMBER
+        elif opcode in (OP_COP0, OP_COP2) and rs in COPROCESSOR_MOVES_TO_GPR:
+            effect, destination = EFFECT_DROP, rt
+        elif opcode != OP_SPECIAL:
+            # Stores, branches, jumps, the coprocessors' operations and transfers to memory: no general register written
+            effect = EFFECT_NONE
+        elif funct in FUNCT_SHIFTS:
+            effect, source, destination = EFFECT_SCALE, rt, rd
+        elif funct in FUNCT_MULTIPLIES:
+            effect, source, other = EFFECT_MULTIPLY, rs, rt
+        elif funct in FUNCT_FROM_MULTIPLY:
+            effect, destination = EFFECT_FROM_MULTIPLY, rd
+        elif funct in FUNCT_TO_MULTIPLY:
+            effect = EFFECT_TO_MULTIPLY
+        elif funct in FUNCT_NO_DESTINATION:
+            effect = EFFECT_NONE
+        elif funct in (FUNCT_ADD, FUNCT_ADDU, FUNCT_OR) and (not rs or not rt):
+            # A move: the origin of the source, none of $zero
+            effect, source, destination = EFFECT_MOVE, rs or rt, rd
+        elif funct in (FUNCT_ADD, FUNCT_ADDU) or funct in FUNCT_SUBTRACTS:
+            effect, source, other, destination = EFFECT_SUM, rs, rt, rd
+        else:
+            effect, destination = EFFECT_DROP, rd
+        if destination == 0 and effect in WRITING_EFFECTS:
+            # A write to $zero
+            effect = EFFECT_NONE
+        decoded.append((effect, access, source, other, destination, signed16(word & HALF_MASK)))
+    return decoded
+
+
+def as_count(origin):
+    """An origin shifted or multiplied"""
+    return None if origin is None else (origin[0], ROLE_COUNT)
+
+
+class Tracer:
+    """Follows a retail run instruction by instruction, keeping for each register the input word it holds, if any: an
+    origin, (Root, its role). Moves and immediate additions keep a register's origin, shifts and multiplications make
+    it a count; an addition keeps the origin of the operand not in memory already, an offset (unless a count) when the
+    other operand is in memory; any other write drops it"""
+
+    def __init__(self, memory, decoded, entry, repaired, buffers):
+        self.memory = memory
+        self.decoded = decoded
+        self.entry = entry
+        # The roots repaired already
+        self.repaired = repaired
+        # RAM's and the scratchpad's words on entry, and as the run goes (the tracing machine's buffers)
+        self.initial_words = {start: memoryview(memory.regions[start]).cast(WORD_FORMAT)
+                              for start in REPAIRABLE_REGIONS}
+        self.words = {start: memoryview(buffers[start]).cast(WORD_FORMAT) for start in REPAIRABLE_REGIONS}
+        # By register number; $zero never has one
+        self.origins = {REGISTER_NAMES.index(f"a{index}") + 1: (Root(ROOT_ARGUMENT, index), ROLE_BASE)
+                        for index in range(len(ARGUMENT_REGISTERS))}
+        # The origin of $hi and $lo
+        self.multiplied = None
+        self.steps = 0
+        # The origin of the base register of the last instruction followed, when it accesses memory: the faulting one's
+        self.access = None
+
+    def called(self, call):
+        for name in CLOBBERED_BY_CALLS:
+            self.origins[REGISTER_NAMES.index(name) + 1] = (Root(ROOT_CALL, (call, name)), ROLE_BASE)
+
+    def step(self, uc, address):
+        """Follows the instruction at address, before it runs; False past TRACE_LIMIT"""
+        self.steps += 1
+        if self.steps > TRACE_LIMIT:
+            return False
+        effect, access, source, other, destination, immediate = self.decoded[(address - self.entry) // WORD]
+        origins = self.origins
+        self.access = origins.get(access)
+        if effect == EFFECT_NONE:
+            pass
+        elif effect == EFFECT_MOVE:
+            origins[destination] = origins.get(source)
+        elif effect == EFFECT_DROP:
+            origins[destination] = None
+        elif effect == EFFECT_LW:
+            target = physical((register_value(uc, source) + immediate) & WORD_MASK)
+            if self.memory.repairable(target):
+                start = SCRATCHPAD_BASE if target >= SCRATCHPAD_BASE else physical(RAM_BASE)
+                index = (target - start) // WORD
+                initial = self.words[start][index] == self.initial_words[start][index]
+            else:
+                initial = False
+            origins[destination] = (Root(ROOT_MEMORY, target), ROLE_BASE) if initial else None
+        elif effect == EFFECT_SUM:
+            origins[destination] = self.sum(uc, source, other)
+        elif effect == EFFECT_SCALE:
+            origins[destination] = as_count(origins.get(source))
+        elif effect == EFFECT_MULTIPLY:
+            self.multiplied = as_count(origins.get(source)) or as_count(origins.get(other))
+        elif effect == EFFECT_FROM_MULTIPLY:
+            origins[destination] = self.multiplied
+        elif effect == EFFECT_TO_MULTIPLY:
+            self.multiplied = None
+        else:
+            raise ValueError(f"effect {effect}")
+        return True
+
+    def sum(self, uc, rs, rt):
+        """The origin of rs + rt: the input that isn't an address in memory already, an offset when the other is one"""
+        left, right = self.origins.get(rs), self.origins.get(rt)
+        left_valid, right_valid = points_to_memory(register_value(uc, rs)), points_to_memory(register_value(uc, rt))
+        if left_valid and right_valid:
+            # Both in memory: their sum isn't, and no input of them is to blame alone
+            return None
+        elif left_valid:
+            return as_offset(right)
+        elif right_valid:
+            return as_offset(left)
+        elif left is not None and (right is None or left[0] not in self.repaired):
+            return left
+        else:
+            # Neither in memory: the one not repaired yet, if either
+            return right
+
+
+def repaired_run(fuzz, base, machine, tracing, decoded):
+    """The trial's retail run on machine, its inputs repaired while it ends on an access fault through one of them (the
+    tracing machine finds which): the memory both sides run from, and the retail run on it"""
+    memory = base
+    expected = machine.run(memory, fuzz)
+    for _ in range(MAX_REPAIRS):
+        if not access_fault(expected.status):
+            break
+        tracer = Tracer(memory, decoded, machine.entry, set(fuzz.repairs), tracing.buffers)
+        traced = tracing.run(memory, fuzz, tracer)
+        if traced.status != expected.status or tracer.access is None:
+            # Faulting past TRACE_LIMIT, or through no input word
+            break
+        root, role = tracer.access
+        if root not in fuzz.repairs:
+            fuzz.repair(root, role)
+        elif role != ROLE_BASE and fuzz.repairs[root] != 0:
+            fuzz.repairs[root] = 0
+        else:
+            # A pointer, or a zero, faulting again: its address comes from elsewhere too
+            break
+        memory = base.patched(fuzz.memory_repairs())
+        expected = machine.run(memory, fuzz)
+    return memory, expected
+
+
+class Machine:
+    """An emulator running one function's code, kept from run to run while they return or reach the limit: the regions
+    are buffers of this process mapped in place, each run copies the trial's memory into them and starts from the CPU
+    state saved when the emulator was made. A new emulator per run spent most of a trial allocating, mapping and reading
+    back 2 MB. Translated code is kept: the retail code is read-only, and a run that writes into the function's own code
+    (the candidate's, in the scratch area) flushes it. A Tracer, if made with one, follows each of the function's
+    instructions"""
+
+    def __init__(self, memory, retail, entry, size, arguments, traced=False):
+        self.retail = retail
+        self.entry = entry
+        self.size = size
+        self.code = memory.code
+        self.traced_hook = traced
+        self.buffers = {start: bytearray(len(content)) for start, content in memory.regions.items()}
+        # A memoryview copies a trial's memory in about three times faster than slice assignment does
+        self.views = {start: memoryview(buffer) for start, buffer in self.buffers.items()}
+        # {callee address: the arguments compared at a call to it}
+        self.arguments = arguments
+        # The run in progress
+        self.outcome = None
+        self.fuzz = None
+        self.tracer = None
+        self.returned = None
+        self.emulator, self.fresh = self.make_emulator()
+
+    def make_emulator(self):
+        """A new emulator on the buffers, and its CPU state before any run"""
+        emulator = Uc(UC_ARCH_MIPS, UC_MODE_MIPS32 | UC_MODE_LITTLE_ENDIAN)
+        for start, buffer in self.buffers.items():
+            address = ctypes.addressof((ctypes.c_char * len(buffer)).from_buffer(buffer))
+            emulator.mem_map_ptr(start, len(buffer), UC_PROT_ALL, address)
+        code_start, code_end = align(self.code[0], PAGE_SIZE), self.code[1] // PAGE_SIZE * PAGE_SIZE
+        emulator.mem_protect(code_start, code_end - code_start, UC_PROT_READ | UC_PROT_EXEC)
+        emulator.hook_add(UC_HOOK_MEM_UNMAPPED, self.unmapped)
+        emulator.hook_add(UC_HOOK_MEM_WRITE_PROT, self.store_to_code)
+        if self.traced_hook:
+            emulator.hook_add(UC_HOOK_CODE, self.traced, begin=self.entry, end=self.entry + self.size - 1)
+        emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=0, end=self.entry - 1)
+        emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=self.entry + self.size, end=WORD_MASK)
+        emulator.hook_add(UC_HOOK_INTR, self.exception)
+        return emulator, emulator.context_save()
+
+    def run(self, memory, fuzz, tracer=None):
+        """Runs the function on the trial's memory and registers: how it ended, its registers, its calls out and its
+        final memory (the machine's buffers, valid until its next run)"""
+        self.outcome = outcome = Run()
+        self.fuzz = fuzz
+        self.tracer = tracer
+        # The values calls return, drawn in call order: the same for the same calls on both sides
+        self.returned = fuzz.generator("calls")
+        emulator = self.emulator
+        emulator.context_restore(self.fresh)
+        for start, content in memory.regions.items():
+            self.views[start][:] = content
+        for register, value in entry_registers(fuzz).items():
+            emulator.reg_write(register, value)
+        emulator.reg_write(REGISTERS["gp"], self.retail.gp)
+        emulator.reg_write(REGISTERS["sp"], ENTRY_SP)
+        emulator.reg_write(REGISTERS["ra"], SENTINEL_RETURN)
+        try:
+            emulator.emu_start(self.entry, SENTINEL_RETURN, count=MAX_INSTRUCTIONS)
+        except UcError as error:
+            if outcome.status is None:
+                outcome.status = f"emulator error: {error}"
+        if outcome.status is None:
+            outcome.status = RETURNED if emulator.reg_read(mips.UC_MIPS_REG_PC) == SENTINEL_RETURN else LIMIT
+        outcome.registers = {name: emulator.reg_read(REGISTERS[name]) for name in REGISTER_NAMES}
+        outcome.regions = self.buffers
+        code = physical(self.entry)
+        for start, buffer in self.buffers.items():
+            if start <= code < start + len(buffer) and buffer[code - start:code - start + self.size] != \
+                    memory.regions[start][code - start:code - start + self.size]:
+                emulator.ctl_flush_tb()
+            else:
+                continue
+        if outcome.status not in (RETURNED, LIMIT):
+            # Unicorn 2.1.4 keeps something of a guest exception that its saved CPU state doesn't hold: the next run on
+            # the same emulator may crash the process (func_8001AA80, seed 1: trial 346 after trial 345's address error)
+            self.emulator, self.fresh = self.make_emulator()
+        return outcome
+
+    def unmapped(self, uc, access, address, size, value, data):
+        # Ends the run: mapping on demand isn't safe (PAGE_SIZE's comment)
+        self.outcome.status = f"{UNMAPPED} {virtual(address):#010x}"
+        return False
+
+    def store_to_code(self, uc, access, address, size, value, data):
+        self.outcome.status = f"{STORE_TO_CODE} {virtual(address):#010x}"
+        return False
+
+    def traced(self, uc, address, size, data):
+        if not self.tracer.step(uc, address):
+            self.outcome.status = LIMIT
+            uc.emu_stop()
+
+    def call_out(self, uc, address, size, data):
+        outcome = self.outcome
         if address == SENTINEL_RETURN:
             outcome.status = RETURNED
             uc.emu_stop()
@@ -735,7 +1161,7 @@ def run(memory, fuzz, retail, entry, size, arguments):
             return
         # TRADEOFF: the callee isn't run, so its side effects (memory it writes, what it returns for real) are missing;
         # both sides get the same made-up return value, and C relying on what the callee does to memory isn't checked
-        count = arguments.get(address, len(ARGUMENT_REGISTERS))
+        count = self.arguments.get(address, len(ARGUMENT_REGISTERS))
         sp = uc.reg_read(REGISTERS["sp"])
 
         def argument(value):
@@ -755,12 +1181,16 @@ def run(memory, fuzz, retail, entry, size, arguments):
         stack = tuple(argument(read_word(uc.mem_read(physical(sp + ARGUMENT_HOME_SIZE + index * WORD), WORD), 0))
                       for index in range(max(0, count - len(ARGUMENT_REGISTERS))))
         outcome.calls.append(Call(address, registers, stack))
-        values = fuzz.words(returned, len(CLOBBERED_BY_CALLS))
+        call = len(outcome.calls) - 1
+        values = self.fuzz.words(self.returned, len(CLOBBERED_BY_CALLS))
         for name, value in zip(CLOBBERED_BY_CALLS, values):
-            uc.reg_write(REGISTERS[name], value)
+            uc.reg_write(REGISTERS[name], self.fuzz.repairs.get(Root(ROOT_CALL, (call, name)), value))
+        if self.tracer is not None:
+            self.tracer.called(call)
         uc.reg_write(mips.UC_MIPS_REG_PC, uc.reg_read(REGISTERS["ra"]))
 
-    def exception(uc, number, data):
+    def exception(self, uc, number, data):
+        outcome = self.outcome
         if number in UNSUPPORTED_EXCEPTIONS:
             outcome.unsupported = UNSUPPORTED_EXCEPTIONS[number]
             outcome.status = outcome.unsupported
@@ -769,27 +1199,6 @@ def run(memory, fuzz, retail, entry, size, arguments):
         else:
             outcome.status = f"exception {number}"
         uc.emu_stop()
-
-    emulator.hook_add(UC_HOOK_MEM_UNMAPPED, unmapped)
-    emulator.hook_add(UC_HOOK_CODE, call_out, begin=0, end=entry - 1)
-    emulator.hook_add(UC_HOOK_CODE, call_out, begin=entry + size, end=WORD_MASK)
-    emulator.hook_add(UC_HOOK_INTR, exception)
-
-    for register, value in entry_registers(fuzz).items():
-        emulator.reg_write(register, value)
-    emulator.reg_write(REGISTERS["gp"], retail.gp)
-    emulator.reg_write(REGISTERS["sp"], ENTRY_SP)
-    emulator.reg_write(REGISTERS["ra"], SENTINEL_RETURN)
-    try:
-        emulator.emu_start(entry, SENTINEL_RETURN, count=MAX_INSTRUCTIONS)
-    except UcError as error:
-        if outcome.status is None:
-            outcome.status = f"emulator error: {error}"
-    if outcome.status is None:
-        outcome.status = RETURNED if emulator.reg_read(mips.UC_MIPS_REG_PC) == SENTINEL_RETURN else LIMIT
-    outcome.registers = {name: emulator.reg_read(REGISTERS[name]) for name in REGISTER_NAMES}
-    outcome.regions = {start: bytes(emulator.mem_read(start, len(content))) for start, content in memory.regions.items()}
-    return outcome
 
 
 def gte_instructions(code, address):
@@ -811,11 +1220,15 @@ def changed(memory, outcome):
         final = outcome.regions[start]
         if final == initial:
             continue
-        for page in range(0, len(initial), PAGE_SIZE):
-            if final[page:page + PAGE_SIZE] == initial[page:page + PAGE_SIZE]:
+        # Narrowed down by chunks, then pages: slicing a bytearray costs more per slice than per byte
+        for chunk in range(0, len(initial), CHUNK_SIZE):
+            if final[chunk:chunk + CHUNK_SIZE] == initial[chunk:chunk + CHUNK_SIZE]:
                 continue
-            words.update(start + offset for offset in range(page, page + PAGE_SIZE, WORD)
-                         if final[offset:offset + WORD] != initial[offset:offset + WORD])
+            for page in range(chunk, min(chunk + CHUNK_SIZE, len(initial)), PAGE_SIZE):
+                if final[page:page + PAGE_SIZE] == initial[page:page + PAGE_SIZE]:
+                    continue
+                words.update(start + offset for offset in range(page, page + PAGE_SIZE, WORD)
+                             if final[offset:offset + WORD] != initial[offset:offset + WORD])
     return words
 
 
@@ -870,12 +1283,13 @@ def compare(memory, retail, declared, expected, actual):
     return differences
 
 
-def describe_inputs(fuzz):
-    """The trial's arguments: $a0-$a3 and the words on the caller's stack"""
+def describe_inputs(fuzz, retail):
+    """The trial's arguments: $a0-$a3 and the words on the caller's stack, then its repairs"""
     values = fuzz.arguments()
     registers, stack = values[:len(ARGUMENT_REGISTERS)], values[len(ARGUMENT_REGISTERS):]
+    repairs = "".join(f", {root.describe(retail)} repaired to {value:#010x}" for root, value in fuzz.repairs.items())
     return (" ".join(f"$a{index}={value:#010x}" for index, value in enumerate(registers))
-            + ", stack " + " ".join(f"{word:#010x}" for word in stack))
+            + ", stack " + " ".join(f"{word:#010x}" for word in stack) + repairs)
 
 
 def main():
@@ -899,16 +1313,28 @@ def main():
     candidate_code = candidate.image[candidate.entry - SCRATCH_BASE:candidate.entry - SCRATCH_BASE + candidate.size]
 
     agreeing = 0
+    repaired = 0
+    replaced = 0
     both_limit = 0
     both_exception = 0
     first = None
     constants = immediates(retail_code)
+    decoded = decode(retail_code)
     pool = fuzz_pool(arguments.seed, constants)
+    machines = None
     for trial in range(arguments.trials):
         fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters)
-        memory = Memory(fuzz, pool, retail, candidate)
-        expected = run(memory, fuzz, retail, retail_entry, retail_size, declared.callee_arguments)
-        actual = run(memory, fuzz, retail, candidate.entry, candidate.size, declared.callee_arguments)
+        base = Memory(fuzz, pool, retail, candidate)
+        if machines is None:
+            # The retail code's, the tracing one's, the candidate's
+            machines = (Machine(base, retail, retail_entry, retail_size, declared.callee_arguments),
+                        Machine(base, retail, retail_entry, retail_size, declared.callee_arguments, traced=True),
+                        Machine(base, retail, candidate.entry, candidate.size, declared.callee_arguments))
+        memory, expected = repaired_run(fuzz, base, machines[0], machines[1], decoded)
+        actual = machines[2].run(memory, fuzz)
+        if fuzz.repairs:
+            repaired += 1
+            replaced += len(fuzz.repairs)
         for side, outcome, code, address in (("retail code", expected, retail_code, retail_entry),
                                              ("candidate", actual, candidate_code, candidate.entry)):
             if outcome.unsupported is not None:
@@ -920,7 +1346,7 @@ def main():
         differences = compare(memory, retail, declared, expected, actual)
         if differences:
             if first is None:
-                first = (trial, describe_inputs(fuzz), differences)
+                first = (trial, describe_inputs(fuzz, retail), differences)
         else:
             agreeing += 1
             if expected.status == LIMIT:
@@ -938,6 +1364,8 @@ def main():
             print(f"  {difference}")
         if len(differences) > MAX_DIFFERENCES_SHOWN:
             print(f"  ... {len(differences) - MAX_DIFFERENCES_SHOWN} more")
+    if repaired:
+        print(f"{repaired} trials ran from inputs repaired after an access fault ({replaced} words replaced)")
     if both_limit:
         print(f"{both_limit} trials agree by both reaching the limit of {MAX_INSTRUCTIONS} instructions or {MAX_CALLS} calls "
               f"(not compared)")
