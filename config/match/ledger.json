@@ -12994,9 +12994,9 @@
     ]
   },
   "func_800158E0": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 18:34",
-    "summary": "trial 90 disagrees: $a0=0x00000000 $a1=0x00000000 $a2=0x801042d8 $a3=0xffffffff, stack 0xfffff706 0x801033a0 0xffffff20 0x00000000\nthe retail code makes 0 calls, the candidate 2\n492 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:55",
+    "summary": "2000 of 2000 trials agree, 1863 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
