@@ -1,18 +1,12 @@
 # func_8001ABF8
 
-Queues a render node into the pool at `D_80063458` (+0x2088 list head, +0x2090 bump pointer) for the object `arg0`, when
-the pool is inside its window (or `arg0` is the player `D_8005F38C`). Dispatch on the byte at `arg0->unk_E8`:
-- 5 (table): runs `func_80018474` per entry, queues a 0x30 node.
-- 2 (sprite): `func_80018474`, queues a 0x2C node with texture bits from `arg0+0x20`.
-- 4 (anim): `func_8001BD84` with sign -1/0/1 from flags at 0xAC.
-- 1 (model): queues a 0x64 node; for variants 4/5 builds a rotated axis and a normalized light direction
-  (`func_80041A78` as the square root), shade 12 and 6/8/19 have their own fields; 0x40 gets bit 31 from `arg0->0x78`.
-- others: nothing.
+Builds one display-list primitive for an object, from `arg0->0xE8` (kind byte 1, 2, 4 or 5; others return):
+- 1: 0x64-byte primitive with model/animation data, vectors (sub-kinds 4/5, rotated for 5), light direction (normalised via `func_80041A78`), per-mode table entries and slope/offset terms.
+- 2: 0x2C-byte primitive after `func_80018474`, table index from `arg0->0x120/0x121`.
+- 4: forwards to `func_8001BD84` with direction -1/0/1.
+- 5: loops `func_80018474` over the entries, then a 0x30-byte primitive.
+Skipped when the packet list is nearly full unless `arg0 == D_8005F38C`.
 
-Written from m2c's draft, checked against the assembly (note `ly = ly + ry + rz` in the second normalization, and the
--0xB50/0/0xB50 default light axis). Field accesses use the `FLD` macro with byte offsets, as the structures are unknown.
+Lessons: the mode read from `D_80062ACC` is a full word (not truncated to u8); `arg0` can alias the packet list in random trials, so load/store order follows the assembly (e.g. `arg0->0xA0` is read before the `prim->0x10` store).
 
-Result (attempt1.c = best.c): seed 0: 500 of 500; seed 1: 499 of 500. Trial 234 of seed 1: retail ends by access to
-unmapped 0x80471300, the candidate by a TLB miss on load (another address): both fault, in a different load order.
-Not found which load; no behavioural path is missing as far as the assembly reading shows.
-A 3000-trial run on seed 7 gave 2999 of 3000, the same kind of disagreement (retail: unmapped load at 0x8045ff60; candidate: address error on load).
+Result: 500 of 500 on seeds 0 and 1, 3000 of 3000 on seed 2. Nothing disagrees.
