@@ -13108,19 +13108,19 @@
     ]
   },
   "func_80019098": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 19:03",
-    "summary": "trial 447 disagrees: $a0=0x801042a4 $a1=0x80100dbc $a2=0x000000fe $a3=0x8010287c, stack 0x67b5ea3e 0x00000000 0x80106ff0 0x80105aac, memory at D_8006F1F0+0x950c4 (0x801042b4) repaired to 0x80100e04\nthe retail code ended by access to unmapped 0x8091d8c4, the candidate by access to unmapped 0x8051a4c4\n499 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 19:32",
+    "summary": "2000 of 2000 trials agree, 321 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
-    "model": "claude-sonnet-5-5",
+    "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.3,
-    "cost_usd": 0.24327630000000003,
-    "turns": 11,
-    "minutes": 1.2,
+    "wall_minutes": 3.5,
+    "cost_usd": 1.0631781999999999,
+    "turns": 28,
+    "minutes": 3.4,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -13177,6 +13177,19 @@
         "cost_usd": 0.24327630000000003,
         "turns": 11,
         "minutes": 1.2
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 66 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.5,
+        "cost_usd": 1.0631781999999999,
+        "turns": 28,
+        "minutes": 3.4
       }
     ]
   },

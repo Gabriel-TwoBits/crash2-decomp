@@ -33,9 +33,8 @@
 #define FIXED_SHIFT 8
 #define ENTITY_POS_ROW_SIZE 0x18
 #define SLOT_STATE_ACTIVE 3
-#define SLOT_ALLOC_FLAGS 0x80000
+#define LIST_TYPE_FREE 2
 
-struct Obj;
 s32 func_8001F054(struct Obj *, u32, s32 *);
 extern s32 D_8005F38C;
 extern s32 D_8006B1C4[];
@@ -70,7 +69,8 @@ extern char func_80019074[];
 
 #define PROP(o, id) func_800321D4(o, id, 0, 0, 0, PROP_ARG_MODE, 0)
 #define LOOKUP(o, id, out) func_80031AE8(o, id, 0, 0, out, PROP_ARG_MODE, PTR_NONE, 0, 0)
-#define FIELD(p, off, T) (*(T *)((u8 *)(p) + (off)))
+/* The value of type T at byte offset off of p. */
+#define AT(p, off, T) (*(T *)((u8 *)(p) + (off)))
 
 s32 func_80019098(void *arg0, u8 arg1) {
     s32 obj;
@@ -92,9 +92,10 @@ s32 func_80019098(void *arg0, u8 arg1) {
         return ERR_NO_OBJECT;
     }
     prev = PTR_NONE;
-    if (FIELD(arg0, 8, s32) == OBJ_TYPE_ENTITY) {
-        e = FIELD(arg0, 0x10, u8 *);
-        obj = FIELD(arg0, 0x10 + (arg1 + FIELD(e, 0x184, s32) + FIELD(e, 0x188, s32)) * 4, s32);
+    /* For any other type the retail code uses whatever the caller left in $s2. */
+    if (AT(arg0, 8, s32) == OBJ_TYPE_ENTITY) {
+        e = AT(arg0, 0x10, u8 *);
+        obj = AT(arg0, 0x10 + (arg1 + AT(e, 0x184, s32) + AT(e, 0x188, s32)) * 4, s32);
     }
     if (PROP(obj, PROP_KIND) == 0 || (PROP(obj, PROP_INDEX) > INDEX_MIN_EXCL && PROP(obj, PROP_INDEX) < INDEX_MAX_EXCL)) {
         if (D_8005F38C != 0) {
@@ -145,7 +146,7 @@ s32 func_80019098(void *arg0, u8 arg1) {
         i = SLOT_FIRST_PLAYER;
     } else {
         while (1) {
-            if (D_8006CB58[0] == 2) {
+            if (D_8006CB58[0] == LIST_TYPE_FREE) {
                 slot = (s32 *)D_8006CB5C;
             } else {
                 slot = (s32 *)D_8006CBA4;
@@ -179,41 +180,43 @@ s32 func_80019098(void *arg0, u8 arg1) {
         func_800189CC(slot, (s32 *)(&D_8006CB18 + SLOT_LIST_OFFSET));
         return r;
     }
+    /* The flag goes at the first call's index; the second call's result is unused. */
+    idx = PROP(obj, PROP_INDEX);
     PROP(obj, PROP_INDEX);
-    D_8006B1C4[PROP(obj, PROP_INDEX)] |= SLOT_FLAG_USED;
+    D_8006B1C4[idx] |= SLOT_FLAG_USED;
     slot[0xB8 / 4] = PROP(obj, PROP_INDEX) << FIXED_SHIFT;
-    if (FIELD(arg0, 8, s32) == OBJ_TYPE_PLAYER) {
+    if (AT(arg0, 8, s32) == OBJ_TYPE_PLAYER) {
         arg0 = (void *)D_800608CC;
     }
-    FIELD(slot, 0x18, void *) = arg0;
+    AT(slot, 0x18, void *) = arg0;
     memset(slot + 0x20 / 4, 0, CLEAR_SIZE);
-    FIELD(slot, 0xF0, s32) = obj;
-    FIELD(slot, 0xF8, s32) = func_800322C0(obj, PROP_POSITION, 0, PROP_ARG_MODE) << FIXED_SHIFT;
+    AT(slot, 0xF0, s32) = obj;
+    AT(slot, 0xF8, s32) = func_800322C0(obj, PROP_POSITION, 0, PROP_ARG_MODE) << FIXED_SHIFT;
     func_8001F054((struct Obj *)slot, 0, slot + 0x60 / 4);
     if ((s32)slot == D_8005F38C) {
         row = D_8006759C + D_8006CD7C * ENTITY_POS_ROW_SIZE;
-        FIELD(slot, 0x60, s32) = FIELD(row, 0x1E8, s32);
-        FIELD(slot, 0x64, s32) = FIELD(row, 0x1EC, s32);
-        FIELD(slot, 0x68, s32) = FIELD(row, 0x1F0, s32);
+        AT(slot, 0x60, s32) = AT(row, 0x1E8, s32);
+        AT(slot, 0x64, s32) = AT(row, 0x1EC, s32);
+        AT(slot, 0x68, s32) = AT(row, 0x1F0, s32);
         if ((s32)slot == D_8005F38C && D_8005F3F0 == -1) {
             D_8006CC84 = D_8005F3F0;
             func_8002F34C((u8 *)slot, &D_80060958, 1, 0);
         }
     }
-    if (FIELD(FIELD(FIELD(slot, 0xC, u8 *), 0x10, u8 *), 4, s32) == MODEL_ID_SPECIAL) {
+    if (AT(AT(AT(slot, 0xC, u8 *), 0x10, u8 *), 4, s32) == MODEL_ID_SPECIAL) {
         func_800189CC(slot, &D_8006CB38);
     }
-    if (FIELD(FIELD(FIELD(slot, 0xC, u8 *), 0x10, u8 *), 0, s32) == KIND_CHAIN) {
-        if (entry == PTR_NONE || (FIELD(entry, 4, s32) & PARAMS_NO_CHAIN) == 0) {
+    if (AT(AT(AT(slot, 0xC, u8 *), 0x10, u8 *), 0, s32) == KIND_CHAIN) {
+        if (entry == PTR_NONE || (AT(entry, 4, s32) & PARAMS_NO_CHAIN) == 0) {
             if (prev != PTR_NONE) {
-                FIELD(slot, 0x84, s32 *) = prev;
-                FIELD(slot, 0x88, s32) = 0;
-                FIELD(prev, 0x88, s32 *) = slot;
+                AT(slot, 0x84, s32 *) = prev;
+                AT(slot, 0x88, s32) = 0;
+                AT(prev, 0x88, s32 *) = slot;
             } else {
-                FIELD(slot, 0x84, s32 *) = PTR_NONE;
-                FIELD(slot, 0x88, s32) = 0;
+                AT(slot, 0x84, s32 *) = PTR_NONE;
+                AT(slot, 0x88, s32) = 0;
             }
-            FIELD(slot, 0x64, s32) = FIELD(slot, 0x64, s32) + CHAIN_STEP - D_8006CDF4;
+            AT(slot, 0x64, s32) = AT(slot, 0x64, s32) + CHAIN_STEP - D_8006CDF4;
         } else {
             /* chain link suppressed by the params */
         }
