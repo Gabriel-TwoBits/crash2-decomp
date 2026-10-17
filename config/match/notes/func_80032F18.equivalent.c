@@ -33,10 +33,23 @@ extern s32 D_8005F244;
 extern s32 D_8005F304;
 extern s32 D_8005FC84;
 extern s32 D_8006CB94;
+extern s32 D_8006CD2C;
+
+#define FIXED_ONE 4096
 
 typedef struct Unk80032F18Raw4 {
     s32 w;
 } __attribute__((packed)) Unk80032F18Raw4;
+
+/* Argument block of func_800518B8, built on the stack. */
+typedef struct Unk80032F18Update {
+    s32 mask;
+    s32 dirty;
+    s32 data;
+    s32 unk_C;
+    s32 unk_10;
+    s16 scale;
+} Unk80032F18Update;
 
 typedef struct Unk80032F18State {
     s32 flags;
@@ -62,15 +75,13 @@ typedef struct Unk80032F18State {
 
 /* arg0: entry id, 0 = shared state, -1 = entry owned by arg3, -2 = all entries. */
 s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
-    s32 mask;
+    Unk80032F18Update upd;
     s32 slot;
-    s32 dirty;
     u32 op;
     Ent *ent;
     Unk80032F18State *st;
     s32 tmp[3];
     volatile s32 peek[3];
-    volatile Unk80032F18Raw4 seen;
     volatile Unk80032F18Raw4 *rawp;
 
     if (!(D_8006CB94 & GATE_FLAG_ACTIVE) && !(*(s32 *)((u8 *)arg3 + OBJ_FLAGS_OFFSET) & OBJ_FLAG_ACTIVE)) {
@@ -102,7 +113,7 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
         if (arg1 & ARG_SET_FLAG2) {
             st->flags |= ST_F_PENDING;
         }
-        dirty = 0;
+        upd.dirty = 0;
         if (op < OP_COUNT) {
             switch (op) {
             case 0:
@@ -116,9 +127,9 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
                 } else {
                     st->unk_1A = arg2[0];
                     if (arg0 != 0) {
-                        dirty |= DIRTY_VEC;
+                        upd.dirty |= DIRTY_VEC;
                         rawp = (volatile Unk80032F18Raw4 *)func_8003264C(st->vec, st->unk_1A);
-                        seen = *rawp;
+                        upd.data = rawp->w;
                     }
                 }
                 break;
@@ -131,7 +142,8 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
                 } else {
                     st->unk_1E = arg2[0];
                     if (arg0 != 0) {
-                        dirty = DIRTY_1E;
+                        upd.dirty = DIRTY_1E;
+                        upd.scale = (st->unk_1E * D_8006CD2C) / FIXED_ONE;
                     }
                 }
                 break;
@@ -151,9 +163,9 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
                     st->vec[1] = arg2[1];
                     st->vec[2] = arg2[2];
                     if (arg0 != 0) {
-                        dirty = DIRTY_VEC;
+                        upd.dirty = DIRTY_VEC;
                         rawp = (volatile Unk80032F18Raw4 *)func_8003264C(st->vec, st->unk_1A);
-                        seen = *rawp;
+                        upd.data = rawp->w;
                     }
                 }
                 break;
@@ -203,9 +215,9 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
                 break;
             }
         }
-        if (dirty != 0) {
-            mask = 1 << slot;
-            func_800518B8(&mask);
+        if (upd.dirty != 0) {
+            upd.mask = 1 << slot;
+            func_800518B8(&upd.mask);
         }
         if (arg0 >= 0) {
             return 0;

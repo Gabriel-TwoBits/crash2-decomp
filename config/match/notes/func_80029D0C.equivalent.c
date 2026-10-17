@@ -20,7 +20,7 @@
 #define SHIFT_Y 46
 #define AXES 3
 
-extern void *D_8005F38C;
+extern u8 *D_8005F38C;
 extern s32 D_80062AD8;
 extern s32 D_8006CB94;
 
@@ -60,7 +60,7 @@ void func_80029D0C(void *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     nz = 0;
     if ((D_8006CB94 & FLAG_COLLIDE_ON) && (D_80062AD8 & MODE_STEP) &&
         (!(D_80062AD8 & MODE_SLIDE) || (*(s32 *)((u8 *)arg0 + OBJ_FLAGS_OFFSET) & OBJ_FLAG_SOLID))) {
-        if ((D_80062AD8 & MODE_ALT) && (*(s32 *)((u8 *)D_8005F38C + OBJ_FLAGS_OFFSET) & OBJ_FLAG_SOLID)) {
+        if ((D_80062AD8 & MODE_ALT) && (*(s32 *)(D_8005F38C +OBJ_FLAGS_OFFSET) & OBJ_FLAG_SOLID)) {
             step = STEP_ALT;
         } else if (D_80062AD8 & MODE_SLIDE) {
             step = STEP_SLIDE;
