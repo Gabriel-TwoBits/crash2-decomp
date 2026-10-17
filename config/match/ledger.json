@@ -4500,16 +4500,16 @@
     "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_800369F4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 00:45",
-    "summary": "5 of 36 words differ",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 21:09",
+    "summary": "500 of 500 trials agree, 407 compared",
     "best": "a2.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "wall_minutes": 4.7,
-    "cost_usd": 0.2419772,
-    "turns": 16,
-    "minutes": 4.6,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.1884264,
+    "turns": 10,
+    "minutes": 0.6,
     "runs": [
       {
         "outcome": "gave up",
@@ -4533,9 +4533,23 @@
         "cost_usd": 0.2419772,
         "turns": 16,
         "minutes": 4.6
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 407 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.1884264,
+        "turns": 10,
+        "minutes": 0.6
       }
     ],
-    "cflags": "-O2 -G8 -mcpu=r8000"
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "mode": "equivalent",
+    "reason": "FAILED: [code=1] build/src/game/800345C8.o \nsrc/game/800345C8.c:1041: conflicting types for `func_80036A84'"
   },
   "func_80039A14": {
     "outcome": "landed",
@@ -4670,17 +4684,17 @@
     "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_80011F78": {
-    "outcome": "gave up",
-    "time": "2026-10-16 01:11",
-    "summary": "35 of 38 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:10",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "a4.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.2,
-    "cost_usd": 0.30777019999999994,
-    "turns": 21,
-    "minutes": 1.2,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.16335,
+    "turns": 7,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -4693,8 +4707,21 @@
         "cost_usd": 0.30777019999999994,
         "turns": 21,
         "minutes": 1.2
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.16335,
+        "turns": 7,
+        "minutes": 0.4
       }
-    ]
+    ],
+    "mode": "equivalent"
   },
   "func_80012294": {
     "outcome": "gave up",
