@@ -232,7 +232,9 @@ void func_800163E8(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016408);
+s32 *func_80016408(void) {
+    return &D_80063458[0]->unk8;
+}
 
 void *func_80016418(s32 arg0) {
     void **temp;
