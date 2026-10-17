@@ -3532,15 +3532,15 @@
     ]
   },
   "func_80014B90": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:19",
-    "summary": "trial 7 disagrees: $a0=0x801003ac $a1=0x000000a0 $a2=0x80104290 $a3=0x00000001, stack 0x00000003 0x00000000 0xffffff24 0x80102488, memory at D_8006F1F0+0x94850 (0x80103a40) repaired to 0x80101e88\nthe retail code ended by returned, the candidate by the limit\n499 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:09",
+    "summary": "2000 of 2000 trials agree, 1875 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
     "wall_minutes": 1.5,
-    "cost_usd": 0.3139051,
-    "turns": 27,
+    "cost_usd": 0.27070580000000005,
+    "turns": 20,
     "minutes": 1.4,
     "runs": [
       {
@@ -3604,12 +3604,24 @@
         "cost_usd": 0.3139051,
         "turns": 27,
         "minutes": 1.4
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 471 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.5,
+        "cost_usd": 0.27070580000000005,
+        "turns": 20,
+        "minutes": 1.4
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
     "mode": "equivalent",
-    "scored": "in place",
-    "reason": "trial 400 disagrees: $a0=0x80100ca0 $a1=0x8010584c $a2=0x00000000 $a3=0x80104e3c, stack 0xffffffff 0xffffff6c 0x8010367c 0xfffffffc, memory at D_80000004+0x7c (0x80000080) repaired to 0x80107320\nthe retail code ended by returned, the candidate by the limit\n1995 of 2000 trials agree"
+    "scored": "in place"
   },
   "func_80018DD0": {
     "outcome": "landed",
