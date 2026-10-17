@@ -35,10 +35,11 @@ this project's C (docs/WORKFLOW.md, "Naming"):
 - Constants get names (`#define` or `enum`), not bare numbers, but for the obvious ones (`0`, `1`, `-1`).
 - Every `if`/`else if` chain ends with an `else`, every `switch` has a `default`, every path of a function that returns a
   value returns one. No nested `?:`.
-- Names say what things are only once the code and its callers make it clear; otherwise keep splat's `func_`/`D_` names,
-  and `unk_<offset>` for a field. A structure of unknown purpose is named after its function or data
-  (`Unk80014148`), not `Entry` or `Obj`: it lands beside other functions' types, and one name defined twice fails the
-  build.
+- Name no function, variable or shared type: keep the names BRIEF.md and the files use (splat's `func_`/`D_` ones, or
+  those given since). Naming is a separate, reviewed step (docs/WORKFLOW.md, "Naming"). Locals and parameters say what
+  they hold where the code makes it clear; a field is `unk_<offset>`. A structure of the function's own is named after
+  its function or data (`Unk80014148`), not `Entry` or `Obj`: it lands beside other functions' types, and one name
+  defined twice fails the build.
 - Comments are short and say what isn't obvious from the code.
 
 ## The loop
@@ -68,6 +69,8 @@ this project's C (docs/WORKFLOW.md, "Naming"):
     variable's type are those (matched callers compile against them); `score.sh` fails to compile on a conflict.
   - A structure its file already defines is copied from the file as it is, never defined otherwise; landing keeps the
     file's own definition, above the function's block when it was further down.
+  - The shared types in `include/game/*.h`, which `game.h` includes, are used as they are: never defined again, never
+    defined otherwise.
   - Data is `extern` (`extern s32 D_8005F304;`), never defined: the build resolves it to the split's symbol. A string or
     constant in `.rodata` (`D_800100D0`) too (`extern char D_800100D0[];`), never a literal.
 - Otherwise: copy the best attempt to `best.c`.

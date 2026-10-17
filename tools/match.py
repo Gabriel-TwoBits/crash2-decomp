@@ -17,6 +17,8 @@ around the function's INCLUDE_ASM line, kept only when both builds hold and equi
 
 Each outcome goes into config/match/ledger.json, and each run's notes and C into config/match/notes/ (in git: what was
 learned about a function outlives its scratch directory). config/match/skip.txt lists functions not to try, with why.
+These and build/match/ are keyed by the function's address name (func_XXXXXXXX), which a rename (tools/rename.py) leaves;
+FUNCTION is either that or its name now.
 The agent may only read, edit inside its scratch directory and run its scratch's score.sh and permute.sh
 (tools/match/CLAUDE.md has its instructions).
 """
@@ -35,6 +37,7 @@ from equiv import DEFAULT_TRIALS, EXIT_DISAGREE, EXIT_UNSUPPORTED, GTE_OPCODES, 
 from probe_compiler import retail_assembly, retail_words
 from progress import EQUIVALENT
 from psx_cc import AS, ASFLAGS, DEFAULT_ASPSX, DEFAULT_CFLAGS, DEFAULT_GCC, HERE, compile_c, compiler
+from symbols import DATA, GAME_FUNCTION, address_name, address_of, current_name, kind_of, with_current_names
 
 SCRATCH = HERE / "build" / "match"
 RECORDS = HERE / "config" / "match"
@@ -46,6 +49,8 @@ EQUIVALENT_TEMPLATE = HERE / "tools" / "match" / "EQUIVALENT.md"
 EQUIV = HERE / "tools" / "equiv.py"
 SOURCES = HERE / "src" / "game"
 GAME_H = HERE / "include" / "game.h"
+# The game's shared types, by subsystem: types, enums and constants only, included by include/game.h
+SHARED_HEADERS = HERE / "include" / "game"
 NONMATCHINGS = HERE / "asm" / "nonmatchings" / "game"
 # The game's assembly part, one file of many functions (docs/TARGET.md, "What the code holds")
 GAME_ASSEMBLY = HERE / "asm" / "game"
@@ -63,29 +68,31 @@ INLINE_ASSEMBLY = re.compile(r"\b(__asm__|asm)\s*\(")
 HANDWRITTEN = "/* Handwritten function */"
 DIFFERING = re.compile(r"^(\d+) of (\d+) words differ$", re.MULTILINE)
 M2C_MACRO = re.compile(r"\bM2C_\w+")
-# A top-level definition of a split data symbol (not an extern declaration), with its initialiser if it has one
-DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(D_[0-9A-F]{8})\b[^(;=]*(=[^;]*)?;\n?",
-                             re.MULTILINE)
-# A one-line declaration of a game function (not its definition): return type, name, parameters
-PROTOTYPE = re.compile(r"^(?:extern[ \t]+)?(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{\n]*\))"
+# A top-level definition of a variable (not an extern declaration), with its initialiser if it has one: a split data
+# symbol's when the symbol table says so (data_definitions)
+DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(\w+)\b[^(;=\n]*(=[^;]*)?;\n?", re.MULTILINE)
+# A one-line declaration of a function (not its definition): return type, name, parameters; a game function's when the
+# symbol table says so (prototypes)
+PROTOTYPE = re.compile(r"^(?:extern[ \t]+)?(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>\w+)[ \t]*\([^;{\n]*\))"
                        r"[ \t]*;[ \t]*\n?", re.MULTILINE)
 IDENTIFIER = re.compile(r"[A-Za-z_]\w*")
 # A structure's definition, typedef'd or tagged, with one level of nested braces at most
 TYPE_DEFINITION = re.compile(r"^(?:typedef[ \t]+)?struct[ \t]*(?P<tag>\w*)[ \t]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[ \t]*"
                              r"(?P<alias>\w*)[ \t]*;[ \t]*\n?", re.MULTILINE)
-# A game function's definition in C: return type, name, parameters, then its body
-DEFINITION = re.compile(r"^(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>func_[0-9A-F]{8})[ \t]*\([^;{]*\))\s*\{",
-                        re.MULTILINE)
+# A function's definition in C: return type, name, parameters, then its body
+DEFINITION = re.compile(r"^(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>\w+)[ \t]*\([^;{]*\))\s*\{", re.MULTILINE)
 POINTER_SPACING = re.compile(r"\s*\*\s*")
 # An empty parameter list declares nothing about the arguments: the compiler checks no call against it
 UNCHECKED_PARAMETERS = re.compile(r"\(\s*\)$")
-# PsyQ's libraries start here (config/SCUS_941.54.yaml): a func_ name from there is the SDK's, not the game's
-SDK_START = 0x80046884
-FUNCTION_ADDRESS_START = len("func_")
-HEXADECIMAL = 16
-# What a prototype in include/game.h may be written with: one using a structure of its file stays in the file
+# What a prototype in include/game.h may be written with, besides the shared headers' types: one using a structure of
+# its file stays in the file
 BASIC_TYPES = {"void", "char", "short", "int", "long", "unsigned", "signed", "const",
                "s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64"}
+TAG_KEYWORDS = {"struct", "union", "enum"}
+# What the shared headers name besides structures: enums, and typedefs of another type
+ENUM_DEFINITION = re.compile(r"^(?:typedef[ \t]+)?enum[ \t]*(?P<tag>\w*)[ \t]*\{[^{}]*\}[ \t]*(?P<alias>\w*)[ \t]*;",
+                             re.MULTILINE)
+PLAIN_TYPEDEF = re.compile(r"^typedef[^;{}]*\b(\w+)[ \t]*;", re.MULTILINE)
 # A parameter's name: the last word of its declaration when a type or a `*` comes before it and it isn't a type itself
 PARAMETER_NAME = re.compile(r"(?<=[\s*])(?!(?:" + "|".join(sorted(BASIC_TYPES)) + r")\b)[A-Za-z_]\w*\s*$")
 ERROR_LINES = 12
@@ -162,14 +169,14 @@ def portable(text):
 def record(name, outcome, **details):
     """The function's latest outcome, keeping what earlier steps recorded (the run's model and cost when it lands) but not
     an earlier outcome's reason; each agent run's own details also go into its list of runs, so a retry with another
-    model doesn't hide the first"""
+    model doesn't hide the first. Keyed by the function's address name, which a rename leaves"""
     ledger = load_ledger()
     details = {key: portable(value) if isinstance(value, str) else value for key, value in details.items()}
-    earlier = {key: value for key, value in ledger.get(name, {}).items() if key != "reason"}
+    earlier = {key: value for key, value in ledger.get(address_name(name), {}).items() if key != "reason"}
     entry = {**earlier, "outcome": outcome, "time": time.strftime("%Y-%m-%d %H:%M"), **details}
     if "model" in details:
         entry["runs"] = entry.get("runs", []) + [{"outcome": outcome, **details}]
-    ledger[name] = entry
+    ledger[address_name(name)] = entry
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
     LEDGER.write_text(json.dumps(ledger, indent=2) + "\n")
 
@@ -251,12 +258,14 @@ def next_function():
     skip = skipped()
     # An equivalent function went to that track because matching it cost too much: a match is left to `run FUNCTION`
     equivalent = equivalents()
-    candidates = sorted((name not in ledger, size, name) for name, size in unmatched().items()
-                        if size >= MIN_SIZE and name not in skip and name not in equivalent and not handwritten(name)
-                        and (name not in ledger or given_up_elsewhere(ledger[name])))
+    # The records and skip.txt by address name; the address breaks a tie
+    keyed = [(address_name(name), name, size) for name, size in unmatched().items()]
+    candidates = sorted((key not in ledger, size, key, name) for key, name, size in keyed
+                        if size >= MIN_SIZE and key not in skip and name not in equivalent and not handwritten(name)
+                        and (key not in ledger or given_up_elsewhere(ledger[key])))
     if not candidates:
         return None
-    return candidates[0][2]
+    return candidates[0][3]
 
 
 def settled_equivalent(entry):
@@ -280,17 +289,19 @@ def next_equivalent():
     skip = skipped()
     equivalent = equivalents()
 
-    def due(name, size):
-        if name not in ledger:
+    def due(key, name, size):
+        if key not in ledger:
             return size >= EQUIVALENT_FIRST_SIZE and not handwritten(name)
         else:
-            return (ledger[name]["outcome"] in GIVEN_UP and not given_up_elsewhere(ledger[name])
-                    and not settled_equivalent(ledger[name]))
+            return (ledger[key]["outcome"] in GIVEN_UP and not given_up_elsewhere(ledger[key])
+                    and not settled_equivalent(ledger[key]))
 
-    candidates = sorted((size, name) for name, size in unmatched().items()
-                        if due(name, size) and name not in skip and name not in equivalent)
+    # The records and skip.txt by address name; the address breaks a tie
+    keyed = [(address_name(name), name, size) for name, size in unmatched().items()]
+    candidates = sorted((size, key, name) for key, name, size in keyed
+                        if due(key, name, size) and key not in skip and name not in equivalent)
     # The GTE check reads the split, so only as far as the first candidate without
-    for _, name in candidates:
+    for _, _, name in candidates:
         if not uses_gte(name):
             return name
         else:
@@ -325,8 +336,9 @@ def m2c_context(folder, source):
 
 
 def prepare(name, equivalent=False):
-    """The function's scratch directory, for a matching run or, with equivalent, an equivalent one"""
-    folder = SCRATCH / name
+    """The function's scratch directory, by its address name, for a matching run or, with equivalent, an equivalent one"""
+    key = address_name(name)
+    folder = SCRATCH / key
     if folder.exists():
         shutil.rmtree(folder)
     folder.mkdir(parents=True)
@@ -363,7 +375,7 @@ def prepare(name, equivalent=False):
            if line == line.lstrip() and line.rstrip().endswith(";")
            and any(re.search(rf"\b{symbol}\b", line) for symbol in [name, *symbols])]
     brief = [
-        f"# {name}",
+        f"# {name}" if name == key else f"# {name} ({key})",
         "",
         f"- Size: {size:#x} bytes",
         f"- File: {source}",
@@ -398,15 +410,16 @@ def prepare(name, equivalent=False):
     ]
     # A run that gave it up before left its notes and best C: the next one starts from them. An equivalent run starts
     # from an earlier equivalent run's, else from the matching run's
-    earlier = f"{name}{EQUIVALENT_NOTES}" if equivalent else name
+    earlier = f"{key}{EQUIVALENT_NOTES}" if equivalent else key
     if equivalent and not (NOTES / f"{earlier}.c").exists():
-        earlier = name
+        earlier = key
     if (NOTES / f"{earlier}.md").exists() and (NOTES / f"{earlier}.c").exists():
         shutil.copy2(NOTES / f"{earlier}.md", folder / "EARLIER.md")
-        shutil.copy2(NOTES / f"{earlier}.c", folder / "earlier.c")
+        # The C by the symbols' names now, though it was written before some were named
+        (folder / "earlier.c").write_text(with_current_names((NOTES / f"{earlier}.c").read_text()))
         if not equivalent:
             told = "An earlier run gave it up, under other compiler flags: `EARLIER.md` has its notes, `earlier.c` its best C."
-        elif earlier != name:
+        elif earlier != key:
             told = "An earlier equivalent run: `EARLIER.md` has its notes, `earlier.c` its best C."
         else:
             told = ("The matching loop gave it up: `EARLIER.md` has its notes, `earlier.c` its closest C, which compiles "
@@ -479,8 +492,8 @@ def best_attempt(folder):
 
 def keep_notes(name, folder, source, stem=None):
     """The run's NOTES.md and its C (the match or the best attempt) into config/match/notes/, as <stem>.md and .c (the
-    function's name by default)"""
-    stem = stem or name
+    function's address name by default)"""
+    stem = stem or address_name(name)
     NOTES.mkdir(parents=True, exist_ok=True)
     if (folder / "NOTES.md").exists():
         (NOTES / f"{stem}.md").write_text(portable((folder / "NOTES.md").read_text()))
@@ -577,16 +590,15 @@ def placed_copy(name, text):
     if reason is not None:
         raise NotLanded(reason)
     source, updated, updated_header = placement(name, text, True)
-    folder = SCRATCH / name / PLACED
+    folder = SCRATCH / address_name(name) / PLACED
     if folder.exists():
         shutil.rmtree(folder)
     folder.mkdir(parents=True)
     (folder / GAME_H.name).write_text(updated_header)
     placed = folder / source.name
     placed.write_text(updated)
-    before = {prototype.group("name"): prototype.group("declaration")
-              for prototype in PROTOTYPE.finditer(GAME_H.read_text())}
-    changed = [prototype.group("name") for prototype in PROTOTYPE.finditer(updated_header)
+    before = {prototype.group("name"): prototype.group("declaration") for prototype in game_prototypes(GAME_H.read_text())}
+    changed = [prototype.group("name") for prototype in game_prototypes(updated_header)
                if before.get(prototype.group("name")) != prototype.group("declaration")]
     for other in sources():
         content = other.read_text()
@@ -631,7 +643,7 @@ def run_equivalent(name, minutes, model):
     folder = prepare(name, equivalent=True)
     session = {"mode": EQUIVALENT_MODE, "scored": SCORED_IN_PLACE,
                **agent_session(folder, EQUIVALENT_PROMPT.format(minutes=minutes), EQUIVALENT_TOOLS, minutes, model)}
-    stem = f"{name}{EQUIVALENT_NOTES}"
+    stem = f"{address_name(name)}{EQUIVALENT_NOTES}"
     candidate = folder / "equivalent.c"
     if candidate.exists():
         keep_notes(name, folder, candidate.name, stem)
@@ -682,21 +694,59 @@ def prototype_of(declaration):
     return None if signature is None else signature + ";"
 
 
+def game_prototypes(text):
+    """The one-line prototypes of the game's functions in C text"""
+    return [match for match in PROTOTYPE.finditer(text) if kind_of(match.group("name")) == GAME_FUNCTION]
+
+
+def data_definitions(text):
+    """The top-level definitions of the split's data symbols in C text"""
+    return [match for match in DATA_DEFINITION.finditer(text) if kind_of(match.group(1)) == DATA]
+
+
+def shared_structures():
+    """{name: (definition, header)} of the structures the shared headers define, by typedef name and by tag"""
+    found = {}
+    for header in sorted(SHARED_HEADERS.glob("*.h")):
+        for definition in TYPE_DEFINITION.finditer(header.read_text()):
+            for name in (definition.group("tag"), definition.group("alias")):
+                if name:
+                    found[name] = (definition.group(0), header)
+                else:
+                    # An untagged structure, or one without a typedef name
+                    continue
+    return found
+
+
+def shared_type_names():
+    """The names the shared headers give types: structures, enums, typedefs of another type"""
+    names = set(shared_structures())
+    for header in sorted(SHARED_HEADERS.glob("*.h")):
+        text = header.read_text()
+        names |= {name for enum in ENUM_DEFINITION.finditer(text) for name in enum.groups() if name}
+        names |= set(PLAIN_TYPEDEF.findall(text))
+    return names
+
+
 def basic(prototype, name):
-    """Whether a prototype uses only basic types, so include/game.h can carry it"""
-    return prototype is not None and set(IDENTIFIER.findall(prototype)) - {name} <= BASIC_TYPES
+    """Whether a prototype uses only basic types and the shared headers' types, so include/game.h can carry it"""
+    allowed = BASIC_TYPES | TAG_KEYWORDS | shared_type_names()
+    return prototype is not None and set(IDENTIFIER.findall(prototype)) - {name} <= allowed
 
 
 def with_prototypes(header, added):
     """include/game.h with these prototypes added to its list, which stays in address order"""
-    prototypes = list(PROTOTYPE.finditer(header))
+    prototypes = game_prototypes(header)
     if not prototypes:
         sys.exit(f"{GAME_H} has no list of prototypes to add to")
     start, end = prototypes[0].start(), prototypes[-1].end()
-    if PROTOTYPE.sub("", header[start:end]).strip():
-        sys.exit(f"{GAME_H}: something other than prototypes inside its list; add {added} by hand")
+    listed = header[start:end]
+    for prototype in prototypes:
+        listed = listed.replace(prototype.group(0), "", 1)
+    if listed.strip():
+        sys.exit(f"{GAME_H}: something other than the game's prototypes inside its list; add {added} by hand")
     lines = sorted([prototype.group("declaration") + ";" for prototype in prototypes] + added,
-                   key=lambda line: PROTOTYPE.match(line).group("name"))
+                   key=lambda line: address_of(PROTOTYPE.match(line).group("name")))
     return header[:start] + "\n".join(lines) + "\n" + header[end:]
 
 
@@ -715,6 +765,8 @@ def placement(name, text, equivalent):
     function already has goes whole, with what it defined. Raises NotLanded when the candidate can't go in as it is"""
     source, current = source_of(name)
     relative = source.relative_to(HERE)
+    # C written before a symbol it uses was named calls it by its address name
+    text = with_current_names(text)
     include = INCLUDED.search(current).group(0)
     original = source.read_text().replace(current, include, 1)
     insertion = original.index(include)
@@ -739,8 +791,8 @@ def placement(name, text, equivalent):
     # definition the file already has goes, or moves up to this function when the file has it further down; an
     # uninitialised one stays, a common the split's symbol resolves; an initialised one the file doesn't have is data of
     # another file, which can't be read through $gp from this one
-    defined = {match.group(1): match for match in DATA_DEFINITION.finditer(original)}
-    for definition in DATA_DEFINITION.finditer(text):
+    defined = {match.group(1): match for match in data_definitions(original)}
+    for definition in data_definitions(text):
         symbol, initialiser = definition.group(1), definition.group(2)
         if symbol in defined and declarator(defined[symbol]) != declarator(definition):
             raise NotLanded(f"declares {symbol} as `{declarator(definition)}`, {relative} as "
@@ -754,14 +806,21 @@ def placement(name, text, equivalent):
         else:
             # A common: the split's symbol is the definition
             continue
-    # A structure the file defines: the candidate's copy of it goes, or moves up to this function when the file has it
-    # further down, and a different one can't land
+    # A structure the file or a shared header (include/game/) defines: the candidate's copy of it goes, or moves up to this
+    # function when the file has it further down, and a different one can't land
     types = {type_name(match): match for match in TYPE_DEFINITION.finditer(original)}
+    shared = shared_structures()
     # Structures the file defines further down that equivalent C needs: they go above its block, outside it
     hoisted = []
     for definition in TYPE_DEFINITION.finditer(text):
         kind = type_name(definition)
-        if kind not in types:
+        shared_name = next((name for name in (definition.group("tag"), definition.group("alias")) if name in shared), None)
+        if shared_name is not None and " ".join(shared[shared_name][0].split()) == " ".join(definition.group(0).split()):
+            # include/game.h includes the shared headers: the file has it already
+            text = text.replace(definition.group(0), "")
+        elif shared_name is not None:
+            raise NotLanded(f"defines {shared_name} otherwise than {shared[shared_name][1].relative_to(HERE)}")
+        elif kind not in types:
             # A structure of its own: it lands with the function
             continue
         elif " ".join(types[kind].group(0).split()) != " ".join(definition.group(0).split()):
@@ -779,21 +838,21 @@ def placement(name, text, equivalent):
             below = moved_up(types[kind], kind)
     # One prototype per game function, in include/game.h: one it has goes, a new one of basic types moves there
     header = GAME_H.read_text()
-    declared = {prototype.group("name"): prototype.group("declaration") for prototype in PROTOTYPE.finditer(header)}
+    declared = {prototype.group("name"): prototype.group("declaration") for prototype in game_prototypes(header)}
     added = []
     for prototype in PROTOTYPE.finditer(text):
         callee = prototype.group("name")
         if callee == name:
             # The function's own forward declaration stays with it
             continue
+        elif kind_of(callee) != GAME_FUNCTION:
+            # An SDK function (include/sdk.h's once it is identified), or none the split knows: it stays in the file
+            continue
         elif callee in declared and signature_of(prototype.group("declaration")) != signature_of(declared[callee]):
             # The candidate was judged with its own prototype; include/game.h's would compile the call otherwise
             raise NotLanded(f"declares `{prototype.group('declaration')}`, include/game.h `{declared[callee]}`")
         elif callee in declared:
             text = text.replace(prototype.group(0), "")
-        elif int(callee[FUNCTION_ADDRESS_START:], HEXADECIMAL) >= SDK_START:
-            # An SDK function not identified yet: include/sdk.h's once it is
-            continue
         elif UNCHECKED_PARAMETERS.search(prototype.group("declaration")):
             raise NotLanded(f"`{prototype.group('declaration')}` has no parameter list")
         elif basic(prototype_of(prototype.group("declaration")), callee):
@@ -857,13 +916,14 @@ def land(name, equivalent=False):
     """The candidate's declarations and function in place of the INCLUDE_ASM line, committed only when it holds. A match
     (match.c) holds when the build's SHA-1 does; equivalent C (equivalent.c, else the notes' C) goes into a NON_MATCHING
     block and holds when the SHA-1 does, the nonmatching build builds and tools/equiv.py agrees on the landed file"""
+    key = address_name(name)
     if equivalent:
-        candidates = [SCRATCH / name / "equivalent.c", NOTES / f"{name}{EQUIVALENT_NOTES}.c", NOTES / f"{name}.c"]
+        candidates = [SCRATCH / key / "equivalent.c", NOTES / f"{key}{EQUIVALENT_NOTES}.c", NOTES / f"{key}.c"]
         replacing = name in equivalents()
         # A function already equivalent stays so when other C for it doesn't land: its block is still there
         refused = EQUIVALENT_MODE if replacing else EQUIVALENT_REFUSED
     else:
-        candidates = [SCRATCH / name / "match.c", NOTES / f"{name}.c"]
+        candidates = [SCRATCH / key / "match.c", NOTES / f"{key}.c"]
         refused = "matched, not landed"
     candidate = next((path for path in candidates if path.exists()), None)
     if candidate is None:
@@ -985,6 +1045,18 @@ def report():
         print(f"  {line}")
 
 
+def entry_of(name):
+    """A function's record in the ledger, by either of its names"""
+    return load_ledger()[address_name(name)]
+
+
+def game_function(argument):
+    """A game function's name now, from either of its names (its address name or its name now); None for another kind of
+    symbol"""
+    name = current_name(argument)
+    return name if kind_of(name) == GAME_FUNCTION else None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=["next", "prepare", "run", "land", "loop", "report", "score"])
@@ -1019,7 +1091,7 @@ def main():
             else:
                 # Its C doesn't agree, or there is none: the ledger has why
                 pass
-            print(f"{name}: {load_ledger()[name]['outcome']}", flush=True)
+            print(f"{name}: {entry_of(name)['outcome']}", flush=True)
         commit_records()
     elif arguments.command == "loop":
         for _ in range(arguments.count):
@@ -1029,29 +1101,31 @@ def main():
                 break
             matched = run(name, arguments.minutes, arguments.model)
             # The second model only where the first came close: elsewhere it rarely matched, at several times the cost
-            if not matched and arguments.retry_model and near_miss(load_ledger()[name]):
+            if not matched and arguments.retry_model and near_miss(entry_of(name)):
                 matched = run(name, arguments.minutes, arguments.retry_model)
             landed = matched and land(name)
-            print(f"{name}: {'landed' if landed else load_ledger()[name]['outcome']}", flush=True)
+            print(f"{name}: {'landed' if landed else entry_of(name)['outcome']}", flush=True)
         commit_records()
     elif arguments.function is None:
         sys.exit(f"{arguments.command} needs a FUNCTION")
+    elif (function := game_function(arguments.function)) is None:
+        sys.exit(f"{arguments.function} is no game function of the split")
     elif arguments.command == "prepare":
-        print(prepare(arguments.function, arguments.equivalent))
+        print(prepare(function, arguments.equivalent))
     elif arguments.command == "score" and arguments.draft is None:
         sys.exit("score needs a FUNCTION and a FILE.c")
     elif arguments.command == "score":
-        sys.exit(score_in_place(arguments.function, Path(arguments.draft).resolve(), arguments.trials, arguments.seed))
+        sys.exit(score_in_place(function, Path(arguments.draft).resolve(), arguments.trials, arguments.seed))
     elif arguments.command == "run" and arguments.equivalent:
-        agrees = run_equivalent(arguments.function, arguments.minutes, arguments.model)
-        print(f"{arguments.function}: {load_ledger()[arguments.function]}")
+        agrees = run_equivalent(function, arguments.minutes, arguments.model)
+        print(f"{function}: {entry_of(function)}")
         sys.exit(0 if agrees else 1)
     elif arguments.command == "run":
-        matched = run(arguments.function, arguments.minutes, arguments.model)
-        print(f"{arguments.function}: {load_ledger()[arguments.function]}")
+        matched = run(function, arguments.minutes, arguments.model)
+        print(f"{function}: {entry_of(function)}")
         sys.exit(0 if matched else 1)
     elif arguments.command == "land":
-        sys.exit(0 if land(arguments.function, arguments.equivalent) else 1)
+        sys.exit(0 if land(function, arguments.equivalent) else 1)
     else:
         sys.exit(f"unknown command {arguments.command}")
 

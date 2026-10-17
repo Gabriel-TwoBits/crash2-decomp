@@ -52,13 +52,16 @@ means an array, `extern s32 D_X[]` used as `D_X[0]`.
     its parameter list (`(void)` for none, never `()`).
   - A structure its file already defines is copied from the file as it is (landing drops the copy), never defined
     otherwise: `match.c` compiles alone.
+  - The shared types in `include/game/*.h`, which `game.h` includes, are used as they are: never defined again, never
+    defined otherwise.
   - Data is `extern`, except a variable the retail code reads through `$gp`: this compiler only does that for a variable
     defined in the same file, so define it. One in `.sdata` is defined at the top of the function's file already: copy
     that definition as it is. One in `.sbss` (`asm/data/bss.bss.s`) is defined without a value (`s32 D_8005F304;`).
   - A string or constant in `.rodata` (`D_800100D0`) stays `extern` (`extern char D_800100D0[];`), never a literal: its
     file includes it from the split. A `switch` is fine: its jump table comes with the function.
-  - Name nothing beyond what the code makes clear; keep splat's `func_`/`D_` names otherwise. A structure of unknown
-    purpose is named after the function or data it belongs to (`Unk80014148`), not `Entry` or `Obj`: it lands in a file
-    beside other functions' types, and one name defined twice fails the build.
+  - Name no function, variable or shared type: keep the names BRIEF.md and the files use (splat's `func_`/`D_` ones,
+    or those given since). Naming is a separate, reviewed step (docs/WORKFLOW.md, "Naming"). A structure of the
+    function's own is named after the function or data it belongs to (`Unk80014148`), not `Entry` or `Obj`: it lands
+    in a file beside other functions' types, and one name defined twice fails the build.
 - Not matched: copy the best attempt to `best.c`.
 - Either way, write `NOTES.md`: what the function does, what was tried, the final count, and what still differs. Short.
