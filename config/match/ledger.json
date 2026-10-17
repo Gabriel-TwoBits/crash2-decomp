@@ -11034,17 +11034,17 @@
     ]
   },
   "func_8002433C": {
-    "outcome": "gave up",
-    "time": "2026-10-16 15:07",
-    "summary": "178 of 199 words differ",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 22:32",
+    "summary": "500 of 500 trials agree, 21 compared",
     "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 6.8,
-    "cost_usd": 0.378732,
-    "turns": 23,
-    "minutes": 6.7,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.2863836,
+    "turns": 10,
+    "minutes": 0.7,
     "runs": [
       {
         "outcome": "gave up",
@@ -11057,8 +11057,24 @@
         "cost_usd": 0.378732,
         "turns": 23,
         "minutes": 6.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 21 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.2863836,
+        "turns": 10,
+        "minutes": 0.7
       }
-    ]
+    ],
+    "mode": "equivalent",
+    "scored": "in place",
+    "reason": "2000 of 2000 trials agree, 84 compared: fewer than 5% of the trials compared"
   },
   "func_8002BC38": {
     "outcome": "equivalent",
@@ -11082,17 +11098,17 @@
     ]
   },
   "func_80023E60": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:50",
-    "summary": "87 of 202 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:33",
+    "summary": "2000 of 2000 trials agree, 1235 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 6.4,
-    "cost_usd": 1.4119656,
-    "turns": 31,
-    "minutes": 6.2,
+    "wall_minutes": 0.7,
+    "cost_usd": 0.229557,
+    "turns": 10,
+    "minutes": 0.6,
     "runs": [
       {
         "outcome": "gave up",
@@ -11130,10 +11146,24 @@
         "cost_usd": 1.4119656,
         "turns": 31,
         "minutes": 6.2
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 306 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.229557,
+        "turns": 10,
+        "minutes": 0.6
       }
     ],
     "resumes": 3,
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/80023B04.o \nsrc/game/80023B04.c:51: conflicting types for `func_80023E60'"
+    "mode": "equivalent",
+    "scored": "in place"
   },
   "func_80030680": {
     "outcome": "equivalent",
