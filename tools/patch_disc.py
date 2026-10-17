@@ -37,7 +37,8 @@ DATA = 24
 EDC = DATA + USER_DATA
 EDC_SIZE = 4
 ECC_P = EDC + EDC_SIZE
-ECC_Q = 2248
+ECC_P_SIZE = 172
+ECC_Q = ECC_P + ECC_P_SIZE
 # The ECC's two passes over the sector from its header: (major count, minor count, major multiplier, minor increment)
 ECC_P_SHAPE = (86, 24, 2, 86)
 ECC_Q_SHAPE = (52, 43, 86, 88)

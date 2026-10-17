@@ -67,6 +67,8 @@ CHECKPOINTS = [
     (7950, "turtle_woods_end"),
 ]
 
+# A trace line, as tools/run_game.lua writes it
+TRACE_FIELDS = ("frame", "image hash", "program counter", "exception code")
 # Where a healthy program counter is: main RAM through its three segments (2 MB), and the BIOS ROM (512 KB)
 PC_RANGES = [
     (0x00000000, 0x00200000),
@@ -160,7 +162,7 @@ def read_trace(folder):
     frames = []
     for line in path.read_text().splitlines():
         words = line.split()
-        if len(words) != len(("frame", "hash", "pc", "code")) or int(words[0]) != len(frames) + 1:
+        if len(words) != len(TRACE_FIELDS) or int(words[0]) != len(frames) + 1:
             sys.exit(f"{path}: unexpected line {line!r}")
         frames.append((words[1], int(words[2], 16), int(words[3])))
     return frames

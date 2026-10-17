@@ -115,6 +115,8 @@ def pcsx_redux():
     appimage = work / PCSX_REDUX_APPIMAGE
     appimage.chmod(EXECUTABLE_MODE)
     subprocess.run([str(appimage), "--appimage-extract"], cwd=work, stdout=subprocess.DEVNULL, check=True)
+    if PCSX_REDUX.exists():
+        shutil.rmtree(PCSX_REDUX)
     (work / APPIMAGE_EXTRACTED).rename(PCSX_REDUX)
     shutil.rmtree(work)
     if not PCSX_REDUX_BINARY.exists():
