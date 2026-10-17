@@ -211,7 +211,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The last 22 functions** as equivalent C (section 4, "Next").
+1. **The last 11 functions** as equivalent C (section 4, "Next").
 2. **Readable C, R1**: the first 40 to 60 names, those with evidence of grade A (section 5).
 
 ## 4. The engine in C
@@ -359,7 +359,16 @@ landing's 2,000 on one to four trials of seeds 1 and 2: agents now run landing's
 functions, 22 left as assembly; in the game, as above, the two halves each agree with retail on all 8,000 frames and
 together lag from frame 2,867.
 
-Next: find what in the disc's data holds the executable's addresses; `run --equivalent` again on the 22 functions left as
+A third pass on the 20 left without GTE (US$8.69; 189 equivalent runs, US$69.13 in all), agents now running landing's
+check, landed 7. Two equiv.py changes landed 4 more from earlier drafts. A `static` helper in the candidate's file ran
+as a call out, never relocated (`func_80029D0C`, `func_800158E0`); it now runs as the candidate's own code. And three
+functions read, on paths the game may never take, registers their caller left (`func_80017380`'s `$s0` for an entry type
+it doesn't handle, `func_80019098`'s `$s2`, `func_80027F3C`'s `$t0` when all three velocities are 0): a disagreeing
+trial's retail code now runs again with those registers flipped, and a trial whose retail result changes isn't compared.
+192 equivalent functions, 11 left as assembly, two with GTE instructions; in the game, the two halves each agree with
+retail on all 8,000 frames.
+
+Next: find what in the disc's data holds the executable's addresses; `run --equivalent` again on the 11 functions left as
 assembly (the largest; two with GTE instructions equiv.py can't run), each batch checked in the game too (by groups
 that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates timing (the game's state at checkpoints, or
 inputs keyed to it rather than to frame numbers).
