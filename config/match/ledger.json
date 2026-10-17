@@ -13092,18 +13092,17 @@
     ]
   },
   "func_800254D4": {
-    "outcome": "equivalent, rejected",
-    "time": "2026-10-17 13:43",
-    "reason": "equivalent.c disagrees: trial 192 disagrees: $a0=0x801008e0 $a1=0x80107418 $a2=0x80100bd0 $a3=0x00000001, stack 0x00000025 0x00000000 0x80104bc0 0x7ed9423a\nthe retail code ended by address error on load, the candidate by TLB miss on load\n499 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 17:52",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 8.0,
-    "cost_usd": 0.6907067999999998,
-    "turns": 29,
-    "minutes": 7.9,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.23468009999999997,
+    "turns": 12,
+    "minutes": 0.8,
     "runs": [
       {
         "outcome": "equivalent, rejected",
@@ -13117,8 +13116,22 @@
         "cost_usd": 0.6907067999999998,
         "turns": 29,
         "minutes": 7.9
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.23468009999999997,
+        "turns": 12,
+        "minutes": 0.8
       }
-    ]
+    ],
+    "summary": "2000 of 2000 trials agree, 2000 compared"
   },
   "func_8002A8D0": {
     "outcome": "equivalent, not landed",

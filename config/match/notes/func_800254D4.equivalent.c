@@ -52,16 +52,17 @@ s32 func_800254D4(void *arg0, s32 arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5,
     frac = pos & FRAC_MASK;
     planar = (arg5 & PLANE_FLAGS) != 0;
 
-    ax = p[0] + origin[0];
-    ay = p[1] + origin[1];
-    az = p[2] + origin[2];
-    bx = q[0] + origin[0];
-    by = q[1] + origin[1];
-    bz = q[2] + origin[2];
+    /* Only the axes in use are read; the others may point at unmapped memory. */
     if (planar) {
+        ax = p[0] + origin[0];
+        az = p[2] + origin[2];
+        bx = q[0] + origin[0];
+        bz = q[2] + origin[2];
         cur = func_800254D4_proj(qx - (ax + (((bx - ax) * frac) >> FIXED_SHIFT)),
                                  qz - (az + (((bz - az) * frac) >> FIXED_SHIFT)), arg4, arg3, arg5);
     } else {
+        ay = p[1] + origin[1];
+        by = q[1] + origin[1];
         cur = ((ay + (((by - ay) * frac) >> FIXED_SHIFT)) - qy) << FIXED_SHIFT;
     }
     best = target - cur;
