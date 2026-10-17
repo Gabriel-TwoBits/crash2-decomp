@@ -10811,7 +10811,7 @@
   },
   "func_8001CEDC": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:25",
+    "time": "2026-10-17 18:05",
     "summary": "build/match/func_8001CEDC/placed/8001CEDC.c: build/match/func_8001CEDC/placed/8001CEDC.c:92: `func_8001CEDC' redeclared as different kind of symbol",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
@@ -10865,7 +10865,7 @@
     ],
     "mode": "equivalent",
     "scored": "in place",
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/8001CEDC.o \nsrc/game/8001CEDC.c:92: `func_8001CEDC' redeclared as different kind of symbol"
+    "reason": "trial 2 disagrees: $a0=0x80105b18 $a1=0x80102d80 $a2=0xffffff84 $a3=0x00000004, stack 0x00000010 0x801004ac 0x00006667 0x00000000\nthe retail code ended by returned, the candidate by address error on load\n1738 of 2000 trials agree"
   },
   "func_8001BFDC": {
     "outcome": "equivalent",
@@ -12098,9 +12098,9 @@
     "reason": "trial 147 disagrees: $a0=0x80102078 $a1=0x80100eec $a2=0x00000000 $a3=0x00000000, stack 0x00000030 0x80100554 0x801001cc 0x8010416c, memory at D_8006F1F0+0x922a8 (0x80101498) repaired to 0x80100390\nthe retail code ended by returned, the candidate by address error on load\n1980 of 2000 trials agree"
   },
   "func_8001C718": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:35",
-    "summary": "build/match/func_8001C718/placed/8001BFDC.c: build/match/func_8001C718/placed/8001BFDC.c:158: `func_8001C718' redeclared as different kind of symbol",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:05",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
@@ -12140,8 +12140,7 @@
         "turns": 14,
         "minutes": 0.9
       }
-    ],
-    "reason": "FAILED: [code=1] build/src/game/8001BFDC.o \nsrc/game/8001BFDC.c:158: `func_8001C718' redeclared as different kind of symbol"
+    ]
   },
   "func_800231B0": {
     "outcome": "equivalent, not landed",

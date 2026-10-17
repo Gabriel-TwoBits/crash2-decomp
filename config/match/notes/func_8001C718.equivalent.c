@@ -45,10 +45,9 @@
 #define MODEL_KIND(o) FIELD(FIELD(FIELD(o, OFF_MODEL, u8 *), OFF_MODEL_INFO, u8 *), 4, u32)
 
 extern u32 D_8006CB94;
-extern void *D_8006CB60;
+extern s32 D_8006CB60;
 extern s32 D_8005F180;
 void func_8001D63C(void *, s32 *, s32 *);
-void func_8001ABF8(void *, s32 *);
 
 s32 func_8001C718(u8 *obj, s32 flag) {
     s32 out[2];
@@ -67,7 +66,7 @@ s32 func_8001C718(u8 *obj, s32 flag) {
         func_800158E0();
     } else {
     }
-    D_8006CB60 = obj;
+    D_8006CB60 = (s32)obj;
     pad = D_8006CB94;
     hit = pad & PAD_ANY;
     if (hit != 0) {
