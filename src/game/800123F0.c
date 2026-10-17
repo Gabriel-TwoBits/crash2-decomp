@@ -595,7 +595,26 @@ s32 func_80013038(Unk80013038 *arg0, s32 arg1) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80013084);
+/* The value func_80012ED0 returns when a CD read fails */
+#define CD_FAILURE -0x10
+/* func_80013200 switches on the state from this one up */
+#define FIRST_STATE 2
+
+typedef struct Unk80013084 {
+    /* 0x00 */ u8 pad0[0x4];
+    /* 0x04 */ s16 state;
+    /* 0x06 */ u8 pad6[0x1C - 0x6];
+    /* 0x1C */ s32 unk1C;
+    /* 0x20 */ u8 pad20[0x4];
+    /* 0x24 */ struct Unk80013084 *unk24;
+} Unk80013084;
+
+s32 func_80013084(Unk80013084 *arg0) {
+    arg0->state = FIRST_STATE;
+    arg0->unk1C = 1;
+    arg0->unk24 = arg0;
+    return CD_FAILURE;
+}
 
 typedef struct Unk800130A0 {
     /* 0x00 */ u8 *base;
