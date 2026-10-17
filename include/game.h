@@ -177,6 +177,7 @@ s32 func_8002B57C(void *, s32 *, void *, s32);
 void func_8002BC38(void *, s32 *, s32 *, void *);
 s32 func_8002BF58(void *, void *);
 void func_8002C0F0(void *, void *, s32 *, s32 *, s32 *);
+s32 *func_8002C324(void *, s32, s32);
 s32 func_8002CB14(void);
 void func_8002D6E4(s32 *, s32 *, void *, void *, s32);
 void func_8002DE08(s32 *, s32 *, void *, void *);
