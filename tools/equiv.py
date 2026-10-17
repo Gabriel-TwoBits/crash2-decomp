@@ -159,6 +159,8 @@ MAX_CALLS = 1_000
 # two global pointers read in a row are both arena pointers in one trial in sixteen
 MAX_REPAIRS = 16
 # Instructions a traced run follows to find the faulting access's word: a fault later than this isn't repaired
+# TRADEOFF: a Python hook on every instruction (about 1.3 us each), from the start at each repair; tracing natively or
+# resuming from a snapshot if late faults matter
 TRACE_LIMIT = 20_000
 REPAIR_OFFSET_LIMIT = 0x100
 REPAIR_COUNT_LIMIT = 8
@@ -1011,6 +1013,7 @@ class Tracer:
 
     def sum(self, uc, rs, rt):
         """The origin of rs + rt: the input that isn't an address in memory already, an offset when the other is one"""
+        # TRADEOFF: one origin per register; an address built from two bad inputs is repaired one input per run
         left, right = self.origins.get(rs), self.origins.get(rt)
         left_valid, right_valid = points_to_memory(register_value(uc, rs)), points_to_memory(register_value(uc, rt))
         if left_valid and right_valid:
