@@ -241,6 +241,7 @@ s32 func_80036BD8(s32);
 s32 func_80036C40(s32);
 s32 *func_80036D0C(struct Obj *, s32);
 s32 *func_80036E30(s32, s32, s32);
+s32 func_80036FAC(u32, s32);
 void func_8003756C(u8 *, u32);
 void func_80038700(s32, u32);
 void func_80038F00(s32, u32);
