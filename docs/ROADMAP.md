@@ -212,7 +212,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **The last 40 functions** as equivalent C (section 4, "Next").
-2. **Readable C**: names and types for the equivalent and matched functions, subsystem by subsystem (section 4).
+2. **Readable C, R1**: the first 40 to 60 names, those with evidence of grade A (section 5).
 
 ## 4. The engine in C
 
@@ -310,7 +310,51 @@ Next: find what in the disc's data holds the executable's addresses; `loop --equ
 assembly (the largest; 16 never tried, two with GTE instructions equiv.py can't run), each batch checked in the game
 too; a run_game comparison that tolerates timing (the decompressor's calls, or the game's state at checkpoints).
 
-## 5. Beyond matching
+## 5. Readable C (in progress)
+
+The C proven equal to the game, matched or equivalent, still names nearly everything by its address. This milestone
+gives it names and types without moving a byte: matched C keeps the retail SHA-1, and a batch of renames or types leaves
+`build/nonmatching/SCUS_941.54.exe` byte for byte as it was (two clean `ninja nonmatching` builds give one SHA-1), so
+neither `tools/equiv.py` nor `tools/run_game.py` has to run again. A batch that changes it runs equiv.py (2 seeds of
+2,000 trials) on the functions it changed, and run_game.py.
+
+How (docs/WORKFLOW.md, "Naming"): names in `config/symbol_addrs.txt`, each with its evidence, given by
+`tools/rename.py`; shared types in `include/game/<subsystem>.h`, included by `include/game.h`, named with their subsystem
+(`GoolObject`, `NsfEntry`); a name only on evidence of grade A (an SDK call, a string, a format constant, what
+`tools/run_game.py` shows) or B and C (the same use by two independent callers, and a reference's note the assembly
+confirms). The matching loop's records stay keyed by the address name.
+
+Steps, in order:
+
+- **R0, the tools (done).** `tools/symbols.py` reads splat's symbol table (`.splat/splat_symbols.csv`): each name's
+  address and kind (game function, SDK function, data, label), for `configure.py`, `tools/match.py`, `tools/rename.py`
+  and `tools/progress.py`. `tools/match.py` takes any name the table gives a game function or data where it took
+  `func_`/`D_` names, tells an SDK function by its address, keeps `include/game.h`'s prototypes in address order, lets
+  the shared headers' types into `include/game.h`'s prototypes and refuses a candidate defining one otherwise, and finds
+  a function by either name; its records stay keyed by the address name. On the tree without names, `next`,
+  `next --equivalent` and `report` print what they did before, and its patterns find in the 509 C files of `src/`, the
+  notes and `include/game.h` exactly what the old ones did. `tools/rename.py` names a batch and keeps it only when both
+  builds hold. Proven by a scratch batch of six, dropped afterwards: an equivalent function, a matched one, one still
+  plain `INCLUDE_ASM` (what `next` offers), one the handwritten code loads with `lui`/`ori`, an `.sdata` variable (its
+  line's `size:` kept) and an `.sbss` one. Both builds held, the equivalent executable stayed byte for byte, `next`
+  and `next --equivalent` offered the new name, `report` printed the same, and `land --equivalent` of two landed
+  functions whose notes' C calls the old name stayed a no-op; a second batch corrected two names and their evidence.
+  A build failure injected after the rename put every file back. `tools/progress.py` starts at 0 of 564 game functions and 0 of
+  1,112 data symbols named, 127 structures in `src/game/`, 192 fields read at a raw offset.
+- **R1, anchor names**: 40 to 60 of grade A. `main` (`func_800117BC`), its initialisation, loop and shutdown, the heap,
+  the CD, the NSF lookups, an entry's type from its EID, the random generator, the sine, the GOOL interpreter's and its
+  operands' entry points, the frame counter, the draw buffers, the player's pointer.
+- **R2, `GoolObject`**: the game object, which 50 functions in 13 files read at offsets 0xA8 to 0x12C, through 9
+  partial structures.
+- **R3**: the NSF types.
+- **R4**: `loop --equivalent` on the functions left as assembly, the shared types in its briefs.
+- **R5**: the other subsystems. **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
+
+Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
+writes: docs/COMPILER.md, "Small data"), rewriting equivalent C for readability, the GOOL opcodes' names, the GTE
+routines.
+
+## 6. Beyond matching
 
 With the game in C, a native port (the way Crash Twinsanity's PS2 decomp got its PC port) becomes possible. Not before the
 code is.

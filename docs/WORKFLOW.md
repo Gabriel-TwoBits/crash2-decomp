@@ -210,6 +210,44 @@ not before:
 A struct field's offset stays in a comment until the whole struct is known (`/* 0x1C */ s32 velocity_y;`). The SDK's
 functions keep their PsyQ names (`LoadImage`, `CdRead`).
 
+A name needs evidence, else the address name stays (a wrong name costs more than an address):
+
+- **A**: a call into the SDK, a string, a format constant checked in this project's assembly, or what
+  `tools/run_game.py` shows; or
+- **B and C**: the same use by two independent callers or more, and a reference's note on the behaviour
+  (docs/REFERENCES.md) that the assembly confirms.
+
+Names are given with `tools/rename.py`, never by hand:
+
+    .venv/bin/python tools/rename.py OLD NEW --evidence "what proves it"
+    .venv/bin/python tools/rename.py --table FILE.tsv     one rename per line: old, new, evidence, tab-separated
+
+The name goes into `config/symbol_addrs.txt`, from which splat writes it into the split: the symbol's line replaced, its
+attributes kept (`size:`, `type:`), or a line added; the evidence a full-line comment above it (splat reads attributes
+after `//` on the symbol's own line). Never a second name at an address: `configure.py`'s rewrite of the handwritten
+code's `lui`/`ori` pairs stops on one. Each whole word of `src/` and `include/` is renamed, `INCLUDE_ASM` and
+`INCLUDE_RODATA` lines included (splat then writes `asm/nonmatchings/game/<file>/NEW.s`). Refused: an unknown OLD, an
+SDK function or a label, `D_8006F1F0` (`configure.py`'s end of `.bss`), a NEW already used (a symbol, a word of `src/`,
+`include/` or `config/symbol_addrs.txt`) or off the conventions: a game function `Subsystem_PascalCase` with one of the
+prefixes `Nsf`, `Gool`, `Obj`, `Zone`, `Gfx`, `Snd`, `Input`, `Save`, `Heap`, `Math`, `Rand` (no PsyQ name has one
+followed by an underscore), or `main`; a variable `g_PascalCase`. Then `configure.py`, `ninja` and `ninja nonmatching`
+run, and the batch stays only when the SHA-1 holds and the equivalent executable is byte for byte what it was (`ninja
+nonmatching` is deterministic); otherwise every file goes back. `--allow-equivalent-change` keeps a batch that changes
+the equivalent executable and lists the functions whose code changed (relocated fields masked), which `tools/equiv.py`
+(2 seeds of 2,000 trials) and `tools/run_game.py` then judge. Nothing is committed: a batch is reviewed, then committed
+as `refactor: name ...`.
+
+The matching loop's records (the ledger, the notes, `skip.txt`, `build/match/`) stay keyed by the address name, and
+`tools/match.py` takes either name; a candidate's C written before a rename lands under today's names. Docs citing a
+function by its address keep doing so.
+
+Shared types go in `include/game/<subsystem>.h` (types, enums and constants, no code), included by `include/game.h`,
+which keeps the one list of prototypes. Their names carry the subsystem (`GoolObject`, `NsfEntry`): files have local
+structures of their own, `Node`, `Ent` and `V` each in two or three. Landing treats them as the file's own: a candidate's copy
+identical to the header's goes, one defined otherwise is refused (`defines GoolObject otherwise than
+include/game/object.h`), and a prototype using them moves into `include/game.h` like one of basic types.
+`tools/progress.py` counts the names given and the structures, and the fields still read at a raw offset.
+
 ## Tools
 
 | Tool | What it does |
