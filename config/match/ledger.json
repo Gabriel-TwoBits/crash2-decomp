@@ -12437,5 +12437,64 @@
         "minutes": 2.0
       }
     ]
+  },
+  "func_8002B57C": {
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 00:05",
+    "summary": "500 of 500 trials agree, 69 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.0,
+    "cost_usd": 0.5382839,
+    "turns": 20,
+    "minutes": 2.0,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 69 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.0,
+        "cost_usd": 0.5382839,
+        "turns": 20,
+        "minutes": 2.0
+      }
+    ],
+    "reason": "trial 1244 disagrees: $a0=0x801045dc $a1=0x801056b4 $a2=0x80101fa0 $a3=0x00000001, stack 0xffffffb5 0x00000000 0xffffff80 0x00000001\ncall 2 to func_8001CC10 (0x8001cc10): stack argument 0 is a frame address holding 0x00006400 0x00000000 0x00000000 0x00000000 in the retail code, a frame address holding 0x00006400 0x00000000 0x801045dc 0x00000000 in the candidate\n1999 of 2000 trials agree"
+  },
+  "func_80031AE8": {
+    "outcome": "equivalent",
+    "time": "2026-10-17 00:07",
+    "summary": "2000 of 2000 trials agree, 455 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.2,
+    "cost_usd": 0.49785770000000007,
+    "turns": 18,
+    "minutes": 2.1,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 112 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.2,
+        "cost_usd": 0.49785770000000007,
+        "turns": 18,
+        "minutes": 2.1
+      }
+    ]
   }
 }
