@@ -11470,5 +11470,96 @@
         "minutes": 0.6
       }
     ]
+  },
+  "func_80024658": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-16 22:46",
+    "summary": "trial 45 disagrees: $a0=0x80100b10 $a1=0x80107318 $a2=0x44d5eb26 $a3=0xb210d7da, stack 0x80107b4c 0x00000001 0x80107998 0x00000000\nthe retail code makes 9 calls, the candidate 6\n477 of 500 trials agree",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.4,
+    "cost_usd": 0.5182428,
+    "turns": 29,
+    "minutes": 2.3,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 45 disagrees: $a0=0x80100b10 $a1=0x80107318 $a2=0x44d5eb26 $a3=0xb210d7da, stack 0x80107b4c 0x00000001 0x80107998 0x00000000\nthe retail code makes 9 calls, the candidate 6\n477 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.4,
+        "cost_usd": 0.5182428,
+        "turns": 29,
+        "minutes": 2.3
+      }
+    ]
+  },
+  "func_800316EC": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-16 22:47",
+    "summary": "no attempt kept",
+    "best": null,
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.3,
+    "cost_usd": 0.31560039999999995,
+    "turns": 9,
+    "minutes": 1.2,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "no attempt kept",
+        "best": null,
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.3,
+        "cost_usd": 0.31560039999999995,
+        "turns": 9,
+        "minutes": 1.2
+      }
+    ]
+  },
+  "func_80038700": {
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:49",
+    "summary": "2000 of 2000 trials agree, 649 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.1,
+    "cost_usd": 0.5798704999999998,
+    "turns": 33,
+    "minutes": 2.1,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 141 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.1,
+        "cost_usd": 0.5798704999999998,
+        "turns": 33,
+        "minutes": 2.1
+      }
+    ]
   }
 }
