@@ -704,7 +704,9 @@ s32 func_8003613C(void) {
     return D_8005F264[0];
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036150);
+s32 func_80036150(void) {
+    return D_8005F264[1];
+}
 
 void EnableEvent(s32);
 void InitCARD(s32);
