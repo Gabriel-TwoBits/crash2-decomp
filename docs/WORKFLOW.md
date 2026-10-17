@@ -95,7 +95,7 @@ has inline (`func_80029D0C`'s helper was compared as a call before). Then
 Unicorn runs the candidate and the retail function from the same state, trial by trial: RAM and the scratchpad filled
 with random words (zeros, small numbers, pointers into an arena of such words, the function's own constants), each word
 of the executable's data either its retail value or random, random arguments (an arena pointer for a parameter the C
-declares as a pointer). A call out of the function is recorded (target, arguments as the callee's prototype counts
+declares as a pointer, a value of its type for one declared narrower than a word: `u8`, `s16`, ...). A call out of the function is recorded (target, arguments as the callee's prototype counts
 them, a pointer into the caller's frame by the words there) and answered with a made-up return value, not run. The
 retail code and read-only data are read-only: a store through a wild pointer ends the run instead of rewriting the
 retail function as it runs (`func_80015344`'s table index went negative into its own code, which then raised a

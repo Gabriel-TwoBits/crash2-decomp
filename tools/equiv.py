@@ -607,6 +607,38 @@ class Declarations:
     compare_v1: bool
     # Whether each of the function's parameters is a pointer
     pointer_parameters: tuple
+    # Each parameter's narrow integer type, (bits, signed), or None (narrow_type)
+    narrow_parameters: tuple
+
+
+# A parameter's integer types narrower than a word, by the words that name them: (bits, signed). Plain char is left out,
+# its signedness being the compiler's
+NARROW_TYPES = {("u8",): (8, False), ("s8",): (8, True), ("unsigned", "char"): (8, False), ("signed", "char"): (8, True),
+                ("u16",): (16, False), ("s16",): (16, True), ("unsigned", "short"): (16, False),
+                ("signed", "short"): (16, True), ("short",): (16, True)}
+
+
+def narrow_type(parameter):
+    """(bits, signed) of a parameter declared with an integer type narrower than a word, else None"""
+    if "*" in parameter or "[" in parameter:
+        return None
+    else:
+        words = tuple(word for word in re.findall(r"\w+", parameter) if word not in ("const", "volatile", "int"))
+        # The type's words, with or without the parameter's name after them
+        return NARROW_TYPES.get(words) or NARROW_TYPES.get(words[:-1])
+
+
+def narrowed(value, narrow):
+    """A word as a parameter of that narrow type holds it, extended to a word as the caller passes it"""
+    if narrow is None:
+        return value
+    else:
+        bits, signed = narrow
+        value &= (1 << bits) - 1
+        if signed and value >> (bits - 1):
+            return (value - (1 << bits)) & WORD_MASK
+        else:
+            return value
 
 
 def declarations(source, function, retail):
@@ -624,6 +656,7 @@ def declarations(source, function, retail):
     counts = {}
     variadic = {}
     pointer_parameters = None
+    narrow_parameters = ()
     for match in NAME_BEFORE_PARENTHESIS.finditer(text):
         name = match.group(1)
         if name not in retail.addresses:
@@ -641,11 +674,12 @@ def declarations(source, function, retail):
             counts[name] = max(counts.get(name, 0), len(parts))
             if name == function and pointer_parameters is None:
                 pointer_parameters = tuple("*" in part for part in parts)
+                narrow_parameters = tuple(narrow_type(part) for part in parts)
     counts.update(variadic)
     returns_void = re.search(rf"\bvoid\s+{function}\s*\(", text) is not None
     returns_long = re.search(rf"{LONG_RETURN}{function}\s*\(", text) is not None
     return Declarations({retail.addresses[name]: count for name, count in counts.items()}, not returns_void, returns_long,
-                        pointer_parameters or ())
+                        pointer_parameters or (), narrow_parameters)
 
 
 ROOT_MEMORY, ROOT_ARGUMENT, ROOT_CALL = "memory", "argument", "call"
@@ -673,10 +707,11 @@ class Root:
 class Fuzz:
     """A trial's random values, each drawn from a generator seeded by the trial and what it is for"""
 
-    def __init__(self, seed, trial, constants, pointer_parameters):
+    def __init__(self, seed, trial, constants, pointer_parameters, narrow_parameters=()):
         self.key = f"{seed}:{trial}"
         self.constants = constants
         self.pointer_parameters = pointer_parameters
+        self.narrow_parameters = narrow_parameters
         # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
         self.repairs = {}
         # The registers set at random on entry, the arguments aside, inverted bit by bit (entry_registers)
@@ -708,6 +743,11 @@ class Fuzz:
                 values.append(word)
         for index in range(len(ARGUMENT_REGISTERS)):
             values[index] = self.repairs.get(Root(ROOT_ARGUMENT, index), values[index])
+        # TRADEOFF: a parameter declared narrower than a word gets only values of its type, as callers compiled with the
+        # prototype pass; the C's declaration is trusted there, and a type narrower than the callers' values would hide
+        # what the function does with the upper bits
+        for index, narrow in enumerate(self.narrow_parameters[:len(values)]):
+            values[index] = narrowed(values[index], narrow)
         return values
 
     def repair(self, root, role):
@@ -1383,7 +1423,7 @@ def main():
     pool = fuzz_pool(arguments.seed, constants)
     machines = None
     for trial in range(arguments.trials):
-        fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters)
+        fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters, declared.narrow_parameters)
         base = Memory(fuzz, pool, retail, candidate)
         if machines is None:
             # The retail code's, the tracing one's, the candidate's
