@@ -27,7 +27,7 @@ extern s32 D_800608E0;
 extern s32 D_8005F38C;
 extern s32 D_8005BADC;
 extern s32 D_8005BAE0;
-extern s32 D_800608CC;
+extern s32 D_800608CC[];
 extern s32 D_800608D4;
 
 void func_80022E74(s32 *arg0) {
@@ -43,10 +43,10 @@ void func_80022E74(s32 *arg0) {
                       ((s32 *)p)[(UNK_FIELD_OFFSET / 4) + D_8005BADC * UNK_TABLE_STRIDE + p->unk_10->unk_184],
                       D_8005BAE0, 0);
         D_8005B994 = UNK_STATE_5;
-        ((s32 *)D_8005F38C)[UNK_D_8005F38C_FIELD / 4] = D_800608CC;
+        ((s32 *)D_8005F38C)[UNK_D_8005F38C_FIELD / 4] = D_800608CC[0];
         return;
     } else {
-        func_800200A8(D_800608CC, D_800608D4, D_800608E0, 0);
+        func_800200A8(D_800608CC[0], D_800608D4, D_800608E0, 0);
         func_800231B0(args);
     }
 }

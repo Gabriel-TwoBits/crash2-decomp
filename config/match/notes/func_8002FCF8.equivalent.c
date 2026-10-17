@@ -36,7 +36,8 @@ extern s32 func_8002F6C8(void *, s32, s32, s32);
 extern s32 func_8003156C(s32);
 extern void *D_8005F374;
 extern Unk8002FCF8Holder *D_8005F38C;
-extern Unk8002FCF8Block *D_8005F3D8;
+extern s32 D_8005F3D8;
+#define BLOCK ((Unk8002FCF8Block *)D_8005F3D8)
 extern s32 D_80060944;
 extern Unk8002FCF8Cam *D_80063454;
 extern s32 D_8006CBF0;
@@ -46,18 +47,18 @@ extern s32 D_8006CD14;
 
 void func_8002FCF8(void) {
     D_8006CD14 = STATE_LOADING;
-    D_8005F374 = D_8005F3D8->unk_1090;
-    func_8003156C(D_8005F3D8->unk_0004);
-    D_80060944 = D_8005F3D8->unk_000C;
-    D_80063454->unk_0C = D_8005F3D8->unk_1070;
-    D_8005F38C->unk_08->unk_30[0] = D_8005F3D8->unk_1074[0];
-    D_8005F38C->unk_08->unk_30[1] = D_8005F3D8->unk_1074[1];
-    D_8005F38C->unk_08->unk_30[2] = D_8005F3D8->unk_1074[2];
-    D_8005F38C->unk_08->unk_30[3] = D_8005F3D8->unk_1074[3];
-    D_8005F38C->unk_08->unk_30[4] = D_8005F3D8->unk_1074[4];
-    D_8005F38C->unk_08->unk_30[5] = D_8005F3D8->unk_1074[5];
+    D_8005F374 = BLOCK->unk_1090;
+    func_8003156C(BLOCK->unk_0004);
+    D_80060944 = BLOCK->unk_000C;
+    D_80063454->unk_0C = BLOCK->unk_1070;
+    D_8005F38C->unk_08->unk_30[0] = BLOCK->unk_1074[0];
+    D_8005F38C->unk_08->unk_30[1] = BLOCK->unk_1074[1];
+    D_8005F38C->unk_08->unk_30[2] = BLOCK->unk_1074[2];
+    D_8005F38C->unk_08->unk_30[3] = BLOCK->unk_1074[3];
+    D_8005F38C->unk_08->unk_30[4] = BLOCK->unk_1074[4];
+    D_8005F38C->unk_08->unk_30[5] = BLOCK->unk_1074[5];
     D_8006CC84 = NO_ENTRY;
-    func_8002F6C8(D_8005F3D8->unk_0010, D_8005F3D8->unk_1074[5], D_8005F3D8->unk_1074[2], D_8005F3D8->unk_1074[3]);
+    func_8002F6C8(BLOCK->unk_0010, BLOCK->unk_1074[5], BLOCK->unk_1074[2], BLOCK->unk_1074[3]);
     D_8006CC00 = 0;
     D_8006CBF0 = 0;
 }

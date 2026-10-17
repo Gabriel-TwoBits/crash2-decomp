@@ -450,15 +450,15 @@
     ]
   },
   "func_80022E74": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:19",
-    "summary": "500 of 500 trials agree, 402 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:52",
+    "summary": "2000 of 2000 trials agree, 1607 compared",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "cost_usd": 0.2128612,
-    "turns": 11,
-    "minutes": 0.7,
+    "cost_usd": 0.22229200000000002,
+    "turns": 16,
+    "minutes": 0.6,
     "runs": [
       {
         "outcome": "gave up",
@@ -503,12 +503,25 @@
         "cost_usd": 0.2128612,
         "turns": 11,
         "minutes": 0.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 402 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.22229200000000002,
+        "turns": 16,
+        "minutes": 0.6
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
     "wall_minutes": 0.7,
     "mode": "equivalent",
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/80020A24.o \nsrc/game/80020A24.c:260: conflicting types for `D_800608CC'"
+    "scored": "in place"
   },
   "func_80038C14": {
     "outcome": "landed",
@@ -5862,15 +5875,15 @@
   },
   "func_8002FCF8": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:16",
+    "time": "2026-10-16 21:51",
     "summary": "500 of 500 trials agree, 115 compared",
     "best": "base.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 0.6,
-    "cost_usd": 0.2072758,
-    "turns": 7,
+    "wall_minutes": 0.7,
+    "cost_usd": 0.23380439999999997,
+    "turns": 16,
     "minutes": 0.6,
     "runs": [
       {
@@ -5896,10 +5909,24 @@
         "cost_usd": 0.2072758,
         "turns": 7,
         "minutes": 0.6
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 115 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.7,
+        "cost_usd": 0.23380439999999997,
+        "turns": 16,
+        "minutes": 0.6
       }
     ],
     "mode": "equivalent",
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/8002FB84.o \nsrc/game/8002FB84.c:125: conflicting types for `D_8005F3D8'"
+    "scored": "in place",
+    "reason": "trial 1925 disagrees: $a0=0x801006b8 $a1=0x00000019 $a2=0xfffffffe $a3=0xffffffff, stack 0x00000005 0x00000023 0x20788eb5 0x801006e4\nthe retail code ended by returned, the candidate by address error on store\n1999 of 2000 trials agree"
   },
   "func_80039104": {
     "outcome": "landed",
@@ -5967,16 +5994,16 @@
     "mode": "equivalent"
   },
   "func_80019D30": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:17",
-    "summary": "500 of 500 trials agree, 500 compared",
-    "best": "a2.c",
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-16 21:51",
+    "summary": "build/match/func_80019D30/placed/80019098.c: build/match/func_80019D30/placed/80019098.c:108: `func_80019D30' redeclared as different kind of symbol",
+    "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
     "wall_minutes": 0.4,
-    "cost_usd": 0.158477,
-    "turns": 6,
+    "cost_usd": 0.18778229999999999,
+    "turns": 9,
     "minutes": 0.4,
     "runs": [
       {
@@ -6002,10 +6029,24 @@
         "cost_usd": 0.158477,
         "turns": 6,
         "minutes": 0.4
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "build/match/func_80019D30/placed/80019098.c: build/match/func_80019D30/placed/80019098.c:108: `func_80019D30' redeclared as different kind of symbol",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.18778229999999999,
+        "turns": 9,
+        "minutes": 0.4
       }
     ],
     "mode": "equivalent",
-    "reason": "FAILED: [code=1] build/src/game/80019098.o \nsrc/game/80019098.c:108: `func_80019D30' redeclared as different kind of symbol"
+    "scored": "in place"
   },
   "func_800270C4": {
     "outcome": "landed",
