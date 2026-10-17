@@ -74,7 +74,7 @@ extern s32 D_8006991C;
 extern s32 D_8006CDD0[6];
 extern s32 D_8005B440[][3];
 extern s32 D_8005F180;
-extern u8 *D_8005F374;
+extern s32 *D_8005F374;
 extern u8 *D_8005F3D8;
 extern s32 *D_800608CC;
 extern u8 *D_80063450;
@@ -211,13 +211,13 @@ void func_800158E0(void) {
                 p->unk_3C = 0;
                 p->unk_40 = DIR_NEUTRAL;
                 sel = p->unk_28;
-                if (D_8005F374 == D_8005F3D8 + STREAM_END_OFFSET) {
+                if ((u8 *)D_8005F374 == D_8005F3D8 + STREAM_END_OFFSET) {
                     *(s32 *)(D_80063450 + STREAM_RESTART_DST) = *(s32 *)(D_8005F3D8 + STREAM_RESTART_OFFSET);
                 } else {
                     /* not at the first record */
                 }
-                p->unk_28 = *(s32 *)(D_8005F374 + STREAM_RECORD_BTN);
-                D_8005F374 += STREAM_RECORD_SIZE;
+                p->unk_28 = *(s32 *)((u8 *)D_8005F374 + STREAM_RECORD_BTN);
+                D_8005F374 = (s32 *)((u8 *)D_8005F374 + STREAM_RECORD_SIZE);
                 if (((sel & BTN_SEL_MASK) && p->unk_00 == 0)
                     || (u32)D_8005F374 >= (u32)(D_8005F3D8 + (*(s32 *)D_8005F3D8 * STREAM_COUNT_SCALE) + STREAM_END_OFFSET)) {
                     if (D_8006CCA0 != 0) {

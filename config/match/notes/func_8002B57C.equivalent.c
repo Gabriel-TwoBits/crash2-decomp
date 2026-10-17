@@ -81,7 +81,7 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     s32 limit;
     s32 bound;
     s32 sp28[3];
-    s32 sp38;
+    s32 sp38[4];
 
     self = arg0;
     best = NO_HIT;
@@ -198,8 +198,8 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
         best_obj->unk_A8 |= STATE_TOUCHED;
         self->unk_A8 |= STATE_TOUCHED;
         if (self->unk_88 >= 0 || best_obj->unk_88 < 0) {
-            sp38 = PARAM_6400;
-            func_8001CC10((s32)self, (s32)best_obj, PARAM_1700, 1, &sp38);
+            sp38[0] = PARAM_6400;
+            func_8001CC10((s32)self, (s32)best_obj, PARAM_1700, 1, sp38);
         }
         if (!(self->unk_100 & FLAG_SKIP_BOUND)) {
             return best;

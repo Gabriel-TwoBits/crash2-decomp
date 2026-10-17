@@ -47,6 +47,16 @@ static inline s32 func_80024B6C_dist(s32 flags, s32 x, s32 y, s32 z, s32 qx, s32
     }
 }
 
+/* Same, reading only the point fields the flag needs. */
+static inline s32 func_80024B6C_dist_at(s32 flags, Unk80024B6CPoint *p, Unk80024B6CBase *base, s32 qx, s32 qy, s32 qz,
+                                        s32 c, s32 s) {
+    if (flags & UNK_80024B6C_PLANE_MASK) {
+        return func_80024B6C_dist(flags, p->x + base->x, 0, p->z + base->z, qx, qy, qz, c, s);
+    } else {
+        return func_80024B6C_dist(flags, 0, p->y + base->y, 0, qx, qy, qz, c, s);
+    }
+}
+
 s32 func_80024B6C(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg5, s32 *arg6) {
     Unk80024B6CPath *path;
     Unk80024B6CBase *base;
@@ -98,12 +108,17 @@ s32 func_80024B6C(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg
     }
     frac = pos & 0xFF;
 
-    x0 = p0->x + base->x;
-    y0 = p0->y + base->y;
-    z0 = p0->z + base->z;
-    x1 = p1->x + base->x;
-    y1 = p1->y + base->y;
-    z1 = p1->z + base->z;
+    /* Only the fields the flag needs are read: x and z for a plane, y otherwise. */
+    x0 = y0 = z0 = x1 = y1 = z1 = 0;
+    if (arg5 & UNK_80024B6C_PLANE_MASK) {
+        x0 = p0->x + base->x;
+        z0 = p0->z + base->z;
+        x1 = p1->x + base->x;
+        z1 = p1->z + base->z;
+    } else {
+        y0 = p0->y + base->y;
+        y1 = p1->y + base->y;
+    }
 
     here = func_80024B6C_dist(arg5, x0 + (((x1 - x0) * frac) >> 8), y0 + (((y1 - y0) * frac) >> 8),
                               z0 + (((z1 - z0) * frac) >> 8), qx, qy, qz, c, s);
@@ -143,7 +158,7 @@ s32 func_80024B6C(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg
             pn = (Unk80024B6CPoint *)func_80031AE8(obj, UNK_80024B6C_ENTRY_KIND, 0, (next << 8) >> 8, 0,
                                                    UNK_80024B6C_ENTRY_SIZE, 0, 0, 0);
             dprev = dnext;
-            dnext = func_80024B6C_dist(arg5, pn->x + base->x, pn->y + base->y, pn->z + base->z, qx, qy, qz, c, s);
+            dnext = func_80024B6C_dist_at(arg5, pn, base, qx, qy, qz, c, s);
             dnew = dnext - target;
             if (target >= dnext) {
                 *arg6 = (cur << 8) + (((dprev - target) << 8) / (dprev - dnext));
@@ -190,7 +205,7 @@ s32 func_80024B6C(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg
             pn = (Unk80024B6CPoint *)func_80031AE8(obj, UNK_80024B6C_ENTRY_KIND, 0, (idx << 8) >> 8, 0,
                                                    UNK_80024B6C_ENTRY_SIZE, 0, 0, 0);
             dprev = dcur;
-            dcur = func_80024B6C_dist(arg5, pn->x + base->x, pn->y + base->y, pn->z + base->z, qx, qy, qz, c, s);
+            dcur = func_80024B6C_dist_at(arg5, pn, base, qx, qy, qz, c, s);
             dnew = dcur - target;
             if (target >= dcur) {
                 *arg6 = (cur << 8) - (((dprev - target) << 8) / (dprev - dcur));

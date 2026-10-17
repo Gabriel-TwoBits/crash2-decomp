@@ -12706,17 +12706,17 @@
   },
   "func_8002B57C": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:15",
-    "summary": "500 of 500 trials agree, 69 compared",
+    "time": "2026-10-17 17:42",
+    "summary": "500 of 500 trials agree, 428 compared",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 2.0,
-    "cost_usd": 0.5382839,
-    "turns": 20,
-    "minutes": 2.0,
+    "wall_minutes": 1.1,
+    "cost_usd": 0.2833939000000001,
+    "turns": 15,
+    "minutes": 1.0,
     "runs": [
       {
         "outcome": "equivalent, agrees",
@@ -12730,9 +12730,22 @@
         "cost_usd": 0.5382839,
         "turns": 20,
         "minutes": 2.0
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 428 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.1,
+        "cost_usd": 0.2833939000000001,
+        "turns": 15,
+        "minutes": 1.0
       }
     ],
-    "reason": "trial 51 disagrees: $a0=0x801041fc $a1=0x80104138 $a2=0x80100510 $a3=0x00000000, stack 0x00000001 0x00000000 0x00000000 0x00000000, memory at D_8006CDFC (0x8006cdfc) repaired to 0x80104e24, memory at D_8006F1F0+0x95c38 (0x80104e28) repaired to 0x801016a4, memory at D_8006CDFC+0x4 (0x8006ce00) repaired to 0x80107430, memory at D_8006CDFC+0x8 (0x8006ce04) repaired to 0x80100320, memory at D_80000004+0x94 (0x80000098) repaired to 0x80106f2c, memory at D_80000004 (0x80000004) repaired to 0x80106a10, memory at D_8006CDFC+0x18 (0x8006ce14) repaired to 0x80106df4, memory at D_8006F1F0+0x97c08 (0x80106df8) repaired to 0x801047a4, memory at D_8006CDFC+0x1c (0x8006ce18) repaired to 0x80100aac, memory at D_8006F1F0+0x918c0 (0x80100ab0) repaired to 0x80105ea8\ncall 2 to func_8001CC10 (0x8001cc10): stack argument 0 is a frame address holding 0x00006400 0x00000000 0x00000000 0x00000000 in the retail code, a frame address holding 0x00006400 0x00000000 0x801041fc 0x00000000 in the candidate\n1969 of 2000 trials agree"
+    "reason": "trial 361 disagrees: $a0=0x80101cc0 $a1=0x80106b20 $a2=0x80100d98 $a3=0x00000001, stack 0xffffffff 0x0000b37f 0x000000f4 0xf8000000, memory at D_8006CDFC (0x8006cdfc) repaired to 0x80101c08, memory at D_8006F1F0+0x92ae8 (0x80101cd8) repaired to 0x80105720\nmemory at D_8006F1F0+0x92bd8 (0x80101dc8) is 0x00033f68 after the retail code, 0x00000028 after the candidate\n1999 of 2000 trials agree"
   },
   "func_80031AE8": {
     "outcome": "equivalent",
@@ -12822,19 +12835,19 @@
     ]
   },
   "func_800158E0": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 00:20",
-    "summary": "trial 90 disagrees: $a0=0x00000000 $a1=0x00000000 $a2=0x801042d8 $a3=0xffffffff, stack 0xfffff706 0x801033a0 0xffffff20 0x00000000\nthe retail code makes 0 calls, the candidate 2\n493 of 500 trials agree",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:44",
+    "summary": "trial 90 disagrees: $a0=0x00000000 $a1=0x00000000 $a2=0x801042d8 $a3=0xffffffff, stack 0xfffff706 0x801033a0 0xffffff20 0x00000000\nthe retail code makes 0 calls, the candidate 2\n492 of 500 trials agree",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 6.6,
-    "cost_usd": 1.2444204,
-    "turns": 55,
-    "minutes": 6.6,
+    "wall_minutes": 1.7,
+    "cost_usd": 0.4581097000000001,
+    "turns": 23,
+    "minutes": 1.6,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -12849,23 +12862,38 @@
         "cost_usd": 1.2444204,
         "turns": 55,
         "minutes": 6.6
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 90 disagrees: $a0=0x00000000 $a1=0x00000000 $a2=0x801042d8 $a3=0xffffffff, stack 0xfffff706 0x801033a0 0xffffff20 0x00000000\nthe retail code makes 0 calls, the candidate 2\n492 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.7,
+        "cost_usd": 0.4581097000000001,
+        "turns": 23,
+        "minutes": 1.6
       }
-    ]
+    ],
+    "reason": "trial 148 disagrees: $a0=0x00000000 $a1=0x80102b9c $a2=0x00000001 $a3=0x8010750c, stack 0x00000001 0x80101abc 0x00008001 0xffffbffe\nthe retail code makes 0 calls, the candidate 2\n1965 of 2000 trials agree"
   },
   "func_80019098": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 00:23",
-    "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0xfffffff2 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000009e 0xfffffff3 0x801035e8\ncall 0 to func_800321D4 (0x800321d4): $a0 is 0xffffcdf5 in the retail code, 0x00000001 in the candidate\n82 of 500 trials agree",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:45",
+    "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0xfffffff2 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000009e 0xfffffff3 0x801035e8, $v0 returned by call 3 repaired to 0x00000003, memory at D_80000004+0x18 (0x8000001c) repaired to 0x80105434\ncall 0 to func_800321D4 (0x800321d4): $a0 is 0xffffcdf5 in the retail code, 0x00000001 in the candidate\n97 of 500 trials agree",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 2.9,
-    "cost_usd": 0.6915259999999999,
-    "turns": 54,
-    "minutes": 2.8,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.38271320000000003,
+    "turns": 12,
+    "minutes": 0.8,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -12880,8 +12908,23 @@
         "cost_usd": 0.6915259999999999,
         "turns": 54,
         "minutes": 2.8
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0xfffffff2 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000009e 0xfffffff3 0x801035e8, $v0 returned by call 3 repaired to 0x00000003, memory at D_80000004+0x18 (0x8000001c) repaired to 0x80105434\ncall 0 to func_800321D4 (0x800321d4): $a0 is 0xffffcdf5 in the retail code, 0x00000001 in the candidate\n97 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.38271320000000003,
+        "turns": 12,
+        "minutes": 0.8
       }
-    ]
+    ],
+    "reason": "trial 0 disagrees: $a0=0x80100028 $a1=0x00000000 $a2=0x80103778 $a3=0x00000003, stack 0x801032a4 0xffffffeb 0x0ac7cbe0 0x80104704\ncall 0 to func_800321D4 (0x800321d4): $a0 is 0xffffcb17 in the retail code, 0x80107f34 in the candidate\n457 of 2000 trials agree"
   },
   "func_800334A0": {
     "outcome": "equivalent",
@@ -12913,19 +12956,19 @@
     ]
   },
   "func_8001F054": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 13:28",
-    "summary": "trial 1 disagrees: $a0=0x80107aa4 $a1=0xffffff57 $a2=0x801002b0 $a3=0xfffffff8, stack 0x801069c8 0x0000004b 0xfffffff1 0x00000e10\nthe retail code ended by returned, the candidate by address error on load\n470 of 500 trials agree",
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-17 17:46",
+    "summary": "trial 1 disagrees: $a0=0x80107aa4 $a1=0xffffff57 $a2=0x801002b0 $a3=0xfffffff8, stack 0x801069c8 0x0000004b 0xfffffff1 0x00000e10\nthe retail code ended by returned, the candidate by address error on load\n305 of 500 trials agree",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 2.2,
-    "cost_usd": 0.5761270999999999,
-    "turns": 21,
-    "minutes": 2.1,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.2785261,
+    "turns": 13,
+    "minutes": 1.0,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -12940,12 +12983,27 @@
         "cost_usd": 0.5761270999999999,
         "turns": 21,
         "minutes": 2.1
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 1 disagrees: $a0=0x80107aa4 $a1=0xffffff57 $a2=0x801002b0 $a3=0xfffffff8, stack 0x801069c8 0x0000004b 0xfffffff1 0x00000e10\nthe retail code ended by returned, the candidate by address error on load\n305 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.2785261,
+        "turns": 13,
+        "minutes": 1.0
       }
-    ]
+    ],
+    "reason": "trial 3 disagrees: $a0=0x80105d54 $a1=0xffffff76 $a2=0x80103ba8 $a3=0x00000000, stack 0x00000008 0x80100af8 0x00000000 0x801035f8, memory at D_8006F1F0+0x96c54 (0x80105e44) repaired to 0x80105210, $v0 returned by call 2 repaired to 0x801003a8\nmemory at D_8006F1F0+0x949b8 (0x80103ba8) is 0x80000000 after the retail code, 0x0001d4c0 after the candidate\n1204 of 2000 trials agree"
   },
   "func_80027F3C": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:14",
+    "time": "2026-10-17 17:49",
     "summary": "500 of 500 trials agree, 500 compared",
     "best": "best.c",
     "mode": "equivalent",
@@ -12953,9 +13011,9 @@
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 2.1,
-    "cost_usd": 0.4639765,
-    "turns": 13,
+    "wall_minutes": 2.2,
+    "cost_usd": 0.4742680000000001,
+    "turns": 14,
     "minutes": 2.1,
     "runs": [
       {
@@ -12971,24 +13029,38 @@
         "cost_usd": 0.4639765,
         "turns": 13,
         "minutes": 2.1
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.2,
+        "cost_usd": 0.4742680000000001,
+        "turns": 14,
+        "minutes": 2.1
       }
     ],
     "reason": "trial 27 disagrees: $a0=0x80106f88 $a1=0x00000059 $a2=0x801028cc $a3=0x801036d4, stack 0x80101a20 0x0000000b 0x00000000 0x00000000\nmemory at D_8006F1F0+0x944e8 (0x801036d8) is 0xffffffdc after the retail code, 0x00000000 after the candidate\n1996 of 2000 trials agree"
   },
   "func_80024B6C": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 13:34",
-    "summary": "trial 192 disagrees: $a0=0x801008e0 $a1=0x80107418 $a2=0x80100bd0 $a3=0x00000001, stack 0x80104bc0 0x00000000 0x80103a78 0x7ed9423a\nthe retail code ended by address error on load, the candidate by TLB miss on load\n499 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 17:50",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 3.8,
-    "cost_usd": 0.47493490000000005,
-    "turns": 16,
-    "minutes": 3.7,
+    "wall_minutes": 0.9,
+    "cost_usd": 0.24449680000000001,
+    "turns": 13,
+    "minutes": 0.9,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -13003,6 +13075,19 @@
         "cost_usd": 0.47493490000000005,
         "turns": 16,
         "minutes": 3.7
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.9,
+        "cost_usd": 0.24449680000000001,
+        "turns": 13,
+        "minutes": 0.9
       }
     ]
   },
