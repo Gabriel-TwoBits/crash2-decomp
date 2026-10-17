@@ -257,7 +257,31 @@ as they were (`func_80013888`, `func_80014148`, `func_800161F8`), and the placed
 conflict (`func_80033C84`'s once its structure moved), in about 0.1 seconds. The loop takes again the 12 functions refused
 at landing after runs that scored alone.
 
-Next: `loop --equivalent` on those 12 and the remaining given-up functions, in batches.
+The equivalent executable in the game (`tools/run_game.py`, docs/WORKFLOW.md, "Running the game"; PCSX-Redux build
+436): with its 76 equivalent functions it boots from the disc, reaches the title, starts a game, plays Cortex's speech
+and Turtle Woods, Crash running and jumping, with no crash and no exception but interrupts and system calls over 8,000
+frames. What it displays differs from retail's from frame 1,278 on (two retail runs agree on every frame): the intro's
+flare elsewhere, Cortex missing from the warp room, Crash invisible in Turtle Woods. The C isn't the cause; where the
+data sits is:
+
+- Layout alone gives the same: with no equivalent function, 8 bytes of padding at the start of the code display otherwise
+  from frame 1,390 and crash in the warp room (frame 4,124, a jump to address 0x68); 32 bytes crash at frame 1,941.
+  The same paddings at the start of `.data`, the code in place, give the same frames and the same crashes; moving only
+  the heap's start (16 bytes) changes nothing.
+- With `.data` kept at its retail address (the code's end padded to 0x8005B198 by hand in the linker script: the 76
+  blocks shrink the code by 104 bytes), the equivalent executable displays what retail does up to frame 4,035, and with
+  all blocks but `func_80027CD0`'s on all 8,000 frames. That one, an LZSS decompressor whose C reads as equivalent,
+  seems to change only timing: Cortex's speech and Crash in Turtle Woods are there, a vsync out of phase. The game is
+  sensitive to timing: the retail executable under PCSX-Redux's interpreter instead of its recompiler displays
+  otherwise from frame 2,004.
+- What depends on the data's addresses is still open. No `.data` word and no `lui`/`%lo` pair is left at a retail
+  address in the moved range (scanned in a shifted build), but values pointing into `.bss` come in from the disc: heap
+  objects read by `CdGetSector` hold 0x8005F340 (inside `D_8005F338`'s 12 bytes), which the shift leaves as it is, and
+  the disc image holds the word 21 times.
+
+Next: keep `.data` and `.bss` at their retail addresses in the equivalent build (`configure.py` padding the code's end),
+find what reads them by address, then `loop --equivalent` on the 12 refused at landing and the remaining given-up
+functions, in batches, each checked in the game too.
 
 ## 5. Beyond matching
 

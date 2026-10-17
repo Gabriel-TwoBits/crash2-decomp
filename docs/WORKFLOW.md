@@ -153,6 +153,33 @@ judged their draft alone, before `score.sh` placed it, is taken again, once. A r
 notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside the matching run's. `run --equivalent`,
 `prepare --equivalent` and `next --equivalent` do one step of it. The matching loop leaves equivalent functions alone.
 
+### Running the game
+
+    .venv/bin/python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
+
+equiv.py judges one function at a time; this plays the equivalent executable as a whole, in the game. It needs the
+`ninja nonmatching` build and the player's disc image (a MODE2/2352 `.cue` and `.bin`, never copied into the repository),
+and writes into `build/` only:
+
+1. `tools/patch_disc.py` copies the image to `build/disc/nonmatching.bin` with `build/nonmatching/SCUS_941.54.exe` in
+   place of `SCUS_941.54`: the file's sectors rewritten with their EDC and ECC, its directory record given the size. An
+   executable that outgrows the file's 160 sectors (327,680 bytes, the retail size, which `ninja` pads to) is refused.
+   Written with the retail executable, the copy is the original image byte for byte.
+2. PCSX-Redux (`tools/setup_toolchain.py` fetches it) boots the retail image and the copy at once, headless, unthrottled,
+   on its own BIOS (OpenBIOS, no Sony BIOS needed). `tools/run_game.lua` presses the same buttons at the same frames in
+   both: the title's menu, New Game, the intro skipped, Cortex's speech in the first warp room waited out, into Turtle
+   Woods, run, jump, spin; 8,000 frames, about 15 seconds. At every frame it records a hash of the displayed image, the
+   program counter and the last exception's code, and at eight checkpoints the image.
+3. A run is healthy when it reaches its last frame (one without a new frame for 20 seconds is stopped: the game crashed
+   or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls, and
+   its display isn't frozen over its last 300 frames. The two runs agree when every frame's image is the same; the
+   checkpoints go side by side to `build/run_game/<checkpoint>.png`. Exit status 0 only when both hold.
+
+The emulator is deterministic: two retail runs (`--against retail`) agree on all 8,000 frames, throttled or not (only the
+program counter sampled at each vsync moves by a few cycles), so a difference comes from the executable. Not
+necessarily from its C, though: the game is sensitive to timing (the retail executable under PCSX-Redux's interpreter
+instead of its recompiler displays otherwise from frame 2,004) and to where its data sits (docs/ROADMAP.md, section 4).
+
 ## Matching C and this project's style
 
 The C has to compile to the retail bytes, so the original's shape wins over style: a missing `else`, an early `return` in
@@ -189,3 +216,4 @@ functions keep their PsyQ names (`LoadImage`, `CdRead`).
 | decomp-permuter | Random rewrites of a near miss, scored against the target |
 | decomp.me | The same compilers online, to share a function's attempt (scratches) |
 | Unicorn (`unicorn`) | The CPU emulator under `tools/equiv.py`, which runs equivalent C against the retail function |
+| PCSX-Redux (`tools/toolchain/pcsx-redux`) | The PlayStation emulator under `tools/run_game.py`, which plays the game with the retail and the equivalent executables |

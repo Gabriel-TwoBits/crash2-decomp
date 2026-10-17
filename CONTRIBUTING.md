@@ -18,7 +18,8 @@ North American release, SCUS-94154.
    .venv/bin/python -m pip install -r requirements.txt
    ```
 
-3. The toolchain (the PSX GCC versions, objdiff, maspsx, m2c, decomp-permuter) into `tools/toolchain/`, each checked:
+3. The toolchain (the PSX GCC versions, objdiff, maspsx, m2c, decomp-permuter, PCSX-Redux) into `tools/toolchain/`, each
+   checked:
 
    ```sh
    .venv/bin/python tools/setup_toolchain.py
