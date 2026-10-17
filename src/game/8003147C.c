@@ -26,6 +26,11 @@ s32 func_8003147C(s32 arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/8003147C", func_8003147C);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/game/8003147C", func_8003155C);
+/* The seed func_8003155C restores, also the generator's increment */
+#define RANDOM_RESET_SEED 0x3039
+
+void func_8003155C(void) {
+    D_8005F220 = RANDOM_RESET_SEED;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/8003147C", func_8003156C);
