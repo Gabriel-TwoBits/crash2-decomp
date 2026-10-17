@@ -6862,9 +6862,9 @@
     ]
   },
   "func_800161F8": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:22",
-    "summary": "500 of 500 trials agree, 465 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:44",
+    "summary": "2000 of 2000 trials agree, 1823 compared",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -6899,8 +6899,7 @@
         "minutes": 1.0
       }
     ],
-    "mode": "equivalent",
-    "reason": "src/game/800158E0.c defines Unk80063458 further down: moved into the NON_MATCHING block, it would leave the default build"
+    "mode": "equivalent"
   },
   "func_800175D8": {
     "outcome": "equivalent, not landed",
