@@ -41,7 +41,7 @@ s32 func_8002FFFC(s32, s32 *, s32 *);
 void func_8003EAD4(s32 *, s32 *, s32, void *, s32, s32);
 
 /* (d * 4) / 8192 with the compiler's signed-division rounding, pre-shift */
-static s32 func_8002CC50_ScaleRaw(s32 d) {
+static inline s32 func_8002CC50_ScaleRaw(s32 d) {
     s32 raw;
 
     raw = d * EDGE_SCALE;
@@ -52,7 +52,7 @@ static s32 func_8002CC50_ScaleRaw(s32 d) {
 }
 
 /* Widens the row's [min, max] pair with column x, clamped to [-1, 32]. */
-static void func_8002CC50_Widen(s8 *row, s32 x) {
+static inline void func_8002CC50_Widen(s8 *row, s32 x) {
     s32 v;
 
     v = x;
@@ -70,19 +70,44 @@ static void func_8002CC50_Widen(s8 *row, s32 x) {
     }
 }
 
-s32 func_8002CC50(void *arg0, s32 *arg1, s32 *arg2, s32 arg3) {
-    Unk8002CC50 *obj;
+typedef struct {
+    s32 pad_0[2];
     s32 corners[NUM_BOX_CORNERS * POINT_WORDS];
     s32 pts[POINT_WORDS * 12];
     s8 tbl[GRID_ROWS * 2];
+    s32 *arg2;
+    s32 pad_14C;
+    s32 arg3;
+    s32 pad_154;
+    s32 lvlEnd;
+    s32 pad_15C;
+    s32 lvlMid;
+    s32 pad_164;
+    s32 lvl;
+    s32 pad_16C;
+    s32 pendZ;
+    s32 pad_174;
+    s32 pad_178;
+    s32 pad_17C[10];
+} Frame8002CC50;
+#define corners f.corners
+#define pts f.pts
+#define tbl f.tbl
+#define arg2 f.arg2
+#define arg3 f.arg3
+#define lvlEnd f.lvlEnd
+#define lvlMid f.lvlMid
+#define lvl f.lvl
+#define pendZ f.pendZ
+
+s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
+    Frame8002CC50 f;
+    Unk8002CC50 *obj;
     s32 *words;
     s32 *p;
     s32 *bits;
     s8 *row;
     s32 ret;
-    s32 lvlEnd;
-    s32 lvlMid;
-    s32 lvl;
     s32 n;
     s32 i;
     s32 e;
@@ -92,9 +117,12 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *arg2, s32 arg3) {
     s32 hiX, hiZ, loX, loZ;
     s32 colLo, colHi, rowLo, rowHi;
     s32 x1, z1, x2, z2, t;
-    s32 dz, dx, step, a3, t2, s3, s5, t4, pendX, pendZ;
+    s32 dz, dx, step, a3, t2, s3, s5, t4, pendX;
     s32 lo, hi, v, mask;
 
+    arg2 = p2;
+    arg3 = p3;
+    f.pad_178 = (s32)tbl;
     obj = arg0;
     ret = func_80030EC0(arg1, &obj->unk_2C);
     if (ret == 0) {
@@ -184,15 +212,20 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *arg2, s32 arg3) {
             ret = rawMinZ;
 
             if (arg3 != 0) {
+                /* Each early exit leaves the value its branch delay slot computed in $v0. */
                 if (hiX + GRID_CLIP_MARGIN < 0) {
-                    ret = hiX + GRID_CLIP_MARGIN;
-                    goto next_level;
-                }
-                if (hiZ + GRID_CLIP_MARGIN < 0) {
                     ret = hiZ + GRID_CLIP_MARGIN;
                     goto next_level;
                 }
-                if (loX >= GRID_CLIP_MARGIN || loZ >= GRID_CLIP_MARGIN) {
+                if (hiZ + GRID_CLIP_MARGIN < 0) {
+                    ret = loX < GRID_CLIP_MARGIN;
+                    goto next_level;
+                }
+                if (loX >= GRID_CLIP_MARGIN) {
+                    ret = loZ < GRID_CLIP_MARGIN;
+                    goto next_level;
+                }
+                if (loZ >= GRID_CLIP_MARGIN) {
                     ret = 0;
                     goto next_level;
                 }
@@ -201,10 +234,18 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *arg2, s32 arg3) {
                 colHi = CLIP_WINDOW_HI;
                 rowHi = CLIP_WINDOW_HI;
             } else {
-                if (colHi < 0 || rowHi < 0) {
+                if (colHi < 0) {
                     goto next_level;
                 }
-                if (colLo >= GRID_ROWS || rowLo >= GRID_ROWS) {
+                if (rowHi < 0) {
+                    ret = colLo < GRID_ROWS;
+                    goto next_level;
+                }
+                if (colLo >= GRID_ROWS) {
+                    ret = rowLo < GRID_ROWS;
+                    goto next_level;
+                }
+                if (rowLo >= GRID_ROWS) {
                     ret = 0;
                     goto next_level;
                 }
@@ -283,7 +324,6 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *arg2, s32 arg3) {
                     z2 = rowHi;
                 }
                 pendX = CLIP_CELL_PENDING_NONE;
-                pendZ = 0;
                 s5 = 0;
                 if (dz < dx) {
                     /* x-major */
@@ -428,3 +468,12 @@ next_level:
     }
     return ret;
 }
+#undef corners
+#undef pts
+#undef tbl
+#undef arg2
+#undef arg3
+#undef lvlEnd
+#undef lvlMid
+#undef lvl
+#undef pendZ
