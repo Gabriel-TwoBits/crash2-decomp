@@ -116,7 +116,7 @@ typedef struct {
     u16 unk202E;
     u8 pad2030[0x2088 - 0x2030];
     void *unk2088;
-    u8 pad208C[0x2090 - 0x208C];
+    char *unk208C;
     char *unk2090;
 } Unk80063458;
 
@@ -205,7 +205,12 @@ s32 func_800162FC(void) {
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800162FC);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800163B4);
+void func_800163B4(void *arg0) {
+    Unk80063458 *p = arg0;
+
+    p->unk2088 = 0;
+    p->unk2090 = p->unk208C;
+}
 
 void func_800163C4(s32 *arg0) {
     arg0[2] = arg0[1];
