@@ -60,6 +60,7 @@ void func_800175D8(u8 *, s32, u8 *, s32, s32);
 s32 func_800176DC(s32, s32, s32, u8 *, u8 *, s32);
 void func_8001798C(void);
 void func_80018194(s32 *, s16 *, s32 *);
+void func_80018294(s32 *);
 void func_80018474(void *, void *);
 s32 func_80018BE4(u8 *, void *, s32);
 s32 func_80018D28(void *, void *, void *);
