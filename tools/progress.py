@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """How much of the game's code is in C: for each C unit of the splat configuration, the bytes of its functions written in C
 (their sizes in the built object, build/src/<unit>.o) against the unit's code bytes. An equivalent function, C under
-NON_MATCHING and assembly in the build (docs/WORKFLOW.md, "The equivalent track"), is counted apart, never as in C.
+NON_MATCHING and assembly in the build (docs/WORKFLOW.md, "The equivalent track"), is counted apart, never as in C. Then
+how readable the C is: the symbols named (docs/WORKFLOW.md, "Naming"), the structures defined, the fields still read at
+a raw offset.
 
     python tools/progress.py
 
@@ -14,6 +16,8 @@ from pathlib import Path
 
 import yaml
 
+from symbols import ADDRESS_NAME, DATA, GAME_FUNCTION, table
+
 HERE = Path(__file__).resolve().parents[1]
 SPLAT_CONFIG = HERE / "config" / "SCUS_941.54.yaml"
 NM = "mipsel-linux-gnu-nm"
@@ -24,6 +28,11 @@ EQUIVALENT = re.compile(r'^#ifdef NON_MATCHING\n(?:(?!#ifdef NON_MATCHING\n|#els
 # nm -S: address, size, type (T: a function in .text), name
 SIZED_SYMBOL = re.compile(r"^[0-9a-f]+ ([0-9a-f]+) [Tt] (\w+)$", re.MULTILINE)
 PERCENT = 100
+SHARED_HEADERS = HERE / "include" / "game"
+# A structure's definition, typedef'd or tagged
+STRUCTURE = re.compile(r"^(?:typedef[ \t]+)?struct\b[^;{]*\{", re.MULTILINE)
+# A field read at a raw offset from a pointer: *(s32 *)(p + 0x60)
+RAW_OFFSET = re.compile(r"\*\s*\(\s*[A-Za-z_][\w ]*\*+\s*\)\s*\(\s*[A-Za-z_][\w.>-]*\s*\+\s*(?:0x[0-9A-Fa-f]+|\d+)\s*\)")
 
 
 def c_units():
@@ -41,6 +50,23 @@ def c_units():
             end = following[0] if isinstance(following, list) else following["start"]
             units.append((subsegment[2], end - subsegment[0]))
     return units
+
+
+def readability():
+    """Lines on the names and types: game functions and data named, structures defined, fields read at a raw offset"""
+    lines = []
+    for kind, what in ((GAME_FUNCTION, "game functions"), (DATA, "data symbols")):
+        names = [symbol.name for symbol in table().values() if symbol.kind == kind]
+        named = [name for name in names if ADDRESS_NAME.fullmatch(name) is None]
+        lines.append(f"names: {len(named)} of {len(names)} {what} named")
+    sources = [path.read_text() for path in sorted((HERE / "src" / "game").glob("*.c"))]
+    headers = [path.read_text() for path in sorted(SHARED_HEADERS.glob("*.h"))]
+    structures = sum(len(STRUCTURE.findall(text)) for text in sources)
+    shared = sum(len(STRUCTURE.findall(text)) for text in headers)
+    raw = sum(len(RAW_OFFSET.findall(text)) for text in sources)
+    lines.append(f"types: {structures} structures defined in src/game, {shared} in include/game; {raw} fields read at a "
+                 "raw offset (*(type *)(p + offset))")
+    return lines
 
 
 def main():
@@ -70,6 +96,8 @@ def main():
         equivalent_total += len(equivalent)
     print(f"game code: {written} of {total} bytes in C ({written * PERCENT / total:.2f}%)")
     print(f"game code: {equivalent_total} functions equivalent, not matched")
+    for line in readability():
+        print(line)
 
 
 if __name__ == "__main__":
