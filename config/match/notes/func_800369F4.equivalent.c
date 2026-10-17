@@ -1,5 +1,6 @@
 #include "common.h"
 #include "sdk.h"
+#include "game.h"
 
 #define OFF_STATE 0x6F4
 #define OFF_SAVED 0x718
@@ -10,10 +11,9 @@
 #define RESULT_MISMATCH 1
 #define RESULT_RESET 2
 
-extern s32 *D_8005F264;
-void func_80036A84(s32 *, s32, s32, s32);
+typedef void (*Func80036A84)(s32 *, s32, s32, s32);
+
 s32 func_80036A8C(s32 *, s32);
-void func_800368C0(void);
 
 s32 func_800369F4(void) {
     s32 *base = D_8005F264;
@@ -21,7 +21,7 @@ s32 func_800369F4(void) {
     s32 saved;
     s32 ret;
 
-    func_80036A84(state, STATE_SIZE, base[OFF_ARG / 4], 0);
+    ((Func80036A84)func_80036A84)(state, STATE_SIZE, base[OFF_ARG / 4], 0);
     saved = base[OFF_SAVED / 4];
     base[OFF_SAVED / 4] = 0;
     if (saved == func_80036A8C(state, STATE_SIZE)) {

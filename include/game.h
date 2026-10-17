@@ -203,7 +203,7 @@ void func_80036850(void);
 void func_800368C0(void);
 void func_8003690C(void *);
 void func_80036978(void);
-void func_800369F4(void);
+s32 func_800369F4(void);
 void func_80036A84(void);
 s32 func_80036A8C(s32 *, s32);
 s32 func_80036AC8(s32);
