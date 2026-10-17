@@ -11033,9 +11033,9 @@
     ]
   },
   "func_8002433C": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 22:32",
-    "summary": "500 of 500 trials agree, 21 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-17 17:06",
+    "summary": "2000 of 2000 trials agree, 1559 compared",
     "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -11072,8 +11072,7 @@
       }
     ],
     "mode": "equivalent",
-    "scored": "in place",
-    "reason": "2000 of 2000 trials agree, 84 compared: fewer than 5% of the trials compared"
+    "scored": "in place"
   },
   "func_8002BC38": {
     "outcome": "equivalent",
