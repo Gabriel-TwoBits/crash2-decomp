@@ -12632,19 +12632,19 @@
     ]
   },
   "func_8001645C": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-16 23:59",
-    "summary": "trial 298 disagrees: $a0=0x00000000 $a1=0xf2000000 $a2=0x00000002 $a3=0x80107a60, stack 0xfffffff1 0x80104ffc 0x00001001 0x00000000\ncall 2 to func_800334A0 (0x800334a0): $a1 is 0x00000000 in the retail code, 0xffffff6a in the candidate\n497 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 17:40",
+    "summary": "2000 of 2000 trials agree, 1429 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 4.1,
-    "cost_usd": 0.8765840000000003,
-    "turns": 55,
-    "minutes": 4.1,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.3715457,
+    "turns": 13,
+    "minutes": 0.8,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -12659,6 +12659,19 @@
         "cost_usd": 0.8765840000000003,
         "turns": 55,
         "minutes": 4.1
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 370 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.3715457,
+        "turns": 13,
+        "minutes": 0.8
       }
     ]
   },

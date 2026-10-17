@@ -84,7 +84,7 @@ extern s32 D_8006CD1C;
 extern s32 D_8005F1D4;
 extern s32 D_8005F1D8;
 
-void func_8001645C(void) {
+int func_8001645C(void) {
     s32 sp28;
     s32 *res;
     s32 mode;
@@ -225,4 +225,5 @@ void func_8001645C(void) {
     }
     func_800163C4((s32 *)D_80063458[0]);
     D_8006CB94 = D_8006CB80;
+    return D_8006CB80;
 }
