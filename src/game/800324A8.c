@@ -720,7 +720,11 @@ s32 func_80033EE0(s32 addr) {
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80033EE0);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80034238);
+void func_80034238(void *arg0, s32 arg1, void *arg2, void *arg3) {
+    if (D_8005F39C == 0) {
+        D_8005F39C = 1;
+    }
+}
 
 #ifdef NON_MATCHING
 #define STATE_IDLE 0
