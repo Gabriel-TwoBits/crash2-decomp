@@ -31,8 +31,8 @@ from symbols import DATA, GAME_FUNCTION, HERE, IMAGE_END
 SYMBOL_ADDRS = HERE / "config" / "symbol_addrs.txt"
 # A symbol's line: name, address, then splat's attributes after `//` (type:, size:, ...)
 SYMBOL_LINE = re.compile(r"^(?P<name>\w+) = (?P<address>0x[0-9A-Fa-f]+);(?P<rest>.*)$")
-NAMES_HEADING = ('// Names, each with its evidence on the line above it (docs/WORKFLOW.md, "Naming"). A rename replaces the '
-                 "symbol's line, never adds a second name at its address")
+NAMES_HEADING = ('// Names, each with its evidence on the line above it (docs/WORKFLOW.md, "Naming"). A rename replaces',
+                 "// the symbol's line, never adds a second name at its address")
 FUNCTION_ATTRIBUTES = " // type:func"
 # The C that uses the names
 SOURCE_PATTERNS = (("src", "*.c"), ("src", "*.h"), ("include", "*.h"))
@@ -93,7 +93,9 @@ def refusals(renames):
         if olds.count(old) > 1 or news.count(new) > 1:
             found.append(f"{old} -> {new}: the batch names it twice")
         elif symbol is None:
-            found.append(f"{old}: no symbol of the split has this name")
+            spelled = symbols.ADDRESS_NAME.fullmatch(old)
+            named = [] if spelled is None else symbols.named_at(spelled)
+            found.append(f"{old}: no symbol of the split has this name" + (f" (its name now: {named[0]})" if named else ""))
         elif old in PROTECTED:
             found.append(f"{old}: protected, the tools reach it by this name")
         elif symbol.kind not in (GAME_FUNCTION, DATA):
@@ -131,12 +133,16 @@ def renamed_symbol_addrs(text, renames):
         elif own:
             line = SYMBOL_LINE.match(lines[own[0]])
             lines[own[0]] = f"{new} = {line.group('address')};{line.group('rest')}"
-            lines.insert(own[0], f"// {evidence}")
+            if symbols.ADDRESS_NAME.fullmatch(old) is None and lines[own[0] - 1].startswith("//"):
+                # A name given before: its evidence, on the line above, gives way
+                lines[own[0] - 1] = f"// {evidence}"
+            else:
+                lines.insert(own[0], f"// {evidence}")
         else:
             attributes = FUNCTION_ATTRIBUTES if symbols.table()[old].kind == GAME_FUNCTION else ""
             appended += ["", f"// {evidence}", f"{new} = 0x{address:08X};{attributes}"]
-    if appended and NAMES_HEADING not in lines:
-        appended = ["", NAMES_HEADING] + appended
+    if appended and NAMES_HEADING[0] not in lines:
+        appended = ["", *NAMES_HEADING] + appended
     return "\n".join(lines + appended) + "\n"
 
 
