@@ -83,7 +83,11 @@ void func_80032588(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800325D0);
+s16 D_8005F2E8;
+
+void func_800325D0(s32 arg0) {
+    D_8005F2E8 = arg0;
+}
 
 extern void SpuSetReverbDepth(Unk80032588 *);
 
