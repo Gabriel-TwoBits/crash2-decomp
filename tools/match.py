@@ -640,10 +640,14 @@ def placement(name, text, equivalent):
     # Other functions' equivalent blocks: what they define is in the nonmatching build only
     blocks = [range(match.start(), match.end()) for match in EQUIVALENT.finditer(original)]
 
+    def in_block(definition):
+        """Whether a definition is inside another function's equivalent block"""
+        return any(definition.start() in block for block in blocks)
+
     def moved_up(definition, what):
         """below without a definition the candidate moves up to the function. Into a NON_MATCHING block, only out of
         another one: from anywhere else the default build would lose it"""
-        if equivalent and not any(definition.start() in block for block in blocks):
+        if equivalent and not in_block(definition):
             raise NotLanded(f"{relative} defines {what} further down: moved into the NON_MATCHING block, it would leave "
                             f"the default build")
         return below.replace(definition.group(0), "", 1)
@@ -670,6 +674,8 @@ def placement(name, text, equivalent):
     # A structure the file defines: the candidate's copy of it goes, or moves up to this function when the file has it
     # further down, and a different one can't land
     types = {type_name(match): match for match in TYPE_DEFINITION.finditer(original)}
+    # Structures the file defines further down that equivalent C needs: they go above its block, outside it
+    hoisted = []
     for definition in TYPE_DEFINITION.finditer(text):
         kind = type_name(definition)
         if kind not in types:
@@ -678,6 +684,11 @@ def placement(name, text, equivalent):
         elif " ".join(types[kind].group(0).split()) != " ".join(definition.group(0).split()):
             raise NotLanded(f"defines {kind} otherwise than {relative}")
         elif types[kind].start() < insertion:
+            text = text.replace(definition.group(0), "")
+        elif equivalent and not in_block(types[kind]):
+            # Both builds keep seeing it there; a type emits no code, so the default build's bytes stay
+            below = below.replace(types[kind].group(0), "", 1)
+            hoisted.append(types[kind].group(0).rstrip("\n") + "\n")
             text = text.replace(definition.group(0), "")
         else:
             below = moved_up(types[kind], kind)
@@ -730,8 +741,13 @@ def placement(name, text, equivalent):
     kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line == line.lstrip() and line.endswith(";") and line in present)]
     body = "\n".join(kept).strip() + "\n"
-    if equivalent:
+    if equivalent and hoisted:
+        body = "".join(hoisted) + f"\n#ifdef NON_MATCHING\n{body}#else\n{include}#endif\n"
+    elif equivalent:
         body = f"#ifdef NON_MATCHING\n{body}#else\n{include}#endif\n"
+    else:
+        # A match takes the INCLUDE_ASM line's place as it is
+        pass
     updated = above + below.replace(include, body, 1)
     if equivalent and name not in EQUIVALENT.findall(updated):
         raise NotLanded("a conditional of its own (#if, #else, #endif), which the NON_MATCHING block can't hold")
