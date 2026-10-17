@@ -425,6 +425,13 @@ def prepare(name, equivalent=False):
             told = ("The matching loop gave it up: `EARLIER.md` has its notes, `earlier.c` its closest C, which compiles "
                     "to other bytes and may behave otherwise.")
         brief += ["## An earlier run", "", told, ""]
+        # Why that C didn't land (a disagreement found by the landing's seeds, a build error once placed)
+        refused = load_ledger().get(key, {}).get("reason")
+        if refused:
+            brief += ["Its landing was refused:", "", "```", refused, "```", ""]
+        else:
+            # Gave up before any landing, or landed elsewhere: the notes say why
+            pass
     (folder / "BRIEF.md").write_text("\n".join(brief))
     template = EQUIVALENT_TEMPLATE if equivalent else TEMPLATE
     (folder / "CLAUDE.md").write_text(template.read_text().replace("$FUNCTION", name))
