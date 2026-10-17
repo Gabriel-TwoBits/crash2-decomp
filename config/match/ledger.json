@@ -7539,17 +7539,17 @@
     "mode": "equivalent"
   },
   "func_80039C08": {
-    "outcome": "gave up",
-    "time": "2026-10-16 05:13",
-    "summary": "56 of 73 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:31",
+    "summary": "2000 of 2000 trials agree, 150 compared",
     "best": "a5.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.0,
-    "cost_usd": 0.30696910000000005,
-    "turns": 17,
-    "minutes": 1.0,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.23866430000000002,
+    "turns": 14,
+    "minutes": 0.8,
     "runs": [
       {
         "outcome": "gave up",
@@ -7562,8 +7562,21 @@
         "cost_usd": 0.30696910000000005,
         "turns": 17,
         "minutes": 1.0
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 42 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.23866430000000002,
+        "turns": 14,
+        "minutes": 0.8
       }
-    ]
+    ],
+    "mode": "equivalent"
   },
   "func_800346E8": {
     "outcome": "landed",
