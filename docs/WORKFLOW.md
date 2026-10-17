@@ -117,9 +117,10 @@ Its limits, which a passing run doesn't lift:
 The candidate is `build/match/FUNCTION/equivalent.c`, else the notes' C (`config/match/notes/FUNCTION.equivalent.c`, then
 `FUNCTION.c`). Its declarations are handled as a match's (a prototype of basic types moves into `include/game.h`, a copy
 of what the file has goes), and the rest goes into the block in place of the `INCLUDE_ASM` line; a function that already
-has a block gets its C replaced. Refused before building: m2c's macros, inline assembly, an `INCLUDE_ASM` line, a
-conditional of its own, and a definition the file has further down, which moved into the block would leave the default
-build. Then `configure.py`, `ninja` (the SHA-1), `ninja nonmatching`, and `tools/equiv.py` on the landed file, not the
+has a block gets its C replaced. A structure the file defines further down moves above the block, outside it, where
+both builds see it (a type emits no code). Refused before building: m2c's macros, inline assembly, an `INCLUDE_ASM`
+line, a conditional of its own, and a variable the file defines further down (moved, it would change the data's
+layout; into the block, it would leave the default build). Then `configure.py`, `ninja` (the SHA-1), `ninja nonmatching`, and `tools/equiv.py` on the landed file, not the
 candidate (the file's declarations and `include/game.h` compile it), at 2,000 trials and seed 1: every trial has to
 agree, and at least 5% of them compared, not agreeing by both reaching the limit or taking the same exception. A failure
 restores the file and `include/game.h` and is recorded as `equivalent, not landed` with its cause (a function whose block
@@ -128,18 +129,26 @@ compared`) and committed as `feat: add equivalent C for FUNCTION` (`feat: improv
 replacement).
 
 Most refusals of the matching runs' notes come from the nonmatching build, where the C meets its file's declarations for
-the first time: a variable or the function itself declared with another type there than in the candidate.
+the first time: a variable or the function itself declared with another type there than in the candidate. An agent's
+draft meets them before landing (below).
 
 ### The loop's equivalent mode
 
     .venv/bin/python tools/match.py loop --equivalent --count N --minutes 15 --model claude-sonnet-5-5
 
 It takes the smallest function the matching loop gave up on (`gave up`, `rejected`, or notes' C that didn't land as
-equivalent) that is still plain `INCLUDE_ASM`, has no GTE instruction and has had no equivalent run. The agent's
-instructions are `tools/match/EQUIVALENT.md`; its `score.sh` runs equiv.py on a draft (`./score.sh FILE.c --seed 1`), and
-its starting points are the assembly, m2c's draft and the matching run's notes and C. It stops when every trial agrees
+equivalent) that is still plain `INCLUDE_ASM`, has no GTE instruction and hasn't been settled by an equivalent run. The agent's
+instructions are `tools/match/EQUIVALENT.md`; its starting points are the assembly, m2c's draft and the matching run's
+notes and C. Its `score.sh` (`tools/match.py score FUNCTION FILE.c [--seed N] [--trials N]`) judges a draft as it would
+land: placed by the landing's own code into a copy of its file beside a copy of `include/game.h`
+(`build/match/FUNCTION/placed/`, where a quoted `#include "game.h"` finds the copy first), the other files calling a
+function whose prototype that copy changes compiled there too, then equiv.py on the placed file. A refusal prints
+`not landable as it is: ...`, a declaration conflict is the compiler's error on a line of the copy: both are what
+landing would stop at, seen while the agent can still fix them. It stops when every trial agrees
 on two seeds, after five attempts without progress, or two minutes before the limit, leaving `equivalent.c` or `best.c`.
-`tools/match.py` checks `equivalent.c` itself (500 trials, seed 0, `equivalent, agrees`), then lands it as above. A run's
+`tools/match.py` checks `equivalent.c` itself the same way (500 trials, seed 0, `equivalent, agrees`), then lands it as
+above. A run's record says it was scored in place (`"scored": "in place"`); a function refused at landing after runs that
+judged their draft alone, before `score.sh` placed it, is taken again, once. A run's
 notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside the matching run's. `run --equivalent`,
 `prepare --equivalent` and `next --equivalent` do one step of it. The matching loop leaves equivalent functions alone.
 

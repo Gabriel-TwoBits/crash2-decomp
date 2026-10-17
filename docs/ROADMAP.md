@@ -242,7 +242,16 @@ handwritten code's 21 `lui`/`ori` pairs loading the addresses of 20 of the game'
 with 0xC00 bytes of code added under `NON_MATCHING` before them, all 21 load their function's linked address, across a
 low half's sign (`func_80037448` at 0x80038008).
 
-Next: `loop --equivalent` on the refused and the remaining given-up functions, in batches.
+A first `loop --equivalent` batch of 40 (Sonnet, $0.15 to $0.30 a function) landed 25; 13 of the 14 refused had agreed
+500 of 500 in `score.sh`, which judged the draft alone: 8 over a declaration their file or another file's calls have
+otherwise, 4 over a structure the file defines further down. `score.sh` now judges a draft placed into a copy of its
+file as landing would, so those show as compile errors or refusals during the run, and a structure further down moves
+above the block instead of refusing it. Of the 14 runs' drafts refused over a declaration or a structure, 3 then landed
+as they were (`func_80013888`, `func_80014148`, `func_800161F8`), and the placed score shows each of the other 11 its
+conflict (`func_80033C84`'s once its structure moved), in about 0.1 seconds. The loop takes again the 12 functions refused
+at landing after runs that scored alone.
+
+Next: `loop --equivalent` on those 12 and the remaining given-up functions, in batches.
 
 ## 5. Beyond matching
 
