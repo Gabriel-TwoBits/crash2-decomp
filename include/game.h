@@ -335,6 +335,7 @@ s32 func_8003D360(s32);
 s32 func_8003D3CC(void *, void *, s32, s32, void *, s32, s32, s32);
 void *func_8003DA00(s32, void *, s32);
 void func_8003DB94(s32, void *, void *);
+void func_8003EAD4(s32 *, s32 *, s32, void *, s32, s32);
 s32 func_80041A78(s32);
 void func_80041D14(void);
 void func_80042420(void);

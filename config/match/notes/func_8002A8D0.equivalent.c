@@ -31,14 +31,27 @@ typedef struct {
 s32 func_80030680(Unk80030680 *point, Unk80030680 *quad);
 s32 func_80030498(s32 arg0, s32 arg1, Unk80030498 *arg2);
 
+/* The function's frame in retail's layout, its spill slots included: a D_8005BBB8 index outside 0..7 reads past v. */
+typedef struct {
+    s32 v[NUM_VERTS * 3];
+    s32 *p[FACE_CORNERS];
+    s32 w[FACE_CORNERS * 3];
+    s32 q[FACE_CORNERS * 2];
+    s32 pt[2];
+    s32 arg2;
+    s32 unk_CC;
+    s32 arg3;
+    s32 unk_D4;
+    s32 *qp;
+    s32 unk_DC;
+    s32 arg4;
+    s32 arg5;
+} Unk8002A8D0;
+
 s32 func_8002A8D0(void *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6) {
     s32 *o = (s32 *)arg0;
     s32 *out = (s32 *)arg6;
-    s32 v[NUM_VERTS * 3];
-    s32 *p[FACE_CORNERS];
-    s32 q[FACE_CORNERS * 2];
-    s32 w[FACE_CORNERS * 3];
-    s32 pt[2];
+    Unk8002A8D0 f;
     s32 pad;
     s32 face;
     s32 k;
@@ -57,6 +70,8 @@ s32 func_8002A8D0(void *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5,
     s32 *cur;
     s32 *prev;
 
+    f.arg2 = arg2;
+    f.arg3 = arg3;
     switch (o[0] & KIND_MASK) {
     case KIND_BOX:
         pad = 0;
@@ -145,26 +160,30 @@ s32 func_8002A8D0(void *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5,
     }
 
     /* Corners of the local box: x from o[2]/o[5], y from o[3]/o[6], z from o[4]/o[7]. */
-    v[0] = o[2];  v[1] = o[3];  v[2] = o[4];
-    v[3] = o[2];  v[4] = o[6];  v[5] = o[4];
-    v[6] = o[5];  v[7] = o[6];  v[8] = o[4];
-    v[9] = o[5];  v[10] = o[3]; v[11] = o[4];
-    v[12] = o[2]; v[13] = o[3]; v[14] = o[7];
-    v[15] = o[2]; v[16] = o[6]; v[17] = o[7];
-    v[18] = o[5]; v[19] = o[6]; v[20] = o[7];
-    v[21] = o[5]; v[22] = o[3]; v[23] = o[7];
-    func_8003EAD4(v, v, *(s32 *)(o[1] + 8), (char *)arg0 + 0x20, NUM_VERTS, FACE_CORNERS);
+    f.v[0] = o[2];  f.v[1] = o[3];  f.v[2] = o[4];
+    f.v[3] = o[2];  f.v[4] = o[6];  f.v[5] = o[4];
+    f.v[6] = o[5];  f.v[7] = o[6];  f.v[8] = o[4];
+    f.v[9] = o[5];  f.v[10] = o[3]; f.v[11] = o[4];
+    f.v[12] = o[2]; f.v[13] = o[3]; f.v[14] = o[7];
+    f.v[15] = o[2]; f.v[16] = o[6]; f.v[17] = o[7];
+    f.v[18] = o[5]; f.v[19] = o[6]; f.v[20] = o[7];
+    f.v[21] = o[5]; f.v[22] = o[3]; f.v[23] = o[7];
+    /* Retail's spill slots of &q, arg4 and arg5; arg4 and arg5 are read back only through a bad index. */
+    f.qp = f.q;
+    f.arg4 = arg4;
+    f.arg5 = arg5;
+    func_8003EAD4(f.v, f.v, *(s32 *)(o[1] + 8), (char *)arg0 + 0x20, NUM_VERTS, FACE_CORNERS);
 
     for (face = 0; face < NUM_FACES; face++) {
         for (k = 0; k < FACE_CORNERS; k++) {
-            p[k] = &v[D_8005BBB8[face * FACE_CORNERS + k] * 3];
+            f.p[k] = &f.v[D_8005BBB8[face * FACE_CORNERS + k] * 3];
         }
-        pa = p[0];
-        pb = p[1];
-        pc = p[2];
+        pa = f.p[0];
+        pb = f.p[1];
+        pc = f.p[2];
         cross = (((pb[2] - pa[2]) >> COORD_SHIFT) * ((pc[0] - pa[0]) >> COORD_SHIFT))
               - (((pb[0] - pa[0]) >> COORD_SHIFT) * ((pc[2] - pa[2]) >> COORD_SHIFT));
-        if (arg2 != 0) {
+        if (f.arg2 != 0) {
             if (cross >= 0) {
                 continue;
             }
@@ -173,29 +192,29 @@ s32 func_8002A8D0(void *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5,
                 continue;
             }
         }
-        cx = (p[0][0] + p[1][0] + p[2][0] + p[3][0]) >> 2;
-        cz = (p[0][2] + p[1][2] + p[2][2] + p[3][2]) >> 2;
+        cx = (f.p[0][0] + f.p[1][0] + f.p[2][0] + f.p[3][0]) >> 2;
+        cz = (f.p[0][2] + f.p[1][2] + f.p[2][2] + f.p[3][2]) >> 2;
         for (k = 0; k < FACE_CORNERS; k++) {
-            q[k * 2] = (p[k][0] - cx) >> COORD_SHIFT;
-            q[k * 2 + 1] = (p[k][2] - cz) >> COORD_SHIFT;
+            f.q[k * 2] = (f.p[k][0] - cx) >> COORD_SHIFT;
+            f.q[k * 2 + 1] = (f.p[k][2] - cz) >> COORD_SHIFT;
         }
-        pt[0] = (((arg1[0] + arg1[3]) >> 1) - cx) >> COORD_SHIFT;
-        pt[1] = (((arg1[2] + arg1[5]) >> 1) - cz) >> COORD_SHIFT;
-        if (func_80030680((Unk80030680 *)pt, (Unk80030680 *)q) == 0) {
+        f.pt[0] = (((arg1[0] + arg1[3]) >> 1) - cx) >> COORD_SHIFT;
+        f.pt[1] = (((arg1[2] + arg1[5]) >> 1) - cz) >> COORD_SHIFT;
+        if (func_80030680((Unk80030680 *)f.pt, (Unk80030680 *)f.qp) == 0) {
             continue;
         }
-        cy = (p[0][1] + p[1][1] + p[2][1] + p[3][1]) >> 2;
+        cy = (f.p[0][1] + f.p[1][1] + f.p[2][1] + f.p[3][1]) >> 2;
         for (k = 0; k < FACE_CORNERS; k++) {
-            w[k * 3] = q[k * 2];
-            w[k * 3 + 1] = (p[k][1] - cy) >> COORD_SHIFT;
-            w[k * 3 + 2] = q[k * 2 + 1];
+            f.w[k * 3] = f.qp[k * 2];
+            f.w[k * 3 + 2] = f.qp[k * 2 + 1];
+            f.w[k * 3 + 1] = (f.p[k][1] - cy) >> COORD_SHIFT;
         }
-        r = func_80030498(pt[0], pt[1], (Unk80030498 *)w);
+        r = func_80030498(f.pt[0], f.pt[1], (Unk80030498 *)f.w);
         if (r == NO_HIT) {
             continue;
         }
         t = (r << COORD_SHIFT) + cy;
-        if (arg3 != 0) {
+        if (f.arg3 != 0) {
             if (arg1[4] < t) {
                 return NO_HIT;
             }
@@ -203,7 +222,7 @@ s32 func_8002A8D0(void *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5,
                 return NO_HIT;
             }
         }
-        if (arg2 != 0) {
+        if (f.arg2 != 0) {
             if (arg4 != NO_LIMIT && t < arg4) {
                 return NO_HIT;
             }
@@ -219,18 +238,18 @@ s32 func_8002A8D0(void *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5,
             }
         }
         if (out != 0) {
-            minY = p[0][1];
+            minY = f.p[0][1];
             minK = 0;
             for (k = 1; k < FACE_CORNERS; k++) {
-                if (p[k][1] < minY) {
-                    minY = p[k][1];
+                if (f.p[k][1] < minY) {
+                    minY = f.p[k][1];
                     minK = k;
                 }
             }
             out[1] = minY - cy;
-            next = p[(minK + 1) & 3];
-            cur = p[minK];
-            prev = p[(minK - 1) & 3];
+            next = f.p[(minK + 1) & 3];
+            cur = f.p[minK];
+            prev = f.p[(minK - 1) & 3];
             if (next[1] == minY) {
                 if (prev[1] == minY) {
                     out[0] = 0;
