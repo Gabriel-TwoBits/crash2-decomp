@@ -12281,19 +12281,19 @@
     ]
   },
   "func_800231B0": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:37",
-    "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0xffffffb0 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x00000049 0xfffffff3 0x801035e8, $v0 returned by call 2 repaired to 0x80103d70, $v0 returned by call 10 repaired to 0x80105434\ncall 1 to func_80031AE8 (0x80031ae8): stack argument 2 is a frame address holding 0x00000000 0x00000000 0x00000003 0x00000004 in the retail code, a frame address holding 0x00000000 0x00000000 0x00000000 0x00000000 in the candidate\n162 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:29",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 2.1,
-    "cost_usd": 0.4837739999999999,
-    "turns": 38,
-    "minutes": 2.1,
+    "wall_minutes": 3.1,
+    "cost_usd": 0.6715185,
+    "turns": 40,
+    "minutes": 3.1,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -12322,9 +12322,21 @@
         "cost_usd": 0.4837739999999999,
         "turns": 38,
         "minutes": 2.1
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.1,
+        "cost_usd": 0.6715185,
+        "turns": 40,
+        "minutes": 3.1
       }
-    ],
-    "reason": "trial 0 disagrees: $a0=0x80100028 $a1=0x00000000 $a2=0x80103778 $a3=0x00000003, stack 0x801032a4 0xffffff91 0x0ac7cbe0 0x80104704, $v0 returned by call 2 repaired to 0x80102fe4\ncall 1 to func_80031AE8 (0x80031ae8): stack argument 2 is a frame address holding 0x00000000 0x00000000 0xffffff90 0x80104598 in the retail code, a frame address holding 0x00000000 0x00000000 0x00000000 0x00000000 in the candidate\n552 of 2000 trials agree"
+    ]
   },
   "func_80032F18": {
     "outcome": "equivalent",
