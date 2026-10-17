@@ -6,23 +6,21 @@ typedef struct {
     u16 w[4];
 } Ent;
 
-typedef struct {
-    Ent e[0x200];
-    s32 n;
-    s32 x;
-    s32 y;
-    s32 z;
-} Tbl;
+#define TBL_COUNT_OFFSET 0x1004
+#define TBL_X_OFFSET 0x1008
+#define TBL_Y_OFFSET 0x100C
+#define TBL_Z_OFFSET 0x1010
+#define TBL_FIELD(off) (*(s32 *)(D_80067FE4 + (off)))
 
 /* Multiplies by 4 with 32-bit wrap-around, then divides by 8192 truncating. */
 #define SCALE_SHIFT 2
 #define SCALE_DIVISOR 8192
 #define SCALE(x) (((s32)((u32)(x) << SCALE_SHIFT)) / SCALE_DIVISOR)
 
-extern Tbl D_80067FE4;
+extern u8 D_80067FE4[];
 extern s32 D_80068FE8;
 
-s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2) {
+s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
     s32 a[3];
     s32 b[3];
     s32 d[3];
@@ -42,13 +40,13 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2) {
     cnt = 0;
     if (D_80068FE8 > 0) {
         do {
-            e = &D_80067FE4.e[i];
+            e = (Ent *)D_80067FE4 + i;
             if (e->w[0] == 0) {
                 d[0] = e->w[1] << 8;
                 d[1] = e->w[2] << 8;
                 i++;
                 d[2] = e->w[3] << 8;
-                e = &D_80067FE4.e[i];
+                e = (Ent *)D_80067FE4 + i;
                 fp = e->w[1];
                 s7 = e->w[2];
                 s6 = e->w[3];
@@ -75,7 +73,7 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2) {
                         break;
                     }
                     m1 = s7;
-                    a[1] = D_80067FE4.y + (s16)e->w[2] * 16 - arg2[1];
+                    a[1] = TBL_FIELD(TBL_Y_OFFSET) + (s16)e->w[2] * 16 - arg2[1];
                     if (s1 < m1) {
                         m1 = s1;
                     }
@@ -92,8 +90,8 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2) {
                     default:
                         break;
                     }
-                    a[0] = D_80067FE4.x + (s16)e->w[1] * 16 - arg2[0];
-                    a[2] = D_80067FE4.z + (s16)e->w[3] * 16 - arg2[2];
+                    a[0] = TBL_FIELD(TBL_X_OFFSET) + (s16)e->w[1] * 16 - arg2[0];
+                    a[2] = TBL_FIELD(TBL_Z_OFFSET) + (s16)e->w[3] * 16 - arg2[2];
                     s1 = e->w[0] & 7;
                     m1 = fp;
                     if (s1 < m1) m1 = s1;
@@ -107,7 +105,7 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2) {
             }
 next:
             i++;
-        } while (i < D_80067FE4.n);
+        } while (i < TBL_FIELD(TBL_COUNT_OFFSET));
     }
     return cnt;
 }

@@ -21,8 +21,8 @@ extern s32 D_8006CB6C;
 /* func_8003DA00 takes six more stack arguments than game.h's prototype. */
 typedef void *(*Func8003DA00Full)(s32, void *, s32, s32, s32, s32, s32, s32, s32);
 
-s32 func_80028C48(void *arg0, void *arg1) {
-    s32 *arg = arg1;
+void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
+    char *arg0 = (char *)unit;
     s32 x, y, z;
     s32 i;
     char *p;
@@ -41,8 +41,8 @@ s32 func_80028C48(void *arg0, void *arg1) {
     res = 0;
     best = 0;
     hit = 0;
-    if (!(*(s32 *)((char *)arg0 + 0xAC) & FLAG_ACTIVE)) {
-        return 0;
+    if (!(*(s32 *)(arg0 + 0xAC) & FLAG_ACTIVE)) {
+        return;
     }
     p = *(char **)(D_800608CC + 0x10);
     x = arg[0];
@@ -112,12 +112,11 @@ s32 func_80028C48(void *arg0, void *arg1) {
 done:
     if (res != 0) {
         if (hit != 0) {
-            func_8002890C(*(u8 **)((char *)arg0 + 0x44), -1, *(s32 *)((char *)res + 0x118));
+            func_8002890C(*(u8 **)(arg0 + 0x44), -1, *(s32 *)((char *)res + 0x118));
         } else {
-            func_8002890C(*(u8 **)((char *)arg0 + 0x44), ((s32)res & ID_MASK) >> ID_SHIFT, -1);
+            func_8002890C(*(u8 **)(arg0 + 0x44), ((s32)res & ID_MASK) >> ID_SHIFT, -1);
         }
     } else {
-        func_8002890C(*(u8 **)((char *)arg0 + 0x44), 0, -1);
+        func_8002890C(*(u8 **)(arg0 + 0x44), 0, -1);
     }
-    return (s32)res;
 }

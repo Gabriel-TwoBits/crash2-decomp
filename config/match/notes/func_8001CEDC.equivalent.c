@@ -10,8 +10,6 @@ typedef struct { u8 pad0[0xC]; UnkP *p; u8 pad1[0x50]; Vec80030D98 pos; } UnkA;
 typedef struct { u8 pad0[0x60]; Vec80030D98 lo; u8 pad1[0x90 - 0x6C]; Vec80030D98 sz; } UnkE;
 typedef struct { UnkE *e; s32 f4; s32 f8; s32 kind; s32 count; void *f14; } UnkB;
 
-extern void *func_8002C324(void *, s32, s32);
-
 s32 func_8001CEDC(UnkA *a, UnkB *b) {
     void *v;
     void *w;
