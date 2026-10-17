@@ -22,15 +22,13 @@
 #define SLOT_KIND_ALT 1
 #define SLOT_TABLE_BYTES 0x290
 #define NO_ID 0xFFFF
-#define POS_X 0
-#define POS_Y 1
-#define POS_Z 2
 #define BOX_SCALE_SHIFT 8
 #define ID_MASK 0x3F0
 #define ID_SHIFT 4
 #define ID_BASE 0x30
 #define ID_RANGE 0x10
 #define LEVEL_OFFSET 0x10
+#define WORD_BYTES 4
 
 extern s32 D_8006CB6C;
 
@@ -39,12 +37,12 @@ typedef void *(*Unk8003DA00Fn)(s32, void *, s32, s32, s32, s32, s32, s32, s32, s
 void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
     s32 start[3];
     s32 pos[3];
-    s32 best;
-    s32 hitMode;
+    s32 bestTop;
+    s32 hitIsBox;
     s32 i;
     s32 id;
     s32 val;
-    s32 axis;
+    s32 count;
     s32 *slots;
     s32 *entry;
     s32 *box;
@@ -57,8 +55,8 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
 
     hit = 0;
     pend = 0;
-    hitMode = 0;
-    best = SCORE_MIN;
+    hitIsBox = 0;
+    bestTop = SCORE_MIN;
     if (!(*(s32 *)(arg0 + OBJ_FLAGS) & OBJ_FLAG_ACTIVE)) {
         return;
     } else if ((arg2 & MODE_LINKED) &&
@@ -67,44 +65,46 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
     } else {
         /* active: continue */
     }
-    pos[POS_X] = arg1[0];
-    pos[POS_Y] = arg1[1] + Y_OFFSET;
-    pos[POS_Z] = arg1[2];
+    pos[0] = arg1[0];
+    pos[1] = arg1[1];
+    pos[2] = arg1[2];
+    pos[1] += Y_OFFSET;
     level = *(char **)(D_800608CC + LEVEL_OFFSET);
-    start[POS_X] = pos[POS_X];
-    start[POS_Y] = pos[POS_Y];
-    start[POS_Z] = pos[POS_Z];
+    start[0] = pos[0];
+    start[1] = pos[1];
+    start[2] = pos[2];
 
-    for (;;) {
+    do {
+        i = 0;
         found = 0;
-        for (i = 0; i < *(s32 *)(level + LIST_COUNT); i++) {
-            if (*(s32 *)(level + LIST_FLAGS + i * 4) & LIST_FLAG_CHECK) {
-                s32 *r = func_80014260(level + LIST_ENTRIES + i * 4, 1, 0);
-                if (func_80030D74(r, pos) != 0) {
-                    found = r;
-                    break;
+        if (*(s32 *)(level + LIST_COUNT) > 0) {
+            do {
+                if (*(s32 *)(level + LIST_FLAGS + i * WORD_BYTES) & LIST_FLAG_CHECK) {
+                    found = func_80014260(level + LIST_ENTRIES + i * WORD_BYTES, 1, 0);
+                    if (func_80030D74(found, pos) != 0) {
+                        rec = (s32 *)found[5];
+                        hit = ((Unk8003DA00Fn)func_8003DA00)((s32)rec, pos, arg2 & MODE_MASK, arg3,
+                            rec[0] << BOX_SCALE_SHIFT, rec[1] << BOX_SCALE_SHIFT, rec[2] << BOX_SCALE_SHIFT,
+                            rec[3] << BOX_SCALE_SHIFT, rec[4] << BOX_SCALE_SHIFT, rec[5] << BOX_SCALE_SHIFT);
+                        break;
+                    }
                 }
-            }
+                i++;
+            } while (i < *(s32 *)(level + LIST_COUNT));
         }
-        if (found != 0) {
-            rec = (s32 *)found[5];
-            hit = ((Unk8003DA00Fn)func_8003DA00)((s32)rec, pos, arg2 & MODE_MASK, arg3,
-                rec[0] << BOX_SCALE_SHIFT, rec[1] << BOX_SCALE_SHIFT, rec[2] << BOX_SCALE_SHIFT,
-                rec[3] << BOX_SCALE_SHIFT, rec[4] << BOX_SCALE_SHIFT, rec[5] << BOX_SCALE_SHIFT);
-        }
-        if (i == *(s32 *)(level + LIST_COUNT)) {
+        count = *(s32 *)(level + LIST_COUNT);
+        if (i == count) {
             hit = 0;
             break;
-        } else if (hit == 0) {
-            continue;
         } else {
-            break;
+            /* hit found: retry while the result is null */
         }
-    }
+    } while (hit == 0);
 
     if (D_8006CB6C > 0) {
+        count = D_8006CB6C;
         slots = (s32 *)((char *)&D_8006CB6C + SLOT_TABLE_BYTES);
-        for (i = 0; i < D_8006CB6C; i++, slots++) {
+        for (i = 0; i < count; i++, slots++) {
             entry = (s32 *)*slots;
             cand = (char *)entry[1];
             if (cand == (char *)arg0 || *(s32 *)(cand + OBJ_ID) == NO_ID) {
@@ -115,52 +115,63 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
                 box = (s32 *)((char *)entry + BOX_ALT_BYTES);
             }
             if (arg2 & MODE_AXIS_Y) {
-                if (start[POS_X] < box[0] || box[3] < start[POS_X] ||
-                    start[POS_Z] < box[2] || box[5] < start[POS_Z]) {
-                    continue;
-                }
                 val = box[4];
-                axis = POS_Y;
-            } else if (arg2 & MODE_AXIS_Z) {
-                if (start[POS_X] < box[0] || box[3] < start[POS_X] ||
-                    start[POS_Y] < box[1] || box[4] < start[POS_Y]) {
+                if (start[0] < box[0] || box[3] < start[0] ||
+                    start[2] < box[2] || box[5] < start[2]) {
                     continue;
                 }
+                if (val >= pos[1] && pos[1] >= box[1]) {
+                    hit = cand;
+                    hitIsBox = 1;
+                    pos[1] = box[1];
+                    break;
+                }
+                if (bestTop < val && start[1] >= val) {
+                    pend = cand;
+                    bestTop = val;
+                }
+            } else if (arg2 & MODE_AXIS_Z) {
                 val = box[5];
-                axis = POS_Z;
+                if (start[0] < box[0] || box[3] < start[0] ||
+                    start[1] < box[1] || box[4] < start[1]) {
+                    continue;
+                }
+                if (val >= pos[2] && pos[2] >= box[2]) {
+                    hit = cand;
+                    hitIsBox = 1;
+                    pos[2] = box[2];
+                    break;
+                }
+                if (bestTop < val && start[2] >= val) {
+                    pend = cand;
+                    bestTop = val;
+                }
             } else {
                 continue;
             }
-            if (val >= pos[axis] && pos[axis] >= box[axis]) {
-                hit = cand;
-                hitMode = 1;
-                pos[axis] = box[axis];
-                break;
-            }
-            if (best < val && start[axis] >= val) {
-                pend = cand;
-                best = val;
-            }
         }
-        if (hitMode == 0 && pend != 0) {
+        if (!hitIsBox && pend != 0) {
             if (arg2 & MODE_AXIS_Y) {
-                axis = POS_Y;
+                if (hit == 0 || bestTop >= pos[1]) {
+                    pos[1] = bestTop;
+                    hit = pend;
+                    hitIsBox = 1;
+                }
             } else if (arg2 & MODE_AXIS_Z) {
-                axis = POS_Z;
+                if (hit == 0 || bestTop >= pos[2]) {
+                    pos[2] = bestTop;
+                    hit = pend;
+                    hitIsBox = 1;
+                }
             } else {
-                axis = -1;
-            }
-            if (axis >= 0 && (hit == 0 || best >= pos[axis])) {
-                pos[axis] = best;
-                hit = pend;
-                hitMode = 1;
+                /* no axis: the pending box is dropped */
             }
         }
     }
 
     id = -1;
     if (hit != 0) {
-        if (hitMode != 0) {
+        if (hitIsBox) {
             id = *(s32 *)(hit + OBJ_ID);
             if (id < 0) {
                 id = -id;
