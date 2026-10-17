@@ -4,6 +4,8 @@
 
 #define NO_HIT 0xC4653601
 #define FLAG_BIG 0x40000000
+/* Re-read at each use: the box overlaps the object when the caller's buffers alias. */
+#define IS_BIG(o) (((o)->unk_100 & FLAG_BIG) != 0)
 #define FLAG_MODE_40 0x40
 #define FLAG_SKIP_BOUND 0x200000
 #define FLAG_PROBE_SRC 0x08000000
@@ -74,7 +76,6 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     s32 best;
     s32 hit;
     s32 i;
-    s32 big;
     s32 base;
     s32 back;
     s32 half;
@@ -87,37 +88,36 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     best = NO_HIT;
     best_obj = 0;
     box = (s32 *)((u8 *)arg2 + BOX_OFFSET);
-    big = (self->unk_100 & FLAG_BIG) != 0;
 
     box[0] = arg1[0] - HALF_SMALL;
     if (self->unk_100 & FLAG_MODE_40) {
-        if (!big) {
+        if (!IS_BIG(self)) {
             box[1] = arg1[1] - self->unk_08->unk_40 / 4;
         } else {
             box[1] = arg1[1] - BIG_BACK;
         }
         box[2] = arg1[2] - HALF_SMALL;
         box[3] = arg1[0] + HALF_SMALL;
-        if (!big) {
+        if (!IS_BIG(self)) {
             box[4] = arg1[1] + self->unk_08->unk_40 * 2;
         } else {
             box[4] = arg1[1] + BIG_FWD_FAR;
         }
         box[5] = arg1[2] + HALF_SMALL;
     } else {
-        if (!big) {
+        if (!IS_BIG(self)) {
             base = arg1[1] + self->unk_08->unk_40;
         } else {
             base = arg1[1] + BIG_FWD;
         }
         if (arg3 != 0) {
-            if (!big) {
+            if (!IS_BIG(self)) {
                 box[1] = base - self->unk_08->unk_40 / 8;
             } else {
                 box[1] = base - BIG_BACK_MID;
             }
         } else {
-            if (!big) {
+            if (!IS_BIG(self)) {
                 back = self->unk_08->unk_40 / 4;
                 half = self->unk_08->unk_40 / 2;
                 if (half > LIMIT_B - 1) {
@@ -130,12 +130,12 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
                 limit = back > BIG_LIMIT_A;
             }
             if (limit) {
-                if (!big) {
+                if (!IS_BIG(self)) {
                     box[1] = base - self->unk_08->unk_40 / 4;
                 } else {
                     box[1] = base - BIG_BACK;
                 }
-            } else if (!big) {
+            } else if (!IS_BIG(self)) {
                 half = self->unk_08->unk_40 / 2;
                 if (half > LIMIT_B - 1) {
                     box[1] = base - LIMIT_B;
@@ -148,7 +148,7 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
         }
         box[2] = arg1[2] - HALF_SMALL;
         box[3] = arg1[0] + HALF_SMALL;
-        if (!big) {
+        if (!IS_BIG(self)) {
             box[4] = arg1[1] + self->unk_08->unk_40;
         } else {
             box[4] = arg1[1] + BIG_FWD;
@@ -171,7 +171,7 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     box[2] = arg1[2] - HALF_NEAR;
     box[3] = arg1[0] + HALF_NEAR;
     box[5] = arg1[2] + HALF_NEAR;
-    if (!big) {
+    if (!IS_BIG(self)) {
         box[4] = arg1[1] + self->unk_08->unk_40 * 5 / 4;
     } else {
         box[4] = arg1[1] + BIG_FWD_NEAR;
@@ -207,7 +207,7 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     }
     if (self->unk_100 & FLAG_MODE_40) {
         return hit;
-    } else if (!big) {
+    } else if (!IS_BIG(self)) {
         if (arg1[1] + self->unk_08->unk_40 < hit) {
             return NO_HIT;
         } else {
