@@ -211,8 +211,8 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **More batches**, a few hundred functions in all.
-2. **More equivalent functions** (section 4, "Next").
+1. **The last 40 functions** as equivalent C (section 4, "Next").
+2. **Readable C**: names and types for the equivalent and matched functions, subsystem by subsystem (section 4).
 
 ## 4. The engine in C
 
@@ -299,8 +299,16 @@ With 155 equivalent functions (the code 1,572 bytes shorter), 154 agree with ret
   phase. Pressing the buttons one or two frames later in retail moves Crash and the camera but leaves the phase as it
   is: the phase follows how long the game's frames take, here the decompressor's.
 
-Next: find what in the disc's data holds the executable's addresses, then `loop --equivalent` on the 12 refused at
-landing and the remaining given-up functions, in batches, each checked in the game too.
+Later batches sent the untried functions of 0x240 bytes or more straight to `loop --equivalent`, and the 41
+functions under 0x20 bytes were matched by hand. A regression over every equivalent function on a fresh seed caught
+two that the landing's single seed had let through (`func_80013F5C` narrowed a call's argument to the callee's `s8`;
+`func_80024A48` swapped two stores through pointers that may alias), so landing now checks two seeds. 115 equivalent
+runs cost US$37.74 in all. With 163 equivalent functions, the equivalent executable agrees with retail on all 8,000
+frames without `func_80027CD0`, and with it differs from frame 4,035 (timing, above).
+
+Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 40 functions left as
+assembly (the largest; 16 never tried, two with GTE instructions equiv.py can't run), each batch checked in the game
+too; a run_game comparison that tolerates timing (the decompressor's calls, or the game's state at checkpoints).
 
 ## 5. Beyond matching
 
