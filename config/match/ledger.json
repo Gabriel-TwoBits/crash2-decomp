@@ -13201,9 +13201,9 @@
     "reason": "trial 3 disagrees: $a0=0x80105d54 $a1=0xffffff76 $a2=0x80103ba8 $a3=0x00000000, stack 0x00000008 0x80100af8 0x00000000 0x801035f8, memory at D_8006F1F0+0x96c54 (0x80105e44) repaired to 0x80105210, $v0 returned by call 2 repaired to 0x801003a8\nmemory at D_8006F1F0+0x949b8 (0x80103ba8) is 0x80000000 after the retail code, 0x0001d4c0 after the candidate\n1204 of 2000 trials agree"
   },
   "func_80027F3C": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 18:37",
-    "summary": "500 of 500 trials agree, 500 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-17 19:00",
+    "summary": "2000 of 2000 trials agree, 1994 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
