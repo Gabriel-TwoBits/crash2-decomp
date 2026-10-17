@@ -243,6 +243,7 @@ void func_800325D0(s32);
 s16 *func_8003264C(s32 *, s32);
 s32 func_800328D4(void);
 s32 func_80032F18(s32, s32, s32 *, struct Obj *);
+void func_800334A0(void);
 void func_80033C84(s32);
 void func_80033D10(void);
 void func_80033DD0(void);
