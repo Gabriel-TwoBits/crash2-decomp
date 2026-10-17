@@ -94,14 +94,28 @@ Unicorn runs the candidate and the retail function from the same state, trial by
 with random words (zeros, small numbers, pointers into an arena of such words, the function's own constants), each word
 of the executable's data either its retail value or random, random arguments (an arena pointer for a parameter the C
 declares as a pointer). A call out of the function is recorded (target, arguments as the callee's prototype counts
-them, a pointer into the caller's frame by the words there) and answered with a made-up return value, not run.
+them, a pointer into the caller's frame by the words there) and answered with a made-up return value, not run. The
+retail code and read-only data are read-only: a store through a wild pointer ends the run instead of rewriting the
+retail function as it runs (`func_80015344`'s table index went negative into its own code, which then raised a
+reserved-instruction exception, reported as an instruction Unicorn lacks).
+
+Random words make most dereferenced words bad pointers, so a trial whose retail run ends on a memory access fault (an
+address error, a TLB miss, unmapped memory, a store into the code) is repaired before the candidate runs. Another
+emulator follows the retail run instruction by instruction, tracking which input word each register holds (a word of
+memory as it was on entry, `$a0`-`$a3`, a register a callee returned) through moves, additions, shifts and
+multiplications, and the word the faulting address came from is replaced: by an arena pointer where it was the
+address's base, a small aligned offset where it was added to an address already in memory, a small count where it was
+shifted or multiplied first (an offset or a count still faulting is set to zero once). The retail run then starts over,
+up to 16 times. The candidate runs from the final repaired state, the same as the retail code's; repairs depend only on
+the retail code, the seed and the trial.
 
 Compared after each trial: how the run ended (returned, an exception, the instruction limit), `$v0` (unless the function
 is `void`), the callee-saved registers, the calls in order, and every word either side changed outside its own stack
 frame. Both runs reaching the limit (500,000 instructions or 1,000 calls), or taking the same exception, agree (reported;
-after an exception only the calls are compared). The first disagreement is printed with its trial's arguments; the last
-line is `N of M trials agree`, and the exit status 0 only when all do. A 500-trial run takes about 2 seconds, up to 15
-for a function spinning on what a callee would change.
+after an exception only the calls are compared). The first disagreement is printed with its trial's arguments and
+repairs; the last line is `N of M trials agree`, and the exit status 0 only when all do. A 500-trial run takes 1 to 2
+seconds, 5 to 25 for a function whose trials often reach the limit or fault after thousands of instructions (a repair
+follows the retail run instruction by instruction, in Python: `func_8002F6C8`, 24 seconds).
 
 Its limits, which a passing run doesn't lift:
 
@@ -114,6 +128,13 @@ Its limits, which a passing run doesn't lift:
 - A frame address passed to a callee is compared by its first 4 words whatever the local's size; past a smaller local
   they may be other locals, which differently laid out C keeps elsewhere.
 - One word per parameter (no 64-bit or structure arguments), and a variadic callee's named parameters only.
+- A fault isn't repaired when it comes after 20,000 instructions, or through an address no single input word explains
+  (a loop running past its table, a word the function stored itself): such trials still agree by the exception. A path
+  behind an equality of two words stays rare (`func_8001F9C4` spins in `for (;;) {}` unless two memory words match, so
+  most of its trials reach the limit).
+- The limit counts instructions, which differ between the two sides: a loop of about 500,000 retail instructions may
+  return in the candidate (`func_80015344`, seed 2, trial 1,553: a 27,000-row loop; at 5,000,000 both return and
+  agree).
 - GTE instructions (coprocessor 2) aren't emulated: such a function stops with `unsupported: ...` and exit status 2.
 
 ### Landing an equivalent function

@@ -306,6 +306,31 @@ two that the landing's single seed had let through (`func_80013F5C` narrowed a c
 runs cost US$37.74 in all. With 163 equivalent functions, the equivalent executable agrees with retail on all 8,000
 frames without `func_80027CD0`, and with it differs from frame 4,035 (timing, above).
 
+equiv.py's random words made most dereferenced words bad pointers: in large functions most trials ended with both sides
+taking the same fault, compared by their calls only, and the landing's 5% floor refused them (`func_8001F9C4`
+dereferences two global pointers in a row: 13 of 2,000 trials compared). Traced, the faulting addresses came from global
+pointers holding random words, arguments the C declares as integers but uses as pointers, callees' return values, and
+indices loaded from memory, shifted and added to a table's address. equiv.py now repairs such a trial: it finds the
+input word the faulting address came from and replaces it (an arena pointer, a small offset or count), then runs again,
+both sides from the repaired state (docs/WORKFLOW.md, "Testing an equivalent function"). Compared trials of 2,000, seeds
+1 and 2, before and after:
+
+| Function | Before | After |
+| --- | --- | --- |
+| `func_8001F9C4` | 13, 5 | 233, 229 (most of the rest spin in a `for (;;) {}` behind an equality of two words) |
+| `func_8002F6C8` | 34, 40 | 1,462, 1,503 |
+| `func_80029538` | 62, 65 | 1,667, 1,634 |
+| `func_8002433C` | 84, 96 | 1,591, 1,559 |
+| the 163 equivalent functions | 448,500 of 652,000 (69%, median 74%) | 613,469 (94%, median 100%) |
+
+All 163 still agree on every trial of both seeds. `func_80015344`'s "instruction Unicorn lacks" (above) was the retail
+function rewriting its own code through a table index gone negative; the retail code is read-only now, and the
+function runs: 941 and 906 compared, with one disagreement on seed 2 that a higher instruction limit removes (the
+retail loop needs more instructions than the C's). Reusing one emulator per side instead of one per run, regions mapped
+from this process's memory, makes a typical 500-trial run 1 to 2 seconds; functions whose repaired trials run long
+take up to 25. An emulator that took a guest exception is rebuilt: run again, Unicorn 2.1.4 crashed the process now
+and then (4 of the 163 functions on 2,000 trials).
+
 Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 40 functions left as
 assembly (the largest; 16 never tried, two with GTE instructions equiv.py can't run), each batch checked in the game
 too; a run_game comparison that tolerates timing (the decompressor's calls, or the game's state at checkpoints).
