@@ -12,7 +12,7 @@ typedef struct Unk80033DE0 {
     s16 volR;
 } Unk80033DE0;
 
-extern s16 D_8005F2EC;
+extern u16 D_8005F2EC;
 extern s16 D_8005F2F8;
 extern s32 D_8005F39C;
 extern s16 D_8005F3E4;

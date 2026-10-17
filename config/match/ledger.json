@@ -4323,16 +4323,16 @@
     "cflags": "-O2 -G8 -mcpu=r8000"
   },
   "func_80033C84": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:44",
-    "summary": "500 of 500 trials agree, 498 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:48",
+    "summary": "2000 of 2000 trials agree, 1996 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
     "wall_minutes": 0.5,
-    "cost_usd": 0.17867119999999997,
-    "turns": 7,
-    "minutes": 0.5,
+    "cost_usd": 0.1689182,
+    "turns": 10,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -4368,11 +4368,24 @@
         "cost_usd": 0.17867119999999997,
         "turns": 7,
         "minutes": 0.5
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 498 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.1689182,
+        "turns": 10,
+        "minutes": 0.4
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
     "mode": "equivalent",
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/800324A8.o \nsrc/game/800324A8.c:477: conflicting types for `D_8005F2EC'"
+    "scored": "in place"
   },
   "func_80035CBC": {
     "outcome": "equivalent",
