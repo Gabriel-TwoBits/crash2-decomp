@@ -245,6 +245,7 @@ void func_80034394(void);
 void func_800345C8(void);
 void func_800346E8(void);
 void func_80034898(void);
+void func_80034A2C(s32 *);
 void func_80034BB8(void);
 void func_8003516C(u8 *);
 void func_800352D8(s8 *, s32);
