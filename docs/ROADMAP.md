@@ -211,7 +211,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The last 40 functions** as equivalent C (section 4, "Next").
+1. **The last 32 functions** as equivalent C (section 4, "Next").
 2. **Readable C, R1**: the first 40 to 60 names, those with evidence of grade A (section 5).
 
 ## 4. The engine in C
@@ -339,7 +339,11 @@ back after the call. `func_8001EC2C` writes all three words of that vector (`Rot
 anything reads them, so the difference is the stubbed callee's, not the C's: a false positive of "callees don't run".
 A callee's outputs known to be written whole would let equiv.py fill them; until then the function stays as it is.
 
-Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 36 functions left as
+The four functions the 5% floor had refused (`func_8001F9C4`, `func_8002F6C8`, `func_80029538`, `func_8002433C`) landed
+with their earlier drafts, unchanged: 2,000 of 2,000 trials agree on both seeds, 229 to 1,634 compared. 171 equivalent
+functions, 32 left as assembly.
+
+Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 32 functions left as
 assembly (the largest; two with GTE instructions equiv.py can't run), each batch checked in the game too; a run_game
 comparison that tolerates timing (the decompressor's calls, or the game's state at checkpoints).
 
