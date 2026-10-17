@@ -11620,5 +11620,34 @@
         "minutes": 2.3
       }
     ]
+  },
+  "func_8002B164": {
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:55",
+    "summary": "2000 of 2000 trials agree, 891 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 1.3,
+    "cost_usd": 0.39340020000000003,
+    "turns": 22,
+    "minutes": 1.3,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 216 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.3,
+        "cost_usd": 0.39340020000000003,
+        "turns": 22,
+        "minutes": 1.3
+      }
+    ]
   }
 }
