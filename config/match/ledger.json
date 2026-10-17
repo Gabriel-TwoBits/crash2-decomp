@@ -10189,9 +10189,9 @@
     ]
   },
   "func_80015344": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:24",
-    "summary": "500 of 500 trials agree, 228 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:02",
+    "summary": "2000 of 2000 trials agree, 906 compared",
     "best": "attempt3.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -10241,8 +10241,7 @@
       }
     ],
     "mode": "equivalent",
-    "scored": "in place",
-    "reason": "trial 1553 disagrees: $a0=0x801030f8 $a1=0x00000000 $a2=0x6a3c41d7 $a3=0xfffffffc, stack 0x00000001 0x00000000 0x691632fb 0x80101a20\nthe retail code ended by the limit, the candidate by returned\n1999 of 2000 trials agree"
+    "scored": "in place"
   },
   "func_800260F4": {
     "outcome": "equivalent",
