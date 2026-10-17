@@ -287,6 +287,18 @@ equivalent executable stays healthy over the 8,000 frames and displays what reta
 heap agree word for word, code pointers aside, but for a handful of 16-bit counters one apart (0xA40D against 0xA40E
 at 0x8005B9C8 from frame 3,500 at least), the decompressor's output included.
 
+With 155 equivalent functions (the code 1,572 bytes shorter), 154 agree with retail on all 8,000 frames, and
+`func_80027CD0` alone still displays otherwise from frame 4,035; it changes timing, not behaviour:
+
+- Hooked at its entry and its return in both runs (PCSX-Redux's interpreter, Lua execution breakpoints), its 160 calls
+  over the 8,000 frames take the same arguments, the same input and ring buffer, and return the same length, output
+  and ring buffer, call for call. Only when they return differs: 5 calls that cross a vsync in retail end within it
+  in C, the first at frame 4,009.
+- The stretched geometry the equivalent side shows in Turtle Woods (frame 7,350) is a frame retail displays too, every
+  other pair of vsyncs (7,348-7,349 and 7,352-7,353); the equivalent run shows the same alternation two vsyncs out of
+  phase. Pressing the buttons one or two frames later in retail moves Crash and the camera but leaves the phase as it
+  is: the phase follows how long the game's frames take, here the decompressor's.
+
 Next: find what in the disc's data holds the executable's addresses, then `loop --equivalent` on the 12 refused at
 landing and the remaining given-up functions, in batches, each checked in the game too.
 
