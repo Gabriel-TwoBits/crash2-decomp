@@ -137,7 +137,8 @@ draft meets them before landing (below).
     .venv/bin/python tools/match.py loop --equivalent --count N --minutes 15 --model claude-sonnet-5-5
 
 It takes the smallest function the matching loop gave up on (`gave up`, `rejected`, or notes' C that didn't land as
-equivalent) that is still plain `INCLUDE_ASM`, has no GTE instruction and hasn't been settled by an equivalent run. The agent's
+equivalent), or one of `0x240` bytes or more not tried yet (the matching loop matched about one in seven to ten of
+those, at US$7-10 a match), that is still plain `INCLUDE_ASM`, has no GTE instruction and hasn't been settled by an equivalent run. The agent's
 instructions are `tools/match/EQUIVALENT.md`; its starting points are the assembly, m2c's draft and the matching run's
 notes and C. Its `score.sh` (`tools/match.py score FUNCTION FILE.c [--seed N] [--trials N]`) judges a draft as it would
 land: placed by the landing's own code into a copy of its file beside a copy of `include/game.h`

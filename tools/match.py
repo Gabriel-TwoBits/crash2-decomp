@@ -127,6 +127,9 @@ SCORED_IN_PLACE = "in place"
 # didn't land as equivalent (a run fixes what the builds refused). A match that didn't land ("matched, not landed") is
 # fixed by hand instead
 GIVEN_UP = ("gave up", "rejected", EQUIVALENT_REFUSED)
+# From this size the matching loop matched about one function in seven to ten, at US$7-10 a match (docs/ROADMAP.md): one
+# not tried yet goes to the equivalent track without a matching run
+EQUIVALENT_FIRST_SIZE = 0x240
 # equiv.py's lines: its last, the trials agreeing without being compared, and the first disagreement
 AGREEING = re.compile(r"^(\d+) of (\d+) trials agree$", re.MULTILINE)
 UNCOMPARED = re.compile(r"^(\d+) trials agree by both (?:reaching the limit|taking the same exception)", re.MULTILINE)
@@ -269,14 +272,22 @@ def settled_equivalent(entry):
 
 
 def next_equivalent():
-    """The next function for an equivalent run: the smallest one the matching loop gave up on for good, still plain
-    INCLUDE_ASM, not skipped, not settled by an equivalent run, and without GTE instructions"""
+    """The next function for an equivalent run: the smallest one the matching loop gave up on for good, or of
+    EQUIVALENT_FIRST_SIZE or more and not tried yet; still plain INCLUDE_ASM, not skipped, not settled by an equivalent
+    run, and without GTE instructions"""
     ledger = load_ledger()
     skip = skipped()
     equivalent = equivalents()
+
+    def due(name, size):
+        if name not in ledger:
+            return size >= EQUIVALENT_FIRST_SIZE and not handwritten(name)
+        else:
+            return (ledger[name]["outcome"] in GIVEN_UP and not given_up_elsewhere(ledger[name])
+                    and not settled_equivalent(ledger[name]))
+
     candidates = sorted((size, name) for name, size in unmatched().items()
-                        if name in ledger and ledger[name]["outcome"] in GIVEN_UP and not given_up_elsewhere(ledger[name])
-                        and not settled_equivalent(ledger[name]) and name not in skip and name not in equivalent)
+                        if due(name, size) and name not in skip and name not in equivalent)
     # The GTE check reads the split, so only as far as the first candidate without
     for _, name in candidates:
         if not uses_gte(name):
