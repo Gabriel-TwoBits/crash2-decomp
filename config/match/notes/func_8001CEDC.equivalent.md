@@ -1,13 +1,13 @@
 # func_8001CEDC notes
 
-Dispatch on `b->kind` (0xC): 0, 4, 5 and anything above 5 go to the common tail; 1 tests object-vs-object overlap
-(func_80030EC0), 2 point-in-box (func_80030D98), 3 builds a box from `b->e` (+-0x60/0x90 pairs) and tests it, then from the
-third hit on every 5th skips the tail. Cases 1..3 need `a->p->q->kind` to be 0x300 or 0x400. Tail: `b->count++`, then
-`func_8001CC10(b->e, a, b->f4, b->f8, b->f14)`. Always returns -0xFF.
+Dispatches on `b->kind` (offset 0xC) through jtbl_800102D8: kinds 1 and 2 skip the type check; 3, 4 and 5 first require
+the object's type word (`a->p->q->kind`) to be 0x300 or 0x400. Kind 1 and 4 test two `func_8002C324` results with
+`func_80030EC0` (two `func_8002CA1C` releases), 2 and 3 test `a + 0x60` against a `func_8002C324` box with
+`func_80030D98`, and 5 builds a min/max box from `b->e` and tests it with `func_80030EC0`; kind 5 also returns early,
+bumping `count`, when `count >= 3 && count % 5 != 0`. Kind 0 or out of range goes straight to the common tail. The
+tail increments `count`, calls `func_8001CC10`, and the function always returns -0xFF.
 
-best.c = earlier.c without its own `func_8002C324` prototype (it conflicted with game.h's `s32 *`). Re-read against
-target.s branch by branch (case 1 does not null-check the second lookup; a nonzero test result continues to the tail).
+The earlier run mapped the jump table wrongly. The first draft here also did `s32 *` arithmetic where the assembly
+adds 8 bytes.
 
-Not scored: score.sh stops with `placed/8001CEDC.c:92: 'func_8001CEDC' redeclared as different kind of symbol`. The file has
-`extern char func_8001CEDC;` (used as `&func_8001CEDC` at lines 103/116), which conflicts with any C definition of the
-name. Landing needs that declaration changed first. Final count: 0 of 0 trials (no run).
+Final: every trial agrees on seeds 0 and 1 (500) and on landing's check (seeds 1 and 2, 2000 trials each).

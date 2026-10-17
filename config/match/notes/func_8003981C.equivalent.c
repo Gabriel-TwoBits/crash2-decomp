@@ -54,8 +54,8 @@ s32 func_8003981C(u8 *arg0, u32 arg1, s32 arg2, s32 *arg3) {
         }
         break;
     default:
-        /* mode 3 leaves the condition register unset; treated as false */
-        cond = 0;
+        /* mode 3 leaves the condition register unset; retail tests the caller's $t1, taken as nonzero */
+        cond = 1;
         break;
     }
     arg2 |= STATUS_TAKEN;
