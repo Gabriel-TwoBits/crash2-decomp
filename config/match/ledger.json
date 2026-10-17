@@ -12827,5 +12827,65 @@
         "minutes": 0.1
       }
     ]
+  },
+  "func_8002CC50": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 14:31",
+    "summary": "trial 4 disagrees: $a0=0x80105f74 $a1=0x00000000 $a2=0x80101038 $a3=0x00000008, stack 0x80104288 0x0000000b 0x00000000 0x80102084\nthe retail code makes 4 calls, the candidate 8\n459 of 500 trials agree",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 20.5,
+    "cost_usd": 1.5697148,
+    "turns": 74,
+    "minutes": 20.4,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 4 disagrees: $a0=0x80105f74 $a1=0x00000000 $a2=0x80101038 $a3=0x00000008, stack 0x80104288 0x0000000b 0x00000000 0x80102084\nthe retail code makes 4 calls, the candidate 8\n459 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 20.5,
+        "cost_usd": 1.5697148,
+        "turns": 74,
+        "minutes": 20.4
+      }
+    ]
+  },
+  "func_80037698": {
+    "outcome": "equivalent",
+    "time": "2026-10-17 14:47",
+    "summary": "2000 of 2000 trials agree, 1719 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 13.2,
+    "cost_usd": 1.0663082000000002,
+    "turns": 69,
+    "minutes": 13.1,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 420 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 13.2,
+        "cost_usd": 1.0663082000000002,
+        "turns": 69,
+        "minutes": 13.1
+      }
+    ]
   }
 }
