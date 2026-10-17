@@ -276,9 +276,9 @@ extern s32 g_UseCd;
 /* GCC calls __main at the start of a function named main */
 s32 main(void) {
     g_UseCd = 1;
-    func_80015614();
-    func_80011800(0x3C);
-    func_800157A0();
+    Sys_Init();
+    Sys_MainLoop(0x3C);
+    Sys_Shutdown();
     return 0;
 }
 
@@ -342,7 +342,7 @@ void SetRotMatrix(void *);
 /* Nsf_OpenLevel stays undeclared: 800123F0.c defines it over a struct type unknown here (implicit int). */
 int printf(const char *, ...);
 
-void func_80011800(s32 arg0) {
+void Sys_MainLoop(s32 arg0) {
     s32 spC0;
     s32 state;
     s32 pending;
@@ -493,5 +493,5 @@ void func_80011800(s32 arg0) {
     Nsf_CloseLevel((int *)D_80067588);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_80011800);
+INCLUDE_ASM("asm/nonmatchings/game/800111B0", Sys_MainLoop);
 #endif

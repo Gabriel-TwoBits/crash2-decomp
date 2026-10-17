@@ -20,7 +20,7 @@ int CdIntToPos(int, unsigned char *);
 int CdRead(int, s32, int);
 int printf(const char *, ...);
 
-s32 func_800123F0(s32 *a0, s32 arg1, s32 arg2) {
+s32 Cd_ReadFile(s32 *a0, s32 arg1, s32 arg2) {
     u8 sp10[8];
     u8 sp18[8];
     s32 s2;
@@ -48,7 +48,7 @@ loop:
     if (CdControl(2, sp18, sp10) == 0) {
         goto loop;
     }
-    if (CdRead((u32)(((arg0[1] & 0x1FFFF) + 0x7FF) / 2048), arg1, 0x80) == 0 || func_80012ED0(1) == -0x10) {
+    if (CdRead((u32)(((arg0[1] & 0x1FFFF) + 0x7FF) / 2048), arg1, 0x80) == 0 || Cd_SyncRead(1) == -0x10) {
         printf(D_8005F1A8);
         goto loop;
     }
@@ -60,7 +60,7 @@ end:
     return ret;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_800123F0);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Cd_ReadFile);
 #endif
 
 s32 Nsf_RelocatePage(u8 *base) {
@@ -471,7 +471,7 @@ void func_80012DC0(void) {
 extern int D_80067FB4[];
 extern int g_LevelFiles[];
 
-void func_80012E4C(s32 arg0) {
+void Nsf_SeekLevel(s32 arg0) {
     char sp10[8];
     int v;
 
@@ -483,7 +483,7 @@ void func_80012E4C(s32 arg0) {
     }
 }
 
-s32 func_80012ED0(s32 wait) {
+s32 Cd_SyncRead(s32 wait) {
     s32 ret;
 
     ret = CdReadSync(wait == 0, 0);
@@ -595,7 +595,7 @@ s32 func_80013038(Unk80013038 *arg0, s32 arg1) {
     return 0;
 }
 
-/* The value func_80012ED0 returns when a CD read fails */
+/* The value Cd_SyncRead returns when a CD read fails */
 #define CD_FAILURE -0x10
 /* func_80013200 switches on the state from this one up */
 #define FIRST_STATE 2
@@ -773,7 +773,7 @@ loop:
         if (g_UseCd == 0 || D_80067FB4[0] != (int)s0) {
             goto cancel;
         }
-        r = func_80012ED0(0);
+        r = Cd_SyncRead(0);
         if (r == 1) {
             if (func_800130A0(s0) == (Unk800130A0 *)ERR_RETRY) {
                 printf(D_800100F0, func_80011F1C(s0->index));
@@ -1897,7 +1897,7 @@ s32 Nsf_OpenLevel(Unk80014C68 *arg0, s32 arg1) {
         a0 = (s32)name;
         a2 = 0;
     }
-    arg0->file = func_800123F0((s32 *)a0, 0, a2);
+    arg0->file = Cd_ReadFile((s32 *)a0, 0, a2);
     file = arg0->file;
     arg0->tbl10 = arg0->file + FILE_TABLE2_OFFSET;
     arg0->tbl8 = (s32 *)arg0->file;
@@ -2054,7 +2054,7 @@ int Nsf_CloseLevel(int *p) {
     int off;
     char buf[8];
     if (p[0] == 1) {
-        if (g_UseCd != 0 && D_80067FB4[0] != 0) func_80012ED0(1);
+        if (g_UseCd != 0 && D_80067FB4[0] != 0) Cd_SyncRead(1);
         if (D_80067FBC[0] != 0) func_80051328(1);
         i = 0;
         Snd_ShutdownSequencer();

@@ -747,3 +747,31 @@ g_LevelFiles = 0x80069034;
 
 // the .NSF's sector func_80014C68 takes from the level's file record; func_80012F24 adds the page's offset to it for CdRead
 g_NsfStartSector = 0x800675A8;
+
+// calls ResetCallback, SetVideoMode, InitGeom, CdInit when g_UseCd is set, Gfx_Init, Input_Init and Save_InitCard, and opens root counter 2's event with OpenEvent and SetRCnt; main calls it first
+Sys_Init = 0x80015614; // type:func
+
+// calls CdControl(CdlStop) and StopCallback when g_UseCd is set, Save_StopCard, StopPAD, ResetGraph(3), StopRCnt and DisableEvent on root counter 2's event; main calls it last
+Sys_Shutdown = 0x800157A0; // type:func
+
+// main calls it between Sys_Init and Sys_Shutdown; it opens and closes levels with Nsf_OpenLevel and Nsf_CloseLevel and calls Gfx_EndFrame on each pass
+Sys_MainLoop = 0x80011800; // type:func
+
+// the callback Sys_Init passes OpenEvent for root counter 2's interrupt; it increments g_TimerTicks and returns
+Sys_TimerHandler = 0x8003BE88; // type:func
+
+// converts a sector with CdIntToPos, seeks it with CdControl(CdlSetloc), reads into a buffer from Heap_Alloc with CdRead and waits on func_80012ED0, reading again on an error
+Cd_ReadFile = 0x800123F0; // type:func
+
+// CdReadSync then CdDataSync, blocking when its argument is set: -16 when either fails, 0 while the read goes on, 1 once done
+Cd_SyncRead = 0x80012ED0; // type:func
+
+// converts a sector with CdIntToPos, seeks it with CdControl(CdlSetloc), then CdRead and CdReadSync
+Cd_ReadSectors = 0x80031680; // type:func
+
+// when g_UseCd is set and the CD is idle (CdSync(1) returns 0), converts the level's NSD sector from g_LevelFiles
+// with CdIntToPos and seeks it with CdControlF(CdlSeekL)
+Nsf_SeekLevel = 0x80012E4C; // type:func
+
+// ratan2 of the difference between two points' first two words, masked to a 12-bit angle
+Math_AngleTo = 0x80031298; // type:func

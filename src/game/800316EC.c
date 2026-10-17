@@ -72,7 +72,7 @@ void Nsf_ScanDisc(void) {
     u32 *entry;
 
     sector = (u8 *)Heap_Alloc(SECTOR_SIZE);
-    if (func_80031680(1, PVD_SECTOR, (unsigned long *)sector) != SECTOR_READ_OK
+    if (Cd_ReadSectors(1, PVD_SECTOR, (unsigned long *)sector) != SECTOR_READ_OK
         || strncmp((char *)sector + ISO_ID_OFFSET, D_8005F228, ISO_ID_LENGTH) != 0) {
         Heap_Free((s32)sector);
         return;
@@ -80,7 +80,7 @@ void Nsf_ScanDisc(void) {
         printf(D_8005F230);
     }
     l.extent = READ_U32(sector + ISO_ROOT_RECORD_OFFSET);
-    if (func_80031680(1, l.extent, (unsigned long *)sector) != SECTOR_READ_OK) {
+    if (Cd_ReadSectors(1, l.extent, (unsigned long *)sector) != SECTOR_READ_OK) {
         Heap_Free((s32)sector);
         return;
     }
@@ -105,7 +105,7 @@ void Nsf_ScanDisc(void) {
         } while (count < MAX_PATH_RECORDS && rec < sector + SECTOR_SIZE);
     }
     for (i = 0; i < SECTOR_COUNT_TABLE; i++) {
-        if (l.table[i] != NO_SECTOR && func_80031680(1, l.table[i], (unsigned long *)sector) != SECTOR_READ_OK) {
+        if (l.table[i] != NO_SECTOR && Cd_ReadSectors(1, l.table[i], (unsigned long *)sector) != SECTOR_READ_OK) {
             Heap_Free((s32)sector);
             return;
         }

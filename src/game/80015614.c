@@ -35,7 +35,7 @@ void SetRCnt(u32, s32, s32);
 void SetVideoMode(s32);
 void StartRCnt(u32);
 
-void func_80015614(void) {
+void Sys_Init(void) {
     s32 i;
     s32 t;
     s8 *p;
@@ -74,7 +74,7 @@ void func_80015614(void) {
     Save_InitCard();
     EnterCriticalSection();
     StopRCnt(ROOT_COUNTER_2);
-    D_8005F3DC = OpenEvent(ROOT_COUNTER_2, EVENT_SPEC_INTERRUPT, EVENT_MODE_CALLBACK, func_8003BE88);
+    D_8005F3DC = OpenEvent(ROOT_COUNTER_2, EVENT_SPEC_INTERRUPT, EVENT_MODE_CALLBACK, Sys_TimerHandler);
     EnableEvent(D_8005F3DC);
     SetRCnt(ROOT_COUNTER_2, RCNT_TARGET, RCNT_TARGET);
     StartRCnt(ROOT_COUNTER_2);
@@ -91,13 +91,13 @@ void func_80015614(void) {
     D_8006CD2C = t;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80015614", func_80015614);
+INCLUDE_ASM("asm/nonmatchings/game/80015614", Sys_Init);
 #endif
 
 extern s32 g_UseCd;
 s32 D_8005F3DC;
 
-s32 func_800157A0(void) {
+s32 Sys_Shutdown(void) {
     if (g_UseCd != 0) {
         CdControl(8, 0, 0);
         StopCallback();

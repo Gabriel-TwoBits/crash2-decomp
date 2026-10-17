@@ -157,7 +157,7 @@ void func_80037698(u8 *obj, u32 arg1) {
         if ((u32)(FIELD(obj, OBJ_KIND, u8) - OBJ_KIND_FIRST) >= OBJ_KIND_COUNT) {
             v = func_80031264((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
         } else {
-            v = func_80031298((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
+            v = Math_AngleTo((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
         }
         PUSH(v);
         return;
@@ -294,7 +294,7 @@ void func_80037698(u8 *obj, u32 arg1) {
             D_8005F3F0 = (u32)*dst >> VALUE_SHIFT;
             return;
         case 10:
-            func_80012E4C((u32)*dst >> VALUE_SHIFT);
+            Nsf_SeekLevel((u32)*dst >> VALUE_SHIFT);
             return;
         case 11:
             func_8002F0DC(1);

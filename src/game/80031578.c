@@ -43,7 +43,7 @@ s32 func_80031668(s32 arg0, s32 arg1) {
 int CdIntToPos(int, unsigned char *);
 int CdRead(int, unsigned long *, int);
 
-s32 func_80031680(s32 arg0, s32 arg1, unsigned long *arg2) {
+s32 Cd_ReadSectors(s32 arg0, s32 arg1, unsigned long *arg2) {
     u8 sp10[8];
 
     CdIntToPos(arg1, sp10);
