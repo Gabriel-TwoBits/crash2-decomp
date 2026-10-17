@@ -220,6 +220,7 @@ void func_8003235C(s32, s32, s32, s32);
 void func_80032364(s32, s32, s32, s32);
 void func_8003236C(s32, s32, s32, s32);
 void func_80032374(s32, s32, s32, s32);
+void func_8003237C(s32, s32, s32, s32);
 void func_800323AC(void);
 void func_80032588(void);
 s16 *func_8003264C(s32 *, s32);
