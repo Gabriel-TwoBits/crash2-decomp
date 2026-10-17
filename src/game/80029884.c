@@ -792,7 +792,9 @@ s32 func_8002CAB8(void) {
     return -0xFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002CB14);
+s32 func_8002CB14(void) {
+    return SUCCESS;
+}
 
 void func_8002CB1C(s32 arg0, s32 arg1) {
     if (((arg0 < 0) ? (-arg0) : (arg0)) < 0x20) {
