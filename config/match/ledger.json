@@ -3492,15 +3492,15 @@
   },
   "func_80014B90": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:37",
-    "summary": "10 of 30 words differ",
+    "time": "2026-10-16 21:02",
+    "summary": "500 of 500 trials agree, 105 compared",
     "best": "a3.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "wall_minutes": 1.2,
-    "cost_usd": 0.3260155999999999,
-    "turns": 24,
-    "minutes": 1.2,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.17447300000000002,
+    "turns": 8,
+    "minutes": 0.5,
     "runs": [
       {
         "outcome": "gave up",
@@ -3524,10 +3524,23 @@
         "cost_usd": 0.3260155999999999,
         "turns": 24,
         "minutes": 1.2
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 105 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.17447300000000002,
+        "turns": 8,
+        "minutes": 0.5
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/800123F0.o \nsrc/game/800123F0.c:583: conflicting types for `D_80067590'"
+    "mode": "equivalent",
+    "reason": "trial 1417 disagrees: $a0=0x80100fec $a1=0x000000a8 $a2=0x00000000 $a3=0x000003fd, stack 0xffffffff 0x00000003 0x00000000 0x00000000\nthe retail code ended by returned, the candidate by the limit\n1999 of 2000 trials agree"
   },
   "func_80018DD0": {
     "outcome": "landed",
