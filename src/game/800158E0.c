@@ -176,7 +176,34 @@ s32 func_800161F8(void) {
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800161F8);
 #endif
 
+#ifdef NON_MATCHING
+#define STATE_FLUSH 2
+#define RESULT_DONE -0xFF
+
+extern s32 D_800654E8;
+extern s32 DrawSync(s32);
+
+s32 func_800162FC(void) {
+    s32 i;
+
+    i = 0;
+    func_800163B4(D_80063458[0]);
+    DrawSync(0);
+    func_800116C0(D_800654E8);
+    if (D_8006344C.count > 0) {
+        do {
+            func_800116C0(D_8006344C.e[i].pad4[0]);
+            i++;
+        } while (i < D_8006344C.count);
+    }
+    if (D_8005F3EC == STATE_FLUSH) {
+        func_800363D0();
+    }
+    return RESULT_DONE;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800162FC);
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800163B4);
 
