@@ -5904,7 +5904,7 @@
   },
   "func_8002FCF8": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:20",
+    "time": "2026-10-17 18:02",
     "summary": "500 of 500 trials agree, 499 compared",
     "best": "base.c",
     "model": "claude-sonnet-5-5",
@@ -6036,9 +6036,9 @@
     "mode": "equivalent"
   },
   "func_80019D30": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:20",
-    "summary": "build/match/func_80019D30/placed/80019098.c: build/match/func_80019D30/placed/80019098.c:288: `func_80019D30' redeclared as different kind of symbol",
+    "outcome": "equivalent",
+    "time": "2026-10-17 18:05",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
@@ -6102,8 +6102,7 @@
       }
     ],
     "mode": "equivalent",
-    "scored": "in place",
-    "reason": "FAILED: [code=1] build/src/game/80019098.o \nsrc/game/80019098.c:288: `func_80019D30' redeclared as different kind of symbol"
+    "scored": "in place"
   },
   "func_800270C4": {
     "outcome": "landed",
@@ -11037,7 +11036,7 @@
   },
   "func_8002DFA8": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:27",
+    "time": "2026-10-17 18:03",
     "summary": "500 of 500 trials agree, 454 compared",
     "best": "best.c",
     "model": "claude-sonnet-5-5",
@@ -11656,7 +11655,7 @@
   },
   "func_800316EC": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:30",
+    "time": "2026-10-17 18:03",
     "summary": "500 of 500 trials agree, 500 compared",
     "best": null,
     "mode": "equivalent",
@@ -12705,7 +12704,7 @@
   },
   "func_8002B57C": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:42",
+    "time": "2026-10-17 18:03",
     "summary": "500 of 500 trials agree, 428 compared",
     "mode": "equivalent",
     "scored": "in place",
@@ -13002,7 +13001,7 @@
   },
   "func_80027F3C": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:49",
+    "time": "2026-10-17 18:04",
     "summary": "500 of 500 trials agree, 500 compared",
     "best": "best.c",
     "mode": "equivalent",
@@ -13134,7 +13133,7 @@
   },
   "func_8002A8D0": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-17 17:52",
+    "time": "2026-10-17 18:04",
     "summary": "500 of 500 trials agree, 500 compared",
     "best": "best.c",
     "mode": "equivalent",

@@ -90,6 +90,7 @@ s32 func_80019098(void *, u8);
 s32 func_80019800(void *, s32, s32, s32, s32, s32);
 s32 func_80019988(s32 *, s32, s32, s32, s32);
 s32 func_80019BBC(s32 *, s32);
+s32 func_80019D30(s32 *, s32);
 void func_80019E28(void *);
 void func_80019F08(void);
 void func_8001A014(void);
