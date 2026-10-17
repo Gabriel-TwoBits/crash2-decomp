@@ -663,4 +663,11 @@ void func_8001BD84(u8 *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
 INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001BD84);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001BFD4);
+typedef struct {
+    /* 0x00 */ u8 pad0[0x24];
+    /* 0x24 */ s16 unk24;
+} Unk8001BFD4;
+
+void func_8001BFD4(Unk8001BFD4 *arg0, s32 arg1) {
+    arg0->unk24 = 0;
+}
