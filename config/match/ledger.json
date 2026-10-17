@@ -12554,5 +12554,67 @@
         "minutes": 2.8
       }
     ]
+  },
+  "func_800158E0": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 00:20",
+    "summary": "trial 90 disagrees: $a0=0x00000000 $a1=0x00000000 $a2=0x801042d8 $a3=0xffffffff, stack 0xfffff706 0x801033a0 0xffffff20 0x00000000\nthe retail code makes 0 calls, the candidate 2\n493 of 500 trials agree",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 6.6,
+    "cost_usd": 1.2444204,
+    "turns": 55,
+    "minutes": 6.6,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 90 disagrees: $a0=0x00000000 $a1=0x00000000 $a2=0x801042d8 $a3=0xffffffff, stack 0xfffff706 0x801033a0 0xffffff20 0x00000000\nthe retail code makes 0 calls, the candidate 2\n493 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 6.6,
+        "cost_usd": 1.2444204,
+        "turns": 55,
+        "minutes": 6.6
+      }
+    ]
+  },
+  "func_80019098": {
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-17 00:23",
+    "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0xfffffff2 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000009e 0xfffffff3 0x801035e8\ncall 0 to func_800321D4 (0x800321d4): $a0 is 0xffffcdf5 in the retail code, 0x00000001 in the candidate\n82 of 500 trials agree",
+    "best": "best.c",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.9,
+    "cost_usd": 0.6915259999999999,
+    "turns": 54,
+    "minutes": 2.8,
+    "runs": [
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0xfffffff2 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000009e 0xfffffff3 0x801035e8\ncall 0 to func_800321D4 (0x800321d4): $a0 is 0xffffcdf5 in the retail code, 0x00000001 in the candidate\n82 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.9,
+        "cost_usd": 0.6915259999999999,
+        "turns": 54,
+        "minutes": 2.8
+      }
+    ]
   }
 }
