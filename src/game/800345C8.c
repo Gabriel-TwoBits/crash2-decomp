@@ -428,7 +428,11 @@ void func_80035A6C(void) {
 void func_80035A74(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035A7C);
+s32 func_80035A7C(s32 arg0) {
+    D_8005F264[5] = 0;
+    D_8005F264[4] = arg0;
+    return 0;
+}
 
 s32 func_80035A94(void) {
     s32 *p = D_8005F264;
