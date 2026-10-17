@@ -4,7 +4,8 @@
 
 INCLUDE_ASM("asm/nonmatchings/game/8001CEDC", func_8001CEDC);
 
-extern char func_8001CEDC;
+/* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
+s32 func_8001CEDC();
 
 s32 func_8001D194(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     s32 args[6];

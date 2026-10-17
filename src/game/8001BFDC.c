@@ -155,7 +155,8 @@ extern u32 *D_80063454;
 extern u32 D_8006CB64;
 extern s32 D_8006CCAC;
 extern u8 func_80018CAC;
-extern u8 func_8001C718;
+/* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
+s32 func_8001C718();
 
 void func_8001C29C(void *arg0) {
     D_8006CB64 = D_80063454[3] / 34;

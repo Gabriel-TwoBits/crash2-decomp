@@ -252,7 +252,8 @@ void func_80019E08(s32 a0) {
     func_80019BBC((s32 *)a0, 1);
 }
 
-extern char func_80019D30[];
+/* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
+s32 func_80019D30();
 
 void func_80019E28(void *arg0) {
     func_80018DD0(func_80018D28, func_80019D30, arg0);
