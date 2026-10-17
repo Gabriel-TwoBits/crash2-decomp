@@ -12,7 +12,6 @@ and nothing else checked: the equivalent track (docs/WORKFLOW.md).
 build.ninja runs this again when the splat configuration or this file change. Needs orig/USA/SCUS_941.54
 (tools/extract_disc.py) and binutils for little-endian MIPS (CONTRIBUTING.md).
 """
-import csv
 import re
 import shutil
 import subprocess
@@ -20,6 +19,8 @@ import sys
 from pathlib import Path
 
 import yaml
+
+from tools.symbols import HEXADECIMAL, IMAGE_END, IMAGE_START, functions_by_address
 
 HERE = Path(__file__).resolve().parent
 NAME = "SCUS_941.54"
@@ -54,9 +55,6 @@ HEADER_FIELD = re.compile(r"^\.word 0x[0-9A-Fa-f]+(?P<comment>\s+/\* (?P<field>I
 HEADER_SYMBOLS = {"Initial PC": "__SN_ENTRY_POINT", ".text size": "nonmatching_TEXT_SIZE"}
 TEXT_SIZE = f"nonmatching_TEXT_SIZE = ALIGN(main_ROM_END - main_ROM_START, {SECTOR_SIZE:#x});"
 LINKER_SCRIPT_END = "    /DISCARD/ :"
-# The image's addresses: .text's start (config/SCUS_941.54.yaml) to the end of .bss
-IMAGE_START = 0x80010000
-IMAGE_END = 0x8006F1F0
 # splat pins an address its split references to its retail value, though an object defines most of them with a label;
 # PROVIDE leaves those to the label. The startup code clears .bss up to this one, which nothing defines
 UNDEFINED_SYMBOL = re.compile(r"^(\w+) = (0x[0-9A-Fa-f]+);$")
@@ -80,10 +78,6 @@ ADDRESS_PAIR = re.compile(r"^(?P<lui>[ ]*/\*[^*]*\*/ +lui +)(?P<register>\$\w+),
 ADDRESS_PAIRS = 21
 # The high half of a number loaded with lui, left by the rewrite
 NUMERIC_HIGH_HALF = re.compile(r"\blui +\$\w+, \((0x[0-9A-F]+) >> 16\)")
-# splat's symbols (dump_symbols in config/SCUS_941.54.yaml): each one's address in hexadecimal, name and type
-SPLAT_SYMBOLS = Path(".splat") / "splat_symbols.csv"
-HEXADECIMAL = 16
-FUNCTION_TYPE = "func"
 # The equivalent build's own copies of the split's assembly, by the default build's object
 NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: NONMATCHING_HANDWRITTEN}
 # The game reads some of its data by absolute address (docs/TARGET.md, "Addresses from the disc"), so the equivalent build
@@ -142,20 +136,8 @@ def c_dependencies(source):
     """What a C file's object depends on besides the file: the headers, its INCLUDE_ASM functions, the compile path"""
     unit = source.relative_to("src").with_suffix("")
     included = sorted((HERE / "asm" / "nonmatchings" / unit).glob("*.s"))
-    headers = sorted((HERE / "include").glob("*"))
+    headers = sorted(path for path in (HERE / "include").rglob("*") if path.is_file())
     return [path.relative_to(HERE) for path in included + headers] + [Path("tools") / "psx_cc.py"]
-
-
-def functions_by_address():
-    """{address: names} of the functions splat knows, in C or in assembly"""
-    functions = {}
-    with (HERE / SPLAT_SYMBOLS).open(newline="") as table:
-        for row in csv.DictReader(table):
-            if row["type"] == FUNCTION_TYPE:
-                functions.setdefault(int(row["vram_start"], HEXADECIMAL), []).append(row["name"])
-    if not functions:
-        sys.exit(f"{SPLAT_SYMBOLS} lists no function")
-    return functions
 
 
 def nonmatching_handwritten():
