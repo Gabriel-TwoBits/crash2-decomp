@@ -20,6 +20,7 @@
 #define FLAG_A8_EDGE_CHANGED 0x10
 #define FLAG_A8_OFF_SEGMENT 0x200
 #define PATH_POINT_SIZE 3
+#define INDEX_SIGN_SHIFT 8
 
 struct Unk8001F054Node {
     /* 0x00 */ u8 unk_00[4];
@@ -57,18 +58,9 @@ struct Unk8001F054Obj {
     /* 0x134 */ s32 unk_134;
 };
 
-extern s32 D_8005F1F0;
-
-/* Octagon-style distance estimate: max + min / 2. */
-static s32 approxLength(s32 a, s32 b) {
-    if (b < a) {
-        return a + b / 2;
-    } else {
-        return b + a / 2;
-    }
-}
-
-s32 func_8001F054(struct Unk8001F054Obj *obj, s32 pos, s32 *out) {
+s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
+    struct Unk8001F054Obj *obj;
+    s32 pos;
     s32 *base;
     s32 shift;
     s32 count;
@@ -77,17 +69,13 @@ s32 func_8001F054(struct Unk8001F054Obj *obj, s32 pos, s32 *out) {
     s32 len;
     s32 t;
     s32 t4;
-    s32 ex;
-    s32 ey;
-    s32 ez;
+    s32 delta[3];
     s32 da;
     s32 db;
     s32 flags;
     s32 oldA8;
     s32 curA8;
-    s32 px;
-    s32 py;
-    s32 pz;
+    s32 next[3];
     s32 ax;
     s32 az;
     s32 posBase;
@@ -95,11 +83,14 @@ s32 func_8001F054(struct Unk8001F054Obj *obj, s32 pos, s32 *out) {
     struct Unk8001F054Node *node;
     struct Unk8001F054Info *info;
 
+    obj = (struct Unk8001F054Obj *)arg0;
+    pos = arg1;
     node = obj->unk_F0;
     if (obj == 0 || node == 0) {
         return ERR_NO_PATH;
     }
     info = node->unk_04;
+    /* base and shift stay unset for any other node type, as in the retail code */
     if (info->unk_08 == NODE_TYPE_SHIFTED) {
         base = info->unk_14;
         shift = NODE_SHIFT_SHIFTED;
@@ -118,7 +109,8 @@ s32 func_8001F054(struct Unk8001F054Obj *obj, s32 pos, s32 *out) {
             seg = t - 2;
         }
         pt = (s16 *)func_80031AE8((s32)node, PATH_KIND, 0, 0, 0, PATH_ARG_SHIFT, 0, 0, 0);
-        pt += ((seg << FRAC_BITS) >> FRAC_BITS) * PATH_POINT_SIZE;
+        /* The segment index keeps its low 24 bits, sign-extended */
+        pt += ((seg << INDEX_SIGN_SHIFT) >> INDEX_SIGN_SHIFT) * PATH_POINT_SIZE;
         out[0] = ((pt[0] << shift) + base[0]) << FRAC_BITS;
         out[1] = ((pt[1] << shift) + base[1]) << FRAC_BITS;
         out[2] = ((pt[2] << shift) + base[2]) << FRAC_BITS;
@@ -126,28 +118,28 @@ s32 func_8001F054(struct Unk8001F054Obj *obj, s32 pos, s32 *out) {
             return 1;
         }
         pt += PATH_POINT_SIZE;
-        px = ((pt[0] << shift) + base[0]) << FRAC_BITS;
-        py = ((pt[1] << shift) + base[1]) << FRAC_BITS;
-        pz = ((pt[2] << shift) + base[2]) << FRAC_BITS;
-        ex = px - out[0];
-        ey = py - out[1];
-        ez = pz - out[2];
+        next[0] = ((pt[0] << shift) + base[0]) << FRAC_BITS;
+        next[1] = ((pt[1] << shift) + base[1]) << FRAC_BITS;
+        next[2] = ((pt[2] << shift) + base[2]) << FRAC_BITS;
+        delta[0] = next[0] - out[0];
+        delta[1] = next[1] - out[1];
+        delta[2] = next[2] - out[2];
         if (obj->unk_AC & FLAG_AC_SEGMENT) {
-            ax = ex >> FRAC_BITS;
-            az = ez >> FRAC_BITS;
+            ax = delta[0] >> FRAC_BITS;
+            az = delta[2] >> FRAC_BITS;
             len = func_80041A78(ax * ax + az * az);
             posBase = pos & ~FRAC_MASK;
             if (len != 0) {
-                t = ((((obj->unk_60 - out[0]) >> STEP_SHIFT) * (ex >> STEP_SHIFT)) +
-                     (((obj->unk_68 - out[2]) >> STEP_SHIFT) * (ez >> STEP_SHIFT))) / len;
+                t = ((((obj->unk_60 - out[0]) >> STEP_SHIFT) * (delta[0] >> STEP_SHIFT)) +
+                     (((obj->unk_68 - out[2]) >> STEP_SHIFT) * (delta[2] >> STEP_SHIFT))) / len;
                 frac = t / len;
                 if (frac >= FRAC_ONE && (pos >> FRAC_BITS) < count - 1) {
                     pos = (seg + 1) << FRAC_BITS;
                     continue;
                 }
                 t4 = t >> STEP_SHIFT;
-                ax = ((t4 * (ex >> STEP_SHIFT)) / len) + out[0];
-                az = ((t4 * (ez >> STEP_SHIFT)) / len) + out[2];
+                ax = ((t4 * (delta[0] >> STEP_SHIFT)) / len) + out[0];
+                az = ((t4 * (delta[2] >> STEP_SHIFT)) / len) + out[2];
                 da = ax - obj->unk_60;
                 if (da < 0) {
                     da = obj->unk_60 - ax;
@@ -156,12 +148,17 @@ s32 func_8001F054(struct Unk8001F054Obj *obj, s32 pos, s32 *out) {
                 if (db < 0) {
                     db = obj->unk_68 - az;
                 }
-                obj->unk_A0 = approxLength(da, db);
+                /* Octagon-style distance estimate: max + min / 2 */
+                if (db < da) {
+                    obj->unk_A0 = da + db / 2;
+                } else {
+                    obj->unk_A0 = db + da / 2;
+                }
                 if (obj->unk_134 < obj->unk_A0 || (frac < 0 && seg == 0) || frac >= FRAC_ONE) {
                     obj->unk_A8 |= FLAG_A8_OFF_SEGMENT;
                 }
-                if (((ez * (obj->unk_60 >> FRAC_BITS)) - (ex * (obj->unk_68 >> FRAC_BITS)) -
-                     (pz * (out[0] >> FRAC_BITS)) + (px * (out[2] >> FRAC_BITS))) < 0) {
+                if (((delta[2] * (obj->unk_60 >> FRAC_BITS)) - (delta[0] * (obj->unk_68 >> FRAC_BITS)) -
+                     (next[2] * (out[0] >> FRAC_BITS)) + (next[0] * (out[2] >> FRAC_BITS))) < 0) {
                     obj->unk_A0 = -obj->unk_A0;
                 }
             } else {
@@ -198,39 +195,49 @@ s32 func_8001F054(struct Unk8001F054Obj *obj, s32 pos, s32 *out) {
     flags = obj->unk_AC;
     if (flags & FLAG_AC_FACE) {
         if ((flags & FLAG_AC_MIRROR) && (obj->unk_A8 & FLAG_A8_EDGE)) {
-            obj->unk_94 = ratan2(-ex, -ez);
+            obj->unk_94 = ratan2(-delta[0], -delta[2]);
         } else {
-            obj->unk_94 = ratan2(ex, ez);
+            obj->unk_94 = ratan2(delta[0], delta[2]);
         }
         if (obj->unk_AC & FLAG_AC_PITCH) {
-            obj->unk_74 = ratan2(ex, ez);
-            if (ex < 0) {
-                ex = -ex;
+            obj->unk_74 = ratan2(delta[0], delta[2]);
+            if (delta[0] < 0) {
+                delta[0] = -delta[0];
             }
-            if (ez < 0) {
-                ez = -ez;
+            if (delta[2] < 0) {
+                delta[2] = -delta[2];
             }
-            obj->unk_98 = -ratan2(ey, approxLength(ex, ez));
+            if (delta[2] < delta[0]) {
+                da = delta[0] + delta[2] / 2;
+            } else {
+                da = delta[2] + delta[0] / 2;
+            }
+            obj->unk_98 = -ratan2(delta[1], da);
         }
     } else if (flags & FLAG_AC_PITCH) {
-        if (ex < 0) {
-            da = -ex;
+        if (delta[0] < 0) {
+            da = -delta[0];
         } else {
-            da = ex;
+            da = delta[0];
         }
-        if (ez < 0) {
-            db = -ez;
+        if (delta[2] < 0) {
+            db = -delta[2];
         } else {
-            db = ez;
+            db = delta[2];
         }
-        obj->unk_98 = ratan2(ey, approxLength(da, db));
-        obj->unk_74 = ratan2(-ex, -ez);
+        if (db < da) {
+            da = da + db / 2;
+        } else {
+            da = db + da / 2;
+        }
+        obj->unk_98 = ratan2(delta[1], da);
+        obj->unk_74 = ratan2(-delta[0], -delta[2]);
     } else {
         /* neither flag: no angles are written */
     }
 
-    out[0] += ((px - out[0]) * frac) >> FRAC_BITS;
-    out[1] += ((py - out[1]) * frac) >> FRAC_BITS;
-    out[2] += ((pz - out[2]) * frac) >> FRAC_BITS;
+    out[0] += ((next[0] - out[0]) * frac) >> FRAC_BITS;
+    out[1] += ((next[1] - out[1]) * frac) >> FRAC_BITS;
+    out[2] += ((next[2] - out[2]) * frac) >> FRAC_BITS;
     return count;
 }

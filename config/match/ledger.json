@@ -13223,19 +13223,19 @@
     ]
   },
   "func_8001F054": {
-    "outcome": "equivalent, gave up",
-    "time": "2026-10-17 19:07",
-    "summary": "trial 2 disagrees: $a0=0x80100054 $a1=0x00000000 $a2=0x80106dd0 $a3=0x00000000, stack 0x00000000 0x80101bc4 0xb18f13aa 0x8010631c, memory at D_8006F1F0+0x91c40 (0x80100e30) repaired to 0x801028f0, $v0 returned by call 2 repaired to 0x801049f8\nthe retail code ended by address error on load, the candidate by TLB miss on load\n462 of 500 trials agree",
+    "outcome": "equivalent",
+    "time": "2026-10-17 19:49",
+    "summary": "2000 of 2000 trials agree, 1198 compared",
     "best": "best.c",
     "mode": "equivalent",
     "scored": "in place",
-    "model": "claude-sonnet-5-5",
+    "model": "claude-opus-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.0,
-    "cost_usd": 0.290574,
-    "turns": 15,
-    "minutes": 1.0,
+    "wall_minutes": 8.1,
+    "cost_usd": 1.9470665999999999,
+    "turns": 85,
+    "minutes": 8.1,
     "runs": [
       {
         "outcome": "equivalent, gave up",
@@ -13292,6 +13292,19 @@
         "cost_usd": 0.290574,
         "turns": 15,
         "minutes": 1.0
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 290 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-opus-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 8.1,
+        "cost_usd": 1.9470665999999999,
+        "turns": 85,
+        "minutes": 8.1
       }
     ]
   },
