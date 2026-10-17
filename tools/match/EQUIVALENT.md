@@ -52,13 +52,14 @@ this project's C (docs/WORKFLOW.md, "Naming"):
 3. Score after every change. Keep each attempt in its own file (`attempt1.c`, `attempt2.c`, ...), and copy the best so far
    to `best.c` each time more trials agree: the session has a time limit, and what isn't in a file when it ends is lost.
 4. Read each disagreement against `target.s`: the trial's arguments and what differed point at the path the C gets wrong.
-5. Stop when every trial agrees on two seeds (`./score.sh FILE.c` and `./score.sh FILE.c --seed 1`); after five attempts
-   in a row that don't raise the count; or when `score.sh` shows 2 minutes left, so that `best.c` and `NOTES.md` are
-   written.
+5. Stop when every trial agrees on two seeds (`./score.sh FILE.c` and `./score.sh FILE.c --seed 1`), then on landing's
+   own check (`./score.sh FILE.c --seed 1 --trials 2000` and `--seed 2 --trials 2000`: a rare path one of those reaches
+   refuses the landing); after five attempts in a row that don't raise the count; or when `score.sh` shows 2 minutes
+   left, so that `best.c` and `NOTES.md` are written.
 
 ## When you stop
 
-- Every trial agrees on both seeds: copy the file to `equivalent.c`. It goes into its file as it is, so:
+- Every trial agrees on landing's check: copy the file to `equivalent.c`. It goes into its file as it is, so:
   - `#include "common.h"`, `"sdk.h"` (PsyQ's functions) and `"game.h"` (the game's), then the types and declarations
     the function needs, then the function.
   - A function `include/game.h` or its file declares is called through that prototype, not declared again (BRIEF.md
