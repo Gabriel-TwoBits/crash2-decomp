@@ -211,7 +211,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The last 11 functions** as equivalent C (section 4, "Next").
+1. **The last 4 functions** as equivalent C (section 4, "Next"): two need a decision on how C states the GTE.
 2. **Readable C, R1**: the first 40 to 60 names, those with evidence of grade A (section 5).
 
 ## 4. The engine in C
@@ -368,10 +368,22 @@ trial's retail code now runs again with those registers flipped, and a trial who
 192 equivalent functions, 11 left as assembly, two with GTE instructions; in the game, the two halves each agree with
 retail on all 8,000 frames.
 
-Next: find what in the disc's data holds the executable's addresses; `run --equivalent` again on the 11 functions left as
-assembly (the largest; two with GTE instructions equiv.py can't run), each batch checked in the game too (by groups
-that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates timing (the game's state at checkpoints, or
-inputs keyed to it rather than to frame numbers).
+A fourth pass (Sonnet, 9 functions, US$2.50) landed `func_8003981C`; one with Opus on the 8 left (US$11.35; 206
+equivalent runs, US$82.97 in all) landed 6. Before it, equiv.py gave a parameter declared narrower than a word only
+values of its type (`func_80019098`'s `u8`, which the retail code adds unmasked), and compared where two retail runs
+stopped by the same address error faulted. Four of the six reproduce the retail code on paths a valid input never takes,
+and so lean on GCC 2.7.2's layout: `func_800316EC`, `func_8002A8D0` and `func_80024658` keep their locals in one
+structure laid out as retail's frame, which an index out of range writes into, and `func_8001F054` reads two locals left
+unset, as the retail code reads its caller's `$s5` and `$s7`. A native port has to give those paths defined behaviour.
+199 equivalent functions, 4 left: `func_8002CC50` (10 of 2,000 trials disagree), `func_8002FFFC` (agrees, 82 of 2,000
+trials compared, under the 5% floor), and the two handwritten GTE routines `func_8001856C` and `func_800186D8` (`rtpt`,
+`rtps`), which wait on how the C states the GTE: PsyQ's inline-assembly macros, or a GTE in C as a port needs. In the
+game, the two halves each agree with retail on all 8,000 frames.
+
+Next: find what in the disc's data holds the executable's addresses; `func_8002CC50` and `func_8002FFFC` (inputs built
+for the latter's paths); the GTE decision, then its two routines; each batch checked in the game too (by groups that
+each agree, docs/WORKFLOW.md); a run_game comparison that tolerates timing (the game's state at checkpoints, or inputs
+keyed to it rather than to frame numbers).
 
 ## 5. Readable C (in progress)
 
