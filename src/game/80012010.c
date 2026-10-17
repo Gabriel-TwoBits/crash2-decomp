@@ -35,7 +35,9 @@ s32 func_80012010(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80012010", func_800120EC);
+u8 func_800120EC(s32 arg0) {
+    return D_8005B198[arg0];
+}
 
 extern u8 D_8005B198[];
 

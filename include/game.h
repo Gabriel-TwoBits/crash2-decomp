@@ -20,7 +20,7 @@ s32 func_800116D4(s32, s32);
 s32 *func_80011764(s32, s32);
 s32 func_80011F78(char *);
 s32 func_80012010(s32);
-s8 func_800120EC(s32);
+u8 func_800120EC(s32);
 char *func_80012170(s32, u32, s32, s32);
 s32 func_80012294(char *, s32);
 s32 func_8001232C(s32 *);
