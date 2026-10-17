@@ -3505,15 +3505,15 @@
   },
   "func_80014B90": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:02",
+    "time": "2026-10-16 21:47",
     "summary": "500 of 500 trials agree, 105 compared",
     "best": "a3.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
     "wall_minutes": 0.5,
-    "cost_usd": 0.17447300000000002,
-    "turns": 8,
-    "minutes": 0.5,
+    "cost_usd": 0.17818930000000002,
+    "turns": 12,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -3549,10 +3549,24 @@
         "cost_usd": 0.17447300000000002,
         "turns": 8,
         "minutes": 0.5
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 105 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.17818930000000002,
+        "turns": 12,
+        "minutes": 0.4
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
     "mode": "equivalent",
+    "scored": "in place",
     "reason": "trial 1417 disagrees: $a0=0x80100fec $a1=0x000000a8 $a2=0x00000000 $a3=0x000003fd, stack 0xffffffff 0x00000003 0x00000000 0x00000000\nthe retail code ended by returned, the candidate by the limit\n1999 of 2000 trials agree"
   },
   "func_80018DD0": {
@@ -3815,15 +3829,15 @@
     ]
   },
   "func_80036978": {
-    "outcome": "equivalent, not landed",
-    "time": "2026-10-16 21:06",
-    "summary": "500 of 500 trials agree, 401 compared",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:48",
+    "summary": "2000 of 2000 trials agree, 1643 compared",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
     "timed_out": false,
-    "wall_minutes": 0.7,
-    "cost_usd": 0.2119088,
-    "turns": 15,
+    "wall_minutes": 0.6,
+    "cost_usd": 0.202385,
+    "turns": 14,
     "minutes": 0.6,
     "runs": [
       {
@@ -3860,11 +3874,24 @@
         "cost_usd": 0.2119088,
         "turns": 15,
         "minutes": 0.6
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 401 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.6,
+        "cost_usd": 0.202385,
+        "turns": 14,
+        "minutes": 0.6
       }
     ],
     "cflags": "-O2 -G8 -mcpu=r8000",
     "mode": "equivalent",
-    "reason": "FAILED: [code=1] build/src/game/800345C8.o \nsrc/game/800345C8.c:997: conflicting types for `func_80036A84'"
+    "scored": "in place"
   },
   "func_800343CC": {
     "outcome": "equivalent",
