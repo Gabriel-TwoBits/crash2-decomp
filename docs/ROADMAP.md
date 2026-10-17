@@ -201,6 +201,12 @@ accesses in the assembly:
 
 The game object's layout is still worth writing down for the port (section 4), but it won't raise the match rate.
 
+The 41 functions under 0x20 bytes, which the loop skips (`MIN_SIZE`), matched by hand and landed with `tools/match.py
+land`: getters, setters, the two generators' seeds, an absolute difference, a sign extension, two returning `-0xFF`
+(`SUCCESS` in `include/game.h`). Twenty in `80031AE8.c` only store `arg3` in the caller's frame (`jr $ra` /
+`sw $a3, 0xC($sp)`): taking its address compiles to that; a variadic definition stores from the last named parameter's
+register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function under it is left in assembly.
+
 ## Next
 
 In order; each is a session's worth of work, and its result goes back here:
