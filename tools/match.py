@@ -121,6 +121,8 @@ EQUIVALENT_NOTES = ".equivalent"
 EQUIVALENT_REFUSED = "equivalent, not landed"
 # An equivalent draft as it would land: a scratch copy of its file and of include/game.h, in its scratch directory
 PLACED = "placed"
+# How an equivalent run's C was judged, in its record: as it would land (older runs judged the draft alone)
+SCORED_IN_PLACE = "in place"
 # The outcomes after which an equivalent run may take a function: the matching loop is done with it, or its notes' C
 # didn't land as equivalent (a run fixes what the builds refused). A match that didn't land ("matched, not landed") is
 # fixed by hand instead
@@ -253,20 +255,28 @@ def next_function():
     return candidates[0][2]
 
 
-def ran_equivalent(entry):
-    """Whether an equivalent run has had the function"""
-    return any(attempt.get("mode") == EQUIVALENT_MODE for attempt in entry.get("runs", []))
+def settled_equivalent(entry):
+    """Whether an equivalent run has had the function for good. A run that judged its draft alone couldn't see what its
+    file refuses at landing, so a function such runs left refused at landing is tried again; a run that judged it in
+    place could"""
+    runs = [attempt for attempt in entry.get("runs", []) if attempt.get("mode") == EQUIVALENT_MODE]
+    if not runs:
+        return False
+    elif entry["outcome"] == EQUIVALENT_REFUSED:
+        return any(attempt.get("scored") == SCORED_IN_PLACE for attempt in runs)
+    else:
+        return True
 
 
 def next_equivalent():
     """The next function for an equivalent run: the smallest one the matching loop gave up on for good, still plain
-    INCLUDE_ASM, not skipped, without an equivalent run before, and without GTE instructions"""
+    INCLUDE_ASM, not skipped, not settled by an equivalent run, and without GTE instructions"""
     ledger = load_ledger()
     skip = skipped()
     equivalent = equivalents()
     candidates = sorted((size, name) for name, size in unmatched().items()
                         if name in ledger and ledger[name]["outcome"] in GIVEN_UP and not given_up_elsewhere(ledger[name])
-                        and not ran_equivalent(ledger[name]) and name not in skip and name not in equivalent)
+                        and not settled_equivalent(ledger[name]) and name not in skip and name not in equivalent)
     # The GTE check reads the split, so only as far as the first candidate without
     for _, name in candidates:
         if not uses_gte(name):
@@ -607,7 +617,7 @@ def score_in_place(name, draft, trials, seed):
 def run_equivalent(name, minutes, model):
     """An agent run on the equivalent track; True when its equivalent.c agrees on every trial of equiv.py's default run"""
     folder = prepare(name, equivalent=True)
-    session = {"mode": EQUIVALENT_MODE,
+    session = {"mode": EQUIVALENT_MODE, "scored": SCORED_IN_PLACE,
                **agent_session(folder, EQUIVALENT_PROMPT.format(minutes=minutes), EQUIVALENT_TOOLS, minutes, model)}
     stem = f"{name}{EQUIVALENT_NOTES}"
     candidate = folder / "equivalent.c"
