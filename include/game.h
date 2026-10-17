@@ -120,6 +120,7 @@ s32 func_80027664(s32 *);
 void *func_800277A8(s32, s32, s32, s32);
 void func_800278F8(s32);
 void func_80027980(s32);
+s32 func_80027A38(void);
 s32 func_80027CD0(u8 *, u8 *, s32);
 s32 func_80027F3C(void *, u16, s32 *, void *, void *, s32);
 void *func_80028A28(void *, s32 *);
