@@ -1238,11 +1238,13 @@ def changed(memory, outcome):
 def compare(memory, retail, declared, expected, actual):
     """What differs between the retail run (expected) and the candidate's (actual)"""
     differences = []
-    if expected.status != actual.status:
-        differences.append(f"the retail code ended by {expected.status}, the candidate by {actual.status}")
-    elif expected.status == LIMIT:
-        # Both still running: their states mid-way don't compare
+    if expected.status == LIMIT:
+        # The retail code still running has no final state to compare with; a candidate past the limit where the retail
+        # code returned still disagrees (below). TRADEOFF: such trials go uncompared; a higher limit for the retail side
+        # would judge them, at the cost of every slow trial
         return differences
+    elif expected.status != actual.status:
+        differences.append(f"the retail code ended by {expected.status}, the candidate by {actual.status}")
     else:
         # Both returned or both took the same exception: compared below
         pass
@@ -1318,7 +1320,7 @@ def main():
     agreeing = 0
     repaired = 0
     replaced = 0
-    both_limit = 0
+    retail_limit = 0
     both_exception = 0
     first = None
     constants = immediates(retail_code)
@@ -1353,7 +1355,7 @@ def main():
         else:
             agreeing += 1
             if expected.status == LIMIT:
-                both_limit += 1
+                retail_limit += 1
             elif expected.status != RETURNED:
                 both_exception += 1
             else:
@@ -1369,9 +1371,9 @@ def main():
             print(f"  ... {len(differences) - MAX_DIFFERENCES_SHOWN} more")
     if repaired:
         print(f"{repaired} trials ran from inputs repaired after an access fault ({replaced} words replaced)")
-    if both_limit:
-        print(f"{both_limit} trials agree by both reaching the limit of {MAX_INSTRUCTIONS} instructions or {MAX_CALLS} calls "
-              f"(not compared)")
+    if retail_limit:
+        print(f"{retail_limit} trials agree by the retail code reaching the limit of {MAX_INSTRUCTIONS} instructions or "
+              f"{MAX_CALLS} calls (not compared)")
     if both_exception:
         print(f"{both_exception} trials agree by both taking the same exception (calls compared, not memory)")
     print(f"{agreeing} of {arguments.trials} trials agree")

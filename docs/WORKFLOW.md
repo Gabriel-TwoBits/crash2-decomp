@@ -111,8 +111,9 @@ the retail code, the seed and the trial.
 
 Compared after each trial: how the run ended (returned, an exception, the instruction limit), `$v0` (unless the function
 is `void`), the callee-saved registers, the calls in order, and every word either side changed outside its own stack
-frame. Both runs reaching the limit (500,000 instructions or 1,000 calls), or taking the same exception, agree (reported;
-after an exception only the calls are compared). The first disagreement is printed with its trial's arguments and
+frame. A trial where the retail run reaches the limit (500,000 instructions or 1,000 calls) agrees whatever the
+candidate does, as one where both take the same exception (reported, not compared; after an exception only the calls
+are compared); a candidate reaching the limit where the retail code returned disagrees. The first disagreement is printed with its trial's arguments and
 repairs; the last line is `N of M trials agree`, and the exit status 0 only when all do. A 500-trial run takes 1 to 2
 seconds, 5 to 25 for a function whose trials often reach the limit or fault after thousands of instructions (a repair
 follows the retail run instruction by instruction, in Python: `func_8002F6C8`, 24 seconds).
@@ -134,7 +135,7 @@ Its limits, which a passing run doesn't lift:
   most of its trials reach the limit).
 - The limit counts instructions, which differ between the two sides: a loop of about 500,000 retail instructions may
   return in the candidate (`func_80015344`, seed 2, trial 1,553: a 27,000-row loop; at 5,000,000 both return and
-  agree).
+  agree), so a retail run past the limit isn't judged, and the candidate's work there isn't checked.
 - GTE instructions (coprocessor 2) aren't emulated: such a function stops with `unsupported: ...` and exit status 2.
 
 ### Landing an equivalent function
@@ -149,7 +150,8 @@ both builds see it (a type emits no code). Refused before building: m2c's macros
 line, a conditional of its own, and a variable the file defines further down (moved, it would change the data's
 layout; into the block, it would leave the default build). Then `configure.py`, `ninja` (the SHA-1), `ninja nonmatching`, and `tools/equiv.py` on the landed file, not the
 candidate (the file's declarations and `include/game.h` compile it), at 2,000 trials for each of seeds 1 and 2: every trial has to
-agree, and at least 5% of them compared, not agreeing by both reaching the limit or taking the same exception. A failure
+agree, and at least 5% of them compared, not agreeing by the retail run reaching the limit or both taking the same
+exception. A failure
 restores the file and `include/game.h` and is recorded as `equivalent, not landed` with its cause (a function whose block
 stays keeps `equivalent`); a landing is recorded as `equivalent` with equiv.py's count (`2000 of 2000 trials agree, 1119
 compared`) and committed as `feat: add equivalent C for FUNCTION` (`feat: improve the equivalent C of FUNCTION` for a
