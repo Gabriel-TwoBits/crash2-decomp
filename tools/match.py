@@ -139,7 +139,8 @@ GIVEN_UP = ("gave up", "rejected", EQUIVALENT_REFUSED)
 EQUIVALENT_FIRST_SIZE = 0x240
 # equiv.py's lines: its last, the trials agreeing without being compared, and the first disagreement
 AGREEING = re.compile(r"^(\d+) of (\d+) trials agree$", re.MULTILINE)
-UNCOMPARED = re.compile(r"^(\d+) trials agree by (?:the retail code reaching the limit|both taking the same exception)",
+UNCOMPARED = re.compile(r"^(\d+) trials agree by (?:the retail code reaching the limit|both taking the same exception|"
+                        r"the retail code depending on registers it didn't set)",
                         re.MULTILINE)
 DISAGREEMENT = re.compile(r"^trial \d+ disagrees: ")
 # A disagreement's lines kept as a reason: the trial with its arguments, then its first difference
@@ -570,7 +571,8 @@ def unfit(text):
 
 def equivalence(source, name, trials, seed):
     """tools/equiv.py's verdict on a C file: (whether every trial agrees, the trials compared, its summary or why not).
-    Compared are the agreeing trials but those where the retail run reached the limit or both took the same exception"""
+    Compared are the agreeing trials but those where the retail run reached the limit or depended on registers it didn't
+    set, or both took the same exception"""
     result = subprocess.run([sys.executable, str(EQUIV), str(source), name, "--trials", str(trials), "--seed", str(seed)],
                             cwd=HERE, capture_output=True, text=True)
     lines = (result.stdout + result.stderr).strip().splitlines()

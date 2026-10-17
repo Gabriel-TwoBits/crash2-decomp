@@ -18,6 +18,7 @@ Exit status: 0 when every trial agrees, 1 on a disagreement or an error, 2 when 
 """
 import argparse
 import bisect
+import copy
 import ctypes
 import random
 import re
@@ -678,6 +679,15 @@ class Fuzz:
         self.pointer_parameters = pointer_parameters
         # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
         self.repairs = {}
+        # The registers set at random on entry, the arguments aside, inverted bit by bit (entry_registers)
+        self.inverted = False
+
+    def with_other_registers(self):
+        """The same trial with every bit flipped in the registers that aren't arguments: a random draw may repeat a
+        register's value (zeros and small numbers are frequent), a flipped word never does"""
+        other = copy.copy(self)
+        other.inverted = True
+        return other
 
     def generator(self, *purpose):
         return random.Random(":".join([self.key, *(str(part) for part in purpose)]))
@@ -863,7 +873,13 @@ class Run:
 def entry_registers(fuzz):
     """{Unicorn register: value} of the registers set at random on entry, the arguments among them"""
     registers = [REGISTERS[name] for name in RANDOM_ON_ENTRY] + list(MULTIPLY_REGISTERS)
-    values = dict(zip(registers, fuzz.words(fuzz.generator("registers"), len(registers))))
+    words = fuzz.words(fuzz.generator("registers"), len(registers))
+    if fuzz.inverted:
+        words = [~word & WORD_MASK for word in words]
+    else:
+        # The trial's own values
+        pass
+    values = dict(zip(registers, words))
     values.update(zip(ARGUMENT_REGISTERS, fuzz.arguments()))
     return values
 
@@ -1248,8 +1264,9 @@ def changed(memory, outcome):
     return words
 
 
-def compare(memory, retail, declared, expected, actual):
-    """What differs between the retail run (expected) and the candidate's (actual)"""
+def compare(memory, retail, declared, expected, actual, restored=()):
+    """What differs between the retail run (expected) and the candidate's (actual); the callee-saved registers named in
+    restored aren't compared (each run gave them back as it got them)"""
     differences = []
     if expected.status == LIMIT:
         # The retail code still running has no final state to compare with; a candidate past the limit where the retail
@@ -1281,7 +1298,7 @@ def compare(memory, retail, declared, expected, actual):
         # An exception stops either side at a point whose registers and memory don't compare
         return differences
 
-    compared = list(CALLEE_SAVED)
+    compared = [name for name in CALLEE_SAVED if name not in restored]
     if declared.compare_v0:
         compared.append("v0")
     if declared.compare_v1:
@@ -1335,6 +1352,9 @@ def main():
     replaced = 0
     retail_limit = 0
     both_exception = 0
+    unset = 0
+    # The retail code's, run again with other values in the registers it gets unset (made on the first disagreement)
+    again_machine = None
     first = None
     constants = immediates(retail_code)
     decoded = decode(retail_code)
@@ -1364,6 +1384,22 @@ def main():
                 sys.exit(EXIT_UNSUPPORTED)
         differences = compare(memory, retail, declared, expected, actual)
         if differences:
+            if again_machine is None:
+                again_machine = Machine(base, retail, retail_entry, retail_size, declared.callee_arguments)
+            other = fuzz.with_other_registers()
+            again = again_machine.run(memory, other)
+            entry, other_entry = entry_registers(fuzz), entry_registers(other)
+            restored = [name for name in CALLEE_SAVED if expected.registers[name] == entry.get(REGISTERS[name])
+                        and again.registers[name] == other_entry.get(REGISTERS[name])]
+            depends = bool(compare(memory, retail, declared, expected, again, restored))
+        else:
+            depends = False
+        if depends:
+            # TRADEOFF: the retail code's result here comes from registers its caller left (a path reading one it never
+            # set), which C can't name: not compared. A caller's real values would judge such trials
+            agreeing += 1
+            unset += 1
+        elif differences:
             if first is None:
                 first = (trial, describe_inputs(fuzz, retail), differences)
         else:
@@ -1390,6 +1426,8 @@ def main():
               f"{MAX_CALLS} calls (not compared)")
     if both_exception:
         print(f"{both_exception} trials agree by both taking the same exception (calls compared, not memory)")
+    if unset:
+        print(f"{unset} trials agree by the retail code depending on registers it didn't set (not compared)")
     print(f"{agreeing} of {arguments.trials} trials agree")
     if agreeing != arguments.trials:
         sys.exit(EXIT_DISAGREE)

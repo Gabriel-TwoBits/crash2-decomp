@@ -115,7 +115,10 @@ Compared after each trial: how the run ended (returned, an exception, the instru
 is `void`), the callee-saved registers, the calls in order, and every word either side changed outside its own stack
 frame. A trial where the retail run reaches the limit (500,000 instructions or 1,000 calls) agrees whatever the
 candidate does, as one where both take the same exception (reported, not compared; after an exception only the calls
-are compared); a candidate reaching the limit where the retail code returned disagrees. The first disagreement is printed with its trial's arguments and
+are compared); a candidate reaching the limit where the retail code returned disagrees. A disagreeing trial's retail code runs again with
+every bit flipped in the registers that aren't arguments: when its result changes, it depends on registers its caller
+left (a path reading one it never set, which C can't name: `func_80017380` uses the caller's `$s0` for an entry type it
+doesn't handle), and the trial agrees, reported and not compared. The first disagreement is printed with its trial's arguments and
 repairs; the last line is `N of M trials agree`, and the exit status 0 only when all do. A 500-trial run takes 1 to 2
 seconds, 5 to 25 for a function whose trials often reach the limit or fault after thousands of instructions (a repair
 follows the retail run instruction by instruction, in Python: `func_8002F6C8`, 24 seconds).
