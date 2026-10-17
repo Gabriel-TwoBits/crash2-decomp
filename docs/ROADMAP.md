@@ -331,9 +331,17 @@ from this process's memory, makes a typical 500-trial run 1 to 2 seconds; functi
 take up to 25. An emulator that took a guest exception is rebuilt: run again, Unicorn 2.1.4 crashed the process now
 and then (4 of the 163 functions on 2,000 trials).
 
-Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 40 functions left as
-assembly (the largest; 16 never tried, two with GTE instructions equiv.py can't run), each batch checked in the game
-too; a run_game comparison that tolerates timing (the decompressor's calls, or the game's state at checkpoints).
+A last `loop --equivalent` batch on the 12 largest untried functions landed 4 (`func_800334A0`, `func_800200A8`,
+`func_80037698`, `func_80020A24`; 127 equivalent runs, US$47.99 in all): 167 equivalent functions, 36 left as assembly.
+Of those 4, checked with the repairs, `func_800334A0` disagrees on 2 of 2,000 trials per seed: retail passes
+`func_8001EC2C` a frame vector still holding another local's words (0x10000, 0x80), the C a zeroed one, and copies it
+back after the call. `func_8001EC2C` writes all three words of that vector (`RotTrans`, then the shifts) before
+anything reads them, so the difference is the stubbed callee's, not the C's: a false positive of "callees don't run".
+A callee's outputs known to be written whole would let equiv.py fill them; until then the function stays as it is.
+
+Next: find what in the disc's data holds the executable's addresses; `loop --equivalent` on the 36 functions left as
+assembly (the largest; two with GTE instructions equiv.py can't run), each batch checked in the game too; a run_game
+comparison that tolerates timing (the decompressor's calls, or the game's state at checkpoints).
 
 ## 5. Readable C (in progress)
 
