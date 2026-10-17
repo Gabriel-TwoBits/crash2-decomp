@@ -114,7 +114,9 @@ void func_8003239C(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     (void)&arg3;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_800323A4);
+void func_800323A4(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    (void)&arg3;
+}
 
 #ifdef NON_MATCHING
 extern u32 D_8005FC84;

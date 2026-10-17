@@ -225,6 +225,7 @@ void func_80032384(s32, s32, s32, s32);
 void func_8003238C(s32, s32, s32, s32);
 void func_80032394(s32, s32, s32, s32);
 void func_8003239C(s32, s32, s32, s32);
+void func_800323A4(s32, s32, s32, s32);
 void func_800323AC(void);
 void func_80032588(void);
 s16 *func_8003264C(s32 *, s32);
