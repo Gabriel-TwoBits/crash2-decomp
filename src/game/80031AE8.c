@@ -37,7 +37,10 @@ s32 func_800322C0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_8003230C);
+/* This and the next 19 functions only store arg3 in its slot of the caller's frame: what taking its address does */
+void func_8003230C(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    (void)&arg3;
+}
 
 INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_80032314);
 
