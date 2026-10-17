@@ -11382,5 +11382,64 @@
         "minutes": 0.9
       }
     ]
+  },
+  "func_80028C48": {
+    "outcome": "equivalent, not landed",
+    "time": "2026-10-16 22:40",
+    "summary": "500 of 500 trials agree, 424 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 0.8,
+    "cost_usd": 0.2633808,
+    "turns": 8,
+    "minutes": 0.8,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 424 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.8,
+        "cost_usd": 0.2633808,
+        "turns": 8,
+        "minutes": 0.8
+      }
+    ],
+    "reason": "trial 1915 disagrees: $a0=0x80106214 $a1=0x80107600 $a2=0x8010430c $a3=0x80105a54, stack 0x801066f0 0x8010392c 0x0000004c 0x80060000\nthe retail code ended by access to unmapped 0x3b9b0000, the candidate by access to unmapped 0x3b9b0004\n1999 of 2000 trials agree"
+  },
+  "func_80032B7C": {
+    "outcome": "equivalent",
+    "time": "2026-10-16 22:42",
+    "summary": "2000 of 2000 trials agree, 1883 compared",
+    "mode": "equivalent",
+    "scored": "in place",
+    "model": "claude-sonnet-5-5",
+    "cflags": "-O2 -G8 -mcpu=r8000",
+    "timed_out": false,
+    "wall_minutes": 2.3,
+    "cost_usd": 0.5399368999999998,
+    "turns": 40,
+    "minutes": 2.2,
+    "runs": [
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 477 compared",
+        "mode": "equivalent",
+        "scored": "in place",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 2.3,
+        "cost_usd": 0.5399368999999998,
+        "turns": 40,
+        "minutes": 2.2
+      }
+    ]
   }
 }
