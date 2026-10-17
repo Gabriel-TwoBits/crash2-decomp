@@ -10,9 +10,10 @@ about 15 seconds to run, both runs at once and the emulator unthrottled. The equ
 copy of the image first (tools/patch_disc.py). `--against retail` runs the retail image twice instead: the emulator is
 deterministic when both runs agree on every frame.
 
-Each run is checked for health: it reaches the last frame, its program counter stays in RAM or the BIOS, it takes no
-exception but interrupts and system calls, and its display isn't frozen at the end. The two are then compared by a hash
-of the displayed image at every frame; at each checkpoint both images are written side by side into build/run_game/.
+Each run is checked for health: it reaches the last frame (a run without a new frame for 20 seconds is stopped: the game
+crashed or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls,
+and its display isn't frozen at the end. The two are then compared by a hash of the displayed image at every frame; at
+each checkpoint both images are written side by side into build/run_game/.
 Exit status 0 when both runs are healthy and display the same image at every frame, 1 otherwise.
 
 Needs tools/setup_toolchain.py's PCSX-Redux; its own BIOS (OpenBIOS) boots the disc.
@@ -22,6 +23,7 @@ import os
 import struct
 import subprocess
 import sys
+import time
 import zlib
 from pathlib import Path
 
@@ -34,7 +36,11 @@ OUT = HERE / "build" / "run_game"
 # Headless (no window, logs on stdout), safe mode (no settings file read), emulation started at once, OpenBIOS
 EMULATOR_FLAGS = ["-cli", "-testmode", "-run"]
 DISPLAY_VARIABLES = ("DISPLAY", "WAYLAND_DISPLAY")
-RUN_TIMEOUT_SECONDS = 900
+# A run stalls when its trace doesn't grow for 20 seconds (the script writes it a few times a second); it then gets 10
+# seconds to quit
+POLL_SECONDS = 1
+STALL_SECONDS = 20
+STOP_SECONDS = 10
 
 # Frames are counted in vsyncs (60 a second) from power-on; the timings are the retail run's
 LAST_FRAME = 8000
@@ -118,13 +124,32 @@ def start(name, cue):
 
 
 def wait(process, folder):
-    try:
-        status = process.wait(timeout=RUN_TIMEOUT_SECONDS)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait()
-        sys.exit(f"the emulator didn't finish within {RUN_TIMEOUT_SECONDS} seconds: see {folder / 'emulator.log'}")
-    return status
+    """The emulator's exit status, or None once it stalls: a crashed game stops the vsyncs, and with them the script"""
+    trace = folder / "trace.txt"
+    last_size = -1
+    last_change = time.monotonic()
+    while True:
+        try:
+            return process.wait(timeout=POLL_SECONDS)
+        except subprocess.TimeoutExpired:
+            pass
+        size = trace.stat().st_size if trace.exists() else 0
+        now = time.monotonic()
+        if size != last_size:
+            last_size = size
+            last_change = now
+        elif now - last_change > STALL_SECONDS:
+            # SIGTERM lets the emulator quit cleanly, the script's buffered frames written
+            process.terminate()
+            try:
+                process.wait(timeout=STOP_SECONDS)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+            return None
+        else:
+            # Still within the time a frame may take
+            pass
 
 
 def read_trace(folder):
@@ -144,8 +169,13 @@ def read_trace(folder):
 def health(name, status, frames):
     """The run's problems, as lines of text (none when healthy)"""
     problems = []
-    if status != 0:
+    if status is None:
+        problems.append(f"no frame for {STALL_SECONDS} seconds: the game crashed or hung (see its emulator.log)")
+    elif status != 0:
         problems.append(f"the emulator exited with status {status}")
+    else:
+        # The emulator quit when the script asked it to
+        pass
     if len(frames) < LAST_FRAME:
         problems.append(f"stopped at frame {len(frames)} of {LAST_FRAME}")
     for number, (_, pc, _) in enumerate(frames, 1):
