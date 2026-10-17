@@ -694,7 +694,30 @@ void func_80014420(void) {
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014420);
 #endif
 
+#ifdef NON_MATCHING
+s32 func_8001456C(void) {
+    s32 i;
+    s32 live;
+    Unk80013BD8 *p;
+
+    live = D_800675B0.count;
+    for (i = 0; i < D_80067950.count; i++) {
+        p = &D_80067950.e[i];
+        if (p->state != 1 && p->f_f != 0) {
+            live--;
+        }
+    }
+    for (i = 0; i < D_800675B0.count; i++) {
+        p = &D_800675B0.e[i];
+        if (p->state != 1 && p->f_f != 0) {
+            live--;
+        }
+    }
+    return live;
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_8001456C);
+#endif
 
 extern Unk80013BD8Table D_800675B0;
 
