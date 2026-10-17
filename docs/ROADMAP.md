@@ -277,11 +277,18 @@ data sits is:
 - What depends on the data's addresses is still open. No `.data` word and no `lui`/`%lo` pair is left at a retail
   address in the moved range (scanned in a shifted build), but values pointing into `.bss` come in from the disc: heap
   objects read by `CdGetSector` hold 0x8005F340 (inside `D_8005F338`'s 12 bytes), which the shift leaves as it is, and
-  the disc image holds the word 21 times.
+  the disc image holds the word 21 times (docs/TARGET.md, "Addresses from the disc").
 
-Next: keep `.data` and `.bss` at their retail addresses in the equivalent build (`configure.py` padding the code's end),
-find what reads them by address, then `loop --equivalent` on the 12 refused at landing and the remaining given-up
-functions, in batches, each checked in the game too.
+`configure.py` now keeps `.data`, `.sdata`, `.sbss` and `.bss` at their retail addresses in the equivalent build: the
+code's end is padded to `.data`'s retail start, and `ninja nonmatching` stops, with the bytes over, should the equivalent
+code outgrow the retail code. With the 144 equivalent functions then on `main` (the code 568 bytes shorter), the
+equivalent executable stays healthy over the 8,000 frames and displays what retail does up to frame 4,035; without
+`func_80027CD0`, the 143 others agree on all 8,000. That divergence is timing: up to frame 4,034 the two runs' data and
+heap agree word for word, code pointers aside, but for a handful of 16-bit counters one apart (0xA40D against 0xA40E
+at 0x8005B9C8 from frame 3,500 at least), the decompressor's output included.
+
+Next: find what in the disc's data holds the executable's addresses, then `loop --equivalent` on the 12 refused at
+landing and the remaining given-up functions, in batches, each checked in the game too.
 
 ## 5. Beyond matching
 
