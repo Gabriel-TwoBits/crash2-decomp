@@ -6510,16 +6510,16 @@
   },
   "func_80022224": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:49",
-    "summary": "47 of 60 words differ",
+    "time": "2026-10-16 21:21",
+    "summary": "500 of 500 trials agree, 237 compared",
     "best": "attempt2.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.1,
-    "cost_usd": 0.2736896,
-    "turns": 21,
-    "minutes": 1.1,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.1739128,
+    "turns": 11,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -6532,9 +6532,22 @@
         "cost_usd": 0.2736896,
         "turns": 21,
         "minutes": 1.1
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 237 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.1739128,
+        "turns": 11,
+        "minutes": 0.4
       }
     ],
-    "reason": "FAILED: [code=1] build/nonmatching/src/game/80020A24.o \nsrc/game/80020A24.c:109: conflicting types for `D_800608D8'"
+    "mode": "equivalent",
+    "reason": "FAILED: [code=1] build/nonmatching/src/game/80020A24.o \nsrc/game/80020A24.c:112: conflicting types for `D_800608CC'"
   },
   "func_800111B0": {
     "outcome": "equivalent",
@@ -6852,16 +6865,16 @@
   },
   "func_800161F8": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:45",
-    "summary": "63 of 65 words differ",
+    "time": "2026-10-16 21:22",
+    "summary": "500 of 500 trials agree, 465 compared",
     "best": "a1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.3,
-    "cost_usd": 0.3244654,
-    "turns": 20,
-    "minutes": 1.2,
+    "wall_minutes": 1.0,
+    "cost_usd": 0.25635749999999996,
+    "turns": 15,
+    "minutes": 1.0,
     "runs": [
       {
         "outcome": "gave up",
@@ -6874,22 +6887,35 @@
         "cost_usd": 0.3244654,
         "turns": 20,
         "minutes": 1.2
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 465 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 1.0,
+        "cost_usd": 0.25635749999999996,
+        "turns": 15,
+        "minutes": 1.0
       }
     ],
+    "mode": "equivalent",
     "reason": "src/game/800158E0.c defines Unk80063458 further down: moved into the NON_MATCHING block, it would leave the default build"
   },
   "func_800175D8": {
     "outcome": "equivalent, not landed",
-    "time": "2026-10-16 20:45",
-    "summary": "61 of 65 words differ",
+    "time": "2026-10-16 21:22",
+    "summary": "500 of 500 trials agree, 252 compared",
     "best": "attempt1.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.6,
-    "cost_usd": 0.4026337000000001,
-    "turns": 16,
-    "minutes": 1.5,
+    "wall_minutes": 0.5,
+    "cost_usd": 0.16513470000000002,
+    "turns": 4,
+    "minutes": 0.4,
     "runs": [
       {
         "outcome": "gave up",
@@ -6902,22 +6928,35 @@
         "cost_usd": 0.4026337000000001,
         "turns": 16,
         "minutes": 1.5
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 252 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.5,
+        "cost_usd": 0.16513470000000002,
+        "turns": 4,
+        "minutes": 0.4
       }
     ],
-    "reason": "FAILED: [code=1] build/src/game/800345C8.o \nsrc/game/800345C8.c:733: too many arguments to function `func_800175D8'"
+    "mode": "equivalent",
+    "reason": "FAILED: [code=1] build/src/game/800345C8.o \nsrc/game/800345C8.c:947: too many arguments to function `func_800175D8'"
   },
   "func_8001ED60": {
-    "outcome": "gave up",
-    "time": "2026-10-16 04:17",
-    "summary": "42 of 65 words differ",
-    "best": "a4.c",
+    "outcome": "equivalent, gave up",
+    "time": "2026-10-16 21:26",
+    "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0x80101068 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000002f 0xfffffff3 0x801035e8\ncall 3 to ReadSZfifo3 (0x8004efa8): $a2 is a frame address holding 0x00000000 0x00000000 0x00000000 0x00000003 in the retail code, a frame address holding 0x00000000 0x00000000 0x00000000 0x00000000 in the candidate\n127 of 500 trials agree",
+    "best": "best.c",
     "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 1.5,
-    "cost_usd": 0.3522969,
-    "turns": 26,
-    "minutes": 1.4,
+    "wall_minutes": 3.4,
+    "cost_usd": 0.5392768000000001,
+    "turns": 32,
+    "minutes": 3.3,
     "runs": [
       {
         "outcome": "gave up",
@@ -6930,21 +6969,35 @@
         "cost_usd": 0.3522969,
         "turns": 26,
         "minutes": 1.4
+      },
+      {
+        "outcome": "equivalent, gave up",
+        "summary": "trial 0 disagrees: $a0=0x80101b48 $a1=0x80101068 $a2=0x00000001 $a3=0x00000000, stack 0x00000001 0x0000002f 0xfffffff3 0x801035e8\ncall 3 to ReadSZfifo3 (0x8004efa8): $a2 is a frame address holding 0x00000000 0x00000000 0x00000000 0x00000003 in the retail code, a frame address holding 0x00000000 0x00000000 0x00000000 0x00000000 in the candidate\n127 of 500 trials agree",
+        "best": "best.c",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 3.4,
+        "cost_usd": 0.5392768000000001,
+        "turns": 32,
+        "minutes": 3.3
       }
-    ]
+    ],
+    "mode": "equivalent"
   },
   "func_8001E8E4": {
-    "outcome": "gave up",
-    "time": "2026-10-16 04:27",
-    "summary": "3 of 66 words differ",
+    "outcome": "equivalent",
+    "time": "2026-10-16 21:27",
+    "summary": "2000 of 2000 trials agree, 2000 compared",
     "best": "attempt1.c",
-    "model": "claude-opus-5-5",
+    "model": "claude-sonnet-5-5",
     "cflags": "-O2 -G8 -mcpu=r8000",
     "timed_out": false,
-    "wall_minutes": 5.4,
-    "cost_usd": 0.8749372000000001,
-    "turns": 2,
-    "minutes": 0.1,
+    "wall_minutes": 0.4,
+    "cost_usd": 0.1546395,
+    "turns": 4,
+    "minutes": 0.3,
     "runs": [
       {
         "outcome": "gave up",
@@ -6969,8 +7022,21 @@
         "cost_usd": 0.8749372000000001,
         "turns": 2,
         "minutes": 0.1
+      },
+      {
+        "outcome": "equivalent, agrees",
+        "summary": "500 of 500 trials agree, 500 compared",
+        "mode": "equivalent",
+        "model": "claude-sonnet-5-5",
+        "cflags": "-O2 -G8 -mcpu=r8000",
+        "timed_out": false,
+        "wall_minutes": 0.4,
+        "cost_usd": 0.1546395,
+        "turns": 4,
+        "minutes": 0.3
       }
-    ]
+    ],
+    "mode": "equivalent"
   },
   "func_800217F8": {
     "outcome": "gave up",
