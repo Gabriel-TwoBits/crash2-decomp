@@ -316,7 +316,8 @@ def write_ninja(linked):
         f"  command = {sys.executable} configure.py {LAYOUT_CHECK} $in && touch $out",
         "  description = check the layout of $in",
         "",
-        f"build build.ninja: configure | configure.py {SPLAT_CONFIG.relative_to(HERE)}",
+        # The symbols name the split's files: a rename moves an INCLUDE_ASM's assembly to another path
+        f"build build.ninja: configure | configure.py {SPLAT_CONFIG.relative_to(HERE)} config/symbol_addrs.txt",
         "",
     ]
     for obj, source in linked:
