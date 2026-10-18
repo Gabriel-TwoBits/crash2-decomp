@@ -32,8 +32,8 @@ extern s32 D_8005F3B0;
 extern s32 D_8005F3B4;
 extern s32 D_8005F3EC;
 extern s32 g_CurrentZone;
-extern s32 D_800608D4;
-extern s32 D_800608E0;
+extern s32 g_CameraPath;
+extern s32 g_CameraProgress;
 extern s8 D_8006094C;
 extern s8 D_8006094D;
 extern s8 D_8006094E;
@@ -174,8 +174,8 @@ s32 func_8001F9C4(void) {
         extra = D_80060984;
     }
     g_CurrentZone = 0;
-    D_800608D4 = 0;
-    D_800608E0 = 0;
+    g_CameraPath = 0;
+    g_CameraProgress = 0;
     off = slot * ENTRY_STRIDE;
     obj = (u8 *)Nsf_OpenEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1, 1);
     D_8005F388 = SAVE_MAGIC;
@@ -187,7 +187,7 @@ s32 func_8001F9C4(void) {
     if (D_8006CBB4 == MODE_600) {
         func_8002FE58(&D_8005F388);
     }
-    func_800200A8((s32)obj,
+    Zone_MoveCamera((s32)obj,
                   FIELD(obj, (FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * 3 + FIELD((u8 *)FIELD(obj, 0x10), 0x184)) * 4 + 0x10),
                   extra, 0);
     Nsf_CloseEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1);

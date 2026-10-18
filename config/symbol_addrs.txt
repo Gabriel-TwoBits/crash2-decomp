@@ -980,3 +980,63 @@ Nsf_FreePageSlot = 0x80013F28; // type:func
 
 // the handler of opcode 0x40 in the dispatch table at 0x8005C514, CrashEdit's CHNK; its kinds 1 to 6 open (Nsf_OpenEntry), close (Nsf_CloseEntry) and count files and pages as CrashEdit's comments list them
 Gool_OpChunk = 0x80038F00; // type:func
+
+// builds the view: Rz(-z) Rx(-x) Ry(-y) of the camera's angles at 0x80060800 with Math_Sin, Math_Cos and MulMatrix, translated by its position at 0x800607F4 >> 8 with TransMatrix, then SetFarColor and SetGeomOffset, as Crash2Recomp's notes decode the matrix; Sys_MainLoop calls it each frame before SetRotMatrix(0x80060774)
+Gfx_UpdateView = 0x80017BC4; // type:func
+
+// the handler of opcode 0x43 in the dispatch table at 0x8005C514, CrashEdit's COLL; switches on the operand's mode to func_80028750, func_80028A28, func_80028C48, func_80028FE0 and func_800294B4
+Gool_OpCollide = 0x80038700; // type:func
+
+// sets the current zone, the camera path, its progress (node << 8), node, node count (property 0x4B, CrashEdit's positions) and kind (0x29) at 0x800608CC to 0x800608F0, stepping the path a node at a time through the SLST (0x103), load and draw lists as Crash2Recomp's notes describe the camera's path walk; the camera's per-kind handlers, func_8001F9C4 and func_8002F6C8 call it
+Zone_MoveCamera = 0x800200A8; // type:func
+
+// the camera's position at a path's progress: the zone's origin plus the path's property 0x4B row (CrashEdit's positions), and the angles of the camera item's row, interpolated by progress & 0xFF, as Crash2Recomp's notes decode it; Zone_MoveCamera and func_80022A5C call it
+Zone_GetCameraPathPoint = 0x80026A08; // type:func
+
+// opens and closes the entries of a camera node's load lists, properties 0x208 and 0x209 (CrashEdit's loadlista and loadlistb), swapped by direction, through func_80021900, as Crash2Recomp's notes say; Zone_MoveCamera calls it at each node it steps through, before Zone_QueueDrawLists
+Zone_ApplyLoadLists = 0x800217F8; // type:func
+
+// Crash2Recomp's notes' camera update: follows g_Player's position, or the target at 0x8006CD70 while bit 0x20000 of 0x8006CB94 is set as the notes say, runs the camera mode's handler (0x8005B994: 6, 7, 9) or else the path kind's (0x800608F0, property 0x29), or Zone_MoveCamera; Sys_MainLoop calls it each unpaused frame before Gfx_UpdateView
+Zone_UpdateCamera = 0x80026CA0; // type:func
+
+// the camera's x in 24.8: Gfx_UpdateView translates the view by it >> 8 (TransMatrix), Zone_GetCameraPathPoint writes it beside the angles, as Crash2Recomp's notes give 0x800607F4; 13 functions use it
+g_CameraX = 0x800607F4;
+
+// the camera's y in 24.8, after g_CameraX: Gfx_UpdateView's TransMatrix takes it >> 8; 13 functions use it
+g_CameraY = 0x800607F8;
+
+// the camera's z in 24.8, after g_CameraY: Gfx_UpdateView's TransMatrix takes it >> 8; 14 functions use it
+g_CameraZ = 0x800607FC;
+
+// the camera's x angle (4096 a turn): Gfx_UpdateView rotates by -it about x (Math_Sin, Math_Cos, MulMatrix), the second of Crash2Recomp's Rz Rx Ry; 6 functions use it
+g_CameraAngleX = 0x80060800;
+
+// the camera's y angle: Gfx_UpdateView rotates by -it about y last (MulMatrix); 4 functions use it
+g_CameraAngleY = 0x80060804;
+
+// the camera's z angle: Gfx_UpdateView starts the view with the rotation by -it about z; 4 functions use it
+g_CameraAngleZ = 0x80060808;
+
+// the matrix Sys_MainLoop, func_8001EC2C and func_8001ED60 give SetRotMatrix before drawing; Gfx_UpdateView writes it from the view with row 1 times -5/8 and row 2 negated (func_80017AF8), as Crash2Recomp's notes say
+g_ViewMatrix = 0x80060774;
+
+// the camera path entity, stored by Zone_MoveCamera as Crash2Recomp's notes say; 17 functions use it, Gfx_UpdateView and func_80022224 reading its properties 0x29 and 0x173 through Ent_GetPropertyValue
+g_CameraPath = 0x800608D4;
+
+// the camera's progress along g_CameraPath, node << 8 plus a fraction, clamped by Zone_MoveCamera to g_CameraProgressMax; 16 functions use it, most as Ent_GetProperty's row argument
+g_CameraProgress = 0x800608E0;
+
+// the last node's progress, (node count - 1) << 8, stored by Zone_MoveCamera; func_8002648C looks the path's end rows up (0x109, 0x176) at it
+g_CameraProgressMax = 0x800608E4;
+
+// g_CameraProgress >> 8, the node Zone_MoveCamera steps the load and draw lists from, as Crash2Recomp's notes give 0x800608E8; func_80018294 and func_80022878 read it
+g_CameraNode = 0x800608E8;
+
+// the length of g_CameraPath's property 0x4B row (CrashEdit's positions), stored by Zone_MoveCamera; func_80022878 reads it
+g_CameraNodeCount = 0x800608EC;
+
+// g_CameraPath's property 0x29, stored by Zone_MoveCamera; Zone_UpdateCamera picks the per-kind handler by it (0, 2, 3, 4, 8, 10), Crash2Recomp's notes' path kinds (3 and 8 side-on); 5 functions use it
+g_CameraPathKind = 0x800608F0;
+
+// 5 while the camera follows its path, else 6, 7 or 9, each with its handler in Zone_UpdateCamera; func_8002648C sets 7 for a prepared cut as Crash2Recomp's notes say; 6 functions use it
+g_CameraMode = 0x8005B994;

@@ -3,7 +3,7 @@
 #include "game.h"
 
 #ifdef NON_MATCHING
-extern s8 D_8005B994;
+extern s8 g_CameraMode;
 extern s8 D_8005B99B;
 extern s32 D_8005BA14;
 extern s32 D_8005BA18;
@@ -14,11 +14,11 @@ extern s32 D_8005BAD8;
 extern s32 D_8005BADC;
 extern s32 D_8005BAE0;
 extern s32 D_8005BAE4;
-extern s32 D_800607F4;
-extern s32 D_800607F8;
-extern s32 D_800607FC;
-extern s32 *D_800608D4;
-extern s32 D_800608E4;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
+extern s32 g_CameraZ;
+extern s32 *g_CameraPath;
+extern s32 g_CameraProgressMax;
 extern s32 D_800608F8;
 extern s32 D_800608FC;
 extern s32 D_80060900;
@@ -52,19 +52,19 @@ void func_8002648C(Arg *arg0, s32 arg1) {
         D_8005B99B = 1;
         break;
     case 0:
-        if (D_8005B994 != 7) {
-            D_8005B994 = 7;
+        if (g_CameraMode != 7) {
+            g_CameraMode = 7;
             goto common;
         }
         break;
     case 2:
-        if (D_8005B994 != 6) {
-            D_8005B994 = 6;
+        if (g_CameraMode != 6) {
+            g_CameraMode = 6;
     common:
         a2 = 0;
-        if (arg1 != 1) a2 = D_800608E4;
-        e = (Ent *)((u8 *)Ent_GetProperty((s32)D_800608D4, 0x109, a2, 0, 0, 1, 0, 0, 0) + arg0->b * 4);
-        p = (s32 *)(((s32 *)D_800608D4[1])[4] + (e->c * 4 + 0x194));
+        if (arg1 != 1) a2 = g_CameraProgressMax;
+        e = (Ent *)((u8 *)Ent_GetProperty((s32)g_CameraPath, 0x109, a2, 0, 0, 1, 0, 0, 0) + arg0->b * 4);
+        p = (s32 *)(((s32 *)g_CameraPath[1])[4] + (e->c * 4 + 0x194));
         v = (s32 *)Nsf_OpenEntry(p, 1, 0);
         s = *(s32 *)((u8 *)v + (e->b * 3 + *(s32 *)(v[4] + 0x184)) * 4 + 0x10);
         D_8005BAD8 = *p;
@@ -79,9 +79,9 @@ void func_8002648C(Arg *arg0, s32 arg1) {
             if (arg0->a != 0) {
                 D_8005BA18 = 0x10;
                 D_8005BA14 = 0x10;
-                D_8005BA1C = D_800607F4;
-                D_8005BA20 = D_800607F8;
-                D_8005BA24 = D_800607FC;
+                D_8005BA1C = g_CameraX;
+                D_8005BA20 = g_CameraY;
+                D_8005BA24 = g_CameraZ;
             }
         }
         if (arg0->c == 1) {
@@ -90,8 +90,8 @@ void func_8002648C(Arg *arg0, s32 arg1) {
         }
         break;
     case 4:
-        if (D_8005B994 != 9) {
-            D_8005B994 = 9;
+        if (g_CameraMode != 9) {
+            g_CameraMode = 9;
             D_800608F8 = arg1;
         }
         break;
@@ -189,7 +189,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8002648C", func_800267C4);
 #ifdef NON_MATCHING
 extern s32 D_800608D8;
 
-void func_80026A08(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
+void Zone_GetCameraPathPoint(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     s32 t[10];
     s32 *base;
     s16 *a;
@@ -231,5 +231,5 @@ void func_80026A08(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8002648C", func_80026A08);
+INCLUDE_ASM("asm/nonmatchings/game/8002648C", Zone_GetCameraPathPoint);
 #endif

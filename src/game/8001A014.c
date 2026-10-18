@@ -418,9 +418,9 @@ extern void *g_BuildBuffer;
 extern void *g_CurrentZone;
 extern s32 D_8006CCE4;
 extern s32 D_80060944;
-extern s32 D_800607F4;
-extern s32 D_800607F8;
-extern s32 D_800607FC;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
+extern s32 g_CameraZ;
 extern s32 D_80062A3C;
 extern s32 D_80062A40;
 extern s32 D_80062A44;
@@ -608,9 +608,9 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
             FLD(s32, prim, 0x54) = pz;
             which = FLD(u8, arg0, 0x120);
             if (which == 0xA || which == 0xF) {
-                s32 ex = (D_800607F4 - FLD(s32, arg0, 0x60)) >> 8;
-                s32 ey = (D_800607F8 - FLD(s32, arg0, 0x64)) >> 8;
-                s32 ez = (D_800607FC - FLD(s32, arg0, 0x68)) >> 8;
+                s32 ex = (g_CameraX - FLD(s32, arg0, 0x60)) >> 8;
+                s32 ey = (g_CameraY - FLD(s32, arg0, 0x64)) >> 8;
+                s32 ez = (g_CameraZ - FLD(s32, arg0, 0x68)) >> 8;
                 s32 sq = (ex * ex) + (ey * ey) + (ez * ez);
                 if (sq == 0) {
                     dx = 0;

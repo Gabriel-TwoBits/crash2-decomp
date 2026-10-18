@@ -720,7 +720,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001E9EC);
 #define MATRIX_ONE 0x1000
 #define CALL_RESULT -0xFF
 
-extern s32 D_80060808;
+extern s32 g_CameraAngleZ;
 extern s32 D_80060914;
 
 /* Retail returns CALL_RESULT; the declared signature is void. */
@@ -730,8 +730,8 @@ void func_8001EAD8(s32 *arg0, s32 *arg1) {
     s32 s;
     s32 c;
 
-    s = Math_Sin(-D_80060808);
-    c = Math_Cos(-D_80060808);
+    s = Math_Sin(-g_CameraAngleZ);
+    c = Math_Cos(-g_CameraAngleZ);
     a[0] = c; a[1] = -s; a[2] = 0;
     a[3] = s; a[4] = c;  a[5] = 0;
     a[6] = 0; a[7] = 0;  a[8] = MATRIX_ONE;
@@ -759,11 +759,11 @@ extern s32 RotTrans(s16 *, s32 *, s32 *, s32);
 extern void SetRotMatrix(void *);
 extern void SetTransMatrix(void *);
 extern char D_80060130;
-extern char D_80060774;
+extern char g_ViewMatrix;
 extern char D_800607D4;
-extern s32 D_800607F4;
-extern s32 D_800607F8;
-extern s32 D_800607FC;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
+extern s32 g_CameraZ;
 extern s32 D_8006083C;
 extern s32 D_80060840;
 extern s32 D_80060844;
@@ -779,7 +779,7 @@ s32 func_8001EC2C(s32 *arg0, s32 *arg1, s32 arg2) {
 
     wv[0] = arg0[0];
     wv[1] = arg0[1];
-    m = &D_80060774;
+    m = &g_ViewMatrix;
     wv[2] = arg0[2];
     if (arg2 != 0) {
         m = &D_800607D4;
@@ -791,9 +791,9 @@ s32 func_8001EC2C(s32 *arg0, s32 *arg1, s32 arg2) {
         a3 = D_80060844;
         x = wv[0] - D_8006083C;
     } else {
-        a2 = D_800607F8;
-        a3 = D_800607FC;
-        x = wv[0] - D_800607F4;
+        a2 = g_CameraY;
+        a3 = g_CameraZ;
+        x = wv[0] - g_CameraX;
     }
     sv[0] = x >> 8;
     sv[1] = (wv[1] - a2) >> 8;
@@ -836,11 +836,11 @@ s32 func_8001ED60(s32 *arg0, s32 *arg1) {
     l.pos[0] = arg0[0];
     l.pos[1] = arg0[1];
     l.pos[2] = arg0[2];
-    SetRotMatrix(&D_80060774);
+    SetRotMatrix(&g_ViewMatrix);
     SetTransMatrix(&D_80060130);
-    l.vec[2] = (l.pos[2] - D_800607FC) >> POS_SHIFT;
-    l.vec[0] = (l.pos[0] - D_800607F4) >> POS_SHIFT;
-    l.vec[1] = (l.pos[1] - D_800607F8) >> POS_SHIFT;
+    l.vec[2] = (l.pos[2] - g_CameraZ) >> POS_SHIFT;
+    l.vec[0] = (l.pos[0] - g_CameraX) >> POS_SHIFT;
+    l.vec[1] = (l.pos[1] - g_CameraY) >> POS_SHIFT;
     RotTransPers(l.vec, &l.sxy, &l.p, &l.flag);
     arg1[0] = ((s16)l.sxy - SCREEN_CENTER_X) << POS_SHIFT;
     arg1[1] = (SCREEN_CENTER_Y - (l.sxy >> SXY_Y_SHIFT)) << POS_SHIFT;

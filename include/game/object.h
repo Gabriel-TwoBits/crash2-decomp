@@ -38,7 +38,7 @@ typedef struct GoolObject {
        (Gool_ChangeState; CrashEdit's external GOOL entries) */
     /* 0x14 */ void *state_exe;
     /* The zone (type 7) the object belongs to: the one Obj_SpawnEntity spawned it from, its parent's (Obj_Init),
-       g_CurrentZone for the player (func_800200A8); Zone_KillObjects kills by it. An error code in func_8002BF58 */
+       g_CurrentZone for the player (Zone_MoveCamera); Zone_KillObjects kills by it. An error code in func_8002BF58 */
     /* 0x18 */ NsfEntry *zone;
     /* 0x1C */ s32 state; /* the state's index, Gool_ChangeState */
     /* 0x20 */ s16 unk_20[0x10]; /* halfwords, the block passed by address (obj + 0x20) */

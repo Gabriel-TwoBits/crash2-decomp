@@ -39,11 +39,11 @@ extern u8 D_8004599C[];
 extern u8 D_80045C18[];
 extern s32 D_8005F180;
 extern s32 g_Player;
-extern s32 D_800607F4;
-extern s32 D_800607F8;
-extern s32 D_800607FC;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
+extern s32 g_CameraZ;
 extern s32 D_800608DC;
-extern s32 D_800608E0;
+extern s32 g_CameraProgress;
 extern void *D_80062A18;
 extern void *D_80062A1C;
 extern void *D_80062A20;
@@ -117,7 +117,7 @@ extern u32 D_8006CDB0;
 extern s32 D_8006CDC4;
 extern u8 func_8003DD0C[];
 
-/* Offsets from D_80062A18 (which holds &D_800607F4) to the other table pointers. */
+/* Offsets from D_80062A18 (which holds &g_CameraX) to the other table pointers. */
 #define TABLE_A_OFFSET (-0x21F4)
 #define TABLE_B_OFFSET (-0x20F4)
 #define TABLE_C_OFFSET (-0x22A4)
@@ -145,9 +145,9 @@ extern u8 func_8003DD0C[];
 
 /* Position relative to the scene origin, with X/Y packed in one word. */
 #define PACK_XY(obj) \
-    ((((FIXED_UNPACK(FIELD_S32(obj, OBJ_Y) - D_800607F8)) & PACK_Y_MASK) << PACK_Y_SHIFT) | \
-     (FIXED_UNPACK(FIELD_S32(obj, OBJ_X) - D_800607F4) & PACK_X_MASK))
-#define REL_Z(obj) FIXED_UNPACK(FIELD_S32(obj, OBJ_Z) - D_800607FC)
+    ((((FIXED_UNPACK(FIELD_S32(obj, OBJ_Y) - g_CameraY)) & PACK_Y_MASK) << PACK_Y_SHIFT) | \
+     (FIXED_UNPACK(FIELD_S32(obj, OBJ_X) - g_CameraX) & PACK_X_MASK))
+#define REL_Z(obj) FIXED_UNPACK(FIELD_S32(obj, OBJ_Z) - g_CameraZ)
 
 #define SCENE_FLAG_ENTRY 0x1
 #define SCENE_FLAG_4 0x4
@@ -181,10 +181,10 @@ void func_80020A24(void) {
     D_80062AE4 = 3;
     D_80062ADC = 3;
     D_80062A28 = func_8003DD0C;
-    D_80062AA4 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_X) - D_800607F4));
-    D_80062AA6 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Y) - D_800607F8));
-    D_80062AA8 = FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Z) - D_800607FC);
-    p = (s32 *)Ent_GetProperty(D_800608DC, 0x185, D_800608E0, 0, 0, 0, 0, 0, 0);
+    D_80062AA4 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_X) - g_CameraX));
+    D_80062AA6 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Y) - g_CameraY));
+    D_80062AA8 = FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Z) - g_CameraZ);
+    p = (s32 *)Ent_GetProperty(D_800608DC, 0x185, g_CameraProgress, 0, 0, 0, 0, 0, 0);
     if (p != 0) {
         D_80062AD8 = *p;
     } else {
@@ -195,7 +195,7 @@ void func_80020A24(void) {
     ((void (*)(s32))func_80011E24)(D_800608DC);
     entry = 0;
     if (D_80062AD8 & SCENE_FLAG_ENTRY) {
-        entry = (s32 *)Ent_GetProperty(D_800608DC, 0x186, D_800608E0, 0, 0, 0, 0, 0, 0);
+        entry = (s32 *)Ent_GetProperty(D_800608DC, 0x186, g_CameraProgress, 0, 0, 0, 0, 0, 0);
     }
     if (entry != 0) {
         D_80062ACC = 6;
@@ -212,13 +212,13 @@ void func_80020A24(void) {
     }
     D_8006CD48 = v;
     if (D_80062AD8 & SCENE_FLAG_1000) {
-        p = (s32 *)Ent_GetProperty(D_800608DC, 0x297, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x297, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         D_80062AD0 = p[1];
         D_80062AD4 = p[2];
         D_8006CCE4 = p[0];
     }
     if (D_80062AD8 & SCENE_FLAG_400000) {
-        p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x2AA, D_800608E0, 0, 0, 3, &frame[0], 0, 0);
+        p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x2AA, g_CameraProgress, 0, 0, 3, &frame[0], 0, 0);
         if (p16 != 0) {
             D_80062AA0 = p16[0];
             D_80062A94 = p16[1];
@@ -229,7 +229,7 @@ void func_80020A24(void) {
         D_80062AA0 = 0;
     }
     if (D_80062AD8 & SCENE_FLAG_10) {
-        p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x1B5, D_800608E0, 0, 0, 3, &frame[2], 0, 0);
+        p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x1B5, g_CameraProgress, 0, 0, 3, &frame[2], 0, 0);
         if (p16 != 0) {
             if (D_8005F180 == 0) {
                 D_80062A6C = D_80062A74[0];
@@ -254,7 +254,7 @@ void func_80020A24(void) {
             D_80062A88 = p16[4];
             D_80062A8C = p16[5];
         }
-        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1B6, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1B6, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062A7C = p[0];
             D_80062A80 = p[1];
@@ -264,7 +264,7 @@ void func_80020A24(void) {
         D_80062A90 = 0;
     }
     if (D_80062AD8 & (SCENE_FLAG_4 | SCENE_FLAG_800000)) {
-        Ent_GetProperty(D_800608DC, 0x1B7, D_800608E0, 0, 0, 0, 0, 0, 0);
+        Ent_GetProperty(D_800608DC, 0x1B7, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         D_80062A28 = D_80044A70;
         D_80062A2C = func_80042420;
         D_80062A30 = D_80042698;
@@ -333,7 +333,7 @@ void func_80020A24(void) {
         D_80062AC4 = D_8006CD94;
     }
     if (D_80062AD8 & SCENE_FLAG_8) {
-        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1B8, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1B8, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062A48 = p[0];
             D_80062A4C = p[1];
@@ -346,7 +346,7 @@ void func_80020A24(void) {
         D_80062AC0 = D_8006CD90;
     }
     if (D_80062AD8 & SCENE_FLAG_20) {
-        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062AB4 = p[0];
             D_80062AB8 = p[1];
@@ -369,7 +369,7 @@ void func_80020A24(void) {
             D_80062A38 = D_80045AB4;
             D_80062A54 = D_8006CDC4;
         } else {
-            p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, D_800608E0, 0, 0, 0, 0, 0, 0);
+            p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, g_CameraProgress, 0, 0, 0, 0, 0, 0);
             if (p != 0) {
                 D_80062AB4 = p[0];
                 D_80062AB8 = p[1];
@@ -416,7 +416,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80020A24);
 #define FLAGS_FIRST 0x14
 #define FLAGS_SECOND 0xC
 
-void func_800217F8(s32 arg0, s32 arg1, s32 arg2) {
+void Zone_ApplyLoadLists(s32 arg0, s32 arg1, s32 arg2) {
     s32 count;
     s32 type;
     s32 offset;
@@ -445,7 +445,7 @@ void func_800217F8(s32 arg0, s32 arg1, s32 arg2) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_800217F8);
+INCLUDE_ASM("asm/nonmatchings/game/80020A24", Zone_ApplyLoadLists);
 #endif
 
 extern NsdRecord **D_80067590;
@@ -526,16 +526,16 @@ extern s32 D_8005BB08;
 extern s32 D_8005BB0C;
 extern s32 D_8005BB1C;
 extern s32 D_8005BB2C;
-extern s32 D_800607F4;
-extern s32 D_800607F8;
-extern s32 D_800607FC;
-extern s32 D_80060800;
-extern s32 D_80060804;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
+extern s32 g_CameraZ;
+extern s32 g_CameraAngleX;
+extern s32 g_CameraAngleY;
 extern s32 D_80060818;
 extern s32 D_80060820;
 extern s32 g_CurrentZone[];
-extern s32 D_800608D4;
-extern s32 D_800608E0;
+extern s32 g_CameraPath;
+extern s32 g_CameraProgress;
 extern s32 D_800608F8;
 extern s32 D_80060914;
 
@@ -623,8 +623,8 @@ void func_80021A08(s32 *arg0, s32 arg1) {
             diff = -diff;
         }
         sp10[0] = g_CurrentZone[0];
-        sp10[1] = D_800608D4;
-        sp10[2] = D_800608E0;
+        sp10[1] = g_CameraPath;
+        sp10[2] = g_CameraProgress;
         sp10[3] = D_800608F8;
         steps = func_80024268(sp10, (diff * TURN_SCALE) >> 8, sp50);
         if (steps != 0 && func_80026764((s32)sp10, (V *)sp20) != 0) {
@@ -635,18 +635,18 @@ void func_80021A08(s32 *arg0, s32 arg1) {
             a2 = sp50[0];
         } else {
             a0 = g_CurrentZone[0];
-            a1 = D_800608D4;
+            a1 = g_CameraPath;
             a2 = sp50[0];
         }
     } else {
         a0 = g_CurrentZone[0];
-        a1 = D_800608D4;
-        a2 = D_800608E0;
+        a1 = g_CameraPath;
+        a2 = g_CameraProgress;
     }
-    func_800200A8(a0, a1, a2, 0);
+    Zone_MoveCamera(a0, a1, a2, 0);
 
     if (D_8005BA08 != 0) {
-        D_800607F8 -= (D_8005BA08 * BOB_SCALE) >> 10;
+        g_CameraY -= (D_8005BA08 * BOB_SCALE) >> 10;
     }
     func_800231B0(sp30);
 
@@ -661,10 +661,10 @@ void func_80021A08(s32 *arg0, s32 arg1) {
     if (D_8005B9F4 != 0 && D_8005B9F0 >= 0) {
         d += ((D_8005B9F0 - d) * D_8005B9F4) >> 10;
     }
-    func_8002FF54(sp40, -d, D_80060800, D_80060804);
-    D_800607F4 += sp40[0];
-    D_800607F8 += sp40[1];
-    D_800607FC += sp40[2];
+    func_8002FF54(sp40, -d, g_CameraAngleX, g_CameraAngleY);
+    g_CameraX += sp40[0];
+    g_CameraY += sp40[1];
+    g_CameraZ += sp40[2];
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80021A08);
@@ -677,8 +677,8 @@ extern s32 D_8005BB44;
 extern s32 D_80060818;
 extern s32 D_80060820;
 extern s32 g_CurrentZone[];
-extern s32 D_800608D4;
-extern s32 D_800608E0;
+extern s32 g_CameraPath;
+extern s32 g_CameraProgress;
 extern s32 D_800608F8;
 extern s32 D_80060914;
 
@@ -747,8 +747,8 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
         }
         t = (s32)(v * DIFF_SCALE * DIFF_SHIFT_PRE) >> DIFF_SHIFT_A;
         a[0] = g_CurrentZone[0];
-        a[1] = D_800608D4;
-        a[2] = D_800608E0;
+        a[1] = g_CameraPath;
+        a[2] = g_CameraProgress;
         a[3] = D_800608F8;
         t = func_80024268(a, t >> DIFF_SHIFT_B, &d);
         if (t != 0 && func_80026764((s32)a, (void *)b) != 0) {
@@ -759,15 +759,15 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
             a2 = d;
         } else {
             a0 = g_CurrentZone[0];
-            a1 = D_800608D4;
+            a1 = g_CameraPath;
             a2 = d;
         }
     } else {
         a0 = g_CurrentZone[0];
-        a1 = D_800608D4;
-        a2 = D_800608E0;
+        a1 = g_CameraPath;
+        a2 = g_CameraProgress;
     }
-    func_800200A8(a0, a1, a2, 0);
+    Zone_MoveCamera(a0, a1, a2, 0);
     func_800231B0(c);
 }
 #else
@@ -798,7 +798,7 @@ void func_800221DC(void) {
 #define VARIANT_DEFAULT 1
 
 extern s32 g_CurrentZone[];
-extern s32 D_800608D4;
+extern s32 g_CameraPath;
 extern s32 D_800608D8[];
 extern s32 D_800608DC;
 extern s32 D_800608FC;
@@ -809,14 +809,14 @@ void func_80022224(s32 arg0) {
     u8 *table;
 
     D_800608FC = arg0;
-    if (D_800608D4 == 0) {
+    if (g_CameraPath == 0) {
         return;
     }
     table = (u8 *)g_CurrentZone[0];
     if (table == 0) {
         return;
     }
-    slot = Ent_GetPropertyValue(D_800608D4, UNK_CALL_ARG, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
+    slot = Ent_GetPropertyValue(g_CameraPath, UNK_CALL_ARG, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
     table = (u8 *)g_CurrentZone[0];
     value = *(s32 *)(table + (slot + *(s32 *)(*(u8 **)(table + SUBTABLE_OFFSET) + BASE_INDEX_OFFSET)) * 4 + ENTRY_DEFAULT_OFFSET);
     D_800608D8[0] = value;
@@ -876,7 +876,7 @@ void func_80022314(s32 *arg0, s32 arg1) {
         y = g_CurrentZone[2];
         z = g_CurrentZone[5];
     }
-    func_800200A8(x, y, z, 0);
+    Zone_MoveCamera(x, y, z, 0);
     func_800224A0(a);
     func_800231B0(a);
 }
@@ -884,9 +884,9 @@ void func_80022314(s32 *arg0, s32 arg1) {
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022314);
 #endif
 
-extern s32 D_800607FC;
+extern s32 g_CameraZ;
 extern s32 D_800608D8[];
-extern s32 D_800608E0;
+extern s32 g_CameraProgress;
 extern s32 D_8006CD98;
 
 void func_800224A0(s32 *arg0) {
@@ -898,8 +898,8 @@ void func_800224A0(s32 *arg0) {
     s32 scale;
     s32 d;
 
-    if (Ent_GetProperty(D_800608D8[0], 0x252, D_800608E0, 0, 0, 0, 0, 0, 0) != 0) {
-        p = (s16 *)Ent_GetProperty(D_800608D8[0], 0x254, D_800608E0, 0, 0, 3, &sp28, 0, 0);
+    if (Ent_GetProperty(D_800608D8[0], 0x252, g_CameraProgress, 0, 0, 0, 0, 0, 0) != 0) {
+        p = (s16 *)Ent_GetProperty(D_800608D8[0], 0x254, g_CameraProgress, 0, 0, 3, &sp28, 0, 0);
         if (p != 0) {
             lo = p[0] << 8;
             hi = p[1];
@@ -909,7 +909,7 @@ void func_800224A0(s32 *arg0) {
             if (D_8006CD98 != 0x100) {
                 scale = (scale * D_8006CD98) >> 8;
             }
-            d = D_800607FC - arg0[2];
+            d = g_CameraZ - arg0[2];
             if (new_var < d) {
                 d = new_var;
             }
@@ -917,7 +917,7 @@ void func_800224A0(s32 *arg0) {
             if (d < 0) {
                 d = 0;
             }
-            D_800607FC -= (d * scale) >> 8;
+            g_CameraZ -= (d * scale) >> 8;
         }
     }
 }
@@ -942,13 +942,13 @@ void func_800225C0(s32 *arg0, s32 arg1) {
         if (r > 0) {
             r = func_80024658(sp28, sp18, p[1], 0, p[2], 1);
             func_80023E60(sp28, r, sp48, arg1 != 0 ? 0x100 : -1);
-            func_800200A8(sp48[0], sp48[1], sp48[2], 0);
+            Zone_MoveCamera(sp48[0], sp48[1], sp48[2], 0);
         } else if (r < 0) {
             r = func_80024658(sp28, sp18, p[0], 1, p[2], 1) + 0;
             func_80023E60(sp28, r, sp48, arg1 != 0 ? 0x100 : -1);
-            func_800200A8(sp48[0], sp48[1], sp48[2], 0);
+            Zone_MoveCamera(sp48[0], sp48[1], sp48[2], 0);
         } else {
-            func_800200A8(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
+            Zone_MoveCamera(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
         }
     } while (0);
     func_800231B0(sp18);
@@ -978,13 +978,13 @@ void func_8002271C(s32 *arg0, s32 arg1) {
     if (r > 0) {
         t = func_80024658(v28, v18, v5C, 0, v60, 1);
         func_80023E60(v28, t, v48, arg1 != 0 ? 0x100 : -1);
-        func_800200A8(v48[0], v48[1], v48[2], 0);
+        Zone_MoveCamera(v48[0], v48[1], v48[2], 0);
     } else if (r < 0) {
         t = func_80024658(v28, v18, v58, 1, v60, 1);
         func_80023E60(v28, t, v48, arg1 != 0 ? 0x100 : -1);
-        func_800200A8(v48[0], v48[1], v48[2], 0);
+        Zone_MoveCamera(v48[0], v48[1], v48[2], 0);
     } else {
-        func_800200A8(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
+        Zone_MoveCamera(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
     }
     func_800231B0(v18);
 }
@@ -1003,8 +1003,8 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_8002271C);
 #define QUERY_MODE_B 2
 
 s32 func_80026764(s32 arg0, V *arg1);
-extern s32 D_800608E8;
-extern s32 D_800608EC;
+extern s32 g_CameraNode;
+extern s32 g_CameraNodeCount;
 
 void func_80022878(s32 *arg0) {
     s32 sp20[4];
@@ -1020,13 +1020,13 @@ void func_80022878(s32 *arg0) {
     sp40[1] = arg0[1];
     sp40[2] = arg0[2];
     if (D_800608F8 == DIR_NONE) {
-        if (D_800608EC < (D_800608E8 * 2)) {
+        if (g_CameraNodeCount < (g_CameraNode * 2)) {
             D_800608F8 = DIR_FIRST;
         } else {
             D_800608F8 = DIR_SECOND;
         }
     }
-    var_a1 = Ent_GetPropertyValue(D_800608DC, QUERY_SELECTOR, D_800608E0, 0, 0, QUERY_MODE_A, QUERY_LIMIT);
+    var_a1 = Ent_GetPropertyValue(D_800608DC, QUERY_SELECTOR, g_CameraProgress, 0, 0, QUERY_MODE_A, QUERY_LIMIT);
     if (var_a1 < 0) {
         var_a1 = -var_a1;
         if (D_800608F8 == DIR_FIRST) {
@@ -1037,7 +1037,7 @@ void func_80022878(s32 *arg0) {
     }
     sp20[0] = g_CurrentZone[0];
     sp20[1] = g_CurrentZone[2];
-    sp20[2] = D_800608E0;
+    sp20[2] = g_CameraProgress;
     sp20[3] = D_800608F8;
     temp_v0 = func_80024268(sp20, var_a1, &sp50);
     if ((temp_v0 != 0) && (func_80026764((s32)sp20, (V *)sp30) != 0)) {
@@ -1054,7 +1054,7 @@ void func_80022878(s32 *arg0) {
         var_a0 = g_CurrentZone[0];
         var_v1 = g_CurrentZone[2];
     }
-    func_800200A8(var_a0, var_v1, sp50, 0);
+    Zone_MoveCamera(var_a0, var_v1, sp50, 0);
     func_800224A0(sp40);
     func_800231B0(sp40);
 }
@@ -1074,7 +1074,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022878);
 #define MODE_SAME_TARGET 1
 #define TRIGGER_VALUE 5
 
-extern s8 D_8005B994;
+extern s8 g_CameraMode;
 extern s32 D_8005BA14;
 extern s32 D_8005BA18;
 extern s32 D_8005BA1C;
@@ -1083,8 +1083,8 @@ extern s32 D_8005BA24;
 extern s32 D_8005BADC;
 extern s32 D_8005BAE0;
 extern s32 D_8005BAE4;
-extern s32 D_800607F4;
-extern s32 D_800607F8;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
 
 /* Locals in retail stack order; the pads are unused slots. */
 typedef struct {
@@ -1113,8 +1113,8 @@ void func_80022A5C(s32 *arg0) {
     f.path[0] = arg0[0];
     f.path[1] = arg0[1];
     f.cur[0] = g_CurrentZone[0];
-    f.cur[1] = D_800608D4;
-    f.cur[2] = D_800608E0;
+    f.cur[1] = g_CameraPath;
+    f.cur[2] = g_CameraProgress;
     f.cur[3] = D_8005BAE4;
     f.path[2] = arg0[2];
     obj = (s32 *)Nsf_OpenEntry((char *)&D_8005BAE4 - STATE_BASE_BACKOFF, 1, 0);
@@ -1123,8 +1123,8 @@ void func_80022A5C(s32 *arg0) {
     target = *(s32 **)((char *)obj + OBJ_CHILD_OFFSET +
                        (D_8005BADC * SLOT_STRIDE_WORDS + *(s32 *)((char *)q + CHILD_INDEX_OFFSET)) * 4);
     f.next[1] = (s32)target;
-    if (D_800608D4 == (s32)target) {
-        f.next[2] = D_800608E0;
+    if (g_CameraPath == (s32)target) {
+        f.next[2] = g_CameraProgress;
     } else {
         f.next[2] = D_8005BAE0;
     }
@@ -1135,7 +1135,7 @@ void func_80022A5C(s32 *arg0) {
     }
     ret = func_8002433C(f.next, f.path, &f.dist[0], &f.dist[1], &f.dist[2]);
     if (D_8005BA14 != 0) {
-        if (D_800608D4 == (s32)target) {
+        if (g_CameraPath == (s32)target) {
             mode = MODE_SAME_TARGET;
         } else {
             mode = MODE_DEFAULT;
@@ -1149,22 +1149,22 @@ void func_80022A5C(s32 *arg0) {
                 f.next[i] = f.cur[i];
             }
         }
-        func_80026A08((s32 *)f.next[1], f.next[2], f.pos, 0);
+        Zone_GetCameraPathPoint((s32 *)f.next[1], f.next[2], f.pos, 0);
         if (ret != 0) {
             func_80023E60(f.cur, mode, f.out, STEP_RANGE / D_8005BA14);
-            func_800200A8(f.out[0], f.out[1], f.out[2], 0);
+            Zone_MoveCamera(f.out[0], f.out[1], f.out[2], 0);
         } else {
-            func_800200A8(g_CurrentZone[0], D_800608D4, D_800608E0, 0);
+            Zone_MoveCamera(g_CurrentZone[0], g_CameraPath, g_CameraProgress, 0);
         }
         scale = ((D_8005BA18 - (D_8005BA14 - 1)) << FIXED_SHIFT) / D_8005BA18;
-        D_800607F4 = (((f.pos[0] - D_8005BA1C) * scale) >> FIXED_SHIFT) + D_8005BA1C;
-        D_800607F8 = (((f.pos[1] - D_8005BA20) * scale) >> FIXED_SHIFT) + D_8005BA20;
-        D_800607FC = (((f.pos[2] - D_8005BA24) * scale) >> FIXED_SHIFT) + D_8005BA24;
+        g_CameraX = (((f.pos[0] - D_8005BA1C) * scale) >> FIXED_SHIFT) + D_8005BA1C;
+        g_CameraY = (((f.pos[1] - D_8005BA20) * scale) >> FIXED_SHIFT) + D_8005BA20;
+        g_CameraZ = (((f.pos[2] - D_8005BA24) * scale) >> FIXED_SHIFT) + D_8005BA24;
         func_800231B0(f.path);
         D_8005BA14 = D_8005BA14 - 1;
         if (D_8005BA14 == 0) {
-            D_8005B994 = TRIGGER_VALUE;
-            func_80023084(D_800608D4, D_8005BAE0);
+            g_CameraMode = TRIGGER_VALUE;
+            func_80023084(g_CameraPath, D_8005BAE0);
         } else {
             return;
         }
@@ -1178,11 +1178,11 @@ void func_80022A5C(s32 *arg0) {
             /* mode stays at the default */
         }
         func_80023E60(f.cur, mode, f.out, -1);
-        func_800200A8(f.out[0], f.out[1], f.out[2], 0);
+        Zone_MoveCamera(f.out[0], f.out[1], f.out[2], 0);
         func_800231B0(f.path);
-        if (D_800608D4 == (s32)target) {
-            D_8005B994 = TRIGGER_VALUE;
-            func_80023084(D_800608D4, D_8005BAE0);
+        if (g_CameraPath == (s32)target) {
+            g_CameraMode = TRIGGER_VALUE;
+            func_80023084(g_CameraPath, D_8005BAE0);
         } else {
             return;
         }
@@ -1211,11 +1211,11 @@ typedef struct Unk80022E74 {
     s32 unk_14[1];
 } Unk80022E74;
 
-extern s8 D_8005B994;
+extern s8 g_CameraMode;
 extern s32 g_Player;
 extern s32 D_8005BADC;
 extern s32 D_8005BAE0;
-extern s32 D_800608D4;
+extern s32 g_CameraPath;
 
 void func_80022E74(s32 *arg0) {
     s32 args[3];
@@ -1226,14 +1226,14 @@ void func_80022E74(s32 *arg0) {
     args[2] = arg0[2];
     if (D_8005B99B != 0) {
         p = (Unk80022E74 *)Nsf_OpenEntry(&D_8005B99B + UNK_80014260_OFFSET, UNK_80014260_FLAGS, 0);
-        func_800200A8((s32)p,
+        Zone_MoveCamera((s32)p,
                       ((s32 *)p)[(UNK_FIELD_OFFSET / 4) + D_8005BADC * UNK_TABLE_STRIDE + p->unk_10->unk_184],
                       D_8005BAE0, 0);
-        D_8005B994 = UNK_STATE_5;
+        g_CameraMode = UNK_STATE_5;
         ((GoolObject *)g_Player)->zone = (void *)g_CurrentZone[0];
         return;
     } else {
-        func_800200A8(g_CurrentZone[0], D_800608D4, D_800608E0, 0);
+        Zone_MoveCamera(g_CurrentZone[0], g_CameraPath, g_CameraProgress, 0);
         func_800231B0(args);
     }
 }
@@ -1276,17 +1276,17 @@ void func_80022F58(s32 *arg0) {
         in.unk_8 = g_CurrentZone[IDX_C];
         in.unk_C = g_CurrentZone[IDX_D];
         if (func_800267C4(out, &in, g_CurrentZone[IDX_C], g_CurrentZone[IDX_D]) == SEARCH_FOUND) {
-            func_800200A8(out[0], out[1], out[2], 0);
+            Zone_MoveCamera(out[0], out[1], out[2], 0);
             if (Ent_GetPropertyValue(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != g_CurrentZone[IDX_EXPECTED]) {
-                D_8005B994 = STATUS_DONE;
+                g_CameraMode = STATUS_DONE;
             }
         } else {
-            func_800200A8(g_CurrentZone[IDX_A], g_CurrentZone[IDX_B],
+            Zone_MoveCamera(g_CurrentZone[IDX_A], g_CurrentZone[IDX_B],
                           (Ent_GetPropertyRowLength(g_CurrentZone[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
-            D_8005B994 = STATUS_DONE;
+            g_CameraMode = STATUS_DONE;
         }
         func_800231B0(arg0);
-    } while (D_8005B994 != STATUS_DONE);
+    } while (g_CameraMode != STATUS_DONE);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022F58);
@@ -1374,12 +1374,12 @@ extern s32 D_8005B9D4;
 extern s32 D_8005B9D8;
 extern s32 D_8005B9E8;
 extern s32 D_8005BA00;
-extern s32 D_80060808;
+extern s32 g_CameraAngleZ;
 extern s32 D_80060824;
 extern s32 D_80060828;
 extern s32 D_8006082C;
 extern s32 D_80060888;
-extern s32 D_800608F0;
+extern s32 g_CameraPathKind;
 extern s32 D_8006091C;
 extern s32 D_80060920;
 
@@ -1404,9 +1404,9 @@ void func_800231B0(s32 *arg0) {
     u32 temp_s0;
     u32 ratio;
 
-    v38[0] = arg0[0] - D_800607F4;
-    v38[1] = arg0[1] - D_800607F8;
-    v38[2] = arg0[2] - D_800607FC;
+    v38[0] = arg0[0] - g_CameraX;
+    v38[1] = arg0[1] - g_CameraY;
+    v38[2] = arg0[2] - g_CameraZ;
     func_80031340(v28, v38, D_80060828);
     v28[0] = (v28[0] + D_80060888) & ANGLE_MASK;
     if (D_8005B997 != 0) {
@@ -1420,9 +1420,9 @@ void func_800231B0(s32 *arg0) {
             var_s3 = v28[2];
         }
     } else {
-        p = (s16 *)Ent_GetProperty(D_800608DC, CAM_TYPE_BLEND, D_800608E0, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
+        p = (s16 *)Ent_GetProperty(D_800608DC, CAM_TYPE_BLEND, g_CameraProgress, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
         if (p == 0) {
-            p = (s16 *)Ent_GetProperty(D_800608D8[0], CAM_TYPE_BLEND, D_800608E0, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
+            p = (s16 *)Ent_GetProperty(D_800608D8[0], CAM_TYPE_BLEND, g_CameraProgress, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
         } else {
             /* first lookup hit */
         }
@@ -1459,7 +1459,7 @@ void func_800231B0(s32 *arg0) {
         } else {
             /* no fade */
         }
-        if ((D_8005B99B == 0) && (D_80060918.unk0 != EASE_TARGET_NONE) && (D_800608F0 != EASE_DISABLED_MODE)) {
+        if ((D_8005B99B == 0) && (D_80060918.unk0 != EASE_TARGET_NONE) && (g_CameraPathKind != EASE_DISABLED_MODE)) {
             var_s1 = func_800312F0(D_80060918.unk0, var_s1, EASE_ARG_C, EASE_ARG_D);
             var_s2 = func_800312F0(D_8006091C, var_s2, EASE_ARG_C, EASE_ARG_D);
             var_s3 = func_800312F0(D_80060920, var_s3, EASE_ARG_C, EASE_ARG_D);
@@ -1467,7 +1467,7 @@ void func_800231B0(s32 *arg0) {
             /* ease skipped */
         }
     }
-    q = (s16 *)Ent_GetProperty(D_800608D8[0], CAM_TYPE_CLAMP, D_800608E0, 0, 0, CAM_ARG_COUNT, sp48, 0, 0);
+    q = (s16 *)Ent_GetProperty(D_800608D8[0], CAM_TYPE_CLAMP, g_CameraProgress, 0, 0, CAM_ARG_COUNT, sp48, 0, 0);
     if (q != 0) {
         temp_a2 = D_80060824 & ANGLE_MASK;
         var_a0 = (var_s1 & ANGLE_MASK) - temp_a2;
@@ -1528,9 +1528,9 @@ void func_800231B0(s32 *arg0) {
     } else {
         /* no shake */
     }
-    D_80060800 = var_s1;
-    D_80060804 = var_s2;
-    D_80060808 = var_s3;
+    g_CameraAngleX = var_s1;
+    g_CameraAngleY = var_s2;
+    g_CameraAngleZ = var_s3;
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_800231B0);

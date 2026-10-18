@@ -13,8 +13,8 @@ typedef struct {
     s32 unk8;
 } Arg80023B04;
 
-extern s32 D_800608D4[];
-extern s32 D_800608F0;
+extern s32 g_CameraPath[];
+extern s32 g_CameraPathKind;
 extern s32 D_800608D8;
 extern s32 D_800608DC;
 extern s32 D_800608FC;
@@ -49,8 +49,8 @@ void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
     s32 unk8;
 
     idx = 0;
-    if (arg0->unk4 == D_800608D4[0]) {
-        key = D_800608F0;
+    if (arg0->unk4 == g_CameraPath[0]) {
+        key = g_CameraPathKind;
         arg = D_800608DC;
     } else {
         key = Ent_GetPropertyValue(arg0->unk4, KEY_QUERY, 0, 0, 0, QUERY_FLAGS, 0);
@@ -65,7 +65,7 @@ void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
     }
     p = (s16 *)Ent_GetProperty(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, &sp28, 0, 0);
     if (p == 0) {
-        if (arg0->unk4 == D_800608D4[0]) {
+        if (arg0->unk4 == g_CameraPath[0]) {
             arg = D_800608D8;
         } else {
             obj = (u8 *)arg0->unk0;
@@ -116,11 +116,11 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023B04);
 #define UNK_ARG1 0x130
 #define UNK_ARG6 0x120
 
-extern s32 D_800608D4[];
-extern s32 D_800608E0;
+extern s32 g_CameraPath[];
+extern s32 g_CameraProgress;
 
 void func_80023D7C(void) {
-    Ent_GetPropertyValue(*D_800608D4, UNK_ARG1, D_800608E0, 0, 0, 3, UNK_ARG6);
+    Ent_GetPropertyValue(*g_CameraPath, UNK_ARG1, g_CameraProgress, 0, 0, 3, UNK_ARG6);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023D7C);
@@ -129,7 +129,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023D7C);
 #ifdef NON_MATCHING
 extern s32 D_8005BA4C;
 extern s32 D_800608DC;
-extern s32 D_800608E0;
+extern s32 g_CameraProgress;
 
 s32 func_80023DC4(void) {
     s32 sp28;
@@ -137,7 +137,7 @@ s32 func_80023DC4(void) {
     s32 a0;
     s32 a1;
 
-    v = Ent_GetProperty(D_800608DC, 0x16E, D_800608E0, 0, 0, 3, &sp28, 0, 0);
+    v = Ent_GetProperty(D_800608DC, 0x16E, g_CameraProgress, 0, 0, 3, &sp28, 0, 0);
     if (v == 0) {
         return 0;
     }
@@ -280,7 +280,7 @@ s32 func_80024188(void) {
     return -0xFF;
 }
 
-extern s8 D_8005B994;
+extern s8 g_CameraMode;
 extern s8 D_8005B99A;
 typedef struct Unk8005B9E0 {
     s32 count;
@@ -300,16 +300,16 @@ extern s32 D_8005B9FC;
 extern s32 D_8005BA08;
 extern s32 D_8005BA0C;
 extern s32 D_8005BA10;
-extern s32 D_800608F0;
+extern s32 g_CameraPathKind;
 extern s32 D_800608F8;
 extern s32 D_80060918;
 extern s32 D_8006CD98;
 
 void func_800241A8(void) {
-    D_8005B994 = 5;
+    g_CameraMode = 5;
     D_80060918 = 0x1001;
     D_8005B9AC = 0x1001;
-    D_800608F0 = 5;
+    g_CameraPathKind = 5;
     D_800608F8 = 0;
     D_8005B9E0.count = 0;
     D_8005B9E4 = 0;
@@ -405,9 +405,9 @@ typedef struct {
     s32 mode;
 } Unk8002433CMode;
 
-extern s32 D_800607F4;
-extern s32 D_800607F8;
-extern s32 D_800607FC;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
+extern s32 g_CameraZ;
 extern s32 D_80060828;
 extern Unk8002433CMode *D_8006759C;
 void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2);
@@ -430,11 +430,11 @@ s32 func_8002433C(s32 *arg0, s32 *arg1, s32 *a2, s32 *a3, s32 *a4) {
     obj = a0->unk4;
     ang = a0->unk8;
     mode = func_800242F8(Ent_GetPropertyValue(obj, KEY_QUERY, 0, 0, 0, QUERY_FLAGS, 0));
-    if (obj == D_800608D4[0]) {
-        dx = a1->x - D_800607F4;
-        dy = a1->y - D_800607F8;
+    if (obj == g_CameraPath[0]) {
+        dx = a1->x - g_CameraX;
+        dy = a1->y - g_CameraY;
         ang2 = D_80060828;
-        dz = a1->z - D_800607FC;
+        dz = a1->z - g_CameraZ;
     } else {
         ang >>= FIXED_SHIFT;
         e = (s16 *)Ent_GetProperty(obj, KEY_ENTRY, 0, ang, 0, QUERY_FLAGS, 0, 0, 0);
@@ -1091,9 +1091,9 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800254D4);
 #endif
 
 #ifdef NON_MATCHING
-extern s32 D_800607F4;
-extern s32 D_800607F8;
-extern s32 D_800607FC;
+extern s32 g_CameraX;
+extern s32 g_CameraY;
+extern s32 g_CameraZ;
 extern s32 D_80060828;
 
 #define ENTRY_TYPE_Y_RANGE 0x1E3
@@ -1132,19 +1132,19 @@ void func_80025D18(Unk80025D18Pos *arg0) {
     s32 rotX;
     s32 rotZ;
 
-    yRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_Y_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
+    yRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_Y_RANGE, g_CameraProgress, 0, 0, 0, 0, 0, 0);
     if (yRange != 0) {
         xMin = yRange->min;
         xMax = yRange->max;
         if (xMin <= xMax) {
-            dy = arg0->y - D_800607F8;
+            dy = arg0->y - g_CameraY;
             if (dy < (xMin << FIXED_SHIFT) || (xMax << FIXED_SHIFT) < dy) {
                 sp28 = yRange->value << FIXED_SHIFT;
                 func_80025FDC(0, &sp28);
             }
         }
     }
-    xRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_X_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
+    xRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_X_RANGE, g_CameraProgress, 0, 0, 0, 0, 0, 0);
     if (xRange != 0) {
         xMin = xRange->min;
         xMax = xRange->max;
@@ -1152,7 +1152,7 @@ void func_80025D18(Unk80025D18Pos *arg0) {
             xRange = 0;
         }
     }
-    zRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_Z_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
+    zRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_Z_RANGE, g_CameraProgress, 0, 0, 0, 0, 0, 0);
     if (zRange != 0) {
         zMin = zRange->min;
         zMax = zRange->max;
@@ -1161,8 +1161,8 @@ void func_80025D18(Unk80025D18Pos *arg0) {
         }
     }
     if (xRange != 0 || zRange != 0) {
-        dx = arg0->x - D_800607F4;
-        dz = arg0->z - D_800607FC;
+        dx = arg0->x - g_CameraX;
+        dz = arg0->z - g_CameraZ;
         negAngle = -D_80060828;
         sin = Math_Cos(negAngle);
         cos = Math_Sin(negAngle);
@@ -1329,7 +1329,7 @@ typedef struct Unk80026334 {
     s32 key;
 } Unk80026334;
 
-extern s32 D_800608D4[];
+extern s32 g_CameraPath[];
 void func_8002648C(Unk80026334 *, s32);
 
 void func_80026334(s32 arg0) {
@@ -1338,7 +1338,7 @@ void func_80026334(s32 arg0) {
 
     key = arg0 & ~D_8005B9E4;
     if (key != 0) {
-        p = (Unk80026334 *)Ent_GetProperty(D_800608D4[0], 0x1A8, (Ent_GetPropertyRowLength(D_800608D4[0], 0x4B, 0, 2) - 1) << 8, 0, 0, 1, 0, 0, 0);
+        p = (Unk80026334 *)Ent_GetProperty(g_CameraPath[0], 0x1A8, (Ent_GetPropertyRowLength(g_CameraPath[0], 0x4B, 0, 2) - 1) << 8, 0, 0, 1, 0, 0, 0);
         if (p != 0 && p->size != 0) {
             do {
                 if (p->key == key) {
@@ -1347,7 +1347,7 @@ void func_80026334(s32 arg0) {
                 p = (Unk80026334 *)((u8 *)p + p->size);
             } while (p->size != 0);
         }
-        p = (Unk80026334 *)Ent_GetProperty(D_800608D4[0], 0x1A8, 0, 0, 0, 1, 0, 0, 0);
+        p = (Unk80026334 *)Ent_GetProperty(g_CameraPath[0], 0x1A8, 0, 0, 0, 1, 0, 0, 0);
         if (p != 0 && p->size != 0) {
             do {
                 if (p->key == key) {

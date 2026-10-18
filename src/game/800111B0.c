@@ -315,7 +315,7 @@ extern s32 g_Player;
 extern s32 D_8005F390;
 extern s32 g_EntityQueueCount;
 extern s32 D_8005F3F0;
-extern char D_80060774[];
+extern char g_ViewMatrix[];
 extern NsfEntry *g_CurrentZone;
 extern s32 D_80060944;
 extern char D_80060958[];
@@ -432,13 +432,13 @@ void Sys_MainLoop(s32 arg0) {
         }
         func_80012BC4(-1);
         if (D_8005F180 == 0) {
-            func_80026CA0();
+            Zone_UpdateCamera();
         } else {
             /* paused */
         }
-        func_80017BC4();
+        Gfx_UpdateView();
         if ((D_8006CB94 & 1) && (*(s32 *)g_CurrentZone->items[0] != 0)) {
-            SetRotMatrix(D_80060774);
+            SetRotMatrix(g_ViewMatrix);
             list = (s32 *)g_CurrentZone->items[0];
             count = *list;
             out = (s32 *)SCRATCH_ENTRY_BASE;

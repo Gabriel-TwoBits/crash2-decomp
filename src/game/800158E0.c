@@ -596,13 +596,13 @@ typedef struct {
 #define FRAME_TIME_DEFAULT 0x11
 #define FRAME_TIME_PENALTY 0x22
 
-extern s32 D_80060800;
+extern s32 g_CameraAngleX;
 extern Unk80060884 D_80060884;
 extern s32 D_8005F180;
 extern s32 *D_8005F374;
 extern s32 *g_CurrentZone;
 extern s32 D_800608D8;
-extern s32 D_800608E0;
+extern s32 g_CameraProgress;
 extern u8 *g_DisplayBuffer;
 extern s32 D_800675AC;
 extern s32 D_8006CB80;
@@ -660,13 +660,13 @@ int Gfx_EndFrame(void) {
         color2 = 0;
         res = 0;
         if (g_CurrentZone != 0) {
-            res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_A, D_800608E0, 0, 0, 0, 0, 0, 0);
+            res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_A, g_CameraProgress, 0, 0, 0, 0, 0, 0);
             if (res != 0) {
                 mode = res[0];
                 color = res[1];
                 if (mode == BAND_MODE_SPLIT) {
                     color2 = res[2];
-                    res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_B, D_800608E0, 0, 0, ARG_SLOT_SHORT, &sp28, 0, 0);
+                    res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_B, g_CameraProgress, 0, 0, ARG_SLOT_SHORT, &sp28, 0, 0);
                     y = 0;
                     if (res != 0) {
                         y = *(s16 *)res;
@@ -675,7 +675,7 @@ int Gfx_EndFrame(void) {
             }
         }
         if (mode == BAND_MODE_SPLIT) {
-            y = ((D_80060884.a * (Math_Sin(D_80060800) * BAND_SCALE)) >> BAND_SHIFT) - (y - BAND_CENTER_OFFSET);
+            y = ((D_80060884.a * (Math_Sin(g_CameraAngleX) * BAND_SCALE)) >> BAND_SHIFT) - (y - BAND_CENTER_OFFSET);
             if (D_8006CC94 != 0) {
                 y -= (D_8006CC94 * PAN_SCALE) >> PAN_SHIFT;
             }
@@ -1300,7 +1300,7 @@ void SetColorMatrix(void *);
 void SetFarColor(s32, s32, s32);
 void SetGeomOffset(s32, s32);
 void SetGeomScreen(s32);
-extern s32 D_80060144, D_80060148, D_8006014C, D_800607F8, D_800607FC, D_80060800, D_80060804, D_80060808, D_8006083C, D_80060840, D_80060844, D_80060860;
+extern s32 D_80060144, D_80060148, D_8006014C, g_CameraY, g_CameraZ, g_CameraAngleX, g_CameraAngleY, g_CameraAngleZ, D_8006083C, D_80060840, D_80060844, D_80060860;
 extern s16 D_80060864, D_80060866, D_80060868;
 extern s32 D_80060878, D_8006087C, D_80060880;
 extern Unk80060884 D_80060884;
@@ -1333,11 +1333,11 @@ void func_8001798C(void) {
     SetColorMatrix(&D_80060884.b);
     func_80018168((s32 *)((char *)&D_80060884 - 0x90));
     *(s32 *)((char *)&D_80060884 - 0x90) = 0;
-    D_800607F8 = 0;
-    D_800607FC = 0x1F400;
-    D_80060800 = 0;
-    D_80060804 = 0;
-    D_80060808 = 0;
+    g_CameraY = 0;
+    g_CameraZ = 0x1F400;
+    g_CameraAngleX = 0;
+    g_CameraAngleY = 0;
+    g_CameraAngleZ = 0;
     D_8006083C = 0;
     D_80060840 = 0xE1000;
     D_80060844 = 0x5DC000;
@@ -1401,10 +1401,10 @@ extern void TransMatrix(Unk80017AF8 *, s32 *);
 extern s32 D_8005F180;
 extern s32 D_80060794;
 extern Unk80017AF8 D_800607B4;
-extern s32 D_800607F4;
+extern s32 g_CameraX;
 extern s32 D_80060828;
 extern s32 *g_CurrentZone;
-extern s32 D_800608D4;
+extern s32 g_CameraPath;
 extern s32 D_80060914;
 extern s32 D_80060930;
 extern s32 D_80060934;
@@ -1419,10 +1419,10 @@ extern s32 D_8006CC10;
 extern s32 D_8006CC14;
 extern s32 D_8006CC18;
 
-void func_80017BC4(void) {
+void Gfx_UpdateView(void) {
     s16 rot[9];
     s32 trans[3];
-    char *base = (char *)&D_800607F4;
+    char *base = (char *)&g_CameraX;
     Unk80017AF8 *view = (Unk80017AF8 *)(base - CAMERA_MATRIX_OFFSET);
     s32 *src;
     s32 *dst;
@@ -1430,8 +1430,8 @@ void func_80017BC4(void) {
     s32 s, c, t, i, a;
 
     func_80020A24();
-    s = Math_Sin(-D_80060808);
-    c = Math_Cos(-D_80060808);
+    s = Math_Sin(-g_CameraAngleZ);
+    c = Math_Cos(-g_CameraAngleZ);
     view->a = c;
     view->b = -s;
     view->c = 0;
@@ -1442,8 +1442,8 @@ void func_80017BC4(void) {
     view->h = 0;
     view->i = ONE_Q12;
 
-    s = Math_Sin(-D_80060800);
-    c = Math_Cos(-D_80060800);
+    s = Math_Sin(-g_CameraAngleX);
+    c = Math_Cos(-g_CameraAngleX);
     rot[0] = ONE_Q12;
     rot[1] = 0;
     rot[2] = 0;
@@ -1455,8 +1455,8 @@ void func_80017BC4(void) {
     rot[8] = c;
     MulMatrix(view, rot);
 
-    s = Math_Sin(-D_80060804);
-    c = Math_Cos(-D_80060804);
+    s = Math_Sin(-g_CameraAngleY);
+    c = Math_Cos(-g_CameraAngleY);
     rot[0] = c;
     rot[1] = 0;
     rot[2] = s;
@@ -1471,9 +1471,9 @@ void func_80017BC4(void) {
     light = (u8 *)(*(s32 **)((char *)g_CurrentZone + LIGHT_BASE_OFFSET));
     SetFarColor(light[FAR_COLOR_BASE], light[FAR_COLOR_BASE + 1], light[FAR_COLOR_BASE + 2]);
 
-    trans[0] = D_800607F4 >> FIXED_SHIFT;
-    trans[1] = D_800607F8 >> FIXED_SHIFT;
-    trans[2] = D_800607FC >> FIXED_SHIFT;
+    trans[0] = g_CameraX >> FIXED_SHIFT;
+    trans[1] = g_CameraY >> FIXED_SHIFT;
+    trans[2] = g_CameraZ >> FIXED_SHIFT;
     TransMatrix(view, trans);
     func_80017AF8((Unk80017AF8 *)(base - CAMERA_COPY_OFFSET), view);
 
@@ -1527,17 +1527,17 @@ void func_80017BC4(void) {
             D_8006CB78 = a << FIXED_SHIFT;
         }
     }
-    D_8006CC04 = D_800607F4;
-    D_8006CC08 = D_800607F8;
-    D_8006CC0C = D_800607FC;
-    D_8006CC10 = D_80060800;
-    D_8006CC14 = D_80060804;
-    D_8006CC18 = D_80060808;
+    D_8006CC04 = g_CameraX;
+    D_8006CC08 = g_CameraY;
+    D_8006CC0C = g_CameraZ;
+    D_8006CC10 = g_CameraAngleX;
+    D_8006CC14 = g_CameraAngleY;
+    D_8006CC18 = g_CameraAngleZ;
     if (!(*(s32 *)(*(char **)((char *)g_CurrentZone + LIGHT_BASE_OFFSET) + FLAG_OFFSET) & CAM_FLAG_FIXED)) {
-        D_8006083C = D_800607F4;
-        D_80060840 = D_800607F8;
-        *(s32 *)((char *)&D_8006083C + 8) = D_800607FC;
-        if (Ent_GetPropertyValue(D_800608D4, QUERY_ARG1, 0, 0, 0, QUERY_ARG5, 0) != QUERY_RESULT_DONE) {
+        D_8006083C = g_CameraX;
+        D_80060840 = g_CameraY;
+        *(s32 *)((char *)&D_8006083C + 8) = g_CameraZ;
+        if (Ent_GetPropertyValue(g_CameraPath, QUERY_ARG1, 0, 0, 0, QUERY_ARG5, 0) != QUERY_RESULT_DONE) {
             D_80060914 = D_80060828 & ANGLE_MASK;
         } else {
             /* result 4: angle kept */
@@ -1557,7 +1557,7 @@ void func_80017BC4(void) {
     func_80018294(*(s32 **)((char *)g_CurrentZone + LIGHT_BASE_OFFSET));
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80017BC4);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_UpdateView);
 #endif
 
 void func_80018168(s32 *p) {
@@ -1591,9 +1591,9 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018194);
 #define MASK_QUERY_MODE 2
 #define SHAPE_FLAG_ZERO_OFFSET 1
 
-extern s32 D_800607F4;
-extern s32 D_800608D4;
-extern s32 D_800608E8;
+extern s32 g_CameraX;
+extern s32 g_CameraPath;
+extern s32 g_CameraNode;
 
 void func_80018294(s32 *arg0) {
     s32 mask;
@@ -1606,7 +1606,7 @@ void func_80018294(s32 *arg0) {
     s32 dy;
     s32 dz;
 
-    mask = Ent_GetPropertyValue(D_800608D4, MASK_QUERY_ID, -1, D_800608E8, 0, MASK_QUERY_MODE, 0);
+    mask = Ent_GetPropertyValue(g_CameraPath, MASK_QUERY_ID, -1, g_CameraNode, 0, MASK_QUERY_MODE, 0);
     entry = arg0;
     off = FIRST_ENTRY_OFFSET;
     for (i = 0; i < *arg0; i++) {
@@ -1618,9 +1618,9 @@ void func_80018294(s32 *arg0) {
                 entry[3] = 0;
                 entry[4] = 0;
             } else {
-                dx = shape[0] - (D_800607F4 >> POS_SHIFT);
-                dy = shape[1] - ((u32)D_800607F8 >> POS_SHIFT);
-                dz = shape[2] - (D_800607FC >> POS_SHIFT);
+                dx = shape[0] - (g_CameraX >> POS_SHIFT);
+                dy = shape[1] - ((u32)g_CameraY >> POS_SHIFT);
+                dz = shape[2] - (g_CameraZ >> POS_SHIFT);
                 entry[2] = dx;
                 entry[3] = dy;
                 entry[4] = dz;

@@ -2,7 +2,7 @@
 #include "sdk.h"
 #include "game.h"
 
-extern void func_800200A8(s32, s32, s32, s32);
+extern void Zone_MoveCamera(s32, s32, s32, s32);
 extern void func_80021A08(s32 *, s32);
 extern void func_80021F4C(s32 *, s32);
 extern void func_80022314(s32 *, s32);
@@ -14,19 +14,19 @@ extern void func_80022E74(s32 *);
 extern void func_80022F58(s32 *);
 extern void func_800237F8(void);
 extern void func_80025D18(s32 *, s32 *);
-extern s8 D_8005B994;
+extern s8 g_CameraMode;
 extern s8 D_8005B99B;
 extern s32 g_Player;
 extern char *g_CurrentZone;
-extern s32 D_800608D4;
-extern s32 D_800608E0;
-extern u32 D_800608F0;
+extern s32 g_CameraPath;
+extern s32 g_CameraProgress;
+extern u32 g_CameraPathKind;
 extern s32 D_80062AD8;
 extern s32 D_80069948;
 extern s32 D_8006CB94[];
 extern s32 D_8006CBB4;
 
-s32 func_80026CA0(void) {
+s32 Zone_UpdateCamera(void) {
     s32 sp18;
     s32 s1;
     s32 *s0;
@@ -55,8 +55,8 @@ s32 func_80026CA0(void) {
     func_800237F8();
     func_8002609C();
     D_8006CBB4 = ((D_80062AD8 & 0x400) == 0) << 8;
-    if (D_8005B994 != 5) {
-        switch (D_8005B994) {
+    if (g_CameraMode != 5) {
+        switch (g_CameraMode) {
         case 6:
             func_80022A5C(s0);
             break;
@@ -71,18 +71,18 @@ s32 func_80026CA0(void) {
         default:
             break;
         }
-        if (D_8005B994 != 5) {
+        if (g_CameraMode != 5) {
             return 1;
         }
     }
-    switch (D_800608F0) {
+    switch (g_CameraPathKind) {
     case 0: func_8002271C(s0, s1); break;
     case 2: func_80022878(s0); break;
     case 4: func_80021A08(s0, s1); break;
     case 10: func_80021F4C(s0, s1); break;
     case 3: func_80022314(s0, s1); break;
     case 8: func_800225C0(s0, s1); break;
-    default: func_800200A8((s32)g_CurrentZone, D_800608D4, D_800608E0, 0); break;
+    default: Zone_MoveCamera((s32)g_CurrentZone, g_CameraPath, g_CameraProgress, 0); break;
     }
     return 1;
 }

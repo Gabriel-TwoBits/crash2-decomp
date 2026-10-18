@@ -531,8 +531,8 @@ void func_8002F228(s32 arg0) {
 
 extern u8 *g_Player;
 extern NsfEntry *g_CurrentZone;
-extern s32 D_800608D4;
-extern s32 D_800608E0;
+extern s32 g_CameraPath;
+extern s32 g_CameraProgress;
 extern u8 D_800619B8[];
 extern s32 g_EntityFlags[];
 extern s32 D_8006CD08[];
@@ -586,9 +586,9 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         blk[4] = 0;
         blk[5] = 0;
         *(s32 *)(arg1 + 0x24) = g_CurrentZone->eid;
-        *(s32 *)(arg1 + 0x2C) = D_800608E0;
+        *(s32 *)(arg1 + 0x2C) = g_CameraProgress;
         *(s32 *)(arg1 + 0x30) = *(s32 *)(D_8006759C[0] + 8);
-        *(s32 *)(arg1 + 0x28) = Ent_GetPropertyValue(D_800608D4, ID_28, 0, 0, 0, CALL_FLAGS, 0);
+        *(s32 *)(arg1 + 0x28) = Ent_GetPropertyValue(g_CameraPath, ID_28, 0, 0, 0, CALL_FLAGS, 0);
         if (D_8006CC84 < -1) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
         } else if (arg0->entity == 0) {
@@ -702,7 +702,7 @@ void func_8002F6C8(u8 *arg0) {
         func_800163B4(g_BuildBuffer);
     }
     g_CurrentZone = 0;
-    D_800608D4 = 0;
+    g_CameraPath = 0;
     SetGeomScreen(D_80060884);
     func_800241A8();
     for (i = 0; i < FLAG_TABLE_WORDS; i++) {
@@ -726,7 +726,7 @@ void func_8002F6C8(u8 *arg0) {
         } else {
             kind = SCREEN_CALL_KIND_NORMAL;
         }
-        func_800200A8((s32)t0, a1, *(s32 *)(arg0 + 0x2C), kind);
+        Zone_MoveCamera((s32)t0, a1, *(s32 *)(arg0 + 0x2C), kind);
     }
     Nsf_CloseEntry(&sp18, 1);
     if (g_Player == 0) {

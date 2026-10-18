@@ -48,7 +48,7 @@ static inline s32 *dest_slot(s32 obj, u32 op) {
     }
 }
 
-void func_80038700(s32 arg0, u32 arg1) {
+void Gool_OpCollide(s32 arg0, u32 arg1) {
     s32 a[8];
     s32 b[8];
     s32 c[16];
@@ -131,7 +131,7 @@ void func_80038700(s32 arg0, u32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038700);
+INCLUDE_ASM("asm/nonmatchings/game/80038700", Gool_OpCollide);
 #endif
 
 #ifdef NON_MATCHING
