@@ -433,8 +433,10 @@ the executable outgrows the retail file, with 1,392 bytes of room left now (the 
 healthy over the 8,000 frames and displays what the same C at the retail layout does on all of them, and what retail
 does up to frame 4,035, as before.
 
-Two retail runs no longer agree on every frame: `run_game.py --against retail` differed from frame 7,233 (730 of the
-8,000 frames), and two runs one after the other from frame 4,121.
+Two retail runs stopped agreeing on every frame: the emulated pads read the host's gamepads, a press the host reported
+reaching the game's pad buffer at a different frame each run. With the pads set to the keyboard (`tools/run_game.lua`),
+retail agrees with itself on all 8,000 frames again, and the equivalent build, run twice, gives the same trace both
+times (docs/WORKFLOW.md, "Running the game").
 
 Next: each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that
 tolerates timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).

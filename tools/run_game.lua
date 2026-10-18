@@ -17,6 +17,10 @@ local CAUSE_CODE_SHIFT = 2
 local CAUSE_CODE_MASK = 0x1f
 -- The SPU's Speed setting: 1 is real time, 0 or less unbounded
 local UNBOUNDED_SPEED = 0
+-- The emulated pads' input source: on Auto they read the host's gamepads, whose state reaches the game at moments that
+-- vary from run to run; a headless emulator gets no keyboard events, so only the schedule's overrides press anything
+local HOST_INPUT_NONE = 'Keyboard'
+local PAD_PORTS = 2
 
 local schedulePath = os.getenv('RUN_GAME_SCHEDULE')
 local outDir = os.getenv('RUN_GAME_OUT')
@@ -48,6 +52,9 @@ if lastFrame == nil then error('the schedule has no end') end
 
 -- The audio sink is the emulator's clock; unbounded, it lets the emulation run as fast as the host can
 PCSX.settings.spu.Speed = UNBOUNDED_SPEED
+for port = 1, PAD_PORTS do
+    PCSX.settings.pads[port].PadType = HOST_INPUT_NONE
+end
 
 local trace = io.open(outDir .. '/trace.txt', 'w')
 local pad = PCSX.SIO0.slots[1].pads[1]

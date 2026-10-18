@@ -233,11 +233,13 @@ and writes into `build/` only:
    its display isn't frozen over its last 300 frames. The two runs agree when every frame's image is the same; the
    checkpoints go side by side to `build/run_game/<checkpoint>.png`. Exit status 0 only when both hold.
 
-The emulator was deterministic: two retail runs (`--against retail`) agreed on all 8,000 frames, throttled or not (only
-the program counter sampled at each vsync moved by a few cycles), so a difference came from the executable. On
-2026-10-18 they no longer did (from frame 7,233; two runs one after the other from frame 4,121, and once the retail
-code with the equivalent build's `lui`/`addiu` pairs from frame 1,620): a difference may be the emulator's, and is
-confirmed by running both again. One from the executable doesn't necessarily come from its C, though: the game is
+The emulator is deterministic: two retail runs (`--against retail`) agree on all 8,000 frames, throttled or not (only
+the program counter sampled at each vsync moves by a few cycles), so a difference comes from the executable. That holds
+only with the emulated pads cut off from the host: on their default, Auto, they read the host's gamepads (a wireless
+receiver, a virtual HID device), and a button the host reports lands in the pad buffer (`D_80069920`) at a moment that
+varies from run to run; three pairs of retail runs then differed from frames 1,496 to 2,245. `tools/run_game.lua` sets
+both pads to the keyboard, which a headless emulator gets no events from. One from the executable doesn't necessarily
+come from its C, though: the game is
 sensitive to timing (the retail executable under PCSX-Redux's interpreter instead of its recompiler displays otherwise
 from frame 2,004) and to where its data sits (docs/ROADMAP.md, section 4).
 
