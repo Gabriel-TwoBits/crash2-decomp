@@ -3,12 +3,14 @@
 equivalent track's, the same pad presses at the same frames for both, and compares what each displays frame by frame.
 
     python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
+                             [--baseline EXE]
 
 The schedule boots the disc, opens the title's menu, starts a new game, skips the intro, waits out Cortex's speech in
 the first warp room, walks into Turtle Woods and runs, jumps and spins there: 8,000 frames (2 minutes 13 of the game),
 about 15 seconds to run, both runs at once and the emulator unthrottled. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a
 copy of the image first (tools/patch_disc.py). `--against retail` runs the retail image twice instead: the emulator is
-deterministic when both runs agree on every frame.
+deterministic when both runs agree on every frame. `--baseline EXE` runs that executable in place of retail: the same
+equivalent build with and without a change, when the change can't be tested alone (docs/WORKFLOW.md).
 
 Each run is checked for health: it reaches the last frame (a run without a new frame for 20 seconds is stopped: the game
 crashed or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls,
@@ -33,6 +35,8 @@ HERE = Path(__file__).resolve().parents[1]
 EMULATOR = HERE / "tools" / "toolchain" / "pcsx-redux" / "usr" / "bin" / "pcsx-redux"
 SCRIPT = HERE / "tools" / "run_game.lua"
 OUT = HERE / "build" / "run_game"
+# The image --baseline patches its executable into, beside the equivalent build's
+BASELINE_OUT = DEFAULT_OUT.with_name("baseline.cue")
 # Headless (no window, logs on stdout), safe mode (no settings file read), emulation started at once, OpenBIOS
 EMULATOR_FLAGS = ["-cli", "-testmode", "-run"]
 DISPLAY_VARIABLES = ("DISPLAY", "WAYLAND_DISPLAY")
@@ -253,9 +257,13 @@ def main():
     parser.add_argument("image", type=Path, help="the disc image's .cue (a MODE2/2352 dump)")
     parser.add_argument("--against", choices=("nonmatching", "retail"), default="nonmatching",
                         help="what the retail run is compared with (default: %(default)s)")
+    parser.add_argument("--baseline", type=Path,
+                        help="an executable run in place of retail (another build of the equivalent track)")
     args = parser.parse_args()
     if not args.image.exists():
         sys.exit(f"{args.image} doesn't exist")
+    if args.baseline is not None and not args.baseline.exists():
+        sys.exit(f"{args.baseline} doesn't exist")
     if not EMULATOR.exists():
         sys.exit(f"{EMULATOR} is missing: tools/setup_toolchain.py fetches it")
     if args.against == "nonmatching":
@@ -268,9 +276,14 @@ def main():
     else:
         sys.exit(f"unknown --against {args.against}")
 
-    print(f"running retail and {other[0]} to frame {LAST_FRAME}", flush=True)
-    runs = [start("retail", args.image), start(*other)]
-    names = ["retail", other[0]]
+    if args.baseline is None:
+        first = ("retail", args.image)
+    else:
+        first = ("baseline", BASELINE_OUT)
+        patch(args.image, args.baseline.read_bytes(), BASELINE_OUT)
+    print(f"running {first[0]} and {other[0]} to frame {LAST_FRAME}", flush=True)
+    runs = [start(*first), start(*other)]
+    names = [first[0], other[0]]
     statuses = [wait(*run) for run in runs]
     traces = [read_trace(folder) for _, folder in runs]
 

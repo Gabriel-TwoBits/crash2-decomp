@@ -142,7 +142,24 @@ Its limits, which a passing run doesn't lift:
 - The limit counts instructions, which differ between the two sides: a loop of about 500,000 retail instructions may
   return in the candidate (`func_80015344`, seed 2, trial 1,553: a 27,000-row loop; at 5,000,000 both return and
   agree), so a retail run past the limit isn't judged, and the candidate's work there isn't checked.
-- GTE instructions (coprocessor 2) aren't emulated: such a function stops with `unsupported: ...` and exit status 2.
+- The GTE (coprocessor 2) runs on a model of it, `tools/gte.py`: its moves (`mfc2`, `cfc2`, `mtc2`, `ctc2`, `lwc2`,
+  `swc2`) and the commands the C models, RTPS and RTPT; another command stops the run with `unsupported: ...` and exit
+  status 2, as a GTE instruction in a delay slot does. Its 64 registers start random, in half the trials with a
+  rotation, translation and projection the game would use (otherwise RTPS nearly always flags an error), and are compared
+  after both runs. `mfc2`'s and `cfc2`'s load delay isn't modelled. The model is psx-spx's account of the GTE, not the
+  hardware's: C and retail agreeing on it means they agree with each other on what psx-spx describes.
+
+### The GTE in C
+
+The game's routines written with GTE instructions get equivalent C through `include/gte.h`, a model of the GTE in C
+included under `NON_MATCHING` only (its functions are `static`, which equiv.py runs as the candidate's own code, and GCC
+2.7.2 emits them used or not). The C moves a register as the retail code does (`GTE_WRITE_DATA(GTE_VXY0, v)`,
+`GTE_READ_CONTROL(GTE_FLAG, flag)`, `GTE_STORE_DATA(GTE_SXY2, quad->xy2)`: one instruction each, the register's number
+part of it) and runs a command as a call (`Gte_Rtpt()`), which reads what the command needs into a `GteRegs`, computes it
+in C, and writes back what it changed. On the PlayStation the registers stay in the GTE, so the C runs among code that
+uses the real one; a native port keeps the commands' C and replaces the moves. It agrees with `tools/gte.py` on 6,000
+random register files and commands (checked while writing it); a command it lacks is added to both, from psx-spx. Its
+cost is code room: about 1,800 bytes of the equivalent build's, which has 208 left.
 
 ### Landing an equivalent function
 
@@ -191,6 +208,7 @@ notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside t
 ### Running the game
 
     .venv/bin/python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
+                                       [--baseline EXE]
 
 equiv.py judges one function at a time; this plays the equivalent executable as a whole, in the game. It needs the
 `ninja nonmatching` build and the player's disc image (a MODE2/2352 `.cue` and `.bin`, never copied into the repository),
@@ -219,6 +237,12 @@ Slower or faster functions add up: with enough equivalents in, a load ends a fra
 another state of the game. Such a difference is told from a wrong function by splitting the equivalents (by source
 file, a block's declarations being shared with its neighbours: `#ifdef NON_MATCHING` turned to `#if 0` for the others):
 when each group alone agrees on every frame, every function ran right and only their sum's timing differs.
+
+A group must fit in the retail code's room, and functions that grow (the GTE's routines, by the model) only fit beside
+others that shrink, which may themselves diverge in combination. Then the group is compared with itself without the
+new functions: `--baseline` runs that build in place of retail, and agreeing on every frame means the new functions
+display as the retail code did wherever the game reaches them. Whether it reaches them at all shows by sabotage: the
+same build with them drawing nothing differs (`func_8001856C` and `func_800186D8`, the title's menu: 41 frames).
 
 ## Matching C and this project's style
 

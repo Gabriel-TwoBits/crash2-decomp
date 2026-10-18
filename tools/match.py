@@ -232,7 +232,8 @@ def equivalents():
 
 
 def uses_gte(name):
-    """Whether the function's code has a GTE instruction, which tools/equiv.py can't run"""
+    """Whether the function's code has a GTE instruction: C for it goes through include/gte.h, whose commands tools/gte.py
+    models only as far as the game's routines needed, so the loop leaves it out"""
     return any(word >> OPCODE_SHIFT in GTE_OPCODES for word in retail_words(name))
 
 
