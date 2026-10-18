@@ -13881,5 +13881,10 @@
         "minutes": 4.8
       }
     ]
+  },
+  "func_8001856C": {
+    "outcome": "equivalent",
+    "time": "2026-10-18 14:45",
+    "summary": "2000 of 2000 trials agree, 1996 compared"
   }
 }
