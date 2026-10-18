@@ -212,7 +212,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **The last 4 functions** as equivalent C (section 4, "Next"): two need a decision on how C states the GTE.
-2. **Readable C, R3**: the NSF types (section 5).
+2. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
 
 ## 4. The engine in C
 
@@ -438,8 +438,15 @@ Steps, in order:
   and objects, and about 800 accesses through equivalent C's offset macros (`FIELD`, `AT`, ...), part of rewriting
   equivalent C for readability. `tools/progress.py`: 155 structures in `src/game/`, 1 in `include/game/`, 155 fields
   read at a raw offset (172 and 240 before).
-- **R3**: the NSF types.
-- **R4**: `loop --equivalent` on the functions left as assembly, the shared types in its briefs.
+- **R3, the NSF types (done).** `include/game/nsf.h`: the page (`NsfPage`, the magic 0x1234 the relocation checks, the
+  texture pages `LoadImage` takes whole), the entry (`NsfEntry`: its EID, the type `Nsf_EntryType` reads, its items),
+  the NSD (`Nsd`, `NsdRecord`: 256 buckets by `(EID >> 15) & 0xFF`, the records from 0x520), the paging slots and the
+  level state at 0x80067588 (`NsfPageSlot`, `NsfLevel`), and the layout's constants; `GoolObject`'s 0x0C and 0x18 are
+  entries. 28 local structures fewer, used by matched and equivalent functions of 14 files, the SHA-1 and the equivalent
+  executable as before; raw where the spelling moves code (docs/COMPILER.md, "Address arithmetic"). Left: the level
+  header at `NsfLevel.unk_14`, `g_LevelFiles`' bitfields, globals that are views of one structure (joining them changes
+  code). `tools/progress.py`: 127 structures in `src/game/`, 7 in `include/game/`, 114 fields read at a raw offset.
+- **R4 (done before R1 to R3)**: the equivalent passes on the functions left as assembly (section 4); 4 are left.
 - **R5**: the other subsystems. **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC

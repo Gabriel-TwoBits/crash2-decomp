@@ -100,3 +100,15 @@ memory in a structure from memory that isn't (`MEM_IN_STRUCT_P`) when it decides
 `func_8002BF58`: its store to the game object's 0x114 written as `*(s32 *)((s8 *)arg0 + 0x114)` matches, the same store
 written as `arg0->unk_114` fails the build's SHA-1. Matched and equivalent C keeps such accesses at their raw offsets,
 with a comment, where the member would move code (`func_80029884`'s reads of 0x60 to 0x68 move a store after them).
+
+## Address arithmetic
+
+How C spells an address moves GCC 2.7.2's code even where the value is the same:
+
+- **A sum as integers or as a pointer**: `func_80021900` adds a bucket's byte offset to `D_80067590` as integers
+  (`((v >> 13) & 0x3FC) + (s32)D_80067590`) and matches; the same sum on a `u8 *` swaps `addu`'s operands and fails
+  the build's SHA-1.
+- **A member's address**: `&nsd->records[n]` adds the member's offset first, `(u8 *)nsd + n * 8 + 0x520` last; only the
+  second leaves the equivalent executable as it was (`Nsf_OpenLevel`, `func_800170B4`). A member read straight from an
+  array element (`arg0->page_slots[i].unk_4`) folds both offsets into the load's, as the raw offset does; through a
+  temporary pointer to the element it costs an `addiu` (`func_800155E0`).
