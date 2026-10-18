@@ -2,15 +2,13 @@
 #define GAME_H
 
 #include "common.h"
+#include "game/object.h"
 
 /* What the game's functions return when they succeed; their errors are other negative values (-0x12, -0x10) */
 #define SUCCESS -0xFF
 
 /* The game's functions that C calls, declared once so every file calls them alike. A parameter whose structure is known
    only in one file is a void pointer here until the structure is shared */
-
-/* A structure func_80032F18 reads (0x100) and func_80038D08 decodes operands into */
-struct Obj;
 
 s32 func_800111B0(u32);
 s32 func_800112A4(s32, s32);
@@ -91,28 +89,28 @@ s32 func_80019098(void *, u8);
 s32 func_80019800(void *, s32, s32, s32, s32, s32);
 s32 func_80019988(s32 *, s32, s32, s32, s32);
 s32 func_80019BBC(s32 *, s32);
-s32 func_80019D30(s32 *, s32);
+s32 func_80019D30(GoolObject *, s32);
 void func_80019E28(void *);
 void func_80019F08(void);
 void func_8001A014(void);
 void func_8001A054(s32, s32, s32);
 void func_8001A13C(s32, s32, s32);
 void func_8001A23C(void *, s32);
-u32 func_8001A90C(void *, s32 *, s32 *);
-void func_8001AA80(u8 *, s32 *);
+u32 func_8001A90C(GoolObject *, s32 *, s32 *);
+void func_8001AA80(GoolObject *, s32 *);
 void func_8001ABF8(u8 *, void *);
 s32 func_8001B83C(void *, char *, s32, s32, void *, s32, s32);
-void func_8001BD84(u8 *, char *, s32, s32, s32);
+void func_8001BD84(GoolObject *, char *, s32, s32, s32);
 void func_8001BFD4(void *, s32);
 s32 func_8001BFDC(void *);
 s32 func_8001C340(void *, s32, s32, s32 *);
-s32 func_8001C620(u8 *, s32, s32);
-s32 func_8001C688(u8 *, u32 *);
+s32 func_8001C620(GoolObject *, s32, s32);
+s32 func_8001C688(GoolObject *, u32 *);
 s32 func_8001C718(u8 *, s32);
 s32 func_8001CC10(s32, s32, s32, s32, void *);
 s32 func_8001D194(s32, s32, s32, s32, s32);
 s32 func_8001D22C(void *, u16, s32, s32 *);
-void func_8001D2C4(s32 *, s32 *, s32 *);
+void func_8001D2C4(GoolObject *, s32 *, s32 *);
 void func_8001D63C(void *, s32 *, s32 *);
 s32 func_8001E3DC(s32, s32, s32, s32 *);
 s32 func_8001E544(s32, s32, s32, void *);
@@ -181,21 +179,21 @@ void *func_80028A28(void *, s32 *);
 void func_80028C48(s32, s32 *, s32);
 void func_80028FE0(s32, s32 *, s32, s32);
 void func_80029538(s32, s32, s32);
-void func_80029884(void *, s32, s32);
-void func_80029D0C(void *, s32, s32 *, s32 *);
+void func_80029884(GoolObject *, s32, s32);
+void func_80029D0C(GoolObject *, s32, s32 *, s32 *);
 void func_8002A3B0(void *, void *, void *, void *, s32, s32);
 s32 func_8002A8D0(void *, s32 *, s32, s32, s32, s32, s32);
 void func_8002B164(void *, s32 *, s32 *, void *, s32 *);
 s32 func_8002B57C(void *, s32 *, void *, s32);
 void func_8002BC38(void *, s32 *, s32 *, void *);
-s32 func_8002BF58(void *, void *);
-void func_8002C0F0(void *, void *, s32 *, s32 *, s32 *);
+s32 func_8002BF58(GoolObject *, void *);
+void func_8002C0F0(GoolObject *, void *, s32 *, s32 *, s32 *);
 s32 *func_8002C324(void *, s32, s32);
 s32 func_8002CAB8(void);
 s32 func_8002CB14(void);
 s32 func_8002CC50(void *, s32 *, s32 *, s32);
 void func_8002D6E4(s32 *, s32 *, void *, void *, s32);
-void func_8002DE08(s32 *, s32 *, void *, void *);
+void func_8002DE08(s32 *, s32 *, GoolObject *, void *);
 s32 func_8002DF68(u32, u32);
 s32 func_8002DFA8(s32, s32, s32 *, void *);
 s32 func_8002E280(s32 *, s32, s32, s32 *, s32 *, void *, s32);
@@ -204,7 +202,7 @@ void func_8002E884(s32 *, s32 *, s32, s32);
 void func_8002EFE4(void);
 void func_8002F0DC(s32);
 void func_8002F228(s32);
-void func_8002F34C(u8 *, u8 *, s32, s32);
+void func_8002F34C(GoolObject *, u8 *, s32, s32);
 void func_8002F6C8(u8 *);
 void func_8002FB84(s32);
 s32 func_8002FC78(void *, s32, s32);
@@ -258,7 +256,7 @@ void func_80032588(void);
 void func_800325D0(s32);
 s16 *func_8003264C(s32 *, s32);
 s32 func_800328D4(void);
-s32 func_80032F18(s32, s32, s32 *, struct Obj *);
+s32 func_80032F18(s32, s32, s32 *, GoolObject *);
 void func_800334A0(void);
 void func_80033C84(s32);
 void Snd_InitSequencer(void);
@@ -309,16 +307,16 @@ s32 func_80036B68(s32);
 s32 func_80036BD8(s32);
 s32 func_80036C40(s32);
 s32 func_80036CF8(s32, s32);
-s32 *func_80036D0C(struct Obj *, s32);
+s32 *func_80036D0C(GoolObject *, s32);
 s32 *func_80036E30(s32, s32, s32);
 s32 func_80036FAC(u32, s32);
-void func_8003756C(u8 *, u32);
+void func_8003756C(GoolObject *, u32);
 void func_80037698(u8 *, u32);
 void func_80038700(s32, u32);
-void func_80038F00(s32, u32);
-s32 func_8003900C(char *, u32, s32);
-s32 func_80039310(u8 *, u32, s32);
-s32 func_8003981C(u8 *, u32, s32, s32 *);
+void func_80038F00(GoolObject *, u32);
+s32 func_8003900C(GoolObject *, u32, s32);
+s32 func_80039310(GoolObject *, u32, s32);
+s32 func_8003981C(GoolObject *, u32, s32, s32 *);
 s32 func_8003A014(void *, s32, s32);
 void func_8003AE54(void *, s32, u16 *);
 void func_8003B24C(void *, s32, u16 *);

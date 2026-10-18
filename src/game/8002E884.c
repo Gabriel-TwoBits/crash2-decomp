@@ -511,7 +511,6 @@ void func_8002F228(s32 arg0) {
 #define SRC_COPY_OFFSET 0x60
 #define SRC_COPY_END_OFFSET 0x80
 #define COPY_STEP_BYTES 0x10
-#define KIND_OFFSET 0x120
 #define KIND_FIRST 6
 #define KIND_COUNT 2
 #define CC00_STEP 0x100
@@ -538,7 +537,7 @@ extern u8 D_800619B8[];
 extern s32 D_8006B1C4[];
 extern s32 D_8006CD08[];
 
-void func_8002F34C(u8 *arg0, u8 *arg1, s32 arg2, s32 arg3) {
+void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
     s32 *src;
     s32 *dst;
     s32 *end;
@@ -573,10 +572,10 @@ void func_8002F34C(u8 *arg0, u8 *arg1, s32 arg2, s32 arg3) {
             dst = (s32 *)((u8 *)dst + COPY_STEP_BYTES);
         } while (src != end);
         dst[0] = src[0];
-        if ((u32)(arg0[KIND_OFFSET] - KIND_FIRST) >= KIND_COUNT) {
-            blk[0] = *(s32 *)(arg0 + 0x60);
-            blk[1] = *(s32 *)(arg0 + 0x64);
-            blk[2] = *(s32 *)(arg0 + 0x68);
+        if ((u32)(arg0->unk_120 - KIND_FIRST) >= KIND_COUNT) {
+            blk[0] = arg0->unk_60[0];
+            blk[1] = arg0->unk_60[1];
+            blk[2] = arg0->unk_60[2];
         }
         if (D_8006CC84 >= 0 && D_8006CC84 != 0) {
             blk[0] = D_8006CD08[0];
@@ -592,12 +591,12 @@ void func_8002F34C(u8 *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         *(s32 *)(arg1 + 0x28) = func_800321D4(D_800608D4, ID_28, 0, 0, 0, CALL_FLAGS, 0);
         if (D_8006CC84 < -1) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
-        } else if (*(s32 *)(arg0 + 0xF0) == 0) {
+        } else if (arg0->unk_F0 == 0) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
         } else if (isStatic) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
         } else {
-            id = func_800321D4(*(s32 *)(arg0 + 0xF0), ID_38, 0, 0, 0, CALL_FLAGS, 0);
+            id = func_800321D4((s32)arg0->unk_F0, ID_38, 0, 0, 0, CALL_FLAGS, 0);
             *(s32 *)(arg1 + 0x38) = id;
             if (id != 0) {
                 D_8006CDB8 = ((D_80069718[*(s32 *)(arg1 + 0x30) * TABLE_ROW_WORDS + id / NIBBLES_PER_WORD]
@@ -745,21 +744,21 @@ void func_8002F6C8(u8 *arg0) {
     } while (src != arg0 + COPY_WORDS_END);
     *(s32 *)dst = *(s32 *)src;
     {
-        u8 *base = D_8005F38C;
-        s32 v1 = *(s32 *)(base + 0xA8);
-        s32 a0 = *(s32 *)(base + 0x70);
-        u8 *a2 = *(u8 **)(base + 0x58);
-        *(u8 **)(base + 0x18) = D_800608CC;
-        *(s32 *)(base + 0x110) = 0;
-        *(s32 *)(base + 0x84) = 0;
-        *(s32 *)(base + 0x88) = 0;
-        *(s32 *)(base + 0x8C) = 0;
-        *(s32 *)(base + 0x104) = 0;
-        *(s32 *)(base + 0xA8) = v1;
-        *(s32 *)(base + 0x94) = a0;
+        GoolObject *base = (GoolObject *)D_8005F38C;
+        s32 v1 = base->unk_A8;
+        s32 a0 = base->unk_6C[1];
+        GoolObject *a2 = base->unk_40[6];
+        base->unk_18 = D_800608CC;
+        base->unk_110 = 0;
+        base->unk_84[0] = 0;
+        base->unk_84[1] = 0;
+        base->unk_84[2] = 0;
+        base->unk_104 = 0;
+        base->unk_A8 = v1;
+        base->unk_90[1] = a0;
         if (a2 != 0) {
-            *(s32 *)(a2 + 0x58) = 0;
-            *(s32 *)(base + 0x58) = 0;
+            a2->unk_40[6] = 0;
+            base->unk_40[6] = 0;
         }
     }
     D_80060944 = 0;

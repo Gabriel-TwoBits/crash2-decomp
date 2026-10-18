@@ -267,7 +267,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         FIELD(D_8005F38C, s32, 0x68) = FIELD(data, s32, 0x1F0);
         FIELD(D_8005F38C, void *, 0x18) = D_800608CC;
         D_8006CC84 = -1;
-        func_8002F34C((u8 *)D_8005F38C, (u8 *)&D_800608CC + 0x8C, 1, 0);
+        func_8002F34C((GoolObject *)D_8005F38C, (u8 *)&D_800608CC + 0x8C, 1, 0);
     }
 }
 #else

@@ -263,7 +263,7 @@ void func_80037698(u8 *obj, u32 arg1) {
     case 12:
         switch ((arg1 >> ARG_SHIFT) & ARG_MASK) {
         case 0:
-            func_8002F34C(obj, D_80060958 + FIELD(dst, 1, u8) * SPAWN_SIZE, 0, FIELD(dst, 2, u16));
+            func_8002F34C((GoolObject *)obj, D_80060958 + FIELD(dst, 1, u8) * SPAWN_SIZE, 0, FIELD(dst, 2, u16));
             return;
         case 1:
             func_8002F6C8(D_80060958 + ((u32)*dst >> VALUE_SHIFT) * SPAWN_SIZE);
@@ -349,7 +349,7 @@ void func_80037698(u8 *obj, u32 arg1) {
             return;
         case 21:
             func_8001A4A4((void *)obj, (s32 *)(obj + OBJ_VEC));
-            func_8001AA80(obj, sp50);
+            func_8001AA80((GoolObject *)obj, sp50);
             return;
         default:
             return;
@@ -429,12 +429,12 @@ enum {
 
 extern s32 D_80010804[];
 
-s32 func_8001F054(struct Obj *, u32, s32 *);
+s32 func_8001F054(GoolObject *, u32, s32 *);
 
 #define F(o, off, T) (*(T *)((u8 *)(o) + (off)))
 #define REG(o, i) ((s32 *)((u8 *)(o) + (i) * REG_SIZE + REG_FILE_OFFSET))
 
-void func_8003817C(struct Obj *obj, u32 arg1) {
+void func_8003817C(GoolObject *obj, u32 arg1) {
     u8 *o = (u8 *)obj;
     s32 *dst = REG(o, (arg1 >> 12) & 7);
     s32 *src;

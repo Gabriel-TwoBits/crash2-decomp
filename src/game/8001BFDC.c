@@ -300,23 +300,23 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001C340);
 #endif
 
 #ifdef NON_MATCHING
-s32 func_8001C620(u8 *arg0, s32 arg1, s32 arg2) {
+s32 func_8001C620(GoolObject *arg0, s32 arg1, s32 arg2) {
     u8 *cur;
     s32 prev;
     s32 *p;
 
-    cur = *(u8 **)(arg0 + 0xBC);
-    p = *(s32 **)(arg0 + 0xBC);
-    prev = *(s32 *)(arg0 + 0xC4);
-    *(u8 **)(arg0 + 0xC4) = cur;
-    *(s32 **)(arg0 + 0xBC) = p + 1;
+    cur = (u8 *)arg0->unk_BC;
+    p = arg0->unk_BC;
+    prev = (s32)arg0->unk_C4;
+    arg0->unk_C4 = cur;
+    arg0->unk_BC = p + 1;
     *p = arg2;
-    p = *(s32 **)(arg0 + 0xBC);
-    *(s32 **)(arg0 + 0xBC) = p + 1;
-    *p = *(s32 *)(arg0 + 0xC0);
-    p = *(s32 **)(arg0 + 0xBC);
-    *(s32 **)(arg0 + 0xBC) = p + 1;
-    *p = ((cur - arg1 * 4 - 0x40) - arg0) | ((prev - 0x40 - (s32)arg0) << 16);
+    p = arg0->unk_BC;
+    arg0->unk_BC = p + 1;
+    *p = arg0->unk_C0;
+    p = arg0->unk_BC;
+    arg0->unk_BC = p + 1;
+    *p = ((cur - arg1 * 4 - 0x40) - (u8 *)arg0) | ((prev - 0x40 - (s32)arg0) << 16);
     return -0xFF;
 }
 #else
@@ -324,30 +324,30 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001C620);
 #endif
 
 #ifdef NON_MATCHING
-s32 func_8001C688(u8 *arg0, u32 *arg1) {
+s32 func_8001C688(GoolObject *arg0, u32 *arg1) {
     u32 temp_a3;
     u32 temp_t0;
     u32 *v1;
     u32 *v1b;
     u32 w;
 
-    v1 = *(u32 **)(arg0 + 0xC4);
-    *(u32 **)(arg0 + 0xBC) = v1 + 2;
+    v1 = (u32 *)arg0->unk_C4;
+    arg0->unk_BC = (s32 *)(v1 + 2);
     temp_a3 = v1[2];
     temp_t0 = temp_a3 >> 16;
     if (temp_t0 == 0) {
         return -0x19;
     }
-    *(u32 **)(arg0 + 0xBC) = v1 + 1;
-    *(u32 *)(arg0 + 0xC0) = v1[1];
-    v1b = *(u32 * volatile *)(arg0 + 0xBC);
-    *(u32 **)(arg0 + 0xBC) = v1b - 1;
+    arg0->unk_BC = (s32 *)(v1 + 1);
+    arg0->unk_C0 = v1[1];
+    v1b = *(u32 * volatile *)&arg0->unk_BC;
+    arg0->unk_BC = (s32 *)(v1b - 1);
     w = v1b[-1];
     if (arg1 != 0) {
         *arg1 = (*arg1 & 0xFFFF0000) | (w & 0xFFFF);
     }
-    *(u8 **)(arg0 + 0xBC) = &arg0[(temp_a3 & 0xFFFF) + 0x40];
-    *(u8 **)(arg0 + 0xC4) = &arg0[temp_t0 + 0x40];
+    arg0->unk_BC = (s32 *)&((u8 *)arg0)[(temp_a3 & 0xFFFF) + 0x40];
+    arg0->unk_C4 = &((u8 *)arg0)[temp_t0 + 0x40];
     return -0xFF;
 }
 #else
@@ -451,7 +451,7 @@ s32 func_8001C718(u8 *obj, s32 flag) {
                 FIELD(obj, OFF_FLAGS_AC, u32) &= ~AC_BIT_COUNTDOWN;
             } else {
             }
-            func_8001AA80(obj, out);
+            func_8001AA80((GoolObject *)obj, out);
         } else {
             FIELD(obj, OFF_TIME_DC, u32) = D_8006CB64;
             if (FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_COPY_VEC) {
@@ -464,7 +464,7 @@ s32 func_8001C718(u8 *obj, s32 flag) {
             } else {
             }
             if (FIELD(obj, OFF_SEL_C8, s32) != 0) {
-                func_8001C620(obj, 0, ARG_FULL_RANGE);
+                func_8001C620((GoolObject *)obj, 0, ARG_FULL_RANGE);
                 FIELD(obj, OFF_SEL_C0, s32) = FIELD(obj, OFF_SEL_C8, s32);
                 r = func_8003A014(obj, 3, 0);
                 if (r >= RESULT_ERROR_LIMIT) {
@@ -489,7 +489,7 @@ s32 func_8001C718(u8 *obj, s32 flag) {
             FIELD(obj, OFF_FLAGS_A8, u32) &= ~A8_BIT_CLEAR;
         }
     } else {
-        func_8001AA80(obj, out);
+        func_8001AA80((GoolObject *)obj, out);
     }
     if (FIELD(obj, OFF_FIELD_E8, s32) != 0 && FIELD(obj, OFF_BYTE_120, u8) != 1
         && !(FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_SKIP) && (D_8006CB94 & PAD_FIRE)) {
@@ -567,31 +567,12 @@ typedef struct Unk8001CC10Bank {
     s32 *flags;
 } Unk8001CC10Bank;
 
-typedef struct Unk8001CC10Obj {
-    u8 pad0[0xC];
-    Unk8001CC10Bank *bank;
-    u8 pad10[0x4C];
-    s32 p5C;
-    u8 pad60[0x48];
-    s32 fA8;
-    u8 padAC[0x04];
-    s32 fB0;
-    u8 padB4[0x08];
-    s32 *stack;
-    s32 pC0;
-    u8 padC4[0x08];
-    s32 pCC;
-    u8 padD0[0x04];
-    s32 fD4;
-    u8 padD8[0x30];
-    s32 f108;
-    u8 pad10C[0x10];
-    s32 f11C;
-} Unk8001CC10Obj;
+/* What GoolObject.unk_C points to, as this function reads it */
+#define BANK(o) ((Unk8001CC10Bank *)(o)->unk_C)
 
 s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
-#define self ((Unk8001CC10Obj *)arg0)
-#define obj ((Unk8001CC10Obj *)arg1)
+#define self ((GoolObject *)arg0)
+#define obj ((GoolObject *)arg1)
 #define args ((s32 *)arg4)
     s32 out[22];
     s32 r;
@@ -606,14 +587,14 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
     r = RESULT_PENDING;
     if (obj != 0) {
         if (self != 0) {
-            self->fD4 = 1;
+            self->unk_D4 = 1;
         }
-        obj->p5C = (s32)self;
-        if (obj->pCC != 0) {
-            *obj->stack++ = id;
-            *obj->stack++ = (s32)args;
-            func_8001C620((u8 *)obj, PUSH_ARG_COUNT, SCRIPT_ARG_LIMIT);
-            obj->pC0 = obj->pCC;
+        obj->unk_40[7] = self;
+        if (obj->unk_CC != 0) {
+            *obj->unk_BC++ = id;
+            *obj->unk_BC++ = (s32)args;
+            func_8001C620(obj, PUSH_ARG_COUNT, SCRIPT_ARG_LIMIT);
+            obj->unk_C0 = obj->unk_CC;
             r = func_8003A014(obj, 8, (s32)out);
             if (r != RESULT_PENDING) {
                 if (r >= -0xFE) {
@@ -623,61 +604,61 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
                 }
             }
             if (self != 0) {
-                self->fD4 = out[1];
+                self->unk_D4 = out[1];
             }
         }
         if (r >= -0xFE) {
-            if ((id >> 8) < obj->bank->tab->count) {
-                s3 = obj->bank->index[id >> 8];
+            if ((id >> 8) < BANK(obj)->tab->count) {
+                s3 = BANK(obj)->index[id >> 8];
             } else {
                 s3 = SCRIPT_NONE;
             }
             if (self != 0) {
-                self->fD4 = s3 != SCRIPT_NONE;
+                self->unk_D4 = s3 != SCRIPT_NONE;
             }
             if (s3 & SCRIPT_RUNS) {
-                obj->f11C = id;
+                obj->unk_11C = id;
                 i = 0;
                 if (n > 0) {
                     src = args;
                     do {
-                        *obj->stack++ = *src;
+                        *obj->unk_BC++ = *src;
                         i++;
                         src++;
                     } while (i < n);
                 }
-                func_8001C620((u8 *)obj, n, SCRIPT_ARG_LIMIT);
-                obj->pC0 = (s32)(obj->bank->code + (s3 & SCRIPT_INDEX_MASK));
+                func_8001C620(obj, n, SCRIPT_ARG_LIMIT);
+                obj->unk_C0 = (s32)(BANK(obj)->code + (s3 & SCRIPT_INDEX_MASK));
                 return func_8003A014(obj, 3, 0);
             }
         }
         if (s3 == SCRIPT_NONE) {
             return RESULT_NONE;
         }
-        fl = obj->fB0;
+        fl = obj->unk_B0;
         if (id == ID_1800 || id == ID_2600 || id == ID_1900 || id == ID_2500) {
             fl &= ~FLAG_BIT2;
         }
         cur = D_8005F38C;
-        mask = obj->bank->flags[s3 * 4];
+        mask = BANK(obj)->flags[s3 * 4];
         st = fl & mask;
         if ((s32)obj == cur) {
-            if ((u32)(obj->f108 - 3) < 2U || obj->f108 == STATE_FIRST) {
+            if ((u32)(obj->unk_108 - 3) < 2U || obj->unk_108 == STATE_FIRST) {
                 st = fl;
                 st = (st | FLAG_FORCE) & mask;
             }
         }
         if (st == 0) {
-            obj->f11C = id;
+            obj->unk_11C = id;
             if (id == ID_1800 || id == ID_1900) {
-                obj->fA8 |= OBJ_FLAG_A8_SET;
+                obj->unk_A8 |= OBJ_FLAG_A8_SET;
             }
             func_8001C340(obj, s3, n, (s32 *)args);
             return RESULT_NONE;
         }
     }
     if (self != 0) {
-        self->fD4 = 0;
+        self->unk_D4 = 0;
     }
     return RESULT_NONE;
 }

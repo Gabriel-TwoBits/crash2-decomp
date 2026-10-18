@@ -175,7 +175,7 @@ typedef struct {
     s32 a;
     s32 flags;
     s32 pad8;
-    struct Obj *key;
+    GoolObject *key;
     u8 pad10[0xD];
     u8 b;
     u8 pad1E[0x32];
@@ -184,7 +184,7 @@ typedef struct {
 s32 D_8005F304;
 extern Ent D_8005F4EC[];
 
-void func_80032808(struct Obj *arg0) {
+void func_80032808(GoolObject *arg0) {
     s32 sp10;
     s32 i;
     Ent *p;
@@ -357,11 +357,10 @@ extern s32 D_8006CD2C;
 void SpuSetReverbVoice(s32, s32);
 void func_800518B8(s32 *);
 
-#define OBJ_W(o, off) (*(s32 *)((u8 *)(o) + (off)))
 #define ENT_W(e, off) (*(s32 *)((u8 *)(e) + (off)))
 #define ENT_H(e, off) (*(s16 *)((u8 *)(e) + (off)))
 
-s32 func_80032B7C(struct Obj *arg0, s32 arg1, s32 arg2) {
+s32 func_80032B7C(GoolObject *arg0, s32 arg1, s32 arg2) {
     s32 cmd[0x14];
     s32 pos[3];
     Ent *e;
@@ -376,7 +375,7 @@ s32 func_80032B7C(struct Obj *arg0, s32 arg1, s32 arg2) {
     if (D_8006CBF8 == 0) {
         return 0;
     }
-    if (!(D_8006CB94 & CTRL_REQUIRED) && !(OBJ_W(arg0, 0x100) & OBJ_FLAGS_REQUIRED)) {
+    if (!(D_8006CB94 & CTRL_REQUIRED) && !(arg0->unk_100 & OBJ_FLAGS_REQUIRED)) {
         return 0;
     }
     voice = func_800328D4();
@@ -414,10 +413,10 @@ s32 func_80032B7C(struct Obj *arg0, s32 arg1, s32 arg2) {
     }
     e->key = arg0;
     if (arg0 != 0) {
-        ENT_W(e, 0x30) = OBJ_W(arg0, 0x60);
-        ENT_W(e, 0x34) = OBJ_W(arg0, 0x64);
-        ENT_W(e, 0x38) = OBJ_W(arg0, 0x68);
-        func_8001EC2C((s32 *)((u8 *)arg0 + 0x60), pos, 1);
+        ENT_W(e, 0x30) = arg0->unk_60[0];
+        ENT_W(e, 0x34) = arg0->unk_60[1];
+        ENT_W(e, 0x38) = arg0->unk_60[2];
+        func_8001EC2C(arg0->unk_60, pos, 1);
         ENT_W(e, 0x24) = pos[0];
         ENT_W(e, 0x28) = pos[1];
         ENT_W(e, 0x2C) = pos[2];
@@ -475,7 +474,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80032B7C);
 #define OP_COUNT 0xF
 #define ARG_SET_FLAG1 0x40000000
 #define ARG_SET_FLAG2 0x20000000
-#define OBJ_FLAGS_OFFSET 0x100
 #define OBJ_FLAG_ACTIVE 0x100000
 #define GATE_FLAG_ACTIVE 0x1000
 #define ENT_FLAG_USED 0x8
@@ -539,7 +537,7 @@ typedef struct Unk80032F18State {
 } Unk80032F18State;
 
 /* arg0: entry id, 0 = shared state, -1 = entry owned by arg3, -2 = all entries. */
-s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
+s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
     Unk80032F18Update upd;
     s32 slot;
     u32 op;
@@ -549,7 +547,7 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, struct Obj *arg3) {
     volatile s32 peek[3];
     volatile Unk80032F18Raw4 *rawp;
 
-    if (!(D_8006CB94 & GATE_FLAG_ACTIVE) && !(*(s32 *)((u8 *)arg3 + OBJ_FLAGS_OFFSET) & OBJ_FLAG_ACTIVE)) {
+    if (!(D_8006CB94 & GATE_FLAG_ACTIVE) && !(arg3->unk_100 & OBJ_FLAG_ACTIVE)) {
         return 0;
     }
     slot = D_8005F304;

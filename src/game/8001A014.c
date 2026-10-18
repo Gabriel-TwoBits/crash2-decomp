@@ -191,39 +191,35 @@ typedef struct {
     s32 f30[6];
 } Unk8001A4A4Inner;
 
-typedef struct {
-    u8 pad0[8];
-    Unk8001A4A4Inner *inner;
-    u8 pad1[0xDC];
-    u8 *e8;
-} Unk8001A4A4Obj;
+/* What GoolObject.unk_8 points to, as this function reads it */
+#define INNER(obj) ((Unk8001A4A4Inner *)(obj)->unk_8)
 
-void func_8001A4A4(Unk8001A4A4Obj *arg0, s32 *arg1) {
+void func_8001A4A4(GoolObject *arg0, s32 *arg1) {
     s32 sp[6];
     s32 *s;
     s32 neg;
     s32 r;
     u8 *a;
 
-    arg0->inner->f28 = 0;
-    a = arg0->e8;
+    INNER(arg0)->f28 = 0;
+    a = arg0->unk_E8;
     if (a != 0) {
         if (*a != 4) {
             if (((s32)(a + 4) & 0xFF800003) != 0x80000000) {
                 return;
             }
             r = (s32)func_80014260(a + 4, 1, 0);
-            arg0->inner->f28 = r;
+            INNER(arg0)->f28 = r;
             if (r >= -0xFE) {
-                arg0->inner->f28 = 0;
+                INNER(arg0)->f28 = 0;
                 return;
             }
         }
-        if (*arg0->e8 == 1) {
+        if (*arg0->unk_E8 == 1) {
             do {
-                arg0->inner->f2C = func_8001A90C(arg0, (void **)&s, &arg0->inner->f24);
+                INNER(arg0)->f2C = func_8001A90C(arg0, (void **)&s, &INNER(arg0)->f24);
             } while (0);
-            arg0->inner->f28 = (s32)func_80014260((s32 *)(arg0->inner->f20 = (s32)s) + 4, 1, 0);
+            INNER(arg0)->f28 = (s32)func_80014260((s32 *)(INNER(arg0)->f20 = (s32)s) + 4, 1, 0);
             if ((s32)arg0 == D_8005F38C) {
                 neg = arg1[0];
                 if (neg < 0) {
@@ -235,16 +231,16 @@ void func_8001A4A4(Unk8001A4A4Obj *arg0, s32 *arg1) {
                 sp[3] = s[7] + s[13];
                 sp[4] = s[8] + s[14];
                 sp[5] = s[9] + s[15];
-                arg0->inner->f30[0] = (sp[0] >> 8) * arg1[0] >> 4;
-                arg0->inner->f30[1] = (sp[1] >> 8) * arg1[1] >> 4;
-                arg0->inner->f30[2] = (sp[2] >> 8) * arg1[2] >> 4;
-                arg0->inner->f30[3] = (sp[3] >> 8) * arg1[0] >> 4;
-                arg0->inner->f30[4] = (sp[4] >> 8) * arg1[1] >> 4;
-                arg0->inner->f30[5] = (sp[5] >> 8) * arg1[2] >> 4;
+                INNER(arg0)->f30[0] = (sp[0] >> 8) * arg1[0] >> 4;
+                INNER(arg0)->f30[1] = (sp[1] >> 8) * arg1[1] >> 4;
+                INNER(arg0)->f30[2] = (sp[2] >> 8) * arg1[2] >> 4;
+                INNER(arg0)->f30[3] = (sp[3] >> 8) * arg1[0] >> 4;
+                INNER(arg0)->f30[4] = (sp[4] >> 8) * arg1[1] >> 4;
+                INNER(arg0)->f30[5] = (sp[5] >> 8) * arg1[2] >> 4;
                 arg1[0] = neg;
             }
         } else {
-            arg0->inner->f28 = -0xE;
+            INNER(arg0)->f28 = -0xE;
         }
     }
 }
@@ -253,63 +249,49 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001A4A4);
 #endif
 
 #ifdef NON_MATCHING
-typedef struct Unk8001A710 {
-    /* 0x00 */ u8 pad0[0x58];
-    /* 0x58 */ struct Unk8001A710 *link;
-    /* 0x5C */ u8 pad5C[0x4];
-    /* 0x60 */ s32 pos[3];
-    /* 0x6C */ u8 pad6C[0x3C];
-    /* 0xA8 */ s32 flagsA8;
-    /* 0xAC */ u8 padAC[0x54];
-    /* 0x100 */ s32 flags100;
-    /* 0x104 */ u8 pad104[0x24];
-    /* 0x128 */ s32 offset;
-} Unk8001A710;
-
-
-s32 func_8001A710(Unk8001A710 *arg0, s32 *arg1, Unk8001A710 *arg2, s32 *arg3) {
+s32 func_8001A710(GoolObject *arg0, s32 *arg1, GoolObject *arg2, s32 *arg3) {
     s32 box0[6];
     s32 box1[6];
-    Unk8001A710 *other;
+    GoolObject *other;
     s32 d;
 
-    other = arg0->link;
+    other = arg0->unk_40[6];
     if (other != 0 && other != arg2) {
-        if (arg2->flags100 & 0x800) {
-            arg2->link = arg0;
+        if (arg2->unk_100 & 0x800) {
+            arg2->unk_40[6] = arg0;
             return -0x1C;
         }
-        d = func_80030FEC(arg0->pos, other->pos);
-        if (!(func_80030FEC(arg0->pos, arg2->pos) < d) && !(other->flags100 & 0x800)) {
+        d = func_80030FEC(arg0->unk_60, other->unk_60);
+        if (!(func_80030FEC(arg0->unk_60, arg2->unk_60) < d) && !(other->unk_100 & 0x800)) {
             return -0x1C;
         }
     }
-    arg0->link = arg2;
-    arg2->link = arg0;
+    arg0->unk_40[6] = arg2;
+    arg2->unk_40[6] = arg0;
     if (arg1 == 0) {
         return -0xFF;
     }
     if (arg3 != 0) {
-        if (arg0->offset != 0) {
-            box0[0] = arg1[0] + arg0->offset;
+        if (arg0->unk_128 != 0) {
+            box0[0] = arg1[0] + arg0->unk_128;
             box0[1] = arg1[1];
-            box0[2] = arg1[2] + arg0->offset;
-            box0[3] = arg1[3] - arg0->offset;
+            box0[2] = arg1[2] + arg0->unk_128;
+            box0[3] = arg1[3] - arg0->unk_128;
             box0[4] = arg1[4];
-            box0[5] = arg1[5] - arg0->offset;
+            box0[5] = arg1[5] - arg0->unk_128;
             if (func_80030EC0(box0, arg3) != 0) {
-                arg0->flagsA8 |= 0x1000;
+                arg0->unk_A8 |= 0x1000;
             }
         }
-        if (arg2->offset != 0) {
-            box1[0] = arg3[0] + arg2->offset;
+        if (arg2->unk_128 != 0) {
+            box1[0] = arg3[0] + arg2->unk_128;
             box1[1] = arg3[1];
-            box1[2] = arg3[2] + arg2->offset;
-            box1[3] = arg3[3] - arg2->offset;
+            box1[2] = arg3[2] + arg2->unk_128;
+            box1[3] = arg3[3] - arg2->unk_128;
             box1[4] = arg3[4];
-            box1[5] = arg3[5] - arg2->offset;
+            box1[5] = arg3[5] - arg2->unk_128;
             if (func_80030EC0(box1, arg1) != 0) {
-                arg2->flagsA8 |= 0x1000;
+                arg2->unk_A8 |= 0x1000;
             }
         }
     }
@@ -320,18 +302,18 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001A710);
 #endif
 
 #ifdef NON_MATCHING
-u32 func_8001A90C(void *arg0, s32 *arg1, s32 *arg2) {
+u32 func_8001A90C(GoolObject *arg0, s32 *arg1, s32 *arg2) {
     char *s2;
     char *s3;
     s32 odd;
     u32 idx;
     s32 *p;
 
-    s2 = *(char **)((char *)arg0 + 0xE8);
+    s2 = (char *)arg0->unk_E8;
     s3 = s2 + 4;
     func_80014260(s3, 1, 0);
     odd = *(s32 *)(s2 + 8) & 1;
-    idx = *(u32 *)((char *)arg0 + 0xEC) >> 8;
+    idx = arg0->unk_EC >> 8;
     if (arg2 == 0) {
         p = (s32 *)((char *)func_80014260(s3, 1, 0) + 0x10);
         if (odd) {
@@ -365,38 +347,38 @@ extern s32 D_8005B690[];
 extern s32 D_80062AE0;
 extern s32 D_80062AE4;
 
-void func_8001AA80(u8 *obj, s32 *out) {
+void func_8001AA80(GoolObject *obj, s32 *out) {
     u8 *state;
     s32 idx;
     s32 v;
 
-    state = *(u8 **)(obj + 0xE8);
+    state = obj->unk_E8;
     if (state != 0) {
         switch (*state) {
         case 2:
         case 5:
-            v = *(s32 *)(obj + 0x78);
+            v = obj->unk_78[0];
             if (v < 0) {
                 v = -v;
             }
             out[1] = v / 27279;
-            idx = obj[0x120];
+            idx = obj->unk_120;
             out[0] = D_8005B690[idx];
             if (out[0] == 0) {
                 idx = D_80062AE0;
                 out[0] = D_8005B690[idx];
             }
-            D_8005B650[idx](*(void **)(obj + 8), obj + 0x6C, obj + 0x78, 0);
+            D_8005B650[idx](obj->unk_8, obj->unk_6C, obj->unk_78, 0);
             break;
         case 1:
-            idx = obj[0x120];
+            idx = obj->unk_120;
             out[0] = D_8005B690[idx];
             if (out[0] == 0) {
                 idx = D_80062AE4;
                 out[0] = D_8005B690[idx];
             }
-            D_8005B650[idx](*(void **)(obj + 8), obj + 0x6C, obj + 0x78,
-                            *(s32 *)(*(u8 **)(*(u8 **)(obj + 8) + 0x28) + 0x10));
+            D_8005B650[idx](obj->unk_8, obj->unk_6C, obj->unk_78,
+                            *(s32 *)(*(u8 **)((u8 *)obj->unk_8 + 0x28) + 0x10));
             break;
         default:
             break;
@@ -525,7 +507,7 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
         } else {
             /* keep */
         }
-        func_8001BD84(arg0, (char *)data, frame, (s32)((u8 *)g_BuildBuffer + 0x18), dir);
+        func_8001BD84((GoolObject *)arg0, (char *)data, frame, (s32)((u8 *)g_BuildBuffer + 0x18), dir);
         return;
     } else if (kind == KIND_FIVE) {
         u8 *src = data + (frame * FLD(s32, data, 8) * 0x18 + 0xC);
@@ -946,7 +928,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001B83C);
 extern char D_8006083C[];
 extern s32 D_80060884;
 
-void func_8001BD84(u8 *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
+void func_8001BD84(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
     char buf[200];
     s32 i;
     s32 t;
@@ -958,13 +940,13 @@ void func_8001BD84(u8 *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
     char *p;
     char *base = arg1;
 
-    t = *(s32 *)(arg0 + 0x78);
+    t = arg0->unk_78[0];
     if (t < 0) {
         t = -t;
     }
     cnt = t / 27279;
-    if (func_8003D3CC(arg0 + 0x60, D_8006083C, (u32)(arg0[0x120] - 6) < 2U, cnt, D_8006083C - 0x68, D_80060884, 0x3C00,
-                      ((*(u32 *)(arg0 + 0xAC) >> 18) ^ 1) & 1) != 0) {
+    if (func_8003D3CC(arg0->unk_60, D_8006083C, (u32)(arg0->unk_120 - 6) < 2U, cnt, D_8006083C - 0x68, D_80060884,
+                      0x3C00, (((u32)arg0->unk_AC >> 18) ^ 1) & 1) != 0) {
         arg1 = base + 0xC;
         for (i = 0; i < arg2;) {
             if (*arg1 == 0) {
@@ -972,14 +954,14 @@ void func_8001BD84(u8 *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
             }
             arg1++;
         }
-        off = *(u32 *)(arg0 + 0x108) >> 8;
+        off = (u32)arg0->unk_108 >> 8;
         if (off == 0) {
             off = *(s32 *)(base + 8);
         }
-        arg2 = *(s32 *)(*(u8 **)(arg0 + 0xC) + 0x24) + off * 4;
+        arg2 = *(s32 *)((u8 *)arg0->unk_C + 0x24) + off * 4;
         mem = func_80014260((void *)(arg2 + 4), 1, 0);
-        q = *(s32 **)(arg0 + 0xBC);
-        sprintf(buf, arg1, q[-2], q[-3], q[-4], (*(s32 **)(arg0 + 0xBC))[-5]);
+        q = arg0->unk_BC;
+        sprintf(buf, arg1, q[-2], q[-3], q[-4], arg0->unk_BC[-5]);
         arg1 = buf;
         for (p = arg1; *p != 0; p++) {
         }

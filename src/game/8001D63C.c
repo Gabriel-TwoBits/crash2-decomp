@@ -145,7 +145,7 @@ extern s32 D_8006CD54;
 extern s32 D_8006CD58;
 extern s32 D_8006CD5C;
 
-s32 func_8001F054(struct Obj *, u32, s32 *);
+s32 func_8001F054(GoolObject *, u32, s32 *);
 
 static inline u32 tick_step(void) {
     u32 n;
@@ -207,7 +207,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
           !(FIELD(arg0, OBJ_FLAGS_C) & C_NO_FRAME_MASK)))) {
         if (!(FIELD(arg0, OBJ_FLAGS_C) & C_BLOCK_MASK)) {
             D_8005F1EC = D_8005B88C;
-            func_8001D2C4(arg0, (s32 *)D_8005B88C, &D_8005F494);
+            func_8001D2C4((GoolObject *)arg0, (s32 *)D_8005B88C, &D_8005F494);
         } else if (!(FIELD(arg0, OBJ_FLAGS_C) & C_NO_STEER)) {
             if (!(FIELD(arg0, OBJ_FLAGS_A) & A_STUCK)) {
                 FIELD(arg0, OBJ_VEL_X) = (FIELD(arg0, OBJ_VEL_X) * SPEED_DAMP_NUM) >> SPEED_DAMP_SHIFT;
@@ -357,7 +357,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
         FIELD(arg0, OBJ_ROT_X) = func_8001E3DC(FIELD(arg0, OBJ_ROT_X), FIELD(arg0, OBJ_ANGLE_X), FIELD(arg0, OBJ_ANGLE_X_RATE), 0);
     }
     func_8001A4A4(arg0, (s32 *)((u8 *)arg0 + OBJ_ROT));
-    func_8001AA80((u8 *)arg0, arg2);
+    func_8001AA80((GoolObject *)arg0, arg2);
     if (*(s32 *)FIELD(FIELD(arg0, OBJ_ANIM), ANIM_FRAME_PTR) != MODE_STOP) {
         FIELD_P(arg0, OBJ_PARENT) = 0;
     }
@@ -372,7 +372,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
             FIELD(arg0, OBJ_ALPHA) = ALPHA_OPAQUE;
             *SCRATCH_REG = D_8005C514;
             func_8002CAB8();
-            func_80029884(arg0, (s32)sp18, (s32)D_80067FE4);
+            func_80029884((GoolObject *)arg0, (s32)sp18, (s32)D_80067FE4);
             if (flagsA & A_STUCK) {
                 t = FIELD(arg0, OBJ_FLAGS_A);
                 if (!(t & A_GROUNDED) && (flagsA & A_GROUNDED)) {
@@ -391,7 +391,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
             FIELD(arg0, OBJ_POS + 8) += sp18[2];
         }
         if (FIELD(arg0, OBJ_FLAGS_B) & B_FLOOR_PROBE) {
-            func_8001F054((struct Obj *)arg0, 0, sp38);
+            func_8001F054((GoolObject *)arg0, 0, sp38);
             FIELD(arg0, OBJ_FLOOR_Y) = sp38[1];
             if (FIELD(arg0, OBJ_FLAGS_A) & A_ON_PLATFORM) {
                 FIELD(arg0, OBJ_POS) = sp28[0];
@@ -979,32 +979,8 @@ struct Unk8001F054Info {
     /* 0x14 */ s32 *unk_14;
 };
 
-struct Unk8001F054Obj {
-    /* 0x00 */ u8 unk_00[0x60];
-    /* 0x60 */ s32 unk_60;
-    /* 0x64 */ u8 unk_64[4];
-    /* 0x68 */ s32 unk_68;
-    /* 0x6C */ u8 unk_6C[8];
-    /* 0x74 */ s32 unk_74;
-    /* 0x78 */ u8 unk_78[0x1C];
-    /* 0x94 */ s32 unk_94;
-    /* 0x98 */ s32 unk_98;
-    /* 0x9C */ u8 unk_9C[4];
-    /* 0xA0 */ s32 unk_A0;
-    /* 0xA4 */ u8 unk_A4[4];
-    /* 0xA8 */ s32 unk_A8;
-    /* 0xAC */ s32 unk_AC;
-    /* 0xB0 */ u8 unk_B0[0x24];
-    /* 0xD4 */ s32 unk_D4;
-    /* 0xD8 */ u8 unk_D8[0x18];
-    /* 0xF0 */ struct Unk8001F054Node *unk_F0;
-    /* 0xF4 */ s32 unk_F4;
-    /* 0xF8 */ u8 unk_F8[0x3C];
-    /* 0x134 */ s32 unk_134;
-};
-
-s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
-    struct Unk8001F054Obj *obj;
+s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
+    GoolObject *obj;
     s32 pos;
     s32 *base;
     s32 shift;
@@ -1028,7 +1004,7 @@ s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
     struct Unk8001F054Node *node;
     struct Unk8001F054Info *info;
 
-    obj = (struct Unk8001F054Obj *)arg0;
+    obj = arg0;
     pos = arg1;
     node = obj->unk_F0;
     if (obj == 0 || node == 0) {
@@ -1075,8 +1051,8 @@ s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
             len = func_80041A78(ax * ax + az * az);
             posBase = pos & ~FRAC_MASK;
             if (len != 0) {
-                t = ((((obj->unk_60 - out[0]) >> STEP_SHIFT) * (delta[0] >> STEP_SHIFT)) +
-                     (((obj->unk_68 - out[2]) >> STEP_SHIFT) * (delta[2] >> STEP_SHIFT))) / len;
+                t = ((((obj->unk_60[0] - out[0]) >> STEP_SHIFT) * (delta[0] >> STEP_SHIFT)) +
+                     (((obj->unk_60[2] - out[2]) >> STEP_SHIFT) * (delta[2] >> STEP_SHIFT))) / len;
                 frac = t / len;
                 if (frac >= FRAC_ONE && (pos >> FRAC_BITS) < count - 1) {
                     pos = (seg + 1) << FRAC_BITS;
@@ -1085,26 +1061,26 @@ s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
                 t4 = t >> STEP_SHIFT;
                 ax = ((t4 * (delta[0] >> STEP_SHIFT)) / len) + out[0];
                 az = ((t4 * (delta[2] >> STEP_SHIFT)) / len) + out[2];
-                da = ax - obj->unk_60;
+                da = ax - obj->unk_60[0];
                 if (da < 0) {
-                    da = obj->unk_60 - ax;
+                    da = obj->unk_60[0] - ax;
                 }
-                db = az - obj->unk_68;
+                db = az - obj->unk_60[2];
                 if (db < 0) {
-                    db = obj->unk_68 - az;
+                    db = obj->unk_60[2] - az;
                 }
                 /* Octagon-style distance estimate: max + min / 2 */
                 if (db < da) {
-                    obj->unk_A0 = da + db / 2;
+                    obj->unk_9C[1] = da + db / 2;
                 } else {
-                    obj->unk_A0 = db + da / 2;
+                    obj->unk_9C[1] = db + da / 2;
                 }
-                if (obj->unk_134 < obj->unk_A0 || (frac < 0 && seg == 0) || frac >= FRAC_ONE) {
+                if (obj->unk_134 < obj->unk_9C[1] || (frac < 0 && seg == 0) || frac >= FRAC_ONE) {
                     obj->unk_A8 |= FLAG_A8_OFF_SEGMENT;
                 }
-                if (((delta[2] * (obj->unk_60 >> FRAC_BITS)) - (delta[0] * (obj->unk_68 >> FRAC_BITS)) -
+                if (((delta[2] * (obj->unk_60[0] >> FRAC_BITS)) - (delta[0] * (obj->unk_60[2] >> FRAC_BITS)) -
                      (next[2] * (out[0] >> FRAC_BITS)) + (next[0] * (out[2] >> FRAC_BITS))) < 0) {
-                    obj->unk_A0 = -obj->unk_A0;
+                    obj->unk_9C[1] = -obj->unk_9C[1];
                 }
             } else {
                 obj->unk_A8 |= FLAG_A8_OFF_SEGMENT;
@@ -1118,7 +1094,7 @@ s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
                 obj->unk_D4 = posBase + FRAC_MAX;
             }
             if (len == 0) {
-                obj->unk_A0 = 0;
+                obj->unk_9C[1] = 0;
             }
         }
         break;
@@ -1140,12 +1116,12 @@ s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
     flags = obj->unk_AC;
     if (flags & FLAG_AC_FACE) {
         if ((flags & FLAG_AC_MIRROR) && (obj->unk_A8 & FLAG_A8_EDGE)) {
-            obj->unk_94 = ratan2(-delta[0], -delta[2]);
+            obj->unk_90[1] = ratan2(-delta[0], -delta[2]);
         } else {
-            obj->unk_94 = ratan2(delta[0], delta[2]);
+            obj->unk_90[1] = ratan2(delta[0], delta[2]);
         }
         if (obj->unk_AC & FLAG_AC_PITCH) {
-            obj->unk_74 = ratan2(delta[0], delta[2]);
+            obj->unk_6C[2] = ratan2(delta[0], delta[2]);
             if (delta[0] < 0) {
                 delta[0] = -delta[0];
             }
@@ -1157,7 +1133,7 @@ s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
             } else {
                 da = delta[2] + delta[0] / 2;
             }
-            obj->unk_98 = -ratan2(delta[1], da);
+            obj->unk_90[2] = -ratan2(delta[1], da);
         }
     } else if (flags & FLAG_AC_PITCH) {
         if (delta[0] < 0) {
@@ -1175,8 +1151,8 @@ s32 func_8001F054(struct Obj *arg0, u32 arg1, s32 *out) {
         } else {
             da = db + da / 2;
         }
-        obj->unk_98 = ratan2(delta[1], da);
-        obj->unk_74 = ratan2(-delta[0], -delta[2]);
+        obj->unk_90[2] = ratan2(delta[1], da);
+        obj->unk_6C[2] = ratan2(-delta[0], -delta[2]);
     } else {
         /* neither flag: no angles are written */
     }

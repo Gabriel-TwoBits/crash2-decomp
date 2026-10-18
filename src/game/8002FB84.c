@@ -74,6 +74,7 @@ typedef struct Unk8002FCF8Cam {
     /* 0x0C */ s32 unk_0C;
 } Unk8002FCF8Cam;
 
+/* What GoolObject.unk_8 points to, as func_8002FCF8 reads it */
 typedef struct Unk8002FCF8Dst {
     /* 0x00 */ char unk_00[0x30];
     /* 0x30 */ s32 unk_30[6];
@@ -91,13 +92,8 @@ typedef struct Unk8002FCF8Block {
     /* 0x1090 */ char unk_1090[1];
 } Unk8002FCF8Block;
 
-typedef struct Unk8002FCF8Holder {
-    /* 0x00 */ char unk_00[8];
-    /* 0x08 */ Unk8002FCF8Dst *unk_08;
-} Unk8002FCF8Holder;
-
 extern void *D_8005F374;
-extern Unk8002FCF8Holder *D_8005F38C;
+extern GoolObject *D_8005F38C;
 #define BLOCK ((Unk8002FCF8Block *)D_8005F3D8)
 extern s32 D_80060944;
 extern Unk8002FCF8Cam *g_DrawBuffer;
@@ -107,7 +103,7 @@ extern s32 D_8006CC84;
 
 void func_8002FCF8(void) {
     Unk8002FCF8Block *block;
-    Unk8002FCF8Holder *holder;
+    GoolObject *holder;
     Unk8002FCF8Dst *dst;
     s32 w0, w1, w2, w3, w4, w5;
 
@@ -118,7 +114,7 @@ void func_8002FCF8(void) {
     D_80060944 = block->unk_000C;
     holder = D_8005F38C;
     g_DrawBuffer->unk_0C = block->unk_1070;
-    dst = holder->unk_08;
+    dst = holder->unk_8;
     w0 = block->unk_1074[0];
     w1 = block->unk_1074[1];
     w2 = block->unk_1074[2];

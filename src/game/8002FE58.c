@@ -424,7 +424,7 @@ s32 func_80030FEC(s32 *arg0, s32 *arg1) {
     return d[2] + (d[1] + d[0]) / 4;
 }
 
-s32 func_800310EC(s32 *arg0, s32 *arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5) {
+s32 func_800310EC(GoolObject *arg0, s32 *arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 d;
     s32 nx = -arg3;
     s32 ny = -arg4;
@@ -438,9 +438,9 @@ s32 func_800310EC(s32 *arg0, s32 *arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5)
         (d = arg1[2] - arg2[2], arg5 < d) || nz > d) {
         if (arg0) {
             if (nz) {
-                arg0[42] |= 0x8000;
+                arg0->unk_A8 |= 0x8000;
             } else {
-                arg0[42] |= 0x8000;
+                arg0->unk_A8 |= 0x8000;
             }
         }
         return 1;

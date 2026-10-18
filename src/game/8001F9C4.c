@@ -316,7 +316,7 @@ void func_8001FFCC(Unk8001FDDC *arg0) {
     }
 }
 
-extern char *D_8005F38C;
+extern GoolObject *D_8005F38C;
 extern int D_800608D0;
 
 void func_8002001C(char *arg0) {
@@ -325,8 +325,8 @@ void func_8002001C(char *arg0) {
     do {
         if (*(unsigned *)(s1 + 0x27C) & 1) {
             func_80019E28(arg0);
-            if (*(char **)(D_8005F38C + 0x18) == arg0) {
-                *(int *)(0x18 + D_8005F38C) = D_800608D0;
+            if (D_8005F38C->unk_18 == arg0) {
+                D_8005F38C->unk_18 = (void *)D_800608D0;
             }
             *(unsigned *)(s1 + 0x27C) &= ~3;
         }

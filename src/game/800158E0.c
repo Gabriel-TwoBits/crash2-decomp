@@ -1894,8 +1894,8 @@ void func_80018DD0(void *arg0, void *arg1, void *arg2) {
     } while (var_s1 < 8);
 }
 
-void *func_80018E48(void *arg0, s32 arg1) {
-    if (*(s32 *)((u8 *)arg0 + 0xB8) == arg1) {
+void *func_80018E48(GoolObject *arg0, s32 arg1) {
+    if (arg0->unk_B8 == arg1) {
         return arg0;
     }
     return 0;

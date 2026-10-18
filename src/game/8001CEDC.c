@@ -13,11 +13,12 @@ typedef struct { s32 x, y, z; } Vec80030D98;
 typedef struct { Vec80030D98 min; Vec80030D98 max; } Box80030D98;
 typedef struct { s32 pad0[1]; s32 kind; } UnkQ;
 typedef struct { s32 pad0[4]; UnkQ *q; } UnkP;
-typedef struct { u8 pad0[0xC]; UnkP *p; u8 pad1[0x50]; Vec80030D98 pos; } UnkA;
-typedef struct { u8 pad0[0x60]; Vec80030D98 lo; u8 pad1[0x90 - 0x6C]; Vec80030D98 sz; } UnkE;
-typedef struct { UnkE *e; s32 f4; s32 f8; s32 kind; s32 count; void *f14; } UnkB;
+typedef struct { GoolObject *e; s32 f4; s32 f8; s32 kind; s32 count; void *f14; } UnkB;
 
-s32 func_8001CEDC(UnkA *a, UnkB *b) {
+/* The kind GoolObject.unk_C leads to, as this function reads it */
+#define KIND(obj) (((UnkP *)(obj)->unk_C)->q->kind)
+
+s32 func_8001CEDC(GoolObject *a, UnkB *b) {
     s32 *v;
     s32 *w;
     s32 r;
@@ -43,28 +44,28 @@ s32 func_8001CEDC(UnkA *a, UnkB *b) {
         if (v == 0) {
             return FAIL_RESULT;
         }
-        r = func_80030D98(&a->pos, (Box80030D98 *)((u8 *)v + 8));
+        r = func_80030D98((Vec80030D98 *)a->unk_60, (Box80030D98 *)((u8 *)v + 8));
         func_8002CA1C();
         if (r == 0) {
             return FAIL_RESULT;
         }
         break;
     case 3:
-        if (a->p->q->kind != KIND_300 && a->p->q->kind != KIND_400) {
+        if (KIND(a) != KIND_300 && KIND(a) != KIND_400) {
             return FAIL_RESULT;
         }
         v = func_8002C324(b->e, 0, -2);
         if (v == 0) {
             return FAIL_RESULT;
         }
-        r = func_80030D98(&a->pos, (Box80030D98 *)((u8 *)v + 8));
+        r = func_80030D98((Vec80030D98 *)a->unk_60, (Box80030D98 *)((u8 *)v + 8));
         func_8002CA1C();
         if (r == 0) {
             return FAIL_RESULT;
         }
         break;
     case 4:
-        if (a->p->q->kind != KIND_300 && a->p->q->kind != KIND_400) {
+        if (KIND(a) != KIND_300 && KIND(a) != KIND_400) {
             return FAIL_RESULT;
         }
         v = func_8002C324(a, 0, -2);
@@ -80,19 +81,19 @@ s32 func_8001CEDC(UnkA *a, UnkB *b) {
         }
         break;
     case 5:
-        if (a->p->q->kind != KIND_300 && a->p->q->kind != KIND_400) {
+        if (KIND(a) != KIND_300 && KIND(a) != KIND_400) {
             return FAIL_RESULT;
         }
         v = func_8002C324(a, 0, -2);
         if (v == 0) {
             return FAIL_RESULT;
         }
-        box.min.x = b->e->lo.x - b->e->sz.x;
-        box.min.y = b->e->lo.y - b->e->sz.y;
-        box.min.z = b->e->lo.z - b->e->sz.z;
-        box.max.x = b->e->sz.x + b->e->lo.x;
-        box.max.y = b->e->sz.y + b->e->lo.y;
-        box.max.z = b->e->sz.z + b->e->lo.z;
+        box.min.x = b->e->unk_60[0] - b->e->unk_90[0];
+        box.min.y = b->e->unk_60[1] - b->e->unk_90[1];
+        box.min.z = b->e->unk_60[2] - b->e->unk_90[2];
+        box.max.x = b->e->unk_90[0] + b->e->unk_60[0];
+        box.max.y = b->e->unk_90[1] + b->e->unk_60[1];
+        box.max.z = b->e->unk_90[2] + b->e->unk_60[2];
         r = func_80030EC0((s32 *)((u8 *)v + 8), (s32 *)&box);
         func_8002CA1C();
         if (r == 0) {
@@ -145,10 +146,7 @@ s32 func_8001D1E0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
 }
 
 #ifdef NON_MATCHING
-#define OFFSET_PARENT 0xC
 #define OFFSET_TABLE 0x14
-#define OFFSET_WRITE_PTR 0xBC
-#define OFFSET_TARGET_PTR 0xC0
 #define INDEX_MASK 0x3FFF
 #define ARG_ALL_BITS 0xFFFF
 #define MODE_THREE 3
@@ -159,10 +157,10 @@ s32 func_8001D22C(void *arg0, u16 arg1, s32 arg2, s32 *arg3) {
     s32 i;
     s32 **write_ptr;
     s32 *slot;
-    u8 *base;
+    GoolObject *base;
 
-    base = (u8 *)arg0;
-    write_ptr = (s32 **)(base + OFFSET_WRITE_PTR);
+    base = arg0;
+    write_ptr = &base->unk_BC;
     for (i = 0; i < arg2; i++) {
         slot = *write_ptr;
         *write_ptr = slot + 1;
@@ -170,8 +168,7 @@ s32 func_8001D22C(void *arg0, u16 arg1, s32 arg2, s32 *arg3) {
         arg3++;
     }
     func_8001C620(base, arg2, ARG_ALL_BITS);
-    *(s32 *)(base + OFFSET_TARGET_PTR) =
-        *(s32 *)(*(u8 **)(base + OFFSET_PARENT) + OFFSET_TABLE) + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
+    base->unk_C0 = *(s32 *)((u8 *)base->unk_C + OFFSET_TABLE) + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
     return func_8003A014(arg0, MODE_THREE, 0);
 }
 #else
@@ -186,7 +183,7 @@ extern s32 D_80069958;
 extern s32 D_8006995C;
 extern s32 D_80069960;
 
-void func_8001D2C4(s32 *arg0, s32 *arg1, s32 *arg2) {
+void func_8001D2C4(GoolObject *arg0, s32 *arg1, s32 *arg2) {
     s32 in[4];
     s32 out[4];
     s32 speed;
@@ -205,24 +202,24 @@ void func_8001D2C4(s32 *arg0, s32 *arg1, s32 *arg2) {
     speed = D_8006995C;
     mode = D_80069960;
     angle = D_80069958;
-    if (speed < 0x99 || !(arg0[0xAC / 4] & 0x80)) {
+    if (speed < 0x99 || !(arg0->unk_AC & 0x80)) {
         mode = 8;
         speed = 0;
     } else {
-        arg0[0x94 / 4] = func_8001E3DC(arg0[0x94 / 4], (D_80060914 + angle) & 0xFFF, arg1[0x10 / 4], 0);
+        arg0->unk_90[1] = func_8001E3DC(arg0->unk_90[1], (D_80060914 + angle) & 0xFFF, arg1[0x10 / 4], 0);
     }
-    if (arg0[0x11C / 4] == 0x3500) {
-        x = (arg0[0x60 / 4] - arg2[0]) * 30;
-        z = (arg0[0x68 / 4] - arg2[2]) * 30;
-        vx = arg0[0x84 / 4];
+    if (arg0->unk_11C == 0x3500) {
+        x = (arg0->unk_60[0] - arg2[0]) * 30;
+        z = (arg0->unk_60[2] - arg2[2]) * 30;
+        vx = arg0->unk_84[0];
         dx = x - vx;
-        dz = z - arg0[0x8C / 4];
+        dz = z - arg0->unk_84[2];
         if (abs(dx) > 1000000 || abs(dz) > 1000000) {
             if ((vx ^ x) >= 0) {
-                arg0[0x84 / 4] = x;
+                arg0->unk_84[0] = x;
             }
-            if ((arg0[0x8C / 4] ^ z) >= 0) {
-                arg0[0x8C / 4] = z;
+            if ((arg0->unk_84[2] ^ z) >= 0) {
+                arg0->unk_84[2] = z;
             }
         }
     }
@@ -235,42 +232,42 @@ void func_8001D2C4(s32 *arg0, s32 *arg1, s32 *arg2) {
     in[1] = 0;
     in[2] = ((Math_Cos(angle) >> 4) * speed) >> 8;
     func_8001EAD8(in, out);
-    arg0[0x84 / 4] += out[0];
-    arg0[0x8C / 4] += out[2];
-    if (mode == 8 || !(arg0[0xA8 / 4] & 0x02000000)) {
+    arg0->unk_84[0] += out[0];
+    arg0->unk_84[2] += out[2];
+    if (mode == 8 || !(arg0->unk_A8 & 0x02000000)) {
         scale = arg1[2];
-        if (!(arg0[0xA8 / 4] & 0x02000000)) {
+        if (!(arg0->unk_A8 & 0x02000000)) {
             scale = 0xC7;
         }
-        arg0[0x84 / 4] = (arg0[0x84 / 4] * scale) >> 8;
-        arg0[0x8C / 4] = (arg0[0x8C / 4] * scale) >> 8;
+        arg0->unk_84[0] = (arg0->unk_84[0] * scale) >> 8;
+        arg0->unk_84[2] = (arg0->unk_84[2] * scale) >> 8;
     }
     lim = arg1[1];
-    if (arg0[0x84 / 4] < lim) {
+    if (arg0->unk_84[0] < lim) {
         lim = -lim;
-        if (arg0[0x84 / 4] >= lim) {
-            lim = arg0[0x84 / 4];
+        if (arg0->unk_84[0] >= lim) {
+            lim = arg0->unk_84[0];
         }
     }
-    arg0[0x84 / 4] = lim;
+    arg0->unk_84[0] = lim;
     lim = arg1[1];
-    if (arg0[0x8C / 4] < lim) {
+    if (arg0->unk_84[2] < lim) {
         lim = -lim;
-        if (arg0[0x8C / 4] >= lim) {
-            lim = arg0[0x8C / 4];
+        if (arg0->unk_84[2] >= lim) {
+            lim = arg0->unk_84[2];
         }
     }
-    arg0[0x8C / 4] = lim;
-    dx = (arg0[0x60 / 4] - arg2[0]) >> 6;
-    dz = (arg0[0x68 / 4] - arg2[2]) >> 6;
+    arg0->unk_84[2] = lim;
+    dx = (arg0->unk_60[0] - arg2[0]) >> 6;
+    dz = (arg0->unk_60[2] - arg2[2]) >> 6;
     dist = func_80041A78(dx * dx + dz * dz) * 0xF00 << 1;
-    arg0[0x104 / 4] = dist;
+    arg0->unk_104 = dist;
     if (dist < 0x6400) {
         if (mode != 8) {
-            arg0[0x104 / 4] = 0x6400;
+            arg0->unk_104 = 0x6400;
         }
     } else if (arg1[1] < dist) {
-        arg0[0x104 / 4] = arg1[1];
+        arg0->unk_104 = arg1[1];
     }
 }
 #else

@@ -1198,7 +1198,6 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022A5C);
 #define UNK_INDEX_OFFSET 0x184
 #define UNK_TABLE_STRIDE 3
 #define UNK_STATE_5 5
-#define UNK_D_8005F38C_FIELD 0x18
 
 typedef struct Unk80022E74Inner {
     char pad0[UNK_INDEX_OFFSET];
@@ -1230,7 +1229,7 @@ void func_80022E74(s32 *arg0) {
                       ((s32 *)p)[(UNK_FIELD_OFFSET / 4) + D_8005BADC * UNK_TABLE_STRIDE + p->unk_10->unk_184],
                       D_8005BAE0, 0);
         D_8005B994 = UNK_STATE_5;
-        ((s32 *)D_8005F38C)[UNK_D_8005F38C_FIELD / 4] = D_800608CC[0];
+        ((GoolObject *)D_8005F38C)->unk_18 = (void *)D_800608CC[0];
         return;
     } else {
         func_800200A8(D_800608CC[0], D_800608D4, D_800608E0, 0);
@@ -1631,12 +1630,12 @@ void func_800237F8(void) {
     Unk800237F8 *e;
     char *q;
 
-    notFlag = (u32)*(s32 *)(D_8005F38C + 0xAC) >> 7;
+    notFlag = (u32)((GoolObject *)D_8005F38C)->unk_AC >> 7;
     notFlag = notFlag ^ 1;
     notFlag = notFlag & 1;
     bits = 0;
     if (notFlag == 0) {
-        d = (s32)((*(s32 *)(D_8005F38C + 0x70) - D_80060914) << 20) >> 20;
+        d = (s32)((((GoolObject *)D_8005F38C)->unk_6C[1] - D_80060914) << 20) >> 20;
         if ((u32)(d - 0x71) < 0x71E) {
             bits = 2;
         } else if ((u32)(d + 0x78E) < 0x71E) {
@@ -1659,7 +1658,7 @@ void func_800237F8(void) {
                 bits = 0;
             }
         }
-        if (*(s32 *)(D_8005F38C + 0x100) & 0x04000000) {
+        if (((GoolObject *)D_8005F38C)->unk_100 & 0x04000000) {
             if (D_80069948 & 0x40) {
                 bits |= 1;
             } else if (D_80069948 & 0x20) {
