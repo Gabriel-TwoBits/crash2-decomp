@@ -287,7 +287,7 @@ code's `lui`/`ori` pairs stops on one. Each whole word of `src/` and `include/` 
 `INCLUDE_RODATA` lines included (splat then writes `asm/nonmatchings/game/<file>/NEW.s`). Refused: an unknown OLD, an
 SDK function or a label, `D_8006F1F0` (`configure.py`'s end of `.bss`), a NEW already used (a symbol, a word of `src/`,
 `include/` or `config/symbol_addrs.txt`) or off the conventions: a game function `Subsystem_PascalCase` with one of the
-prefixes `Nsf`, `Gool`, `Obj`, `Zone`, `Gfx`, `Snd`, `Input`, `Save`, `Heap`, `Math`, `Rand`, `Sys`, `Cd` (no PsyQ name has one
+prefixes `Nsf`, `Gool`, `Obj`, `Zone`, `Gfx`, `Snd`, `Input`, `Save`, `Heap`, `Math`, `Rand`, `Sys`, `Cd`, `Ent` (no PsyQ name has one
 followed by an underscore), or `main`; a variable `g_PascalCase`. Then `configure.py`, `ninja` and `ninja nonmatching`
 run, and the batch stays only when the SHA-1 holds and the equivalent executable is byte for byte what it was (`ninja
 nonmatching` is deterministic); otherwise every file goes back. `--allow-equivalent-change` keeps a batch that changes

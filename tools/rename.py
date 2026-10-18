@@ -38,7 +38,7 @@ FUNCTION_ATTRIBUTES = " // type:func"
 SOURCE_PATTERNS = (("src", "*.c"), ("src", "*.h"), ("include", "*.h"))
 # A game function is Subsystem_PascalCase, the entry point PsyQ's startup code calls is main; a variable g_PascalCase.
 # No PsyQ name has one of these prefixes followed by an underscore (theirs are Cd, Pad, Ss, _card_ and the like)
-FUNCTION_PREFIXES = ("Nsf", "Gool", "Obj", "Zone", "Gfx", "Snd", "Input", "Save", "Heap", "Math", "Rand", "Sys", "Cd")
+FUNCTION_PREFIXES = ("Nsf", "Gool", "Obj", "Zone", "Gfx", "Snd", "Input", "Save", "Heap", "Math", "Rand", "Sys", "Cd", "Ent")
 FUNCTION_NAME = re.compile(rf"(?:{'|'.join(FUNCTION_PREFIXES)})_[A-Z][A-Za-z0-9]*")
 ENTRY_POINT = "main"
 DATA_NAME = re.compile(r"g_[A-Z][A-Za-z0-9]*")
