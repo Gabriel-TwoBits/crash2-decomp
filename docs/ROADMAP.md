@@ -397,15 +397,15 @@ them projecting and drawing. In the game they can't run alone: with the model th
 bytes, so they need equivalents that shrink beside them. Such a group, with and without the two routines, displays the
 same on all 8,000 frames (`run_game.py --baseline`, added for it), and the same group with them drawing nothing differs
 in 41 frames of the title's menu, so the game reaches them there. The group itself diverges from retail from frame
-3,435, as it does without them; so does another group from frame 4,035, narrowed to `80020A24.c`, `80012010.c`,
-`80036E30.c`, `80026CA0.c`, `80038700.c` and `800316EC.c` together, files from both of the earlier halves that each
-agreed: timing or a fault, not settled yet. The whole equivalent build diverges from frame 2,515 (2,867 before; 1,626 with the
+3,435, as it does without them: its ten files together, `func_80027CD0` (the decompressor shown above to change timing
+only) left out or not, while each of its parts with the six files the others need agrees on all 8,000, and the scenes
+are the same a step out of phase, as timing that adds up gives. Another group's divergence from frame 4,035 narrowed to
+`func_80027CD0` alone. The whole equivalent build diverges from frame 2,515 (2,867 before; 1,626 with the
 model's code in and the routines not), the frame moving with the layout. 201 equivalent functions, 2 left; the
 equivalent build has 208 bytes of the retail code's room left.
 
 Next: find what in the disc's data holds the executable's addresses, which would let the equivalent code grow;
-`func_8002CC50` and `func_8002FFFC` (inputs built for the latter's paths); why the six files above diverge together;
-each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates
+`func_8002CC50` and `func_8002FFFC` (inputs built for the latter's paths); each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates
 timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).
 
 ## 5. Readable C (in progress)
