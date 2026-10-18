@@ -447,7 +447,15 @@ Steps, in order:
   header at `NsfLevel.unk_14`, `g_LevelFiles`' bitfields, globals that are views of one structure (joining them changes
   code). `tools/progress.py`: 127 structures in `src/game/`, 7 in `include/game/`, 114 fields read at a raw offset.
 - **R4 (done before R1 to R3)**: the equivalent passes on the functions left as assembly (section 4); 4 are left.
-- **R5**: the other subsystems. **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
+- **R5, the other subsystems (in progress).** A first batch: 47 game functions, 11 data symbols and 22 of `GoolObject`'s
+  fields, for the GOOL interpreter, the objects and the zones. The table of handlers by entry type at 0x8005B1D8 carries
+  each type's four-character tag ("ZDAT", "OPAT", "GOOL", ...) beside its handlers for a level's open and close and a
+  page's load and drop, so those handlers' names are of grade A; the interpreter's loop (`Gool_Interpret`, handwritten)
+  dispatches through the 79-entry table at 0x8005C514 by an instruction's top byte, each entry a stub naming its C
+  handler, so a handler takes its opcode's mnemonic (CrashEdit's list, the reference). `GoolObject`'s links at 0x40
+  (self, parent, sibling, child, creator, player, collider, interrupter) are an enum. Next: the entity properties'
+  accessors (an `Ent` prefix), the spawn queue, the paging's reference counts, the collision and the camera.
+- **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
 writes: docs/COMPILER.md, "Small data"), rewriting equivalent C for readability, the GOOL opcodes' names, the GTE
