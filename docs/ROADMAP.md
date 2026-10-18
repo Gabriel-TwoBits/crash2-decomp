@@ -479,8 +479,20 @@ Steps, in order:
   page's load and drop, so those handlers' names are of grade A; the interpreter's loop (`Gool_Interpret`, handwritten)
   dispatches through the 79-entry table at 0x8005C514 by an instruction's top byte, each entry a stub naming its C
   handler, so a handler takes its opcode's mnemonic (CrashEdit's list, the reference). `GoolObject`'s links at 0x40
-  (self, parent, sibling, child, creator, player, collider, interrupter) are an enum. Next: the entity properties'
-  accessors (an `Ent` prefix), the spawn queue, the paging's reference counts, the collision and the camera.
+  (self, parent, sibling, child, creator, player, collider, interrupter) are an enum. A second batch: 17 game
+  functions, 14 data symbols, `NsfPageSlot`'s state and reference count, and `include/game/entity.h`, for the entity
+  properties, the spawn queue, the paging's reference counts and the camera. An entity's properties are laid out as
+  CrashEdit reads them (8-byte headers sorted by id from 0x10, sparse rows, meta values, a row count), which
+  `Ent_GetProperty` searches; the ids the code passes it (positions 0x4B, SLST 0x103, draw lists 0x13B and 0x13C, load
+  lists 0x208 and 0x209) are format constants that name the camera's walk along a path (`Zone_MoveCamera`,
+  `Zone_QueueDrawLists`, `Zone_ApplyLoadLists`). The opcodes CHNK and COLL name their handlers, CHNK's kinds the
+  entries' opening and closing (`Nsf_OpenEntry`, `Nsf_CloseEntry`); the Crash 1 decomp's slot functions, the same
+  code, confirm the page slots' count and release. The camera has no prefix of its own: its path functions take
+  `Zone_`, the view `Gfx_`. Left without the evidence: the collision routines COLL calls (CrashEdit describes none of
+  its modes), the page functions with one caller (func_80013F5C, func_80013FD8, func_80014078, func_8001456C,
+  func_80014918), func_80014148, the camera's handlers by path kind and by mode. `tools/progress.py`: 120 of 564 game
+  functions and 38 of 1,112 data symbols named, 131 structures in `src/game/`, 8 in `include/game/`. Next: the
+  collision, the camera's handlers, a `Cam` prefix if the camera's functions need one.
 - **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
