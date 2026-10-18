@@ -1,7 +1,8 @@
 # Crash Bandicoot 2 decompilation
 
-A matching decompilation of **Crash Bandicoot 2: Cortex Strikes Back** for the PlayStation (USA, SCUS-94154): the game's
-executable rewritten in C that, built with the original compiler, gives the retail executable byte for byte.
+A decompilation of **Crash Bandicoot 2: Cortex Strikes Back** for the PlayStation (USA, SCUS-94154): the game's
+executable rewritten in C. Where it can, the C built with the original compiler gives the retail bytes exactly; where it
+can't, it behaves like the original, tested against it function by function.
 
 > [!IMPORTANT]
 > **No game data is included.** You need your own copy of the game. Crash Bandicoot is a trademark of Activision; PlayStation
@@ -10,7 +11,8 @@ executable rewritten in C that, built with the original compiler, gives the reta
 ## Status
 
 The executable is split and rebuilt byte for byte, the game's code compiled as C with the original compiler, its
-unmatched functions included from the split. The milestones are in [docs/ROADMAP.md](docs/ROADMAP.md).
+unmatched functions included from the split. A second build (`ninja nonmatching`) compiles the equivalent C in their place.
+The milestones are in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 | | |
 | --- | --- |
@@ -21,8 +23,8 @@ unmatched functions included from the split. The milestones are in [docs/ROADMAP
 
 ## Why
 
-A matching decompilation is the game's source as it could have been written: readable, documented, and proven equal to
-the original by its bytes. It is what makes fixes, mods and native ports possible without emulating anything. Crash 2 has
+A decompilation is the game's source as it could have been written: readable, documented, and checked against the
+original, by its bytes where the C matches and by running both side by side where it doesn't. It is what makes fixes, mods and native ports possible without emulating anything. Crash 2 has
 recompilations ([Crash2Recomp](https://github.com/Zumbo06/Crash2Recomp)) and a machine translation
 ([c2c](https://github.com/ughman/c2c)), which run the game, but no decompilation.
 
@@ -32,15 +34,17 @@ This project uses AI, openly. Most functions are matched by an AI agent (Claude,
 (`tools/match.py`, docs/WORKFLOW.md): it reads a function's assembly and m2c's draft, writes C, and tries again against the
 diff. The tools, docs and build were also written with AI assistance, directed and reviewed by the maintainer.
 
-What makes that safe for a matching decompilation is that nothing rests on the AI's word. A function counts as matched only
-when the original compiler turns its C into exactly the retail bytes, and the whole executable still has the retail SHA-1;
-the scripts check both, and the build fails otherwise. So the C is proven equal to the game, whoever wrote it. What isn't
+What makes that safe is that nothing rests on the AI's word. A function counts as matched only when the original compiler
+turns its C into exactly the retail bytes, and the whole executable still has the retail SHA-1; the scripts check both, and
+the build fails otherwise. A function that doesn't match counts as equivalent only when `tools/equiv.py` runs its C and the
+retail code on the same random inputs and every compared trial agrees. So matched C is proven equal to the game and
+equivalent C is tested against it, whoever wrote it. What isn't
 proven is the meaning: names, types and comments the agent chose can be wrong, and corrections are welcome.
 
 ## Getting started
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the setup and the rules, [docs/WORKFLOW.md](docs/WORKFLOW.md) how a function gets
-matched, and [docs/REFERENCES.md](docs/REFERENCES.md) the projects and documentation this one builds on.
+matched or made equivalent, and [docs/REFERENCES.md](docs/REFERENCES.md) the projects and documentation this one builds on.
 
 ## Licence
 
