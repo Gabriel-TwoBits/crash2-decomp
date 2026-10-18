@@ -385,18 +385,13 @@ typedef struct { s32 n; u8 pad[0x28C]; s32 *p[1]; } Unk8006CB6C;
 
 extern Unk8006CB6C D_8006CB6C;
 
+/* The first item of GoolObject.unk_C, as this function reads it */
 typedef struct {
     u8 pad0[0x4];
     s32 unk4;
 } Unk8002A554_C10;
 
-/* What GoolObject.unk_C points to, as this function reads it */
-typedef struct {
-    u8 pad0[0x10];
-    Unk8002A554_C10 *unk10;
-} Unk8002A554_C;
-
-#define KIND(obj) (((Unk8002A554_C *)(obj)->unk_C)->unk10->unk4)
+#define KIND(obj) (((Unk8002A554_C10 *)(obj)->unk_C->items[0])->unk4)
 
 typedef struct {
     s32 unk0;
@@ -965,11 +960,6 @@ typedef struct Unk8002B57CInfo {
     s32 unk_10;
 } Unk8002B57CInfo;
 
-typedef struct Unk8002B57CLink {
-    u8 pad_00[0x10];
-    u8 *unk_10;
-    Unk8002B57CInfo *unk_14;
-} Unk8002B57CLink;
 
 /* An entry of D_8006CB6C's list, which holds an object at 0x04 */
 typedef struct Unk8002B57CEntry {
@@ -977,9 +967,8 @@ typedef struct Unk8002B57CEntry {
     GoolObject *unk_04;
 } Unk8002B57CEntry;
 
-/* What GoolObject.unk_8 and unk_18 point to, as this function reads them */
+/* What GoolObject.unk_8 points to, as this function reads it */
 #define SCALE_OF(o) ((Unk8002B57CScale *)(o)->unk_8)
-#define LINK_OF(o) ((Unk8002B57CLink *)(o)->unk_18)
 
 extern void *D_800608CC;
 
@@ -1095,12 +1084,12 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     }
     hit = func_8003D040(arg0, arg2, (u8 *)arg2 + BOUNDS_OFFSET, box, 2, 6, 1, NO_HIT, 1);
 
-    if (*(s32 *)(LINK_OF(self)->unk_10 + QUERY_FLAGS_OFFSET) & FLAG_QUERY_20000) {
+    if (*(s32 *)(self->unk_18->items[0] + QUERY_FLAGS_OFFSET) & FLAG_QUERY_20000) {
         sp28[0] = arg1[0];
         sp28[1] = box[4];
         sp28[2] = arg1[2];
         if ((s32)func_80027DEC(D_800608CC, sp28) >= SKIP_THRESHOLD) {
-            info = LINK_OF(self)->unk_14;
+            info = (Unk8002B57CInfo *)self->unk_18->items[1];
             bound = (info->unk_04 + info->unk_10) << 8;
             if (bound < sp28[1]) {
                 hit = bound;

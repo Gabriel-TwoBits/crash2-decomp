@@ -82,7 +82,7 @@ s32 func_8003900C(GoolObject *arg0, u32 arg1, s32 arg2) {
     }
     mask = arg0->unk_B0;
     state = arg0->unk_108;
-    flags = *(s32 *)(*(char **)((char *)arg0->unk_C + 0x20) + (arg1 & 0x3FF) * 16);
+    flags = *(s32 *)(arg0->unk_C->items[4] + (arg1 & 0x3FF) * 16);
     if ((u32)(state - 3) >= 2U) {
         hit = mask & flags;
         if (state == 2) {
@@ -109,17 +109,12 @@ INCLUDE_ASM("asm/nonmatchings/game/80038F00", func_8003900C);
 
 extern s32 D_8006CB64;
 
-typedef struct Unk80039104Src {
-    char pad0[0x24];
-    u8 *unk24;
-} Unk80039104Src;
-
 s32 func_80039104(GoolObject *arg0, u32 arg1, s32 arg2) {
     u8 *q;
     s32 *p;
     s32 t;
 
-    q = ((Unk80039104Src *)arg0->unk_C)->unk24;
+    q = arg0->unk_C->items[5];
     p = arg0->unk_BC;
     arg0->unk_EC = (arg1 & 0x7F) << 8;
     arg0->unk_BC = p + 1;
@@ -582,7 +577,7 @@ void func_80039C08(GoolObject *arg0, u32 arg1) {
     s32 *dst;
     s32 *sp;
     u32 hi;
-    u8 *owner;
+    NsfEntry *owner;
     s32 packed;
     s32 base;
     s32 addr;
@@ -596,7 +591,7 @@ void func_80039C08(GoolObject *arg0, u32 arg1) {
     owner = arg0->unk_C;
     arg0->unk_BC = sp - 1;
     packed = sp[-1];
-    base = *(s32 *)(owner + 0x24);
+    base = (s32)owner->items[5];
     arg0->unk_BC = sp - 2;
     addr = sp[-2];
     dstVal = *dst;

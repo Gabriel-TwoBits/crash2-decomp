@@ -934,7 +934,7 @@ L22:
     return arg0;
 }
 
-s32 func_80016F44(s32 arg0, s32 arg1, s32 arg2) {
+s32 func_80016F44(NsfEntry *arg0, s32 arg1, s32 arg2) {
     u8 *s3;
     u8 *s2;
     s32 n;
@@ -943,8 +943,8 @@ s32 func_80016F44(s32 arg0, s32 arg1, s32 arg2) {
     s32 e;
 
     idx = -1;
-    do { s3 = *(u8 **)((u8 *)arg0 + 0x10); } while (0);
-    s2 = *(u8 **)((u8 *)arg0 + 0x20);
+    do { s3 = arg0->items[0]; } while (0);
+    s2 = arg0->items[4];
     n = *(s32 *)(s3 + 0x1C);
     if (arg2 != 0x6396347F) {
         for (i = 0; i < *(u32 *)(s3 + 0x28); i++) {
@@ -983,35 +983,33 @@ found:
 }
 
 #ifdef NON_MATCHING
-typedef struct { s32 pad0[2]; s32 kind; } Obj170B4;
-typedef struct { char pad[0x404]; s32 count; } Cnt170B4;
-typedef struct { char pad[0x18]; Cnt170B4 *list; } Hdr170B4;
-extern Hdr170B4 D_80067588;
-extern Cnt170B4 *D_800675A0;
+extern NsfLevel D_80067588;
+extern Nsd *D_800675A0;
 
 s32 func_800170B4(s32 arg0, s32 arg1) {
     s32 pad[2];
     s32 i;
-    Obj170B4 *o;
-    Hdr170B4 *h = &D_80067588;
-    Hdr170B4 *new_var;
+    NsfEntry *o;
+    NsfLevel *h = &D_80067588;
+    NsfLevel *new_var;
 
     i = 0;
-    if (D_800675A0->count > 0) {
+    if (D_800675A0->record_count > 0) {
         new_var = h;
         do {
-            o = *(Obj170B4 **)((char *)new_var->list + i * 8 + 0x520);
-            if (!((s32)o & 3)) {
-                if (o->kind != 2) {
-                    if (o->kind == 3) {
-                        func_80016F44((s32)o, arg1, arg0);
+            /* records[i] adds the offset first and changes the code */
+            o = *(NsfEntry **)((u8 *)new_var->nsd + i * sizeof(NsdRecord) + NSD_RECORDS_OFFSET);
+            if (!((s32)o & NSD_REF_TAG_MASK)) {
+                if (o->type != 2) {
+                    if (o->type == 3) {
+                        func_80016F44(o, arg1, arg0);
                     }
                 } else {
                     func_800171E8(o, arg1, arg0);
                 }
             }
             i++;
-        } while (i < new_var->list->count);
+        } while (i < new_var->nsd->record_count);
     }
     return -0xFF;
 }
@@ -1020,14 +1018,14 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800170B4);
 #endif
 
 void func_80017198(s32 arg0) {
-    func_80016F44(arg0, 1, 0x6396347F);
+    func_80016F44((NsfEntry *)arg0, 1, 0x6396347F);
 }
 
 void func_800171C0(int a0) {
-    func_80016F44(a0, 0, 0x6396347F);
+    func_80016F44((NsfEntry *)a0, 0, 0x6396347F);
 }
 
-s32 func_800171E8(void *arg0, s32 arg1, s32 arg2) {
+s32 func_800171E8(NsfEntry *arg0, s32 arg1, s32 arg2) {
     u8 *s3;
     u8 *s2;
     s32 n;
@@ -1036,8 +1034,8 @@ s32 func_800171E8(void *arg0, s32 arg1, s32 arg2) {
     s32 e;
 
     idx = -1;
-    do { s3 = *(u8 **)((u8 *)arg0 + 0x10); } while (0);
-    s2 = *(u8 **)((u8 *)arg0 + 0x1C);
+    do { s3 = arg0->items[0]; } while (0);
+    s2 = arg0->items[3];
     n = *(s32 *)(s3 + 0x34);
     if (arg2 != 0x6396347F) {
         for (i = 0; i < *(s32 *)(s3 + 0x40); i++) {
@@ -1076,7 +1074,7 @@ found:
 }
 
 void func_80017358(s32 a0) {
-    func_800171E8((void *)a0, 1, 0x6396347F);
+    func_800171E8((NsfEntry *)a0, 1, 0x6396347F);
 }
 
 #ifdef NON_MATCHING

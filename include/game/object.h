@@ -2,6 +2,7 @@
 #define GAME_OBJECT_H
 
 #include "common.h"
+#include "game/nsf.h"
 
 /* The game object: what the GOOL interpreter's operands (func_80036D0C, func_80038D08) and the object code read. Each
    field has the width and signedness the code reads it with. The size isn't known: the code reads up to 0x16C
@@ -14,10 +15,12 @@ typedef struct GoolObject {
     /* 0x00 */ s32 unk_0;
     /* 0x04 */ s32 unk_4;
     /* 0x08 */ void *unk_8;
-    /* 0x0C */ void *unk_C;
+    /* 0x0C */ NsfEntry *unk_C; /* what func_80014260 returns for an NSD record (func_80019988) */
     /* 0x10 */ void *unk_10;
     /* 0x14 */ void *unk_14;
-    /* 0x18 */ void *unk_18;
+    /* An entry from func_80014260, the one func_800200A8 keeps in D_800608CC (func_8002E884), or an error code
+       (func_8002BF58) */
+    /* 0x18 */ NsfEntry *unk_18;
     /* 0x1C */ s32 unk_1C;
     /* 0x20 */ s16 unk_20[0x10]; /* halfwords, the block passed by address (obj + 0x20) */
     /* Indexed by 3 bits (func_80036D0C); [0] holds the object itself (func_80019988) */

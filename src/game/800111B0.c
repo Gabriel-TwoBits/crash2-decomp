@@ -316,7 +316,7 @@ extern s32 D_8005F390;
 extern s32 D_8005F3B8;
 extern s32 D_8005F3F0;
 extern char D_80060774[];
-extern void *D_800608CC;
+extern NsfEntry *D_800608CC;
 extern s32 D_80060944;
 extern char D_80060958[];
 extern s32 D_80060988;
@@ -326,7 +326,7 @@ extern s32 D_80062AA0;
 extern s32 D_80062AD8;
 extern void *g_DrawBuffer;
 extern void *g_BuildBuffer;
-extern char D_80067588[];
+extern NsfLevel D_80067588;
 extern void *D_8006759C;
 extern s32 D_80069944;
 extern s32 D_8006CB94;
@@ -339,7 +339,6 @@ extern s32 D_8006CD7C;
 
 void SetRotMatrix(void *);
 /* func_80041E5C stays undeclared: 800158E0.c declares it void, but its v0 is stored below (implicit int). */
-/* Nsf_OpenLevel stays undeclared: 800123F0.c defines it over a struct type unknown here (implicit int). */
 int printf(const char *, ...);
 
 void Sys_MainLoop(s32 arg0) {
@@ -352,7 +351,7 @@ void Sys_MainLoop(s32 arg0) {
     s32 *list;
 
     func_8002EFE4();
-    Nsf_OpenLevel(D_80067588, arg0);
+    Nsf_OpenLevel(&D_80067588, arg0);
     func_8002EE48();
     do {
         if (((D_80069944 & POWER_BUTTON_MASK) || ((D_8005F180 == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
@@ -410,8 +409,8 @@ void Sys_MainLoop(s32 arg0) {
             } else {
                 D_8005F1F4 = 0;
             }
-            *(s32 *)(D_80067588 + 0x24) = 2;
-            Nsf_CloseLevel((int *)D_80067588);
+            D_80067588.unk_24 = 2;
+            Nsf_CloseLevel(&D_80067588);
             D_8005F180 = 0;
             D_8005F3B8 = 0;
             if ((state == 2) || ((u32)(state - STATE_DEAD) < 2U)) {
@@ -419,7 +418,7 @@ void Sys_MainLoop(s32 arg0) {
             } else {
                 /* other states keep the saved level */
             }
-            Nsf_OpenLevel(D_80067588, state);
+            Nsf_OpenLevel(&D_80067588, state);
             func_8002EE48();
             if (pending != 0) {
                 D_8005F3F0 = STATE_NONE;
@@ -438,9 +437,9 @@ void Sys_MainLoop(s32 arg0) {
             /* paused */
         }
         func_80017BC4();
-        if ((D_8006CB94 & 1) && (**(s32 **)((char *)D_800608CC + 0x10) != 0)) {
+        if ((D_8006CB94 & 1) && (*(s32 *)D_800608CC->items[0] != 0)) {
             SetRotMatrix(D_80060774);
-            list = *(s32 **)((char *)D_800608CC + 0x10);
+            list = (s32 *)D_800608CC->items[0];
             count = *list;
             out = (s32 *)SCRATCH_ENTRY_BASE;
             if (count != 0) {
@@ -490,7 +489,7 @@ void Sys_MainLoop(s32 arg0) {
     D_8006CB94 = 0;
     Gfx_EndFrame();
     Gfx_EndFrame();
-    Nsf_CloseLevel((int *)D_80067588);
+    Nsf_CloseLevel(&D_80067588);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", Sys_MainLoop);

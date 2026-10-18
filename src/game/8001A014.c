@@ -958,7 +958,7 @@ void func_8001BD84(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
         if (off == 0) {
             off = *(s32 *)(base + 8);
         }
-        arg2 = *(s32 *)((u8 *)arg0->unk_C + 0x24) + off * 4;
+        arg2 = (s32)arg0->unk_C->items[5] + off * 4;
         mem = func_80014260((void *)(arg2 + 4), 1, 0);
         q = arg0->unk_BC;
         sprintf(buf, arg1, q[-2], q[-3], q[-4], arg0->unk_BC[-5]);

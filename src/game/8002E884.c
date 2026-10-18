@@ -530,7 +530,7 @@ void func_8002F228(s32 arg0) {
 #define VAL_SHIFT 8
 
 extern u8 *D_8005F38C;
-extern u8 *D_800608CC;
+extern NsfEntry *D_800608CC;
 extern s32 D_800608D4;
 extern s32 D_800608E0;
 extern u8 D_800619B8[];
@@ -546,7 +546,7 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
     s32 isStatic;
     s32 *blk;
 
-    if (*(s32 *)(*(u8 **)(D_800608CC + 0x10) + CTX_FLAGS_OFFSET) & CTX_FLAGS_MASK) {
+    if (*(s32 *)(D_800608CC->items[0] + CTX_FLAGS_OFFSET) & CTX_FLAGS_MASK) {
         return;
     }
     isStatic = (arg1 == D_800619B8);
@@ -585,7 +585,7 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         blk[3] = 0;
         blk[4] = 0;
         blk[5] = 0;
-        *(s32 *)(arg1 + 0x24) = *(s32 *)(D_800608CC + 4);
+        *(s32 *)(arg1 + 0x24) = D_800608CC->eid;
         *(s32 *)(arg1 + 0x2C) = D_800608E0;
         *(s32 *)(arg1 + 0x30) = *(s32 *)(D_8006759C[0] + 8);
         *(s32 *)(arg1 + 0x28) = func_800321D4(D_800608D4, ID_28, 0, 0, 0, CALL_FLAGS, 0);
@@ -690,7 +690,7 @@ void func_8002F6C8(u8 *arg0) {
     if (D_800608CC != 0) {
         func_8001A014();
         func_8001A23C(D_800608CC, -1);
-        obj = *(u8 **)(D_800608CC + 0x10);
+        obj = D_800608CC->items[0];
         D_800608D0 = -1;
         for (i = 0; i < *(s32 *)(obj + 0x190); i++) {
             slot = obj + 0x194 + i * 4;

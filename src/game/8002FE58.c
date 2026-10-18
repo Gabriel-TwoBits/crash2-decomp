@@ -6,11 +6,11 @@ char D_8005F218[] = "pb??B";
 
 typedef struct { char c[6]; } S6;
 extern char D_8005F218[];
-extern char D_80067588[];
+extern NsfLevel D_80067588;
 extern s32 D_8006758C, D_800675AC, D_8006CBB4, D_8006CD14, D_8005F3EC;
 void func_8002FE58(s32 *arg0) {
     char buf[8];
-    s32 r = Nsf_CountEntriesOfType(D_80067588, 0x13);
+    s32 r = Nsf_CountEntriesOfType(&D_80067588, 0x13);
     s32 t;
     *(S6 *)buf = *(S6 *)D_8005F218;
     memset(buf + 6, 0, 2);

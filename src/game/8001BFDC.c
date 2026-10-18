@@ -558,17 +558,11 @@ typedef struct Unk8001CC10Tab {
     s32 count;
 } Unk8001CC10Tab;
 
-typedef struct Unk8001CC10Bank {
-    u8 pad0[0x10];
-    Unk8001CC10Tab *tab;
-    s32 *code;
-    u8 pad18[0x04];
-    u16 *index;
-    s32 *flags;
-} Unk8001CC10Bank;
-
-/* What GoolObject.unk_C points to, as this function reads it */
-#define BANK(o) ((Unk8001CC10Bank *)(o)->unk_C)
+/* GoolObject.unk_C's items, as this function reads them */
+#define BANK_TAB(o) ((Unk8001CC10Tab *)(o)->unk_C->items[0])
+#define BANK_CODE(o) ((s32 *)(o)->unk_C->items[1])
+#define BANK_INDEX(o) ((u16 *)(o)->unk_C->items[3])
+#define BANK_FLAGS(o) ((s32 *)(o)->unk_C->items[4])
 
 s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
 #define self ((GoolObject *)arg0)
@@ -608,8 +602,8 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
             }
         }
         if (r >= -0xFE) {
-            if ((id >> 8) < BANK(obj)->tab->count) {
-                s3 = BANK(obj)->index[id >> 8];
+            if ((id >> 8) < BANK_TAB(obj)->count) {
+                s3 = BANK_INDEX(obj)[id >> 8];
             } else {
                 s3 = SCRIPT_NONE;
             }
@@ -628,7 +622,7 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
                     } while (i < n);
                 }
                 func_8001C620(obj, n, SCRIPT_ARG_LIMIT);
-                obj->unk_C0 = (s32)(BANK(obj)->code + (s3 & SCRIPT_INDEX_MASK));
+                obj->unk_C0 = (s32)(BANK_CODE(obj) + (s3 & SCRIPT_INDEX_MASK));
                 return func_8003A014(obj, 3, 0);
             }
         }
@@ -640,7 +634,7 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
             fl &= ~FLAG_BIT2;
         }
         cur = D_8005F38C;
-        mask = BANK(obj)->flags[s3 * 4];
+        mask = BANK_FLAGS(obj)[s3 * 4];
         st = fl & mask;
         if ((s32)obj == cur) {
             if ((u32)(obj->unk_108 - 3) < 2U || obj->unk_108 == STATE_FIRST) {

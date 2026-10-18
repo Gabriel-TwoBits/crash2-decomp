@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "common.h"
+#include "game/nsf.h"
 #include "game/object.h"
 
 /* What the game's functions return when they succeed; their errors are other negative values (-0x12, -0x10) */
@@ -26,20 +27,22 @@ s32 Nsf_EidType(s32);
 u8 func_800120EC(s32);
 void Nsf_FileName(s32, s32);
 char *Nsf_FormatFileName(s32, u32, s32, s32);
-s32 Nsf_CountEntriesOfType(char *, s32);
-s32 func_8001232C(s32 *);
+s32 Nsf_CountEntriesOfType(NsfLevel *, s32);
+s32 func_8001232C(void *);
+s32 func_800123BC(NsfEntry *, s32);
 s32 Cd_ReadFile(s32 *, s32, s32);
+s32 Nsf_RelocatePage(NsfPage *);
 s32 func_800125F8(s32);
 void func_80012BC4(s32);
 void func_80012DC0(void);
 s32 Cd_SyncRead(s32);
-s32 Nsf_ReadPages(u8 *, s32);
+s32 Nsf_ReadPages(NsfPageSlot *, s32);
 s32 func_800136C8(s32 *, s32);
 s32 func_80013888(void);
 s32 func_80013968(s32);
 void func_80013A54(s32, s32);
-void *func_80013C98(void *, s32, s32, s32 *, s32);
-void func_80013F28(void *);
+NsfPageSlot *func_80013C98(NsfPageSlot *, s32, s32, s32 *, s32);
+void func_80013F28(NsfPageSlot *);
 u8 *func_80013F5C(s32, s32, s32, s32);
 s32 func_80014078(s32, s32);
 void *func_80014260(void *, s32, s32);
@@ -50,10 +53,13 @@ s32 func_8001456C(void);
 void func_80014638(u32 *);
 void func_80014790(u32 *);
 s32 func_80014918(u32 * *, s32);
+NsdRecord *Nsf_LookupEid(u32);
 s32 func_80014B90(s32, s32);
+s32 Nsf_OpenLevel(NsfLevel *, s32);
+s32 Nsf_CloseLevel(NsfLevel *);
 void func_80015344(s32, s32, s32, s32, s32);
 void *func_8001557C(s32);
-void func_800155E0(void *, s32);
+void func_800155E0(NsfLevel *, s32);
 void Sys_Init(void);
 s32 Sys_Shutdown(void);
 void Input_Init(s32);
@@ -67,9 +73,9 @@ int Gfx_EndFrame(void);
 void Gfx_AddFillRect(s32, s32, s16, s16, u8, u8, u8);
 void func_80016B08(u32);
 void func_80016C58(s32, s32);
-s32 func_80016F44(s32, s32, s32);
+s32 func_80016F44(NsfEntry *, s32, s32);
 s32 func_800170B4(s32, s32);
-s32 func_800171E8(void *, s32, s32);
+s32 func_800171E8(NsfEntry *, s32, s32);
 void func_80017380(s32, u8 *, s32, u16 *);
 void func_800175D8(u8 *, s32, u8 *, s32, s32);
 s32 func_800176DC(s32, s32, s32, u8 *, u8 *, s32);

@@ -448,31 +448,32 @@ void func_800217F8(s32 arg0, s32 arg1, s32 arg2) {
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_800217F8);
 #endif
 
-extern s32 D_80067590;
+extern NsdRecord **D_80067590;
 
 void func_80021900(s32 count, u32 *p, s32 flags, s32 arg3) {
-    u32 *cur;
+    NsdRecord *cur;
     u32 v;
-    u32 *e;
+    NsdRecord *e;
     s32 neg;
 
     cur = 0;
     do {
         v = *p;
         if (v & 1) {
-            e = *(u32 **)(((v >> 13) & 0x3FC) + D_80067590);
+            /* The EID's bucket by its byte offset, added as integers: a pointer sum swaps addu's operands */
+            e = *(NsdRecord **)(((v >> 13) & 0x3FC) + (s32)D_80067590);
             if (cur == 0 || cur < e) {
                 cur = e;
             }
-            if (cur[1] != v) {
-                while (cur[1] != v) {
-                    cur += 2;
+            if (cur->eid != v) {
+                while (cur->eid != v) {
+                    cur++;
                 }
-                cur -= 2;
-                cur += 2;
+                cur--;
+                cur++;
             }
         } else {
-            cur = (u32 *)v;
+            cur = (NsdRecord *)v;
         }
         if (flags & 8) {
             func_80014260(cur, flags | 2, arg3);

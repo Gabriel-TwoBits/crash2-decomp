@@ -12,11 +12,10 @@
 typedef struct { s32 x, y, z; } Vec80030D98;
 typedef struct { Vec80030D98 min; Vec80030D98 max; } Box80030D98;
 typedef struct { s32 pad0[1]; s32 kind; } UnkQ;
-typedef struct { s32 pad0[4]; UnkQ *q; } UnkP;
 typedef struct { GoolObject *e; s32 f4; s32 f8; s32 kind; s32 count; void *f14; } UnkB;
 
-/* The kind GoolObject.unk_C leads to, as this function reads it */
-#define KIND(obj) (((UnkP *)(obj)->unk_C)->q->kind)
+/* The kind in the first item of GoolObject.unk_C, as this function reads it */
+#define KIND(obj) (((UnkQ *)(obj)->unk_C->items[0])->kind)
 
 s32 func_8001CEDC(GoolObject *a, UnkB *b) {
     s32 *v;
@@ -146,7 +145,6 @@ s32 func_8001D1E0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
 }
 
 #ifdef NON_MATCHING
-#define OFFSET_TABLE 0x14
 #define INDEX_MASK 0x3FFF
 #define ARG_ALL_BITS 0xFFFF
 #define MODE_THREE 3
@@ -168,7 +166,7 @@ s32 func_8001D22C(void *arg0, u16 arg1, s32 arg2, s32 *arg3) {
         arg3++;
     }
     func_8001C620(base, arg2, ARG_ALL_BITS);
-    base->unk_C0 = *(s32 *)((u8 *)base->unk_C + OFFSET_TABLE) + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
+    base->unk_C0 = (s32)base->unk_C->items[1] + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
     return func_8003A014(arg0, MODE_THREE, 0);
 }
 #else
