@@ -61,29 +61,29 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 
 #define FIELD(p, off, type) (*(type *)((u8 *)(p) + (off)))
 #define SLOT(obj, arg1) FIELD(obj, (((arg1) >> SLOT_SHIFT) & SLOT_MASK) + OBJ_SLOTS, u8 *)
-#define PROP(dst) D_8006B1C4[(u32)*(dst) >> VALUE_SHIFT]
+#define PROP(dst) g_EntityFlags[(u32)*(dst) >> VALUE_SHIFT]
 
 extern u32 g_TimerTicks;
-extern s32 D_8005F38C;
+extern s32 g_Player;
 extern u32 D_8005F3F0;
-extern s32 D_800608CC;
+extern s32 g_CurrentZone;
 extern s32 D_800608D0;
 extern u8 D_80060958[];
 extern s8 D_80069920;
 extern s8 D_80069921;
 extern u8 D_80069926;
 extern u8 D_80069927;
-extern u32 D_8006B1C4[];
-extern u8 D_8006CB18[];
+extern u32 g_EntityFlags[];
+extern u8 g_ObjLists[];
 extern u8 D_8006CB30[];
 extern u8 D_8006CB38[];
-extern u8 func_80018E48[];
+extern u8 Obj_HasId[];
 
 /* Appends to the object's value stack; a macro so no extra call is emitted. */
 #define PUSH(value) \
     (pushValue = (value), pushSlot = FIELD(obj, OBJ_STACK, s32 *), FIELD(obj, OBJ_STACK, s32 *) = pushSlot + 1, *pushSlot = pushValue)
 
-void func_80037698(u8 *obj, u32 arg1) {
+void Gool_OpMisc(u8 *obj, u32 arg1) {
     s32 *dst;
     s32 sub;
     u32 op;
@@ -112,7 +112,7 @@ void func_80037698(u8 *obj, u32 arg1) {
             dst = (s32 *)(obj + (arg1 & REG_INDEX_MASK) * WORD_BYTES + OBJ_SLOTS);
         }
     } else {
-        dst = func_80036D0C((void *)obj, arg1 & REG_ID_MASK);
+        dst = Gool_ResolveRef((void *)obj, arg1 & REG_ID_MASK);
     }
     sub = (s32)(arg1 << ARG_SIGN_LSHIFT) >> ARG_SIGN_RSHIFT;
     op = (arg1 >> OP_SHIFT) & OP_MASK;
@@ -177,9 +177,9 @@ void func_80037698(u8 *obj, u32 arg1) {
             PUSH(0);
             return;
         }
-        v = func_80018BE4(D_8006CB30, func_80018E48, *dst);
+        v = Obj_Find(D_8006CB30, Obj_HasId, *dst);
         if (v == 0) {
-            v = func_80018BE4(D_8006CB30 + ENTRY_STRIDE, func_80018E48, *dst);
+            v = Obj_Find(D_8006CB30 + ENTRY_STRIDE, Obj_HasId, *dst);
         }
         PUSH(v);
         return;
@@ -252,9 +252,9 @@ void func_80037698(u8 *obj, u32 arg1) {
         }
     case 9:
         if (dst == 0) {
-            v = D_800608CC;
+            v = g_CurrentZone;
         } else {
-            v = (s32)func_80027DEC((char *)D_800608CC, dst);
+            v = (s32)func_80027DEC((char *)g_CurrentZone, dst);
         }
         if (v < MIN_VALID) {
             FIELD(SLOT(obj, arg1), 0x18, s32) = v;
@@ -269,7 +269,7 @@ void func_80037698(u8 *obj, u32 arg1) {
             func_8002F6C8(D_80060958 + ((u32)*dst >> VALUE_SHIFT) * SPAWN_SIZE);
             return;
         case 2:
-            func_800189CC((void *)obj, D_8006CB18 + ((u32)*dst >> VALUE_SHIFT) * ENTRY_STRIDE);
+            Obj_SetParent((void *)obj, g_ObjLists + ((u32)*dst >> VALUE_SHIFT) * ENTRY_STRIDE);
             return;
         case 3:
             func_800324A0(*dst);
@@ -324,14 +324,14 @@ void func_80037698(u8 *obj, u32 arg1) {
                 return;
             }
             for (i = 0; i < sp48; i++) {
-                flags = &D_8006B1C4[list[i]];
+                flags = &g_EntityFlags[list[i]];
                 if (*flags & PROP_ACTIVE) {
-                    v = func_80019FA0(list[i] << VALUE_SHIFT);
+                    v = Obj_FindById(list[i] << VALUE_SHIFT);
                     if (v != 0) {
-                        func_8001CC10((s32)obj, v, EVENT_ACTIVE, 1, &sp4C);
+                        Gool_SendEvent((s32)obj, v, EVENT_ACTIVE, 1, &sp4C);
                     }
                 } else if (!(*flags & PROP_HIDDEN)) {
-                    func_8001CC10((s32)obj, D_8005F38C, EVENT_IDLE, 0, 0);
+                    Gool_SendEvent((s32)obj, g_Player, EVENT_IDLE, 0, 0);
                     *flags |= PROP_HIDDEN;
                 }
             }
@@ -360,9 +360,9 @@ void func_80037698(u8 *obj, u32 arg1) {
         query[QUERY_RESULT] = 0;
         query[QUERY_SLOT] = (s32)SLOT(obj, arg1);
         query[QUERY_VALUE] = *dst;
-        func_80018BE4(D_8006CB38, (void *)func_80018E68, query);
+        Obj_Find(D_8006CB38, (void *)func_80018E68, query);
         if ((arg1 >> ARG_SHIFT) & SCRIPT_HANDLE_FLAGS) {
-            func_80018BE4(D_8006CB38 - ENTRY_STRIDE, (void *)func_80018E68, query);
+            Obj_Find(D_8006CB38 - ENTRY_STRIDE, (void *)func_80018E68, query);
         }
         PUSH(query[QUERY_RESULT]);
         return;
@@ -389,7 +389,7 @@ void func_80037698(u8 *obj, u32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80037698", func_80037698);
+INCLUDE_ASM("asm/nonmatchings/game/80037698", Gool_OpMisc);
 #endif
 
 #ifdef NON_MATCHING
@@ -460,7 +460,7 @@ void func_8003817C(GoolObject *obj, u32 arg1) {
             src = (s32 *)(o + (arg1 & SLOT_SELECT_MASK) * 4 + SLOT_ARRAY_OFFSET);
         }
     } else {
-        src = func_80036D0C(obj, arg1 & FIELD_OP_MASK);
+        src = Gool_ResolveRef(obj, arg1 & FIELD_OP_MASK);
     }
 
     switch (op) {

@@ -31,7 +31,7 @@
 #define FIELD(p, T, off) (*(T *)((u8 *)(p) + (off)))
 
 
-extern void *D_800608CC;
+extern void *g_CurrentZone;
 extern s32 D_800608D0;
 extern s32 D_800608D4;
 extern s32 D_800608E0;
@@ -47,7 +47,7 @@ extern s32 D_80060888;
 extern s32 D_800607F4[];
 extern s32 D_80060800[];
 extern s32 D_80060918[];
-extern s32 D_8005F38C;
+extern s32 g_Player;
 extern s32 D_8005F390;
 extern s32 D_8005F398;
 extern s32 D_8005F3D0;
@@ -86,19 +86,19 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     keepScreen = 1;
     target = arg2;
     if (arg1 != 0 && arg0 != 0) {
-        if (arg0 != (s32)D_800608CC) {
+        if (arg0 != (s32)g_CurrentZone) {
             flags |= FLAG_OBJECT;
-            if (D_800608CC != 0) {
+            if (g_CurrentZone != 0) {
                 keepScreen = arg3 & ARG_KEEP_SCREEN;
                 if (!(arg3 & ARG_SKIP_PREPASS)) {
-                    data = FIELD(D_800608CC, s32, OBJ_DATA);
+                    data = FIELD(g_CurrentZone, s32, OBJ_DATA);
                     D_800608D0 = arg0;
                     for (i = 0; i < FIELD(data, s32, DATA_COUNT); i++) {
                         if (FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) {
                             sub = data + DATA_ENTRIES + i * ENTRY_STRIDE;
                             if (func_800143C0((void *)sub, 0) != 0) {
                                 entry = func_80014260((void *)sub, 1, 0);
-                                if (func_8001FF50(arg0, (s32 *)entry) == 0) {
+                                if (Zone_IsLinked(arg0, (s32 *)entry) == 0) {
                                     func_8002001C((char *)entry);
                                 }
                             }
@@ -146,7 +146,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
             }
             idx = seg;
             if ((flags & FLAG_TARGET) || seg < dist || (count - (seg + 1)) < dist) {
-                ((void (*)(s32))func_8001A014)(D_800608E8);
+                ((void (*)(s32))Zone_QueueKillAll)(D_800608E8);
                 func_80014420();
                 tmp = D_8005F398;
                 D_8005F398 = D_8005F3D0;
@@ -189,7 +189,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                 }
             }
             func_800143C0((void *)func_80031AE8(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1);
-            func_8001A23C(FIELD(arg1, void *, 4), 0x13B);
+            Zone_RunEntityQueue(FIELD(arg1, void *, 4), 0x13B);
         }
 
         if (flags & FLAG_ANY_RELOAD) {
@@ -198,7 +198,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                 if (D_8006CBB4 == SCREEN_MODE_PENDING && !(arg3 & ARG_KEEP_SCREEN)) {
                     keepScreen = 0;
                 }
-                D_800608CC = (void *)arg0;
+                g_CurrentZone = (void *)arg0;
                 D_800608E0 = target;
                 D_800608D4 = arg1;
                 D_800608E8 = seg;
@@ -219,7 +219,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                     }
                 }
             } else {
-                D_800608CC = (void *)arg0;
+                g_CurrentZone = (void *)arg0;
                 D_800608E0 = target;
                 D_800608D4 = arg1;
                 D_800608E8 = seg;
@@ -247,7 +247,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                 }
                 D_80060904 = shortVal;
             }
-            func_8001A23C(D_800608CC, -1);
+            Zone_RunEntityQueue(g_CurrentZone, -1);
         }
         for (i = 0; i < 9; i++) {
             D_800607F4[i] = D_800607F4[i + 9];
@@ -259,15 +259,15 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         }
     }
     D_80067FC8 = 0;
-    if (D_8005F38C == 0 && FIELD(D_8006759C, s32, OBJ_DATA) != SAVE_MAGIC) {
-        func_80019800(&D_8006CB48, 0, 0, 0, 0, 1);
+    if (g_Player == 0 && FIELD(D_8006759C, s32, OBJ_DATA) != SAVE_MAGIC) {
+        Obj_Spawn(&D_8006CB48, 0, 0, 0, 0, 1);
         data = (s32)D_8006759C + D_8006CD7C * 0x18;
-        FIELD(D_8005F38C, s32, 0x60) = FIELD(data, s32, 0x1E8);
-        FIELD(D_8005F38C, s32, 0x64) = FIELD(data, s32, 0x1EC);
-        FIELD(D_8005F38C, s32, 0x68) = FIELD(data, s32, 0x1F0);
-        FIELD(D_8005F38C, void *, 0x18) = D_800608CC;
+        FIELD(g_Player, s32, 0x60) = FIELD(data, s32, 0x1E8);
+        FIELD(g_Player, s32, 0x64) = FIELD(data, s32, 0x1EC);
+        FIELD(g_Player, s32, 0x68) = FIELD(data, s32, 0x1F0);
+        FIELD(g_Player, void *, 0x18) = g_CurrentZone;
         D_8006CC84 = -1;
-        func_8002F34C((GoolObject *)D_8005F38C, (u8 *)&D_800608CC + 0x8C, 1, 0);
+        func_8002F34C((GoolObject *)g_Player, (u8 *)&g_CurrentZone + 0x8C, 1, 0);
     }
 }
 #else

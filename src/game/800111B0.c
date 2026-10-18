@@ -311,12 +311,12 @@ extern s32 D_8005F1F4;
 extern s32 D_8005F2C4;
 extern s32 D_8005F2C8;
 extern s32 D_8005F388;
-extern s32 D_8005F38C;
+extern s32 g_Player;
 extern s32 D_8005F390;
-extern s32 D_8005F3B8;
+extern s32 g_EntityQueueCount;
 extern s32 D_8005F3F0;
 extern char D_80060774[];
-extern NsfEntry *D_800608CC;
+extern NsfEntry *g_CurrentZone;
 extern s32 D_80060944;
 extern char D_80060958[];
 extern s32 D_80060988;
@@ -358,7 +358,7 @@ void Sys_MainLoop(s32 arg0) {
             D_8005F180 = D_8005F180 == 0;
             if (D_8005F180 != 0) {
                 if (CD14(-0x174) == 0) {
-                    CD14(-0x174) = func_80019800(D_8006CD14 - 0x1C4, 4, 4, 0, 0, 0);
+                    CD14(-0x174) = Obj_Spawn(D_8006CD14 - 0x1C4, 4, 4, 0, 0, 0);
                     if (CD14(-0x174) >= -0xFE) {
                         D_8005F180 = 0;
                         CD14(-0x174) = 0;
@@ -373,7 +373,7 @@ void Sys_MainLoop(s32 arg0) {
                 }
             } else if (CD14(-0x174) != 0) {
                 spC0 = 0;
-                func_8001CC10(0, CD14(-0x174), PAUSE_BUF_ID, 1, &spC0);
+                Gool_SendEvent(0, CD14(-0x174), PAUSE_BUF_ID, 1, &spC0);
                 D_8005F180 = 1;
             } else {
                 D_8005F18C = -1;
@@ -384,7 +384,7 @@ void Sys_MainLoop(s32 arg0) {
             D_8005F18C = 0;
         }
         func_80011E80();
-        if ((D_8005F38C != 0) && (D_8005F388 != SAVE_MAGIC)) {
+        if ((g_Player != 0) && (D_8005F388 != SAVE_MAGIC)) {
             func_8002FDCC(&D_8005F388);
         }
         if (D_8005F3F0 == STATE_NONE) {
@@ -400,7 +400,7 @@ void Sys_MainLoop(s32 arg0) {
         }
         if (D_8005F3F0 != STATE_NONE) {
             state = D_8005F3F0;
-            func_8001D194(0, 0x2900, 0, 0, 0);
+            Gool_BroadcastEvent(0, 0x2900, 0, 0, 0);
             pending = 0;
             if (D_8005F3F0 == STATE_PENDING) {
                 state = D_80060988;
@@ -412,7 +412,7 @@ void Sys_MainLoop(s32 arg0) {
             D_80067588.unk_24 = 2;
             Nsf_CloseLevel(&D_80067588);
             D_8005F180 = 0;
-            D_8005F3B8 = 0;
+            g_EntityQueueCount = 0;
             if ((state == 2) || ((u32)(state - STATE_DEAD) < 2U)) {
                 D_8006CB98 = D_8006CBB4;
             } else {
@@ -437,9 +437,9 @@ void Sys_MainLoop(s32 arg0) {
             /* paused */
         }
         func_80017BC4();
-        if ((D_8006CB94 & 1) && (*(s32 *)D_800608CC->items[0] != 0)) {
+        if ((D_8006CB94 & 1) && (*(s32 *)g_CurrentZone->items[0] != 0)) {
             SetRotMatrix(D_80060774);
-            list = (s32 *)D_800608CC->items[0];
+            list = (s32 *)g_CurrentZone->items[0];
             count = *list;
             out = (s32 *)SCRATCH_ENTRY_BASE;
             if (count != 0) {
@@ -480,7 +480,7 @@ void Sys_MainLoop(s32 arg0) {
         } else {
             /* skipped */
         }
-        func_8001C29C((void *)(D_8005F180 == 0));
+        Obj_UpdateAll((void *)(D_8005F180 == 0));
         func_80011E88();
         func_8003DB94(*(s32 *)((char *)g_BuildBuffer + BUF_FIELD_2088), g_BuildBuffer, D_80062A18);
         Gfx_EndFrame();

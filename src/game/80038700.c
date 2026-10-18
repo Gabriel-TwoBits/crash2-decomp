@@ -26,8 +26,8 @@
 #define CTX_OFS_INNER 0x10
 #define INNER_OFS_FLAGS 0x29C
 
-extern s32 D_8005F38C;
-extern s32 D_800608CC;
+extern s32 g_Player;
+extern s32 g_CurrentZone;
 
 #define W(base, ofs) (*(s32 *)((u8 *)(base) + (ofs)))
 
@@ -44,7 +44,7 @@ static inline s32 *dest_slot(s32 obj, u32 op) {
             return (s32 *)(obj + OBJ_IMM_BASE + (op & OP_DEST_IMM_INDEX_MASK) * 4);
         }
     } else {
-        return (s32 *)func_80036D0C((GoolObject *)obj, d);
+        return (s32 *)Gool_ResolveRef((GoolObject *)obj, d);
     }
 }
 
@@ -61,7 +61,7 @@ void func_80038700(s32 arg0, u32 arg1) {
     s32 *out;
     extern void *func_80028750(s32 *, s32 *, s32);
 
-    func_80036E30(arg0, arg1 & OP_DEST_MASK, 0);
+    Gool_ResolveOperand(arg0, arg1 & OP_DEST_MASK, 0);
     mode = (arg1 >> OP_MODE_SHIFT) & REG_MASK;
     switch (mode) {
     case 0:
@@ -83,8 +83,8 @@ void func_80038700(s32 arg0, u32 arg1) {
         b[0] = W(arg0, 0x60);
         b[1] = W(arg0, 0x64);
         b[2] = W(arg0, 0x68);
-        if (arg0 == D_8005F38C || W(arg0, OBJ_OFS_OTHER) == D_8005F38C) {
-            func_80028C48(arg0, a, D_8005F38C);
+        if (arg0 == g_Player || W(arg0, OBJ_OFS_OTHER) == g_Player) {
+            func_80028C48(arg0, a, g_Player);
         }
         W(arg0, OBJ_OFS_RESULT) = (s32)func_80028A28((void *)arg0, b);
         out = b;
@@ -100,7 +100,7 @@ void func_80038700(s32 arg0, u32 arg1) {
         c[2] = W(arg0, 0x68);
         ctx = W(arg0, OBJ_OFS_CTX);
         if (ctx == 0) {
-            ctx = D_800608CC;
+            ctx = g_CurrentZone;
         }
         if (W(W(ctx, CTX_OFS_INNER), INNER_OFS_FLAGS) & OBJ_FLAG_BIT) {
             sel = flag ? 6 : 2;
@@ -135,7 +135,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038700);
 #endif
 
 #ifdef NON_MATCHING
-void func_80038AFC(GoolObject *arg0, u32 arg1) {
+void Gool_OpSpawn(GoolObject *arg0, u32 arg1) {
     s32 i;
     s32 count;
     s32 n;
@@ -148,13 +148,13 @@ void func_80038AFC(GoolObject *arg0, u32 arg1) {
     n = hi & 0xF;
     if (count == 0) {
         n += 1;
-        count = *(arg0->unk_BC - n);
+        count = *(arg0->sp - n);
     }
     i = 0;
     if (count > 0) {
         k = hi & 0xF;
         do {
-            r = (s32 *)func_80019800(arg0, (arg1 >> 0xC) & 0xFF, (arg1 >> 6) & 0x3F, k, (s32)(arg0->unk_BC + k * -1), (arg1 >> 0x18) == 0x46);
+            r = (s32 *)Obj_Spawn(arg0, (arg1 >> 0xC) & 0xFF, (arg1 >> 6) & 0x3F, k, (s32)(arg0->sp + k * -1), (arg1 >> 0x18) == 0x46);
             if ((s32)r < -0xFE) {
                 r[0x50 / 4] = (s32)arg0;
                 arg0->unk_D4 = (s32)r;
@@ -164,28 +164,28 @@ void func_80038AFC(GoolObject *arg0, u32 arg1) {
             i++;
         } while (i < count);
     }
-    arg0->unk_BC = arg0->unk_BC - n;
+    arg0->sp = arg0->sp - n;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80038700", func_80038AFC);
+INCLUDE_ASM("asm/nonmatchings/game/80038700", Gool_OpSpawn);
 #endif
 
-/* 0xE1F pops the stack, 0xE00-0xFFF name a register, anything else is resolved by func_80036D0C. */
+/* 0xE1F pops the stack, 0xE00-0xFFF name a register, anything else is resolved by Gool_ResolveRef. */
 static inline s32 *operand_address(GoolObject *obj, s32 idx) {
     if ((idx & 0xE00) == 0xE00) {
         if (idx == 0xE1F) {
-            return --obj->unk_BC;
+            return --obj->sp;
         } else {
-            return &((s32 *)obj->unk_40)[idx & 0x1FF];
+            return &((s32 *)obj->links)[idx & 0x1FF];
         }
     } else {
-        return func_80036D0C(obj, idx);
+        return Gool_ResolveRef(obj, idx);
     }
 }
 
 s32 func_80032B7C(GoolObject *, s32 *, s32);
 
-void func_80038C14(GoolObject *obj, u32 arg1) {
+void Gool_OpPlaySound(GoolObject *obj, u32 arg1) {
     s32 *a;
     s32 *b;
 
@@ -194,7 +194,7 @@ void func_80038C14(GoolObject *obj, u32 arg1) {
     obj->unk_12C = func_80032B7C(obj, b, *(s16 *)a);
 }
 
-void func_80038D08(GoolObject *obj, u32 op) {
+void Gool_OpSetAudio(GoolObject *obj, u32 op) {
     s32 *dst;
     s32 *src;
     s32 srcIdx;
@@ -208,9 +208,9 @@ void func_80038D08(GoolObject *obj, u32 op) {
         val = 0;
     } else {
         if (srcIdx == 0x1F) {
-            src = --obj->unk_BC;
+            src = --obj->sp;
         } else {
-            src = &((s32 *)obj->unk_40)[srcIdx];
+            src = &((s32 *)obj->links)[srcIdx];
         }
         val = *src;
     }

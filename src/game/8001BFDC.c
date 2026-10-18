@@ -148,8 +148,8 @@ s32 func_8001BFDC(void *arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001BFDC);
 #endif
 
-extern u8 D_8005C514;
-extern s32 D_8005F38C;
+extern u8 g_GoolOpcodeHandlers;
+extern s32 g_Player;
 extern s32 D_80060944;
 extern u32 *g_DrawBuffer;
 extern u32 D_8006CB64;
@@ -157,15 +157,15 @@ extern s32 D_8006CCAC;
 extern u8 func_80018CAC;
 /* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
 
-void func_8001C29C(void *arg0) {
+void Obj_UpdateAll(void *arg0) {
     D_8006CB64 = g_DrawBuffer[3] / 34;
     func_8002CA98();
     D_8006CCAC = D_80060944;
-    func_80019F08();
-    if (D_8005F38C != 0) {
-        func_80018DD0(&func_80018CAC, &func_8001C718, arg0);
+    Gool_InitScratchpad();
+    if (g_Player != 0) {
+        Obj_ForEachList(&func_80018CAC, &Obj_Update, arg0);
     }
-    *(u8 **)0x1F80005C = &D_8005C514;
+    *(u8 **)0x1F80005C = &g_GoolOpcodeHandlers;
 }
 
 #ifdef NON_MATCHING
@@ -198,7 +198,7 @@ typedef struct Unk8001C340Entry {
 
 extern s32 D_8006CB60;
 
-s32 func_8001C340(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
+s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     s32 prev_d0;
     Unk8001C340Entry *entry;
     char *own;
@@ -267,11 +267,11 @@ s32 func_8001C340(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
         FIELD(s32 *, 0xBC) = sp + 1;
         *sp = *arg3++;
     }
-    func_8001C620(arg0, arg2, ARG_MASK);
+    Gool_PushFrame(arg0, arg2, ARG_MASK);
     if (prev_d0 != 0) {
-        func_8001C620(arg0, 0, ARG_MASK);
+        Gool_PushFrame(arg0, 0, ARG_MASK);
         FIELD(s32, 0xC0) = prev_d0;
-        i = func_8003A014(arg0, CMD_RESUME, 0);
+        i = Gool_Interpret(arg0, CMD_RESUME, 0);
         if (i >= RESULT_MIN_OK) {
             return i;
         }
@@ -283,9 +283,9 @@ s32 func_8001C340(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     FIELD(u32, 0xE0) = D_8006CB64;
     if (FIELD(s32, 0xC8) != 0) {
         if ((s32)arg0 == D_8006CB60) {
-            func_8001C620(arg0, 0, ARG_MASK);
+            Gool_PushFrame(arg0, 0, ARG_MASK);
             FIELD(s32, 0xC0) = FIELD(s32, 0xC8);
-            i = func_8003A014(arg0, CMD_START, 0);
+            i = Gool_Interpret(arg0, CMD_START, 0);
             if (i >= RESULT_MIN_OK) {
                 return i;
             }
@@ -296,62 +296,62 @@ s32 func_8001C340(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     return RESULT_FAIL;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001C340);
+INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_ChangeState);
 #endif
 
 #ifdef NON_MATCHING
-s32 func_8001C620(GoolObject *arg0, s32 arg1, s32 arg2) {
+s32 Gool_PushFrame(GoolObject *arg0, s32 arg1, s32 arg2) {
     u8 *cur;
     s32 prev;
     s32 *p;
 
-    cur = (u8 *)arg0->unk_BC;
-    p = arg0->unk_BC;
-    prev = (s32)arg0->unk_C4;
-    arg0->unk_C4 = cur;
-    arg0->unk_BC = p + 1;
+    cur = (u8 *)arg0->sp;
+    p = arg0->sp;
+    prev = (s32)arg0->fp;
+    arg0->fp = cur;
+    arg0->sp = p + 1;
     *p = arg2;
-    p = arg0->unk_BC;
-    arg0->unk_BC = p + 1;
-    *p = arg0->unk_C0;
-    p = arg0->unk_BC;
-    arg0->unk_BC = p + 1;
+    p = arg0->sp;
+    arg0->sp = p + 1;
+    *p = arg0->pc;
+    p = arg0->sp;
+    arg0->sp = p + 1;
     *p = ((cur - arg1 * 4 - 0x40) - (u8 *)arg0) | ((prev - 0x40 - (s32)arg0) << 16);
     return -0xFF;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001C620);
+INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_PushFrame);
 #endif
 
 #ifdef NON_MATCHING
-s32 func_8001C688(GoolObject *arg0, u32 *arg1) {
+s32 Gool_PopFrame(GoolObject *arg0, u32 *arg1) {
     u32 temp_a3;
     u32 temp_t0;
     u32 *v1;
     u32 *v1b;
     u32 w;
 
-    v1 = (u32 *)arg0->unk_C4;
-    arg0->unk_BC = (s32 *)(v1 + 2);
+    v1 = (u32 *)arg0->fp;
+    arg0->sp = (s32 *)(v1 + 2);
     temp_a3 = v1[2];
     temp_t0 = temp_a3 >> 16;
     if (temp_t0 == 0) {
         return -0x19;
     }
-    arg0->unk_BC = (s32 *)(v1 + 1);
-    arg0->unk_C0 = v1[1];
-    v1b = *(u32 * volatile *)&arg0->unk_BC;
-    arg0->unk_BC = (s32 *)(v1b - 1);
+    arg0->sp = (s32 *)(v1 + 1);
+    arg0->pc = v1[1];
+    v1b = *(u32 * volatile *)&arg0->sp;
+    arg0->sp = (s32 *)(v1b - 1);
     w = v1b[-1];
     if (arg1 != 0) {
         *arg1 = (*arg1 & 0xFFFF0000) | (w & 0xFFFF);
     }
-    arg0->unk_BC = (s32 *)&((u8 *)arg0)[(temp_a3 & 0xFFFF) + 0x40];
-    arg0->unk_C4 = &((u8 *)arg0)[temp_t0 + 0x40];
+    arg0->sp = (s32 *)&((u8 *)arg0)[(temp_a3 & 0xFFFF) + 0x40];
+    arg0->fp = &((u8 *)arg0)[temp_t0 + 0x40];
     return -0xFF;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001C688);
+INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_PopFrame);
 #endif
 
 #ifdef NON_MATCHING
@@ -400,7 +400,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001C688);
 extern u32 D_8006CB94;
 extern s32 D_8005F180;
 
-s32 func_8001C718(u8 *obj, s32 flag) {
+s32 Obj_Update(u8 *obj, s32 flag) {
     s32 out[2];
     s32 vec[6];
     u32 pad;
@@ -413,7 +413,7 @@ s32 func_8001C718(u8 *obj, s32 flag) {
     if (FIELD(obj, OFF_KIND, s32) != OBJ_STATE_ACTIVE) {
         return RESULT_NOT_ACTIVE;
     }
-    if (obj == (u8 *)D_8005F38C) {
+    if (obj == (u8 *)g_Player) {
         func_800158E0();
     } else {
     }
@@ -464,9 +464,9 @@ s32 func_8001C718(u8 *obj, s32 flag) {
             } else {
             }
             if (FIELD(obj, OFF_SEL_C8, s32) != 0) {
-                func_8001C620((GoolObject *)obj, 0, ARG_FULL_RANGE);
+                Gool_PushFrame((GoolObject *)obj, 0, ARG_FULL_RANGE);
                 FIELD(obj, OFF_SEL_C0, s32) = FIELD(obj, OFF_SEL_C8, s32);
-                r = func_8003A014(obj, 3, 0);
+                r = Gool_Interpret(obj, 3, 0);
                 if (r >= RESULT_ERROR_LIMIT) {
                     return r;
                 } else {
@@ -477,7 +477,7 @@ s32 func_8001C718(u8 *obj, s32 flag) {
             sel = *(u32 *)(top - 4);
             if (D_8006CB64 - (sel & MASK_LOW24) >= (sel >> SHIFT_HIGH8)) {
                 FIELD(obj, OFF_STACK_TOP, u32) = top - 4;
-                r = func_8003A014(obj, 4, 0);
+                r = Gool_Interpret(obj, 4, 0);
                 if (r >= RESULT_ERROR_LIMIT) {
                     return r;
                 } else {
@@ -533,7 +533,7 @@ s32 func_8001C718(u8 *obj, s32 flag) {
     return RESULT_NOT_ACTIVE;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001C718);
+INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Obj_Update);
 #endif
 
 #ifdef NON_MATCHING
@@ -558,13 +558,13 @@ typedef struct Unk8001CC10Tab {
     s32 count;
 } Unk8001CC10Tab;
 
-/* GoolObject.unk_C's items, as this function reads them */
-#define BANK_TAB(o) ((Unk8001CC10Tab *)(o)->unk_C->items[0])
-#define BANK_CODE(o) ((s32 *)(o)->unk_C->items[1])
-#define BANK_INDEX(o) ((u16 *)(o)->unk_C->items[3])
-#define BANK_FLAGS(o) ((s32 *)(o)->unk_C->items[4])
+/* GoolObject.exe's items, as this function reads them */
+#define BANK_TAB(o) ((Unk8001CC10Tab *)(o)->exe->items[0])
+#define BANK_CODE(o) ((s32 *)(o)->exe->items[1])
+#define BANK_INDEX(o) ((u16 *)(o)->exe->items[3])
+#define BANK_FLAGS(o) ((s32 *)(o)->exe->items[4])
 
-s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
+s32 Gool_SendEvent(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
 #define self ((GoolObject *)arg0)
 #define obj ((GoolObject *)arg1)
 #define args ((s32 *)arg4)
@@ -583,13 +583,13 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
         if (self != 0) {
             self->unk_D4 = 1;
         }
-        obj->unk_40[7] = self;
-        if (obj->unk_CC != 0) {
-            *obj->unk_BC++ = id;
-            *obj->unk_BC++ = (s32)args;
-            func_8001C620(obj, PUSH_ARG_COUNT, SCRIPT_ARG_LIMIT);
-            obj->unk_C0 = obj->unk_CC;
-            r = func_8003A014(obj, 8, (s32)out);
+        obj->links[GOOL_LINK_INTERRUPTER] = self;
+        if (obj->event_pc != 0) {
+            *obj->sp++ = id;
+            *obj->sp++ = (s32)args;
+            Gool_PushFrame(obj, PUSH_ARG_COUNT, SCRIPT_ARG_LIMIT);
+            obj->pc = obj->event_pc;
+            r = Gool_Interpret(obj, 8, (s32)out);
             if (r != RESULT_PENDING) {
                 if (r >= -0xFE) {
                     return r;
@@ -616,24 +616,24 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
                 if (n > 0) {
                     src = args;
                     do {
-                        *obj->unk_BC++ = *src;
+                        *obj->sp++ = *src;
                         i++;
                         src++;
                     } while (i < n);
                 }
-                func_8001C620(obj, n, SCRIPT_ARG_LIMIT);
-                obj->unk_C0 = (s32)(BANK_CODE(obj) + (s3 & SCRIPT_INDEX_MASK));
-                return func_8003A014(obj, 3, 0);
+                Gool_PushFrame(obj, n, SCRIPT_ARG_LIMIT);
+                obj->pc = (s32)(BANK_CODE(obj) + (s3 & SCRIPT_INDEX_MASK));
+                return Gool_Interpret(obj, 3, 0);
             }
         }
         if (s3 == SCRIPT_NONE) {
             return RESULT_NONE;
         }
-        fl = obj->unk_B0;
+        fl = obj->block_flags;
         if (id == ID_1800 || id == ID_2600 || id == ID_1900 || id == ID_2500) {
             fl &= ~FLAG_BIT2;
         }
-        cur = D_8005F38C;
+        cur = g_Player;
         mask = BANK_FLAGS(obj)[s3 * 4];
         st = fl & mask;
         if ((s32)obj == cur) {
@@ -647,7 +647,7 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
             if (id == ID_1800 || id == ID_1900) {
                 obj->unk_A8 |= OBJ_FLAG_A8_SET;
             }
-            func_8001C340(obj, s3, n, (s32 *)args);
+            Gool_ChangeState(obj, s3, n, (s32 *)args);
             return RESULT_NONE;
         }
     }
@@ -657,5 +657,5 @@ s32 func_8001CC10(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
     return RESULT_NONE;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001CC10);
+INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_SendEvent);
 #endif

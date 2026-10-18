@@ -31,7 +31,7 @@ extern s32 D_8005F388;
 extern s32 D_8005F3B0;
 extern s32 D_8005F3B4;
 extern s32 D_8005F3EC;
-extern s32 D_800608CC;
+extern s32 g_CurrentZone;
 extern s32 D_800608D4;
 extern s32 D_800608E0;
 extern s8 D_8006094C;
@@ -44,7 +44,7 @@ extern s32 D_80060980;
 extern s32 D_80060984;
 extern s32 *D_80067598;
 extern u8 *D_8006759C;
-extern u8 D_8006B1C4[];
+extern u8 g_EntityFlags[];
 extern s32 D_8006CB80;
 extern s32 D_8006CB94;
 extern s32 D_8006CB98;
@@ -163,7 +163,7 @@ s32 func_8001F9C4(void) {
         slot = 0;
         D_8006CD7C = 0;
     }
-    memset(D_8006B1C4, 0, CLEAR_BYTES);
+    memset(g_EntityFlags, 0, CLEAR_BYTES);
     func_8001F858(FIELD(D_8006759C, 8));
     func_8001798C();
     if (D_8005F1F4 == 1) {
@@ -173,7 +173,7 @@ s32 func_8001F9C4(void) {
         FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) = D_80060980;
         extra = D_80060984;
     }
-    D_800608CC = 0;
+    g_CurrentZone = 0;
     D_800608D4 = 0;
     D_800608E0 = 0;
     off = slot * ENTRY_STRIDE;
@@ -217,9 +217,9 @@ typedef struct Unk8001FDDC {
 } Unk8001FDDC;
 
 void func_8001FFCC(Unk8001FDDC *);
-extern s32 D_800608CC;
+extern s32 g_CurrentZone;
 
-s32 func_8001FDDC(Unk8001FDDC *obj) {
+s32 Zone_PageIn(Unk8001FDDC *obj) {
     s32 n;
     s32 i;
     s32 j;
@@ -248,19 +248,19 @@ s32 func_8001FDDC(Unk8001FDDC *obj) {
     for (i = 0; i < ((Header *)obj->items[0])->unk18C; i++) {
         obj->items[i + ((Header *)obj->items[0])->unk184 + ((Header *)obj->items[0])->unk188]->unk4 = obj;
     }
-    if (D_800608CC != 0 && func_8001FF50(D_800608CC, obj) != 0) {
+    if (g_CurrentZone != 0 && Zone_IsLinked(g_CurrentZone, obj) != 0) {
         func_8001FFCC(obj);
     }
     return -0xFF;
 }
 
-s32 func_8001FF30(char *arg0) {
+s32 Zone_PageOut(char *arg0) {
     func_8002001C(arg0);
     return -0xFF;
 }
 
 #ifdef NON_MATCHING
-s32 func_8001FF50(s32 arg0, s32 *arg1) {
+s32 Zone_IsLinked(s32 arg0, s32 *arg1) {
     s32 key;
     s32 count;
     s32 n;
@@ -296,7 +296,7 @@ next:
     return 0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001F9C4", func_8001FF50);
+INCLUDE_ASM("asm/nonmatchings/game/8001F9C4", Zone_IsLinked);
 #endif
 
 extern s32 D_8006CDF0;
@@ -316,7 +316,7 @@ void func_8001FFCC(Unk8001FDDC *arg0) {
     }
 }
 
-extern GoolObject *D_8005F38C;
+extern GoolObject *g_Player;
 extern int D_800608D0;
 
 void func_8002001C(char *arg0) {
@@ -324,9 +324,9 @@ void func_8002001C(char *arg0) {
 
     do {
         if (*(unsigned *)(s1 + 0x27C) & 1) {
-            func_80019E28(arg0);
-            if (D_8005F38C->unk_18 == arg0) {
-                D_8005F38C->unk_18 = (void *)D_800608D0;
+            Zone_KillObjects(arg0);
+            if (g_Player->zone == arg0) {
+                g_Player->zone = (void *)D_800608D0;
             }
             *(unsigned *)(s1 + 0x27C) &= ~3;
         }

@@ -38,7 +38,7 @@ extern u8 D_80044A70[];
 extern u8 D_8004599C[];
 extern u8 D_80045C18[];
 extern s32 D_8005F180;
-extern s32 D_8005F38C;
+extern s32 g_Player;
 extern s32 D_800607F4;
 extern s32 D_800607F8;
 extern s32 D_800607FC;
@@ -181,9 +181,9 @@ void func_80020A24(void) {
     D_80062AE4 = 3;
     D_80062ADC = 3;
     D_80062A28 = func_8003DD0C;
-    D_80062AA4 = (s16)(FIXED_UNPACK(FIELD_S32(D_8005F38C, OBJ_X) - D_800607F4));
-    D_80062AA6 = (s16)(FIXED_UNPACK(FIELD_S32(D_8005F38C, OBJ_Y) - D_800607F8));
-    D_80062AA8 = FIXED_UNPACK(FIELD_S32(D_8005F38C, OBJ_Z) - D_800607FC);
+    D_80062AA4 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_X) - D_800607F4));
+    D_80062AA6 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Y) - D_800607F8));
+    D_80062AA8 = FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Z) - D_800607FC);
     p = (s32 *)func_80031AE8(D_800608DC, 0x185, D_800608E0, 0, 0, 0, 0, 0, 0);
     if (p != 0) {
         D_80062AD8 = *p;
@@ -533,7 +533,7 @@ extern s32 D_80060800;
 extern s32 D_80060804;
 extern s32 D_80060818;
 extern s32 D_80060820;
-extern s32 D_800608CC[];
+extern s32 g_CurrentZone[];
 extern s32 D_800608D4;
 extern s32 D_800608E0;
 extern s32 D_800608F8;
@@ -622,7 +622,7 @@ void func_80021A08(s32 *arg0, s32 arg1) {
         if (diff < 0) {
             diff = -diff;
         }
-        sp10[0] = D_800608CC[0];
+        sp10[0] = g_CurrentZone[0];
         sp10[1] = D_800608D4;
         sp10[2] = D_800608E0;
         sp10[3] = D_800608F8;
@@ -634,12 +634,12 @@ void func_80021A08(s32 *arg0, s32 arg1) {
             a1 = sp20[1];
             a2 = sp50[0];
         } else {
-            a0 = D_800608CC[0];
+            a0 = g_CurrentZone[0];
             a1 = D_800608D4;
             a2 = sp50[0];
         }
     } else {
-        a0 = D_800608CC[0];
+        a0 = g_CurrentZone[0];
         a1 = D_800608D4;
         a2 = D_800608E0;
     }
@@ -676,7 +676,7 @@ extern s32 D_8005BB3C;
 extern s32 D_8005BB44;
 extern s32 D_80060818;
 extern s32 D_80060820;
-extern s32 D_800608CC[];
+extern s32 g_CurrentZone[];
 extern s32 D_800608D4;
 extern s32 D_800608E0;
 extern s32 D_800608F8;
@@ -746,7 +746,7 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
             v = -v;
         }
         t = (s32)(v * DIFF_SCALE * DIFF_SHIFT_PRE) >> DIFF_SHIFT_A;
-        a[0] = D_800608CC[0];
+        a[0] = g_CurrentZone[0];
         a[1] = D_800608D4;
         a[2] = D_800608E0;
         a[3] = D_800608F8;
@@ -758,12 +758,12 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
             a1 = b[1];
             a2 = d;
         } else {
-            a0 = D_800608CC[0];
+            a0 = g_CurrentZone[0];
             a1 = D_800608D4;
             a2 = d;
         }
     } else {
-        a0 = D_800608CC[0];
+        a0 = g_CurrentZone[0];
         a1 = D_800608D4;
         a2 = D_800608E0;
     }
@@ -797,7 +797,7 @@ void func_800221DC(void) {
 #define ENTRY_VARIANT_OFFSET 0x10
 #define VARIANT_DEFAULT 1
 
-extern s32 D_800608CC[];
+extern s32 g_CurrentZone[];
 extern s32 D_800608D4;
 extern s32 D_800608D8[];
 extern s32 D_800608DC;
@@ -812,12 +812,12 @@ void func_80022224(s32 arg0) {
     if (D_800608D4 == 0) {
         return;
     }
-    table = (u8 *)D_800608CC[0];
+    table = (u8 *)g_CurrentZone[0];
     if (table == 0) {
         return;
     }
     slot = func_800321D4(D_800608D4, UNK_CALL_ARG, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
-    table = (u8 *)D_800608CC[0];
+    table = (u8 *)g_CurrentZone[0];
     value = *(s32 *)(table + (slot + *(s32 *)(*(u8 **)(table + SUBTABLE_OFFSET) + BASE_INDEX_OFFSET)) * 4 + ENTRY_DEFAULT_OFFSET);
     D_800608D8[0] = value;
     if (arg0 == VARIANT_DEFAULT) {
@@ -831,7 +831,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022224);
 #endif
 
 #ifdef NON_MATCHING
-extern s32 D_800608CC[];
+extern s32 g_CurrentZone[];
 extern s32 *D_8006759C;
 
 void func_80022314(s32 *arg0, s32 arg1) {
@@ -851,9 +851,9 @@ void func_80022314(s32 *arg0, s32 arg1) {
     if (D_8006759C[2] == 3) {
         a[0] = (a[0] * 5) >> 3;
     }
-    b[0] = D_800608CC[0];
-    b[1] = D_800608CC[2];
-    b[2] = D_800608CC[5];
+    b[0] = g_CurrentZone[0];
+    b[1] = g_CurrentZone[2];
+    b[2] = g_CurrentZone[5];
     r = func_8002433C(b, a, &sp58, &sp5C, &sp60);
     if (r > 0) {
         r = func_80024658(b, a, sp5C, 0, sp60, 1);
@@ -872,9 +872,9 @@ void func_80022314(s32 *arg0, s32 arg1) {
         y = out[1];
         z = out[2];
     } else {
-        x = D_800608CC[0];
-        y = D_800608CC[2];
-        z = D_800608CC[5];
+        x = g_CurrentZone[0];
+        y = g_CurrentZone[2];
+        z = g_CurrentZone[5];
     }
     func_800200A8(x, y, z, 0);
     func_800224A0(a);
@@ -935,9 +935,9 @@ void func_800225C0(s32 *arg0, s32 arg1) {
     do {
         sp18[1] = arg0[1];
         sp18[2] = arg0[2];
-        sp28[0] = D_800608CC[0];
-        sp28[1] = D_800608CC[2];
-        sp28[2] = D_800608CC[5];
+        sp28[0] = g_CurrentZone[0];
+        sp28[1] = g_CurrentZone[2];
+        sp28[2] = g_CurrentZone[5];
         r = func_8002433C(sp28, sp18, &p[0], &p[1], &p[2]);
         if (r > 0) {
             r = func_80024658(sp28, sp18, p[1], 0, p[2], 1);
@@ -948,7 +948,7 @@ void func_800225C0(s32 *arg0, s32 arg1) {
             func_80023E60(sp28, r, sp48, arg1 != 0 ? 0x100 : -1);
             func_800200A8(sp48[0], sp48[1], sp48[2], 0);
         } else {
-            func_800200A8(D_800608CC[0], D_800608CC[2], D_800608CC[5], 0);
+            func_800200A8(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
         }
     } while (0);
     func_800231B0(sp18);
@@ -970,9 +970,9 @@ void func_8002271C(s32 *arg0, s32 arg1) {
     v18[0] = arg0[0];
     v18[1] = arg0[1];
     t2 = arg0[2];
-    v28[0] = D_800608CC[0];
-    v28[1] = D_800608CC[2];
-    v28[2] = D_800608CC[5];
+    v28[0] = g_CurrentZone[0];
+    v28[1] = g_CurrentZone[2];
+    v28[2] = g_CurrentZone[5];
     v18[2] = t2;
     r = func_8002433C(v28, v18, &v58, &v5C, &v60);
     if (r > 0) {
@@ -984,7 +984,7 @@ void func_8002271C(s32 *arg0, s32 arg1) {
         func_80023E60(v28, t, v48, arg1 != 0 ? 0x100 : -1);
         func_800200A8(v48[0], v48[1], v48[2], 0);
     } else {
-        func_800200A8(D_800608CC[0], D_800608CC[2], D_800608CC[5], 0);
+        func_800200A8(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
     }
     func_800231B0(v18);
 }
@@ -1035,8 +1035,8 @@ void func_80022878(s32 *arg0) {
             D_800608F8 = DIR_FIRST;
         }
     }
-    sp20[0] = D_800608CC[0];
-    sp20[1] = D_800608CC[2];
+    sp20[0] = g_CurrentZone[0];
+    sp20[1] = g_CurrentZone[2];
     sp20[2] = D_800608E0;
     sp20[3] = D_800608F8;
     temp_v0 = func_80024268(sp20, var_a1, &sp50);
@@ -1051,8 +1051,8 @@ void func_80022878(s32 *arg0) {
         var_a0 = sp30[0];
         var_v1 = sp30[1];
     } else {
-        var_a0 = D_800608CC[0];
-        var_v1 = D_800608CC[2];
+        var_a0 = g_CurrentZone[0];
+        var_v1 = g_CurrentZone[2];
     }
     func_800200A8(var_a0, var_v1, sp50, 0);
     func_800224A0(sp40);
@@ -1112,7 +1112,7 @@ void func_80022A5C(s32 *arg0) {
 
     f.path[0] = arg0[0];
     f.path[1] = arg0[1];
-    f.cur[0] = D_800608CC[0];
+    f.cur[0] = g_CurrentZone[0];
     f.cur[1] = D_800608D4;
     f.cur[2] = D_800608E0;
     f.cur[3] = D_8005BAE4;
@@ -1154,7 +1154,7 @@ void func_80022A5C(s32 *arg0) {
             func_80023E60(f.cur, mode, f.out, STEP_RANGE / D_8005BA14);
             func_800200A8(f.out[0], f.out[1], f.out[2], 0);
         } else {
-            func_800200A8(D_800608CC[0], D_800608D4, D_800608E0, 0);
+            func_800200A8(g_CurrentZone[0], D_800608D4, D_800608E0, 0);
         }
         scale = ((D_8005BA18 - (D_8005BA14 - 1)) << FIXED_SHIFT) / D_8005BA18;
         D_800607F4 = (((f.pos[0] - D_8005BA1C) * scale) >> FIXED_SHIFT) + D_8005BA1C;
@@ -1212,7 +1212,7 @@ typedef struct Unk80022E74 {
 } Unk80022E74;
 
 extern s8 D_8005B994;
-extern s32 D_8005F38C;
+extern s32 g_Player;
 extern s32 D_8005BADC;
 extern s32 D_8005BAE0;
 extern s32 D_800608D4;
@@ -1230,10 +1230,10 @@ void func_80022E74(s32 *arg0) {
                       ((s32 *)p)[(UNK_FIELD_OFFSET / 4) + D_8005BADC * UNK_TABLE_STRIDE + p->unk_10->unk_184],
                       D_8005BAE0, 0);
         D_8005B994 = UNK_STATE_5;
-        ((GoolObject *)D_8005F38C)->unk_18 = (void *)D_800608CC[0];
+        ((GoolObject *)g_Player)->zone = (void *)g_CurrentZone[0];
         return;
     } else {
-        func_800200A8(D_800608CC[0], D_800608D4, D_800608E0, 0);
+        func_800200A8(g_CurrentZone[0], D_800608D4, D_800608E0, 0);
         func_800231B0(args);
     }
 }
@@ -1254,7 +1254,7 @@ typedef struct {
 
 s32 func_800267C4(s32 *, Unk80022F58 *, s32, s32);
 
-/* Word indices into D_800608CC. */
+/* Word indices into g_CurrentZone. */
 #define IDX_A 0
 #define IDX_B 2
 #define IDX_C 5
@@ -1271,18 +1271,18 @@ void func_80022F58(s32 *arg0) {
     Unk80022F58 in;
 
     do {
-        in.unk_0 = D_800608CC[IDX_A];
-        in.unk_4 = D_800608CC[IDX_B];
-        in.unk_8 = D_800608CC[IDX_C];
-        in.unk_C = D_800608CC[IDX_D];
-        if (func_800267C4(out, &in, D_800608CC[IDX_C], D_800608CC[IDX_D]) == SEARCH_FOUND) {
+        in.unk_0 = g_CurrentZone[IDX_A];
+        in.unk_4 = g_CurrentZone[IDX_B];
+        in.unk_8 = g_CurrentZone[IDX_C];
+        in.unk_C = g_CurrentZone[IDX_D];
+        if (func_800267C4(out, &in, g_CurrentZone[IDX_C], g_CurrentZone[IDX_D]) == SEARCH_FOUND) {
             func_800200A8(out[0], out[1], out[2], 0);
-            if (func_800321D4(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != D_800608CC[IDX_EXPECTED]) {
+            if (func_800321D4(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != g_CurrentZone[IDX_EXPECTED]) {
                 D_8005B994 = STATUS_DONE;
             }
         } else {
-            func_800200A8(D_800608CC[IDX_A], D_800608CC[IDX_B],
-                          (func_800322C0(D_800608CC[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
+            func_800200A8(g_CurrentZone[IDX_A], g_CurrentZone[IDX_B],
+                          (func_800322C0(g_CurrentZone[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
             D_8005B994 = STATUS_DONE;
         }
         func_800231B0(arg0);
@@ -1292,7 +1292,7 @@ void func_80022F58(s32 *arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022F58);
 #endif
 
-extern s32 D_8005F38C;
+extern s32 g_Player;
 
 void func_80023084(s32 arg0, s32 arg1) {
     s32 *p;
@@ -1309,7 +1309,7 @@ void func_80023084(s32 arg0, s32 arg1) {
                 kind = p[1];
                 len = p[0];
                 if (kind >= 0) {
-                    func_8001CC10(0, D_8005F38C, kind, len - 2, p + 2);
+                    Gool_SendEvent(0, g_Player, kind, len - 2, p + 2);
                     step = len * 4;
                 } else {
                     func_80012DC0();
@@ -1621,7 +1621,7 @@ extern Unk800237F8 D_8005BA28[];
 extern char D_8005BB48[];
 extern s32 D_80060914;
 extern s32 D_80069948;
-extern s32 D_8005F38C;
+extern s32 g_Player;
 
 void func_800237F8(void) {
     s32 notFlag;
@@ -1631,12 +1631,12 @@ void func_800237F8(void) {
     Unk800237F8 *e;
     char *q;
 
-    notFlag = (u32)((GoolObject *)D_8005F38C)->unk_AC >> 7;
+    notFlag = (u32)((GoolObject *)g_Player)->unk_AC >> 7;
     notFlag = notFlag ^ 1;
     notFlag = notFlag & 1;
     bits = 0;
     if (notFlag == 0) {
-        d = (s32)((((GoolObject *)D_8005F38C)->unk_6C[1] - D_80060914) << 20) >> 20;
+        d = (s32)((((GoolObject *)g_Player)->unk_6C[1] - D_80060914) << 20) >> 20;
         if ((u32)(d - 0x71) < 0x71E) {
             bits = 2;
         } else if ((u32)(d + 0x78E) < 0x71E) {
@@ -1659,7 +1659,7 @@ void func_800237F8(void) {
                 bits = 0;
             }
         }
-        if (((GoolObject *)D_8005F38C)->unk_100 & 0x04000000) {
+        if (((GoolObject *)g_Player)->state_flags & 0x04000000) {
             if (D_80069948 & 0x40) {
                 bits |= 1;
             } else if (D_80069948 & 0x20) {

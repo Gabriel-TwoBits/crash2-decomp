@@ -47,34 +47,34 @@ typedef struct {
 #define LIST_TYPE_FREE 2
 
 s32 func_8001F054(GoolObject *, u32, s32 *);
-extern s32 D_8005F38C;
-extern s32 D_8006B1C4[];
-extern s32 *D_8006CB10[];
-extern s32 D_8006CB58[];
+extern s32 g_Player;
+extern s32 g_EntityFlags[];
+extern s32 *g_PlayerSlot[];
+extern s32 g_ObjFreeList[];
 extern s32 D_8006CB5C;
 extern s32 D_8006CBA4;
 
 
 /* volatile: the retail code reloads it after the null check. */
-extern Unk608CC *volatile D_800608CC;
+extern Unk608CC *volatile g_CurrentZone;
 extern s32 D_8005F3F0;
 extern u8 D_80060958;
 extern u8 *D_8006759C;
-extern u8 D_8006CB18;
+extern u8 g_ObjLists;
 extern s32 D_8006CB38;
 extern s32 D_8006CC84;
 extern s32 D_8006CD7C;
 extern s32 *D_8006CDF0;
 extern s32 D_8006CDF4;
 extern s32 D_8006CDF8;
-extern char func_80019074[];
+extern char Obj_HasStateFlags[];
 
 #define PROP(o, id) func_800321D4(o, id, 0, 0, 0, PROP_ARG_MODE, 0)
 #define LOOKUP(o, id, out) func_80031AE8(o, id, 0, 0, out, PROP_ARG_MODE, PTR_NONE, 0, 0)
 /* The value of type T at byte offset off of p. */
 #define AT(p, off, T) (*(T *)((u8 *)(p) + (off)))
 
-s32 func_80019098(void *arg0, u8 arg1) {
+s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     s32 obj;
     s32 sp28;
     s32 *slot;
@@ -100,7 +100,7 @@ s32 func_80019098(void *arg0, u8 arg1) {
         obj = AT(arg0, 0x10 + (arg1 + AT(e, 0x184, s32) + AT(e, 0x188, s32)) * 4, s32);
     }
     if (PROP(obj, PROP_KIND) == 0 || (PROP(obj, PROP_INDEX) > INDEX_MIN_EXCL && PROP(obj, PROP_INDEX) < INDEX_MAX_EXCL)) {
-        if (D_8005F38C != 0) {
+        if (g_Player != 0) {
             return ERR_NO_OBJECT;
         }
     }
@@ -129,11 +129,11 @@ s32 func_80019098(void *arg0, u8 arg1) {
     }
     PROP(obj, PROP_INDEX);
     idx = PROP(obj, PROP_INDEX);
-    first = D_8006B1C4[idx] & SLOT_FLAG_USED;
+    first = g_EntityFlags[idx] & SLOT_FLAG_USED;
     if (first == 0) {
         PROP(obj, PROP_INDEX);
         idx = PROP(obj, PROP_INDEX);
-        first = D_8006B1C4[idx] & SLOT_FLAG_RESERVED;
+        first = g_EntityFlags[idx] & SLOT_FLAG_RESERVED;
     }
     if (first != 0) {
         if (PROP(obj, PROP_KIND) == KIND_CHAIN) {
@@ -143,12 +143,12 @@ s32 func_80019098(void *arg0, u8 arg1) {
     }
 
     if (PROP(obj, PROP_KIND) == 0 || (PROP(obj, PROP_INDEX) > INDEX_MIN_EXCL && PROP(obj, PROP_INDEX) < INDEX_MAX_EXCL)) {
-        slot = D_8006CB10[0];
-        D_8005F38C = (s32)slot;
+        slot = g_PlayerSlot[0];
+        g_Player = (s32)slot;
         i = SLOT_FIRST_PLAYER;
     } else {
         while (1) {
-            if (D_8006CB58[0] == LIST_TYPE_FREE) {
+            if (g_ObjFreeList[0] == LIST_TYPE_FREE) {
                 slot = (s32 *)D_8006CB5C;
             } else {
                 slot = (s32 *)D_8006CBA4;
@@ -157,9 +157,9 @@ s32 func_80019098(void *arg0, u8 arg1) {
             if (slot != PTR_NONE) {
                 break;
             }
-            p = &D_8006CB18;
+            p = &g_ObjLists;
             for (idx = 0; idx < SLOT_COUNT; idx++) {
-                r = func_80018BE4(p, func_80019074, PARAMS_NO_CHAIN);
+                r = Obj_Find(p, Obj_HasStateFlags, PARAMS_NO_CHAIN);
                 if (r != 0) {
                     break;
                 }
@@ -168,45 +168,45 @@ s32 func_80019098(void *arg0, u8 arg1) {
             if (idx >= SLOT_COUNT) {
                 return ERR_NO_SLOT;
             }
-            func_80019E08(r);
+            Obj_KillWithEvent(r);
         }
     }
-    func_800189CC(slot, (s32 *)(&D_8006CB18 + i * SLOT_SIZE));
+    Obj_SetParent(slot, (s32 *)(&g_ObjLists + i * SLOT_SIZE));
     slot[1] = SLOT_STATE_ACTIVE;
     entry = (s32 *)LOOKUP(obj, PROP_PARAMS, &sp28);
     if (entry == PTR_NONE) {
         sp28 = 0;
     }
-    r = func_80019988(slot, PROP(obj, PROP_KIND), PROP(obj, PROP_SLOT), sp28, (s32)entry);
+    r = Obj_Init(slot, PROP(obj, PROP_KIND), PROP(obj, PROP_SLOT), sp28, (s32)entry);
     if (r >= ERR_THRESHOLD) {
-        func_800189CC(slot, (s32 *)(&D_8006CB18 + SLOT_LIST_OFFSET));
+        Obj_SetParent(slot, (s32 *)(&g_ObjLists + SLOT_LIST_OFFSET));
         return r;
     }
     /* The flag goes at the first call's index; the second call's result is unused. */
     idx = PROP(obj, PROP_INDEX);
     PROP(obj, PROP_INDEX);
-    D_8006B1C4[idx] |= SLOT_FLAG_USED;
+    g_EntityFlags[idx] |= SLOT_FLAG_USED;
     slot[0xB8 / 4] = PROP(obj, PROP_INDEX) << FIXED_SHIFT;
     if (AT(arg0, 8, s32) == OBJ_TYPE_PLAYER) {
-        arg0 = (void *)D_800608CC;
+        arg0 = (void *)g_CurrentZone;
     }
     AT(slot, 0x18, void *) = arg0;
     memset(slot + 0x20 / 4, 0, CLEAR_SIZE);
     AT(slot, 0xF0, s32) = obj;
     AT(slot, 0xF8, s32) = func_800322C0(obj, PROP_POSITION, 0, PROP_ARG_MODE) << FIXED_SHIFT;
     func_8001F054((GoolObject *)slot, 0, slot + 0x60 / 4);
-    if ((s32)slot == D_8005F38C) {
+    if ((s32)slot == g_Player) {
         row = D_8006759C + D_8006CD7C * ENTITY_POS_ROW_SIZE;
         AT(slot, 0x60, s32) = AT(row, 0x1E8, s32);
         AT(slot, 0x64, s32) = AT(row, 0x1EC, s32);
         AT(slot, 0x68, s32) = AT(row, 0x1F0, s32);
-        if ((s32)slot == D_8005F38C && D_8005F3F0 == -1) {
+        if ((s32)slot == g_Player && D_8005F3F0 == -1) {
             D_8006CC84 = D_8005F3F0;
             func_8002F34C((GoolObject *)slot, &D_80060958, 1, 0);
         }
     }
     if (AT(AT(AT(slot, 0xC, u8 *), 0x10, u8 *), 4, s32) == MODEL_ID_SPECIAL) {
-        func_800189CC(slot, &D_8006CB38);
+        Obj_SetParent(slot, &D_8006CB38);
     }
     if (AT(AT(AT(slot, 0xC, u8 *), 0x10, u8 *), 0, s32) == KIND_CHAIN) {
         if (entry == PTR_NONE || (AT(entry, 4, s32) & PARAMS_NO_CHAIN) == 0) {
@@ -229,7 +229,7 @@ s32 func_80019098(void *arg0, u8 arg1) {
     return (s32)slot;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019098);
+INCLUDE_ASM("asm/nonmatchings/game/80019098", Obj_SpawnEntity);
 #endif
 
 #ifdef NON_MATCHING
@@ -244,15 +244,15 @@ INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019098);
 #define ERR_INVALID -0x16
 #define RESULT_ERROR_LIMIT -0xFE
 
-extern s32 D_8005F38C;
-extern s32 *D_8006CB10[];
-extern s32 D_8006CB58[];
+extern s32 g_Player;
+extern s32 *g_PlayerSlot[];
+extern s32 g_ObjFreeList[];
 extern s32 D_8006CB5C;
 extern s32 D_8006CBA4;
-extern u8 D_8006CB18;
-extern char func_80019074[];
+extern u8 g_ObjLists;
+extern char Obj_HasStateFlags[];
 
-s32 func_80019800(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+s32 Obj_Spawn(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 *slot;
     s32 result;
     s32 found;
@@ -260,11 +260,11 @@ s32 func_80019800(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     u8 *entry;
 
     if (arg1 == 0 && arg2 == 0) {
-        slot = *D_8006CB10;
-        D_8005F38C = (s32)slot;
+        slot = *g_PlayerSlot;
+        g_Player = (s32)slot;
     } else {
         while (1) {
-            if (*D_8006CB58 == LIST_TYPE_FREE) {
+            if (*g_ObjFreeList == LIST_TYPE_FREE) {
                 slot = (s32 *)D_8006CB5C;
             } else {
                 slot = (s32 *)D_8006CBA4;
@@ -273,9 +273,9 @@ s32 func_80019800(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
                 break;
             }
             found = 0;
-            entry = &D_8006CB18;
+            entry = &g_ObjLists;
             for (i = 0; i < SEARCH_SLOT_COUNT; i++) {
-                found = func_80018BE4(entry, func_80019074, SEARCH_FLAGS);
+                found = Obj_Find(entry, Obj_HasStateFlags, SEARCH_FLAGS);
                 if (found != 0) {
                     break;
                 }
@@ -284,15 +284,15 @@ s32 func_80019800(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
             if (found == 0) {
                 break;
             }
-            func_80019E08(found);
+            Obj_KillWithEvent(found);
         }
     }
     if (slot == 0) {
         return ERR_INVALID;
     }
-    func_800189CC(slot, arg0);
+    Obj_SetParent(slot, arg0);
     slot[SLOT_STATE_OFFSET_WORDS] = SLOT_STATE_ACTIVE;
-    result = func_80019988(slot, arg1, arg2, arg3, arg4);
+    result = Obj_Init(slot, arg1, arg2, arg3, arg4);
     memset((u8 *)slot + SLOT_CLEAR_OFFSET_BYTES, 0, SLOT_CLEAR_SIZE_BYTES);
     if (result < RESULT_ERROR_LIMIT) {
         result = (s32)slot;
@@ -300,7 +300,7 @@ s32 func_80019800(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     return result;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019800);
+INCLUDE_ASM("asm/nonmatchings/game/80019098", Obj_Spawn);
 #endif
 
 #ifdef NON_MATCHING
@@ -326,7 +326,7 @@ extern u8 *D_8006759C;
 
 #define W(base, off) (((s32 *)(base))[(off) / 4])
 
-s32 func_80019988(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     s32 *parent;
     s32 *entry;
     void *res;
@@ -402,59 +402,59 @@ s32 func_80019988(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     W(arg0, 0xB4) = arg2;
     W(arg0, 0xE8) = 0;
     W(arg0, 0xD0) = 0;
-    W(arg0, 0x54) = (s32)D_8006CB10[0];
+    W(arg0, 0x54) = (s32)g_PlayerSlot[0];
     frame = *(u16 *)(W(table, 0x1C) + (W((s32 *)W(table, 0x10), 0x10) + W(arg0, 0xB4)) * 2);
     if (frame == FRAME_NONE) {
         return RESULT_NO_FRAME;
     }
-    if (func_8001C340(arg0, frame, arg3, (s32 *)arg4) < RESULT_OK_LIMIT) {
+    if (Gool_ChangeState(arg0, frame, arg3, (s32 *)arg4) < RESULT_OK_LIMIT) {
         return RESULT_FAIL;
     }
     return RESULT_BAD_ENTRY;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019988);
+INCLUDE_ASM("asm/nonmatchings/game/80019098", Obj_Init);
 #endif
 
-s32 D_8005F38C;
-extern s32 D_8006B1C4[];
-extern s32 *D_8006CB10[];
-extern s32 D_8006CB58[];
+s32 g_Player;
+extern s32 g_EntityFlags[];
+extern s32 *g_PlayerSlot[];
+extern s32 g_ObjFreeList[];
 extern s32 D_8006CB5C;
 extern s32 D_8006CBA4;
 
-s32 func_800189CC(s32 *, s32 *);
+s32 Obj_SetParent(s32 *, s32 *);
 void func_80032808(s32 *);
 
-s32 func_80019BBC(s32 *arg0, s32 arg1) {
+s32 Obj_Kill(s32 *arg0, s32 arg1) {
     s32 *child;
     s32 *next;
     s32 *slot;
     s32 *base;
     s32 cur;
 
-    if (arg0 != 0 && (s32)arg0 != D_8005F38C) {
+    if (arg0 != 0 && (s32)arg0 != g_Player) {
         if (arg1 != 0) {
-            func_8001CC10(0, (s32)arg0, 0x1A00, 0, 0);
+            Gool_SendEvent(0, (s32)arg0, 0x1A00, 0, 0);
         }
         child = (s32 *)arg0[0x4C / 4];
         while (child != 0) {
             next = (s32 *)child[0x48 / 4];
-            func_80019BBC(child, arg1);
+            Obj_Kill(child, arg1);
             child = next;
         }
         func_80032808(arg0);
-        cur = D_8005F38C;
-        D_8006B1C4[arg0[0xB8 / 4] >> 8] &= ~1;
+        cur = g_Player;
+        g_EntityFlags[arg0[0xB8 / 4] >> 8] &= ~1;
         arg0[0] = 0;
         if ((s32)arg0 == cur) {
-            if (D_8006CB58[0] == 2) {
+            if (g_ObjFreeList[0] == 2) {
                 arg1 = D_8006CB5C;
             } else {
                 arg1 = D_8006CBA4;
             }
-            base = D_8006CB58;
-            func_800189CC(arg0, base);
+            base = g_ObjFreeList;
+            Obj_SetParent(arg0, base);
             /* the block wrapper changes the store scheduling */
             do {
                 slot = base + 0x13;
@@ -462,14 +462,14 @@ s32 func_80019BBC(s32 *arg0, s32 arg1) {
                     slot = base + 1;
                 }
                 *slot = arg1;
-                D_8006CB10[0][0x44 / 4] = 0;
-                D_8006CB10[0][0x4C / 4] = 0;
-                D_8006CB10[0][0x48 / 4] = 0;
+                g_PlayerSlot[0][0x44 / 4] = 0;
+                g_PlayerSlot[0][0x4C / 4] = 0;
+                g_PlayerSlot[0][0x48 / 4] = 0;
             } while (0);
-            D_8005F38C = 0;
+            g_Player = 0;
             return -0xFF;
         }
-        func_800189CC(arg0, D_8006CB58);
+        Obj_SetParent(arg0, g_ObjFreeList);
     }
     return -0xFF;
 }
@@ -484,17 +484,17 @@ s32 func_80019BBC(s32 *arg0, s32 arg1) {
 extern s32 D_800608D0;
 
 s32 func_80019D30(GoolObject *obj, s32 key) {
-    if (obj->unk_B8 != 0) {
+    if (obj->entity_id != 0) {
         return RESULT_REJECTED;
     }
-    if (obj->unk_0 == 0 || (s32)obj->unk_18 != key ||
+    if (obj->unk_0 == 0 || (s32)obj->zone != key ||
         (obj->unk_AC & FLAGS_A_BLOCK) != 0 ||
-        (obj->unk_100 & FLAGS_B_BLOCK) != 0) {
+        (obj->state_flags & FLAGS_B_BLOCK) != 0) {
         return RESULT_REJECTED;
     }
-    func_8001CC10(0, (s32)obj, CALL_ARG_1A00, 0, 0);
-    if ((s32)obj->unk_18 == key || D_800608D0 == NO_VALUE) {
-        return func_80019BBC((s32 *)obj, 0);
+    Gool_SendEvent(0, (s32)obj, CALL_ARG_1A00, 0, 0);
+    if ((s32)obj->zone == key || D_800608D0 == NO_VALUE) {
+        return Obj_Kill((s32 *)obj, 0);
     }
     return RESULT_REJECTED;
 }
@@ -502,40 +502,40 @@ s32 func_80019D30(GoolObject *obj, s32 key) {
 INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019D30);
 #endif
 
-void func_80019E08(s32 a0) {
-    func_80019BBC((s32 *)a0, 1);
+void Obj_KillWithEvent(s32 a0) {
+    Obj_Kill((s32 *)a0, 1);
 }
 
 /* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
 
-void func_80019E28(void *arg0) {
-    func_80018DD0(func_80018D28, func_80019D30, arg0);
+void Zone_KillObjects(void *arg0) {
+    Obj_ForEachList(Obj_ForEachDescendant, func_80019D30, arg0);
 }
 
 /* volatile: the retail code reloads it after the null check. */
-extern Unk608CC *volatile D_800608CC;
+extern Unk608CC *volatile g_CurrentZone;
 
 void func_80019E5C(void) {
     Unk19E5C *obj;
     s32 i;
 
-    if (D_800608CC != 0) {
-        obj = D_800608CC->unk10;
+    if (g_CurrentZone != 0) {
+        obj = g_CurrentZone->unk10;
         for (i = 0; i < obj->count; i++) {
             if (func_800143C0(&obj->items[i], 0) != 0) {
-                func_80019E28(func_80014260(&obj->items[i], 1, 0));
+                Zone_KillObjects(func_80014260(&obj->items[i], 1, 0));
             }
         }
     }
 }
 
-extern char D_8005C514[];
+extern char g_GoolOpcodeHandlers[];
 extern char D_8005C650[];
 extern s32 D_80060944;
 extern u32 *g_DisplayBuffer;
-extern char D_8006CB70[];
+extern char g_GoolGlobals[];
 
-void func_80019F08(void) {
+void Gool_InitScratchpad(void) {
     u32 n;
     u32 *p;
 
@@ -546,15 +546,15 @@ void func_80019F08(void) {
         n = 0x66;
     }
     *p = n;
-    *(char **)0x1F800058 = D_8006CB70;
-    func_8003B940(D_8005C514, (void *)0x1F800060, (D_8005C650 - D_8005C514) / 2);
+    *(char **)0x1F800058 = g_GoolGlobals;
+    func_8003B940(g_GoolOpcodeHandlers, (void *)0x1F800060, (D_8005C650 - g_GoolOpcodeHandlers) / 2);
     *(s32 *)0x1F80005C = 0x1F800060;
 }
 
 extern u8 D_8006CB30[];
-extern u8 func_80018E48[];
+extern u8 Obj_HasId[];
 
-s32 func_80019FA0(s32 arg0) {
+s32 Obj_FindById(s32 arg0) {
     u8 *p;
     u8 *a;
     s32 i;
@@ -566,7 +566,7 @@ s32 func_80019FA0(s32 arg0) {
         a = p;
         p += 8;
         i++;
-        r = func_80018BE4(a, func_80018E48, arg0);
+        r = Obj_Find(a, Obj_HasId, arg0);
         if (r != 0) {
             break;
         }

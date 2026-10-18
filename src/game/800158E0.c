@@ -84,7 +84,7 @@ extern s32 D_8005B440[][3];
 extern s32 D_8005F180;
 extern s32 *D_8005F374;
 extern u8 *D_8005F3D8;
-extern s32 *D_800608CC;
+extern s32 *g_CurrentZone;
 extern u8 *g_DisplayBuffer;
 extern s32 D_8006CB80;
 extern s32 D_8006CB94;
@@ -147,8 +147,9 @@ void func_800158E0(void) {
                 }
                 y = clamp_stick((dy * STICK_MAX) / span);
 
-                if (D_800608CC != 0
-                    && (*(s32 *)(*(u8 **)((u8 *)D_800608CC + CAMERA_PTR_OFFSET) + CAMERA_FLAG_OFFSET) & CAMERA_FLAG)) {
+                if (g_CurrentZone != 0
+                    && (*(s32 *)(*(u8 **)((u8 *)g_CurrentZone + CAMERA_PTR_OFFSET) + CAMERA_FLAG_OFFSET)
+                        & CAMERA_FLAG)) {
                     p->unk_38 = func_8001E640(ratan2(x, y) & ANGLE_MASK, SMOOTH_ARG1, SMOOTH_ARG2);
                 } else {
                     p->unk_38 = ratan2(x, y) & ANGLE_MASK;
@@ -205,7 +206,7 @@ void func_800158E0(void) {
                     sel = D_8006CCA0;
                     stream_flag = (u32)D_8005F374 >= (u32)(D_8005F3D8 + (*(s32 *)D_8005F3D8 * STREAM_COUNT_SCALE) + STREAM_END_OFFSET);
                     if (sel != 0) {
-                        func_8001CC10(0, sel, STREAM_ID, 1, &stream_flag);
+                        Gool_SendEvent(0, sel, STREAM_ID, 1, &stream_flag);
                         D_8006CB80 = STREAM_UNK_VALUE;
                         D_8006CD14 = STATE_PLAYBACK_END;
                     } else {
@@ -596,7 +597,7 @@ extern s32 D_80060800;
 extern Unk80060884 D_80060884;
 extern s32 D_8005F180;
 extern s32 *D_8005F374;
-extern s32 *D_800608CC;
+extern s32 *g_CurrentZone;
 extern s32 D_800608D8;
 extern s32 D_800608E0;
 extern u8 *g_DisplayBuffer;
@@ -655,7 +656,7 @@ int Gfx_EndFrame(void) {
         y = 0;
         color2 = 0;
         res = 0;
-        if (D_800608CC != 0) {
+        if (g_CurrentZone != 0) {
             res = (s32 *)func_80031AE8(D_800608D8, BAND_KEY_A, D_800608E0, 0, 0, 0, 0, 0, 0);
             if (res != 0) {
                 mode = res[0];
@@ -1399,7 +1400,7 @@ extern s32 D_80060794;
 extern Unk80017AF8 D_800607B4;
 extern s32 D_800607F4;
 extern s32 D_80060828;
-extern s32 *D_800608CC;
+extern s32 *g_CurrentZone;
 extern s32 D_800608D4;
 extern s32 D_80060914;
 extern s32 D_80060930;
@@ -1464,7 +1465,7 @@ void func_80017BC4(void) {
     rot[8] = c;
     MulMatrix(view, rot);
 
-    light = (u8 *)(*(s32 **)((char *)D_800608CC + LIGHT_BASE_OFFSET));
+    light = (u8 *)(*(s32 **)((char *)g_CurrentZone + LIGHT_BASE_OFFSET));
     SetFarColor(light[FAR_COLOR_BASE], light[FAR_COLOR_BASE + 1], light[FAR_COLOR_BASE + 2]);
 
     trans[0] = D_800607F4 >> FIXED_SHIFT;
@@ -1479,7 +1480,7 @@ void func_80017BC4(void) {
         dst[i] = src[i];
     }
 
-    if (*(s32 *)(*(char **)((char *)D_800608CC + LIGHT_BASE_OFFSET) + FLAG_OFFSET) & CAM_FLAG_FIXED) {
+    if (*(s32 *)(*(char **)((char *)g_CurrentZone + LIGHT_BASE_OFFSET) + FLAG_OFFSET) & CAM_FLAG_FIXED) {
         a = D_80060944;
         if (D_80060944 < 0) {
             a = D_80060944 + ANGLE_STEP_MASK;
@@ -1529,7 +1530,7 @@ void func_80017BC4(void) {
     D_8006CC10 = D_80060800;
     D_8006CC14 = D_80060804;
     D_8006CC18 = D_80060808;
-    if (!(*(s32 *)(*(char **)((char *)D_800608CC + LIGHT_BASE_OFFSET) + FLAG_OFFSET) & CAM_FLAG_FIXED)) {
+    if (!(*(s32 *)(*(char **)((char *)g_CurrentZone + LIGHT_BASE_OFFSET) + FLAG_OFFSET) & CAM_FLAG_FIXED)) {
         D_8006083C = D_800607F4;
         D_80060840 = D_800607F8;
         *(s32 *)((char *)&D_8006083C + 8) = D_800607FC;
@@ -1550,7 +1551,7 @@ void func_80017BC4(void) {
     D_80060930 = Math_Sin(D_80060914) >> SINCOS_SHIFT;
     D_80060934 = 0;
     D_80060938 = Math_Cos(D_80060914) >> SINCOS_SHIFT;
-    func_80018294(*(s32 **)((char *)D_800608CC + LIGHT_BASE_OFFSET));
+    func_80018294(*(s32 **)((char *)g_CurrentZone + LIGHT_BASE_OFFSET));
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80017BC4);
@@ -1696,7 +1697,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_8001856C);
 
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800186D8);
 
-s32 func_800189C4(void) {
+s32 Gool_PageIn(void) {
     return SUCCESS;
 }
 
@@ -1711,7 +1712,7 @@ typedef struct Node {
 
 /* Moves node from its parent's child list to the head of parent's. Returns -0x18 when node is missing from its old
  * parent's list. The success path has no return statement: $v0 is left holding the 2 of the last comparison. */
-s32 func_800189CC(Node *node, Node *parent) {
+s32 Obj_SetParent(Node *node, Node *parent) {
     Node *old;
     Node *it;
 
@@ -1751,7 +1752,7 @@ s32 func_80018AA8(Unk80018AA8 *arg0, Cb80018AA8 arg1, void *arg2) {
 
     ret = arg1(arg0, arg2);
     if (ret == -0x19) {
-        func_80019BBC((s32 *)arg0, 0);
+        Obj_Kill((s32 *)arg0, 0);
         return -0x19;
     }
     p = arg0->child;
@@ -1772,7 +1773,7 @@ s32 func_80018B50(void *arg0, s32 (*arg1)(void *, s32), s32 arg2) {
         do {
             next = *(char **)(child + 0x48);
             if (func_80018B50(child, arg1, arg2) == -0x19) {
-                func_80019BBC((s32 *)arg0, 0);
+                Obj_Kill((s32 *)arg0, 0);
             }
             child = next;
         } while (child != 0);
@@ -1780,7 +1781,7 @@ s32 func_80018B50(void *arg0, s32 (*arg1)(void *, s32), s32 arg2) {
     return arg1(arg0, arg2);
 }
 
-s32 func_80018BE4(u8 *arg0, void *arg1, s32 arg2) {
+s32 Obj_Find(u8 *arg0, void *arg1, s32 arg2) {
     s32 r;
     u8 *c;
     u8 *next;
@@ -1802,7 +1803,7 @@ s32 func_80018BE4(u8 *arg0, void *arg1, s32 arg2) {
     }
     while (c != 0 && r == 0) {
         next = *(u8 **)(c + 0x48);
-        r = func_80018BE4(c, arg1, arg2);
+        r = Obj_Find(c, arg1, arg2);
         c = next;
     }
     return r;
@@ -1853,7 +1854,7 @@ typedef struct Unk80018D28 {
     struct Unk80018D28 *head;
 } Unk80018D28;
 
-s32 func_80018D28(void *arg0, void *arg1, void *arg2) {
+s32 Obj_ForEachDescendant(void *arg0, void *arg1, void *arg2) {
     int is_kind2;
     Unk80018D28 *node;
     Unk80018D28 *next;
@@ -1867,24 +1868,24 @@ s32 func_80018D28(void *arg0, void *arg1, void *arg2) {
     while (node != 0) {
         next = node->next;
         if (func_80018B50(node, (s32 (*)(void *, s32))arg1, (s32)arg2) == -0x19) {
-            func_80019BBC((s32)arg0, 0);
+            Obj_Kill((s32)arg0, 0);
         }
         node = next;
     }
     return -0xFF;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018D28);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Obj_ForEachDescendant);
 #endif
 
-extern u8 D_8006CB18[];
+extern u8 g_ObjLists[];
 
-void func_80018DD0(void *arg0, void *arg1, void *arg2) {
+void Obj_ForEachList(void *arg0, void *arg1, void *arg2) {
     u8 *var_s0;
     s32 var_s1;
 
     var_s1 = 0;
-    var_s0 = D_8006CB18;
+    var_s0 = g_ObjLists;
     do {
         ((void (*)(void *, void *, void *))arg0)(var_s0, arg1, arg2);
         var_s1 += 1;
@@ -1892,8 +1893,8 @@ void func_80018DD0(void *arg0, void *arg1, void *arg2) {
     } while (var_s1 < 8);
 }
 
-void *func_80018E48(GoolObject *arg0, s32 arg1) {
-    if (arg0->unk_B8 == arg1) {
+void *Obj_HasId(GoolObject *arg0, s32 arg1) {
+    if (arg0->entity_id == arg1) {
         return arg0;
     }
     return 0;
@@ -1988,7 +1989,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018E68);
 
 typedef struct { char pad[0x100]; s32 flags; } T;
 
-T *func_80019074(T *a, s32 m) {
+T *Obj_HasStateFlags(T *a, s32 m) {
     if (a->flags & m) {
         return a;
     }

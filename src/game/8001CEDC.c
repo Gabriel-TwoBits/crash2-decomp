@@ -14,8 +14,8 @@ typedef struct { Vec80030D98 min; Vec80030D98 max; } Box80030D98;
 typedef struct { s32 pad0[1]; s32 kind; } UnkQ;
 typedef struct { GoolObject *e; s32 f4; s32 f8; s32 kind; s32 count; void *f14; } UnkB;
 
-/* The kind in the first item of GoolObject.unk_C, as this function reads it */
-#define KIND(obj) (((UnkQ *)(obj)->unk_C->items[0])->kind)
+/* The kind in the first item of GoolObject.exe, as this function reads it */
+#define KIND(obj) (((UnkQ *)(obj)->exe->items[0])->kind)
 
 s32 func_8001CEDC(GoolObject *a, UnkB *b) {
     s32 *v;
@@ -43,7 +43,7 @@ s32 func_8001CEDC(GoolObject *a, UnkB *b) {
         if (v == 0) {
             return FAIL_RESULT;
         }
-        r = func_80030D98((Vec80030D98 *)a->unk_60, (Box80030D98 *)((u8 *)v + 8));
+        r = func_80030D98((Vec80030D98 *)a->pos, (Box80030D98 *)((u8 *)v + 8));
         func_8002CA1C();
         if (r == 0) {
             return FAIL_RESULT;
@@ -57,7 +57,7 @@ s32 func_8001CEDC(GoolObject *a, UnkB *b) {
         if (v == 0) {
             return FAIL_RESULT;
         }
-        r = func_80030D98((Vec80030D98 *)a->unk_60, (Box80030D98 *)((u8 *)v + 8));
+        r = func_80030D98((Vec80030D98 *)a->pos, (Box80030D98 *)((u8 *)v + 8));
         func_8002CA1C();
         if (r == 0) {
             return FAIL_RESULT;
@@ -87,12 +87,12 @@ s32 func_8001CEDC(GoolObject *a, UnkB *b) {
         if (v == 0) {
             return FAIL_RESULT;
         }
-        box.min.x = b->e->unk_60[0] - b->e->unk_90[0];
-        box.min.y = b->e->unk_60[1] - b->e->unk_90[1];
-        box.min.z = b->e->unk_60[2] - b->e->unk_90[2];
-        box.max.x = b->e->unk_90[0] + b->e->unk_60[0];
-        box.max.y = b->e->unk_90[1] + b->e->unk_60[1];
-        box.max.z = b->e->unk_90[2] + b->e->unk_60[2];
+        box.min.x = b->e->pos[0] - b->e->unk_90[0];
+        box.min.y = b->e->pos[1] - b->e->unk_90[1];
+        box.min.z = b->e->pos[2] - b->e->unk_90[2];
+        box.max.x = b->e->unk_90[0] + b->e->pos[0];
+        box.max.y = b->e->unk_90[1] + b->e->pos[1];
+        box.max.z = b->e->unk_90[2] + b->e->pos[2];
         r = func_80030EC0((s32 *)((u8 *)v + 8), (s32 *)&box);
         func_8002CA1C();
         if (r == 0) {
@@ -108,7 +108,7 @@ s32 func_8001CEDC(GoolObject *a, UnkB *b) {
         break;
     }
     b->count++;
-    func_8001CC10((s32)b->e, (s32)a, b->f4, b->f8, b->f14);
+    Gool_SendEvent((s32)b->e, (s32)a, b->f4, b->f8, b->f14);
     return FAIL_RESULT;
 }
 #else
@@ -118,7 +118,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001CEDC", func_8001CEDC);
 /* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
 s32 func_8001CEDC();
 
-s32 func_8001D194(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+s32 Gool_BroadcastEvent(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     s32 args[6];
 
     args[0] = arg0;
@@ -127,11 +127,11 @@ s32 func_8001D194(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     args[2] = arg3;
     args[4] = 0;
     args[5] = arg4;
-    func_80018DD0(func_80018D28, &func_8001CEDC, args);
+    Obj_ForEachList(Obj_ForEachDescendant, &func_8001CEDC, args);
     return -0xFF;
 }
 
-s32 func_8001D1E0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+s32 Gool_CascadeEvent(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 sp[6];
 
     sp[0] = arg0;
@@ -140,7 +140,7 @@ s32 func_8001D1E0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     sp[4] = 0;
     sp[2] = arg4;
     sp[5] = arg5;
-    func_80018D28((void *)arg1, &func_8001CEDC, sp);
+    Obj_ForEachDescendant((void *)arg1, &func_8001CEDC, sp);
     return -0xFF;
 }
 
@@ -158,16 +158,16 @@ s32 func_8001D22C(void *arg0, u16 arg1, s32 arg2, s32 *arg3) {
     GoolObject *base;
 
     base = arg0;
-    write_ptr = &base->unk_BC;
+    write_ptr = &base->sp;
     for (i = 0; i < arg2; i++) {
         slot = *write_ptr;
         *write_ptr = slot + 1;
         *slot = *arg3;
         arg3++;
     }
-    func_8001C620(base, arg2, ARG_ALL_BITS);
-    base->unk_C0 = (s32)base->unk_C->items[1] + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
-    return func_8003A014(arg0, MODE_THREE, 0);
+    Gool_PushFrame(base, arg2, ARG_ALL_BITS);
+    base->pc = (s32)base->exe->items[1] + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
+    return Gool_Interpret(arg0, MODE_THREE, 0);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/8001CEDC", func_8001D22C);
@@ -207,8 +207,8 @@ void func_8001D2C4(GoolObject *arg0, s32 *arg1, s32 *arg2) {
         arg0->unk_90[1] = func_8001E3DC(arg0->unk_90[1], (D_80060914 + angle) & 0xFFF, arg1[0x10 / 4], 0);
     }
     if (arg0->unk_11C == 0x3500) {
-        x = (arg0->unk_60[0] - arg2[0]) * 30;
-        z = (arg0->unk_60[2] - arg2[2]) * 30;
+        x = (arg0->pos[0] - arg2[0]) * 30;
+        z = (arg0->pos[2] - arg2[2]) * 30;
         vx = arg0->unk_84[0];
         dx = x - vx;
         dz = z - arg0->unk_84[2];
@@ -256,8 +256,8 @@ void func_8001D2C4(GoolObject *arg0, s32 *arg1, s32 *arg2) {
         }
     }
     arg0->unk_84[2] = lim;
-    dx = (arg0->unk_60[0] - arg2[0]) >> 6;
-    dz = (arg0->unk_60[2] - arg2[2]) >> 6;
+    dx = (arg0->pos[0] - arg2[0]) >> 6;
+    dz = (arg0->pos[2] - arg2[2]) >> 6;
     dist = func_80041A78(dx * dx + dz * dz) * 0xF00 << 1;
     arg0->unk_104 = dist;
     if (dist < 0x6400) {

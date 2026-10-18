@@ -273,7 +273,7 @@ void func_8002E884(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3) {
 INCLUDE_ASM("asm/nonmatchings/game/8002E884", func_8002E884);
 #endif
 
-extern s32 D_8005C514;
+extern s32 g_GoolOpcodeHandlers;
 extern s32 D_8005F3EC;
 extern u8 *D_8006759C[];
 extern s32 D_8006CB20;
@@ -295,10 +295,10 @@ void func_8002EE48(void) {
     default: {
         s32 *cb20 = &D_8006CB20;
         u8 **p;
-        D_8006CB8C = func_80019800(cb20, 4, 0, 0, 0, 0);
-        D_8006CB88 = func_80019800(cb20, 4, 1, 0, 0, 0);
-        D_8006CBA8 = func_80019800(cb20, 4, 5, 0, 0, 0);
-        D_8006CBE4 = func_80019800(cb20, 4, 0x16, 0, 0, 0);
+        D_8006CB8C = Obj_Spawn(cb20, 4, 0, 0, 0, 0);
+        D_8006CB88 = Obj_Spawn(cb20, 4, 1, 0, 0, 0);
+        D_8006CBA8 = Obj_Spawn(cb20, 4, 5, 0, 0, 0);
+        D_8006CBE4 = Obj_Spawn(cb20, 4, 0x16, 0, 0, 0);
         func_80014260(D_8006759C[0] + 0x10, 0, 1);
         func_80014260(D_8006759C[0] + 0x24, 0, 1);
         func_80014260(D_8006759C[0] + 0x84, 0, 1);
@@ -310,7 +310,7 @@ void func_8002EE48(void) {
     }
     }
     func_8002F228(1);
-    *(s32 **)0x1F80005C = &D_8005C514;
+    *(s32 **)0x1F80005C = &g_GoolOpcodeHandlers;
 }
 
 extern s32 D_8006CBB4;
@@ -529,12 +529,12 @@ void func_8002F228(s32 arg0) {
 #define NO_ENTRY -1
 #define VAL_SHIFT 8
 
-extern u8 *D_8005F38C;
-extern NsfEntry *D_800608CC;
+extern u8 *g_Player;
+extern NsfEntry *g_CurrentZone;
 extern s32 D_800608D4;
 extern s32 D_800608E0;
 extern u8 D_800619B8[];
-extern s32 D_8006B1C4[];
+extern s32 g_EntityFlags[];
 extern s32 D_8006CD08[];
 
 void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
@@ -546,13 +546,13 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
     s32 isStatic;
     s32 *blk;
 
-    if (*(s32 *)(D_800608CC->items[0] + CTX_FLAGS_OFFSET) & CTX_FLAGS_MASK) {
+    if (*(s32 *)(g_CurrentZone->items[0] + CTX_FLAGS_OFFSET) & CTX_FLAGS_MASK) {
         return;
     }
     isStatic = (arg1 == D_800619B8);
     blk = (s32 *)arg1;
     if (arg3 == MODE_INIT) {
-        func_8001CC10((s32)arg0, (s32)D_8005F38C, CLEAR_SIZE, 0, (void *)0);
+        Gool_SendEvent((s32)arg0, (s32)g_Player, CLEAR_SIZE, 0, (void *)0);
         if (arg2 != 0) {
             D_8006CC00 = 0;
             D_8006CC68 = 0;
@@ -560,8 +560,8 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
             D_8006CC00 += CC00_STEP;
         }
         *(s32 *)(arg1 + 0x34) = arg2;
-        src = (s32 *)(D_8005F38C + SRC_COPY_OFFSET);
-        end = (s32 *)(D_8005F38C + SRC_COPY_END_OFFSET);
+        src = (s32 *)(g_Player + SRC_COPY_OFFSET);
+        end = (s32 *)(g_Player + SRC_COPY_END_OFFSET);
         dst = (s32 *)arg1;
         do {
             dst[0] = src[0];
@@ -573,9 +573,9 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         } while (src != end);
         dst[0] = src[0];
         if ((u32)(arg0->unk_120 - KIND_FIRST) >= KIND_COUNT) {
-            blk[0] = arg0->unk_60[0];
-            blk[1] = arg0->unk_60[1];
-            blk[2] = arg0->unk_60[2];
+            blk[0] = arg0->pos[0];
+            blk[1] = arg0->pos[1];
+            blk[2] = arg0->pos[2];
         }
         if (D_8006CC84 >= 0 && D_8006CC84 != 0) {
             blk[0] = D_8006CD08[0];
@@ -585,18 +585,18 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         blk[3] = 0;
         blk[4] = 0;
         blk[5] = 0;
-        *(s32 *)(arg1 + 0x24) = D_800608CC->eid;
+        *(s32 *)(arg1 + 0x24) = g_CurrentZone->eid;
         *(s32 *)(arg1 + 0x2C) = D_800608E0;
         *(s32 *)(arg1 + 0x30) = *(s32 *)(D_8006759C[0] + 8);
         *(s32 *)(arg1 + 0x28) = func_800321D4(D_800608D4, ID_28, 0, 0, 0, CALL_FLAGS, 0);
         if (D_8006CC84 < -1) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
-        } else if (arg0->unk_F0 == 0) {
+        } else if (arg0->entity == 0) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
         } else if (isStatic) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
         } else {
-            id = func_800321D4((s32)arg0->unk_F0, ID_38, 0, 0, 0, CALL_FLAGS, 0);
+            id = func_800321D4((s32)arg0->entity, ID_38, 0, 0, 0, CALL_FLAGS, 0);
             *(s32 *)(arg1 + 0x38) = id;
             if (id != 0) {
                 D_8006CDB8 = ((D_80069718[*(s32 *)(arg1 + 0x30) * TABLE_ROW_WORDS + id / NIBBLES_PER_WORD]
@@ -609,14 +609,14 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
     if (arg3 == MODE_MERGE) {
         *(s32 *)(arg1 + TAIL_OFFSET) += D_8006CC68;
         for (i = 0; i < BLOCK_WORDS; i++) {
-            blk[BLOCK_OFFSET / 4 + i] |= ~*(s32 *)(arg1 + BLOCK_SRC_DELTA + BLOCK_OFFSET + i * 4) & D_8006B1C4[i];
+            blk[BLOCK_OFFSET / 4 + i] |= ~*(s32 *)(arg1 + BLOCK_SRC_DELTA + BLOCK_OFFSET + i * 4) & g_EntityFlags[i];
         }
     } else {
         *(s32 *)(arg1 + TAIL_OFFSET) = D_8006CC68;
     }
     if (arg3 != MODE_MERGE) {
         for (i = 0; i < BLOCK_WORDS; i++) {
-            blk[BLOCK_OFFSET / 4 + i] = D_8006B1C4[i];
+            blk[BLOCK_OFFSET / 4 + i] = g_EntityFlags[i];
         }
     }
 }
@@ -686,11 +686,11 @@ void func_8002F6C8(u8 *arg0) {
         D_8006CDB4 = 0;
     }
     D_8006CC60 = 0;
-    func_8001D194(0, 0x1300, 0, 0, 0);
-    if (D_800608CC != 0) {
-        func_8001A014();
-        func_8001A23C(D_800608CC, -1);
-        obj = D_800608CC->items[0];
+    Gool_BroadcastEvent(0, 0x1300, 0, 0, 0);
+    if (g_CurrentZone != 0) {
+        Zone_QueueKillAll();
+        Zone_RunEntityQueue(g_CurrentZone, -1);
+        obj = g_CurrentZone->items[0];
         D_800608D0 = -1;
         for (i = 0; i < *(s32 *)(obj + 0x190); i++) {
             slot = obj + 0x194 + i * 4;
@@ -701,19 +701,19 @@ void func_8002F6C8(u8 *arg0) {
         func_80014790((u32 *)(arg0 + 0x1040));
         func_800163B4(g_BuildBuffer);
     }
-    D_800608CC = 0;
+    g_CurrentZone = 0;
     D_800608D4 = 0;
     SetGeomScreen(D_80060884);
     func_800241A8();
     for (i = 0; i < FLAG_TABLE_WORDS; i++) {
-        D_8006B1C4[i] = *(s32 *)(arg0 + SPECIAL_ARG_FIELD_BASE + i * 4);
+        g_EntityFlags[i] = *(s32 *)(arg0 + SPECIAL_ARG_FIELD_BASE + i * 4);
     }
     if (!isSpecial && D_8006CC84 > 0) {
-        D_8006B1C4[(u32)D_8006CC84 >> SLOT_INDEX_SHIFT] &= FLAG_CLEAR_2;
-        D_8006B1C4[(u32)D_8006CC84 >> SLOT_INDEX_SHIFT] |= FLAG_SET_8;
+        g_EntityFlags[(u32)D_8006CC84 >> SLOT_INDEX_SHIFT] &= FLAG_CLEAR_2;
+        g_EntityFlags[(u32)D_8006CC84 >> SLOT_INDEX_SHIFT] |= FLAG_SET_8;
     }
     for (i = 0; i < FLAG_TABLE_WORDS; i++) {
-        D_8006B1C4[i] &= FLAG_CLEAR_1;
+        g_EntityFlags[i] &= FLAG_CLEAR_1;
     }
     func_8001F858(*(s32 *)(D_8006759C[0] + 8));
     sp18 = *(s32 *)(arg0 + 0x24);
@@ -729,11 +729,11 @@ void func_8002F6C8(u8 *arg0) {
         func_800200A8((s32)t0, a1, *(s32 *)(arg0 + 0x2C), kind);
     }
     func_800143C0(&sp18, 1);
-    if (D_8005F38C == 0) {
-        func_80019800(D_8006CB48, 0, 0, 0, 0, 1);
+    if (g_Player == 0) {
+        Obj_Spawn(D_8006CB48, 0, 0, 0, 0, 1);
     }
     src = arg0;
-    dst = D_8005F38C + COPY_DEST_OFFSET;
+    dst = g_Player + COPY_DEST_OFFSET;
     do {
         *(s32 *)(dst + 0) = *(s32 *)(src + 0);
         *(s32 *)(dst + 4) = *(s32 *)(src + 4);
@@ -744,11 +744,11 @@ void func_8002F6C8(u8 *arg0) {
     } while (src != arg0 + COPY_WORDS_END);
     *(s32 *)dst = *(s32 *)src;
     {
-        GoolObject *base = (GoolObject *)D_8005F38C;
+        GoolObject *base = (GoolObject *)g_Player;
         s32 v1 = base->unk_A8;
         s32 a0 = base->unk_6C[1];
-        GoolObject *a2 = base->unk_40[6];
-        base->unk_18 = D_800608CC;
+        GoolObject *a2 = base->links[GOOL_LINK_COLLIDER];
+        base->zone = g_CurrentZone;
         base->unk_110 = 0;
         base->unk_84[0] = 0;
         base->unk_84[1] = 0;
@@ -757,8 +757,8 @@ void func_8002F6C8(u8 *arg0) {
         base->unk_A8 = v1;
         base->unk_90[1] = a0;
         if (a2 != 0) {
-            a2->unk_40[6] = 0;
-            base->unk_40[6] = 0;
+            a2->links[GOOL_LINK_COLLIDER] = 0;
+            base->links[GOOL_LINK_COLLIDER] = 0;
         }
     }
     D_80060944 = 0;

@@ -433,7 +433,8 @@ D_80010E58 = 0x80010E58;
 // Entries into the handwritten code (docs/TARGET.md) that .data's dispatch tables hold: those at 0x8005B650 to
 // 0x8005B7AC, and the GOOL interpreter's at 0x8005C514 (copied to the scratchpad). splat ends a function at any symbol
 // it is given unless the function has a size: with theirs, each stays whole and its entries are alternative labels
-func_8003A014 = 0x8003A014; // type:func size:0x66C
+// Crash2Recomp's GOOL main loop: loads pc 0xC0, sp 0xBC, fp 0xC4 and the two entries' pools, then fetches each word at pc and jumps through g_GoolOpcodeHandlers by word >> 24; Gool_ChangeState, Gool_SendEvent, Obj_Update and func_8001D22C run it
+Gool_Interpret = 0x8003A014; // type:func size:0x66C
 D_8003A06C = 0x8003A06C; // type:alabel
 D_8003A0D4 = 0x8003A0D4; // type:alabel
 D_8003A0F8 = 0x8003A0F8; // type:alabel
@@ -775,3 +776,174 @@ Nsf_SeekLevel = 0x80012E4C; // type:func
 
 // ratan2 of the difference between two points' first two words, masked to a 12-bit angle
 Math_AngleTo = 0x80031298; // type:func
+
+// the level-open handler of the "OPAT" record of the entry-type table at 0x8005B1D8 (Nsf_OpenLevel calls it); Heap_Alloc of 0x60 objects of 0x23C bytes, chained through 0x48 under the free list at 0x8006CB58
+Obj_InitPool = 0x8001EE64; // type:func
+
+// the level-close handler of the "OPAT" record (Nsf_CloseLevel calls it); Heap_Free of the two blocks func_8001EE64 allocates
+Obj_FreePool = 0x8001EFD8; // type:func
+
+// the page-in handler of the "GOOL" record (type 11) of the entry-type table, which func_800125F8 calls for each entry a page brings; returns -0xFF and does nothing else
+Gool_PageIn = 0x800189C4; // type:func
+
+// the page-in handler of the "ZDAT" record (type 7) of the entry-type table; points each camera and entity item back to the zone (counts at header 0x184, 0x188, 0x18C, CrashEdit's zone layout)
+Zone_PageIn = 0x8001FDDC; // type:func
+
+// the page-out handler of the "ZDAT" record (type 7), which func_80012A20 calls for each entry a page loses; kills the zone's objects through func_8002001C
+Zone_PageOut = 0x8001FF30; // type:func
+
+// scans the zone header's linked zones (count at 0x190, references from 0x194, CrashEdit's layout) for the other zone's EID; func_8001FDDC and func_800200A8 call it with two zones
+Zone_IsLinked = 0x8001FF50; // type:func
+
+// visits every object list with func_80019D30, which kills each object whose 0x18 is the given zone; called from the zone page-out path (func_8002001C) and for the current zone's linked zones (func_80019E5C)
+Zone_KillObjects = 0x80019E28; // type:func
+
+// carries out the 12-byte queue at 0x8006302C: 0x13C rows spawn the entity in the linked zone the row names (func_80019098), 0x13B rows kill its object (func_80019BBC), as Crash2Recomp's notes say; func_800200A8 and func_8002F6C8 call it
+Zone_RunEntityQueue = 0x8001A23C; // type:func
+
+// sets every row of the entity queue at 0x8006302C to the kill action 0x13B, as Crash2Recomp's notes say; func_800200A8 and func_8002F6C8 call it
+Zone_QueueKillAll = 0x8001A014; // type:func
+
+// decodes a GOOL operand reference into its word's address as Crash2Recomp's notes give the encoding (pool of 0x10's or 0x14's entry item 2, immediates, frame slots from 0xC4, linked objects' fields); its callers (func_80037448, func_80038C14, ...) decode the 0xE00 register and stack forms first
+Gool_ResolveRef = 0x80036D0C; // type:func
+
+// func_80036D0C's decoding plus the 0xE00 forms: the object's field 0x40 + index * 4, and 0xE1F pushing or popping the stack at 0xBC; func_80038700 and func_80038F00 call it
+Gool_ResolveOperand = 0x80036E30; // type:func
+
+// stores the state index at 0x1C and loads the 0x10-byte state descriptor of the GOOL entry's item 4 (CrashEdit's flags, block flags, GOOL index, event, trans and code hooks) into 0x100, 0xB0, 0x14, 0xCC, 0xC8 and 0xC0; func_8001CC10, func_80019988 and the GO opcode's handler call it
+Gool_ChangeState = 0x8001C340; // type:func
+
+// Crash2Recomp's GOOL event-to-state entry: stores the sender at the receiver's 0x5C, runs its event hook at 0xCC, maps event >> 8 through the GOOL entry's item 3 to a state and changes state unless 0xB0 masks it; the SEVT opcode's handler and 13 other callers
+Gool_SendEvent = 0x8001CC10; // type:func
+
+// pushes a word, the program counter at 0xC0 and a link of the stack and old frame offsets on the stack at 0xBC, and sets the frame pointer at 0xC4 (CrashEdit's sp, pc and fp fields); 4 callers, each before running the interpreter
+Gool_PushFrame = 0x8001C620; // type:func
+
+// undoes func_8001C620: restores 0xC0, 0xBC and 0xC4 from the frame at 0xC4, -0x19 when the link is 0; the return path of the RJEV and ACEV opcodes' handler (CrashEdit's "and return")
+Gool_PopFrame = 0x8001C688; // type:func
+
+// sends an event through func_8001CC10 to every object of every list that passes the filter kind (func_8001CEDC); the BEVT opcode's handler (CrashEdit: send event to every object) and 4 other callers
+Gool_BroadcastEvent = 0x8001D194; // type:func
+
+// sends an event through func_8001CC10 to every object under the given one (func_80018D28, func_8001CEDC); the handler of opcode 0x45, CrashEdit's CEVT (cascade event), calls it
+Gool_CascadeEvent = 0x8001D1E0; // type:func
+
+// stores the global variables' base 0x8006CB70 at 0x1F800058 and copies the opcode table at 0x8005C514 to 0x1F800060, pointed to at 0x1F80005C, as Crash2Recomp's notes say; func_8001C29C and func_8001D63C call it
+Gool_InitScratchpad = 0x80019F08; // type:func
+
+// the handler of opcode 0x3C in the dispatch table at 0x8005C514, CrashEdit's SEVT (send event); calls func_8001CC10 with the operands it decodes
+Gool_OpSendEvent = 0x80039310; // type:func
+
+// the handler of opcode 0x44 in the dispatch table at 0x8005C514, CrashEdit's BEVT (send event to every object); calls func_8001D194
+Gool_OpBroadcastEvent = 0x80039684; // type:func
+
+// the handler of opcode 0x45 in the dispatch table at 0x8005C514, CrashEdit's CEVT (cascade event); calls func_8001D1E0
+Gool_OpCascadeEvent = 0x800394C4; // type:func
+
+// the handler of opcodes 0x3D and 0x3E in the dispatch table at 0x8005C514, CrashEdit's RJEV and ACEV (reject or accept event, then branch, change state or return); tells the two apart by the opcode
+Gool_OpAcceptOrRejectEvent = 0x8003981C; // type:func
+
+// the handler of opcodes 0x3F and 0x46 in the dispatch table at 0x8005C514, CrashEdit's SPWN and SPWF (spawn, force spawn); calls func_80019800 per object, the force flag set for 0x46, and stores itself at the child's 0x50
+Gool_OpSpawn = 0x80038AFC; // type:func
+
+// the handler of opcodes 0x35 and 0x36 in the dispatch table at 0x8005C514, CrashEdit's GO and GNEZ (go to state); pops the arguments and calls func_8001C340 unless 0xB0 masks the state
+Gool_OpGoToState = 0x8003900C; // type:func
+
+// the handler of opcode 0x38 in the dispatch table at 0x8005C514, CrashEdit's ANIM (play animation frame for a number of frames, flipped); sets 0xE8 into the GOOL entry's item 5, the frame at 0xEC and the flip on 0x78
+Gool_OpPlayAnim = 0x80039104; // type:func
+
+// the handler of opcode 0x39 in the dispatch table at 0x8005C514, CrashEdit's ANIF (play frame for a number of frames); sets the frame at 0xEC from its operand
+Gool_OpPlayFrame = 0x800391D8; // type:func
+
+// the handler of opcode 0x1A in the dispatch table at 0x8005C514, CrashEdit's CPAD; tests the operand's 12 button bits, two 2-bit modes and 4-bit direction against a controller's words, bit 20 inverting, as CrashEdit's format lays them out
+Gool_OpTestPad = 0x80036FAC; // type:func
+
+// the handler of opcode 0x1C in the dispatch table at 0x8005C514, CrashEdit's MISC, a switch over sub-operations
+Gool_OpMisc = 0x80037698; // type:func
+
+// the handler of opcode 0x28 in the dispatch table at 0x8005C514, CrashEdit's EFLR (push entity field row); reads a property of the entity at 0xF0 through func_800321D4 and pushes it
+Gool_OpEntityFieldRow = 0x80037448; // type:func
+
+// the handler of opcode 0x29 in the dispatch table at 0x8005C514, CrashEdit's EFLV (entity field value); reads a property of the entity at 0xF0 through func_800321D4 into its operand
+Gool_OpEntityFieldValue = 0x8003756C; // type:func
+
+// the handler of opcode 0x41 in the dispatch table at 0x8005C514, CrashEdit's SNDP (play sound at a volume); calls func_80032B7C with its two operands
+Gool_OpPlaySound = 0x80038C14; // type:func
+
+// the handler of opcode 0x42 in the dispatch table at 0x8005C514, CrashEdit's SNDA (set an audio parameter); calls func_80032F18 with its operand and flags
+Gool_OpSetAudio = 0x80038D08; // type:func
+
+// unlinks the object from its old parent's child list (0x44 parent, 0x4C first child, 0x48 next sibling, CrashEdit's link names) and pushes it on the new one's; spawning, killing and the MISC opcode's handler call it
+Obj_SetParent = 0x800189CC; // type:func
+
+// walks an object's tree through 0x4C and 0x48 (a list head's children at 4) and returns the first non-zero result of the callback; func_80019098, func_80019800, func_80019FA0 and func_80037698 call it
+Obj_Find = 0x80018BE4; // type:func
+
+// calls its function on each of the 8 object list heads at 0x8006CB18; func_8001C29C, func_8001D194 and func_80019E28 call it
+Obj_ForEachList = 0x80018DD0; // type:func
+
+// runs the callback on each object under the given node, children before parents (func_80018B50); func_8001D194, func_8001D1E0 and func_80019E28 call it
+Obj_ForEachDescendant = 0x80018D28; // type:func
+
+// takes a free object from the pool (evicting one when forced), parents it with func_800189CC and starts it with func_80019988 by type and subtype; the SPWN and SPWF opcodes' handler and 5 other callers
+Obj_Spawn = 0x80019800; // type:func
+
+// spawns the entity of a zone (type 7 checked, the entity item after header 0x184 and 0x188 items) into a pool object, -0x16 when none is free, as Crash2Recomp's notes say; marks the entity spawned in 0x8006B1C4
+Obj_SpawnEntity = 0x80019098; // type:func
+
+// stores the object at its own 0x40 and the player slot at 0x54, the level's GOOL entry for the type at 0xC and 0x10, the subtype at 0xB4, and enters the subtype's first state with func_8001C340; func_80019800 and func_80019098 call it
+Obj_Init = 0x80019988; // type:func
+
+// kills the object's children first, clears its entity's spawned bit, zeroes its first word and moves it to the free list at 0x8006CB58, the kill Crash2Recomp's notes give 0x13B rows; 5 callers
+Obj_Kill = 0x80019BBC; // type:func
+
+// calls func_80019BBC with its event flag set, which first sends the object event 0x1A00 through func_8001CC10; func_80019098 and func_80019800 evict an object with it
+Obj_KillWithEvent = 0x80019E08; // type:func
+
+// returns the object when its state flags at 0x100 (the state descriptor's first word, func_8001C340) hold the mask; func_80019098 and func_80019800 search for an evictable object with it
+Obj_HasStateFlags = 0x80019074; // type:func
+
+// returns the object when its entity id at 0xB8 (stored by func_80019098) is the given one; func_80019FA0 and func_80037698 search with it
+Obj_HasId = 0x80018E48; // type:func
+
+// searches object lists 3 and 4 with func_80018E48 for the object of an entity id; func_8001A23C and func_80037698 call it
+Obj_FindById = 0x80019FA0; // type:func
+
+// for an object whose word at 4 is 3: runs the state's trans hook at 0xC8 (CrashEdit's tpc), resumes the code once the wait word the ANIM opcode pushes expires, then moves it; func_8001C29C runs it on every object each frame
+Obj_Update = 0x8001C718; // type:func
+
+// Sys_MainLoop calls it once per pass: sets the tick at 0x8006CB64, the interpreter's scratchpad (func_80019F08) and runs func_8001C718 on every object of the 8 lists
+Obj_UpdateAll = 0x8001C29C; // type:func
+
+// the object func_80019098 and func_80019800 take from 0x8006CB10 for GOOL type 0; func_80019BBC never kills it; Crash2Recomp's notes read the player's fields through it
+g_Player = 0x8005F38C;
+
+// the 0x33C-byte block func_8001EE64 allocates beside the pool; func_80019098 and func_80019800 spawn the player into it and func_80019988 stores it at every object's 0x54, CrashEdit's player link
+g_PlayerSlot = 0x8006CB10;
+
+// the 0x60 objects of 0x23C bytes func_8001EE64 allocates and func_8001EFD8 frees
+g_ObjPool = 0x8006CB14;
+
+// the 8 list heads (tag 2, first child) func_8001EE64 sets up and func_80018DD0 visits
+g_ObjLists = 0x8006CB18;
+
+// the list head func_8001EE64 chains the pool under; spawns take its first child, func_80019BBC moves killed objects back to it
+g_ObjFreeList = 0x8006CB58;
+
+// the GOOL global variables: func_80019F08 stores their base at 0x1F800058, which the GVAR and GVAW opcodes' handlers (0x1F, 0x20) read, as Crash2Recomp's notes say
+g_GoolGlobals = 0x8006CB70;
+
+// the 79 entries the interpreter at 0x8003A014 jumps through by opcode (word >> 24) via 0x1F80005C; func_80019F08 copies it to the scratchpad, as Crash2Recomp's notes say
+g_GoolOpcodeHandlers = 0x8005C514;
+
+// the zone func_800200A8 enters and gives the player at 0x18; func_8001FDDC tests a paged-in zone against its linked zones, func_80019E5C kills its linked zones' objects
+g_CurrentZone = 0x800608CC;
+
+// words by entity id: func_80019098 sets bit 0 when it spawns the entity and refuses one with bit 0 or 1 set, func_80019BBC clears bit 0; Crash2Recomp's notes call bit 0 "spawned"
+g_EntityFlags = 0x8006B1C4;
+
+// the 12-byte rows (value, object, action) Crash2Recomp's notes describe: func_8001A054 adds them, func_8001A23C carries them out, func_8001A014 sets their actions
+g_EntityQueue = 0x8006302C;
+
+// the number of rows of the entity queue at 0x8006302C, which func_8001A054 grows and func_8001A23C shrinks, at gp + 0x23C as Crash2Recomp's notes say
+g_EntityQueueCount = 0x8005F3B8;

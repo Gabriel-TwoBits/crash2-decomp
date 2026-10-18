@@ -16,8 +16,8 @@ extern void func_800237F8(void);
 extern void func_80025D18(s32 *, s32 *);
 extern s8 D_8005B994;
 extern s8 D_8005B99B;
-extern s32 D_8005F38C;
-extern char *D_800608CC;
+extern s32 g_Player;
+extern char *g_CurrentZone;
 extern s32 D_800608D4;
 extern s32 D_800608E0;
 extern u32 D_800608F0;
@@ -35,9 +35,9 @@ s32 func_80026CA0(void) {
     if ((D_80062AD8 & 0x400) && (D_80069948 & 0xE0)) {
         sp18 = 0x8000;
         func_80025FDC(0, &sp18);
-        func_8001D194(0, 0x4300, 0, 0, 0);
+        Gool_BroadcastEvent(0, 0x4300, 0, 0, 0);
     }
-    if (D_8005F38C == 0) {
+    if (g_Player == 0) {
         return 0;
     }
     p = D_8006CB94;
@@ -49,7 +49,7 @@ s32 func_80026CA0(void) {
     if (*p & 0x20000) {
         s0 = p + 0x77;
     } else {
-        s0 = ((GoolObject *)D_8005F38C)->unk_60;
+        s0 = ((GoolObject *)g_Player)->pos;
     }
     func_80025D18(s0, p);
     func_800237F8();
@@ -82,7 +82,7 @@ s32 func_80026CA0(void) {
     case 10: func_80021F4C(s0, s1); break;
     case 3: func_80022314(s0, s1); break;
     case 8: func_800225C0(s0, s1); break;
-    default: func_800200A8((s32)D_800608CC, D_800608D4, D_800608E0, 0); break;
+    default: func_800200A8((s32)g_CurrentZone, D_800608D4, D_800608E0, 0); break;
     }
     return 1;
 }
@@ -821,7 +821,7 @@ s32 func_80027CD0(u8 *arg0, u8 *arg1, s32 arg2) {
 INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027CD0);
 #endif
 
-extern char *D_800608CC;
+extern char *g_CurrentZone;
 
 typedef struct {
     char pad[0x190];
@@ -837,7 +837,7 @@ void *func_80027DEC(char *arg0, void *arg1) {
     s32 i;
 
     p = *(Unk80027DEC **)(arg0 + 0x10);
-    global = &D_800608CC;
+    global = &g_CurrentZone;
     for (i = p->count - 1; i >= 0; i--) {
         if (p->flags[i] & 4) {
             r = func_80014260(&p->ent[i], 1, 0);
@@ -847,7 +847,7 @@ void *func_80027DEC(char *arg0, void *arg1) {
         }
     }
     if (arg0 != *global) {
-        p = *(Unk80027DEC **)(D_800608CC + 0x10);
+        p = *(Unk80027DEC **)(g_CurrentZone + 0x10);
         for (i = p->count - 1; i >= 0; i--) {
             if (p->flags[i] & 4) {
                 r = func_80014260(&p->ent[i], 1, 0);
@@ -1042,7 +1042,7 @@ typedef struct {
 
 
 s32 func_80028750(Vec3i80028750 *arg0, Vec3i80028750 *arg1) {
-    Unk80027DEC *p = *(Unk80027DEC **)(D_800608CC + 0x10);
+    Unk80027DEC *p = *(Unk80027DEC **)(g_CurrentZone + 0x10);
     Vec3i80028750 pos;
     s32 box[6];
     s32 r;
@@ -1087,7 +1087,7 @@ void func_8002890C(GoolObject *arg0, s32 arg1, s32 arg2) {
     s32 off;
 
     if (arg0->unk_AC & 0x04000000) {
-        off = -((arg0->unk_100 & 0x10) == 0) & 0x18;
+        off = -((arg0->state_flags & 0x10) == 0) & 0x18;
         if (arg1 >= 0) {
             arg0->unk_118 = off + D_8005BB68[arg1];
         } else {
@@ -1141,7 +1141,7 @@ void *func_80028A28(void *unused, s32 *arg) {
 
     pos = *(V3 *)arg;
     res = 0;
-    p = *(char **)(D_800608CC + 0x10);
+    p = *(char **)(g_CurrentZone + 0x10);
     while (1) {
         i = 0;
         if (*(s32 *)(p + 0x190) > 0) {
@@ -1246,7 +1246,7 @@ void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
     if (!(arg0->unk_AC & FLAG_ACTIVE)) {
         return;
     }
-    p = *(char **)(D_800608CC + 0x10);
+    p = *(char **)(g_CurrentZone + 0x10);
     x = arg[0];
     y = arg[1];
     z = arg[2];
@@ -1314,12 +1314,12 @@ void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
 done:
     if (res != 0) {
         if (hit != 0) {
-            func_8002890C(arg0->unk_40[1], -1, ((GoolObject *)res)->unk_118);
+            func_8002890C(arg0->links[GOOL_LINK_PARENT], -1, ((GoolObject *)res)->unk_118);
         } else {
-            func_8002890C(arg0->unk_40[1], ((s32)res & ID_MASK) >> ID_SHIFT, -1);
+            func_8002890C(arg0->links[GOOL_LINK_PARENT], ((s32)res & ID_MASK) >> ID_SHIFT, -1);
         }
     } else {
-        func_8002890C(arg0->unk_40[1], 0, -1);
+        func_8002890C(arg0->links[GOOL_LINK_PARENT], 0, -1);
     }
 }
 #else
@@ -1381,7 +1381,7 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
     if (!(((GoolObject *)arg0)->unk_AC & OBJ_FLAG_ACTIVE)) {
         return;
     } else if ((arg2 & MODE_LINKED) &&
-               !(((GoolObject *)arg0)->unk_40[1]->unk_AC & OBJ_FLAG_ACTIVE)) {
+               !(((GoolObject *)arg0)->links[GOOL_LINK_PARENT]->unk_AC & OBJ_FLAG_ACTIVE)) {
         return;
     } else {
         /* active: continue */
@@ -1390,7 +1390,7 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
     pos[1] = arg1[1];
     pos[2] = arg1[2];
     pos[1] += Y_OFFSET;
-    level = *(char **)(D_800608CC + LEVEL_OFFSET);
+    level = *(char **)(g_CurrentZone + LEVEL_OFFSET);
     start[0] = pos[0];
     start[1] = pos[1];
     start[2] = pos[2];
@@ -1507,7 +1507,7 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
     }
     func_800289C4((s16 *)arg0, id, arg3);
     if (arg2 & MODE_LINKED) {
-        func_800289C4((s16 *)((GoolObject *)arg0)->unk_40[1], id, arg3);
+        func_800289C4((s16 *)((GoolObject *)arg0)->links[GOOL_LINK_PARENT], id, arg3);
     }
 }
 #else
@@ -1519,7 +1519,7 @@ void func_800294B4(s16 *arg0) {
     s32 temp_v0;
     u32 var_a1;
 
-    temp_a0 = (s32)((GoolObject *)arg0)->unk_F0;
+    temp_a0 = (s32)((GoolObject *)arg0)->entity;
     if (temp_a0 != 0) {
         temp_v0 = func_800321D4(temp_a0, 0xF2, 0, 0, 0, 2, 0);
         if ((temp_v0 & 0xFFFF) != 0xFFFF) {
@@ -1570,7 +1570,7 @@ void func_80029538(s32 arg0, s32 arg1, s32 arg2) {
     c->one = 1;
     c->b[0] = a[0] - HALF_EXTENT;
     y = a[1];
-    if (!(b->unk_100 & FLAG_FIXED_HEIGHT)) {
+    if (!(b->state_flags & FLAG_FIXED_HEIGHT)) {
         c->b[1] = y + SUB(b)->unk_40 / 2 - Y_LOW_OFFSET;
     } else {
         c->b[1] = y - Y_LOW_FIXED_OFFSET;
@@ -1578,13 +1578,13 @@ void func_80029538(s32 arg0, s32 arg1, s32 arg2) {
     c->b[2] = a[2] - HALF_EXTENT;
     c->b[3] = a[0] + HALF_EXTENT;
     y = a[1];
-    if (!(b->unk_100 & FLAG_FIXED_HEIGHT)) {
+    if (!(b->state_flags & FLAG_FIXED_HEIGHT)) {
         c->b[4] = y + SUB(b)->unk_40 / 2 + Y_LOW_OFFSET;
     } else {
         c->b[4] = y + Y_HIGH_FIXED_OFFSET;
     }
     c->b[5] = a[2] + HALF_EXTENT;
-    l = *(Unk80029538Lst **)(D_800608CC + LIST_OFFSET);
+    l = *(Unk80029538Lst **)(g_CurrentZone + LIST_OFFSET);
     s = c->b;
     for (i = 0; i < l->n; i++) {
         if (*(s32 *)((char *)l + 0x1B4 + i * 4) & SLOT_ACTIVE) {

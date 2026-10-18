@@ -7,7 +7,7 @@ INCLUDE_RODATA("asm/nonmatchings/game/80036D0C", D_80010750);
 s32 D_8005F290 = 0;
 
 #ifdef NON_MATCHING
-s32 *func_80036D0C(GoolObject *a0, s32 arg1) {
+s32 *Gool_ResolveRef(GoolObject *a0, s32 arg1) {
     u8 *arg0 = (u8 *)a0;
     s32 *scratch = (s32 *)0x1F800040;
     s32 *r;
@@ -34,7 +34,7 @@ s32 *func_80036D0C(GoolObject *a0, s32 arg1) {
                     }
                     return (s32 *)0xBF0;
                 }
-                return (s32 *)(a0->unk_C4 + ((arg1 << 25) >> 23));
+                return (s32 *)(a0->fp + ((arg1 << 25) >> 23));
             }
             t = D_8005F290 == 0;
             r = scratch + t;
@@ -49,12 +49,12 @@ s32 *func_80036D0C(GoolObject *a0, s32 arg1) {
         return r;
     }
     if (arg1 & 0x400) {
-        p = a0->unk_14;
+        p = a0->state_exe;
     } else {
         p = a0->unk_10;
     }
     return *(s32 **)(p + 0x18) + (arg1 & 0x3FF);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80036D0C", func_80036D0C);
+INCLUDE_ASM("asm/nonmatchings/game/80036D0C", Gool_ResolveRef);
 #endif

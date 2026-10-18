@@ -125,14 +125,14 @@ s32 D_8005F1F0 = 0x80;
 #define PARAMS_FAST_SLIDE_EXTRA 0x78
 
 extern s32 *g_DisplayBuffer;
-extern s32 D_8005F38C;
+extern s32 g_Player;
 extern u8 D_8005B7B0[];
 extern u8 D_8005B7D8[];
 extern u8 D_8005B7EC[];
 extern u8 D_8005B800[];
 extern u8 D_8005B850[];
 extern s32 D_8005B8B8;
-extern u8 D_8005C514[];
+extern u8 g_GoolOpcodeHandlers[];
 extern s32 D_8005F494;
 extern s32 D_80060914;
 extern u8 D_80067FE4[];
@@ -201,7 +201,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
 
     flagsA = FIELD(arg0, OBJ_FLAGS_A);
     parent = FIELD_P(arg0, OBJ_PARENT);
-    if ((s32)arg0 == D_8005F38C &&
+    if ((s32)arg0 == g_Player &&
         ((flagsA & A_STUCK) || (FIELD(arg0, OBJ_FLAGS_C) & C_NO_STEER) ||
          (((u32)(D_8006CB64 - FIELD(arg0, OBJ_FRAME_STAMP)) < FRAME_WINDOW) &&
           !(FIELD(arg0, OBJ_FLAGS_C) & C_NO_FRAME_MASK)))) {
@@ -326,7 +326,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
     } else {
         /* Not steerable this frame: nothing to do. */
     }
-    if ((s32)arg0 == D_8005F38C) {
+    if ((s32)arg0 == g_Player) {
         D_8005F494 = FIELD(arg0, OBJ_POS);
         (&D_8005F494)[1] = FIELD(arg0, OBJ_POS + 4);
         (&D_8005F494)[2] = FIELD(arg0, OBJ_POS + 8);
@@ -370,7 +370,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
         sp18[2] = scale_div(FIELD(arg0, OBJ_VEL_Z) * tick_step());
         if (FIELD(arg0, OBJ_FLAGS_B) & B_MOVE) {
             FIELD(arg0, OBJ_ALPHA) = ALPHA_OPAQUE;
-            *SCRATCH_REG = D_8005C514;
+            *SCRATCH_REG = g_GoolOpcodeHandlers;
             func_8002CAB8();
             func_80029884((GoolObject *)arg0, (s32)sp18, (s32)D_80067FE4);
             if (flagsA & A_STUCK) {
@@ -384,7 +384,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
                 D_8006CD58 = FIELD(arg0, OBJ_POS + 4);
                 D_8006CD5C = FIELD(arg0, OBJ_POS + 8);
             }
-            func_80019F08();
+            Gool_InitScratchpad();
         } else {
             FIELD(arg0, OBJ_POS) += sp18[0];
             FIELD(arg0, OBJ_POS + 4) += sp18[1];
@@ -445,7 +445,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
         }
     }
     if ((FIELD(arg0, OBJ_FLAGS_B) & B_COLLIDE) &&
-        func_800310EC(arg0, arg0 + OBJ_POS / 4, (s32 *)(D_8005F38C + OBJ_POS), NEAR_DIST, FAR_DIST, NEAR_DIST) == 0) {
+        func_800310EC(arg0, arg0 + OBJ_POS / 4, (s32 *)(g_Player + OBJ_POS), NEAR_DIST, FAR_DIST, NEAR_DIST) == 0) {
         ground = FIELD_P(arg0, OBJ_GROUND_PTR);
         if (ground != 0 && *ground == GROUND_TYPE_PLAIN) {
             count = FIELD(FIELD_P(FIELD_P(arg0, OBJ_MATRIX), 0x20), 0xC);
@@ -861,17 +861,17 @@ INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001ED60);
 #define ERR_ALLOC (-0xF)
 #define ERR_INIT (-0xFF)
 
-extern s32 D_8005F38C;
-extern s32 D_8006CB10;
-extern s32 D_8006CB14;
-extern s32 D_8006CB18[];
-extern s32 D_8006CB58;
+extern s32 g_Player;
+extern s32 g_PlayerSlot;
+extern s32 g_ObjPool;
+extern s32 g_ObjLists[];
+extern s32 g_ObjFreeList;
 extern s32 D_8006CB60;
 extern s32 D_8006CB64;
 
-/* D_8006CB10 and D_8006CB14 are adjacent; the table offsets below are taken
+/* g_PlayerSlot and g_ObjPool are adjacent; the table offsets below are taken
    from their addresses, not from the blocks they point to. */
-s32 func_8001EE64(void) {
+s32 Obj_InitPool(void) {
     s32 i;
     s32 pool;
     s32 header;
@@ -881,65 +881,65 @@ s32 func_8001EE64(void) {
     s32 ring;
     s32 *p;
 
-    D_8005F38C = 0;
-    D_8006CB14 = Heap_Alloc(POOL_BYTES);
-    D_8006CB10 = Heap_Alloc(HEADER_BYTES);
-    if (D_8006CB14 == 0 || D_8006CB10 == 0) {
+    g_Player = 0;
+    g_ObjPool = Heap_Alloc(POOL_BYTES);
+    g_PlayerSlot = Heap_Alloc(HEADER_BYTES);
+    if (g_ObjPool == 0 || g_PlayerSlot == 0) {
         return ERR_ALLOC;
     }
     D_8006CB60 = 0;
     D_8006CB64 = 0;
-    ring = (s32)&D_8006CB14 + 0x1468;
-    *(s32 *)(D_8006CB10 + 8) = ring;
-    D_8006CB58 = 2;
-    *(s32 *)((s32)&D_8006CB14 + 0x48) = D_8006CB14;
-    list = (s32)&D_8006CB10 + 0x14D8;
+    ring = (s32)&g_ObjPool + 0x1468;
+    *(s32 *)(g_PlayerSlot + 8) = ring;
+    g_ObjFreeList = 2;
+    *(s32 *)((s32)&g_ObjPool + 0x48) = g_ObjPool;
+    list = (s32)&g_PlayerSlot + 0x14D8;
     next = ENTRY_SIZE;
     for (i = 0; i < ENTRY_COUNT; i++) {
-        entry = D_8006CB14 + i * ENTRY_SIZE;
+        entry = g_ObjPool + i * ENTRY_SIZE;
         *(s32 *)(entry + 8) = list;
         *(s32 *)entry = 0;
-        *(s32 *)(entry + 0x44) = (s32)&D_8006CB10 + 0x48;
+        *(s32 *)(entry + 0x44) = (s32)&g_PlayerSlot + 0x48;
         *(s32 *)(entry + 0x4C) = 0;
         if (i < ENTRY_COUNT - 1) {
-            *(s32 *)(entry + 0x48) = D_8006CB14 + next;
+            *(s32 *)(entry + 0x48) = g_ObjPool + next;
         } else {
             *(s32 *)(entry + 0x48) = 0;
         }
         next += ENTRY_SIZE;
         list += 0x30;
     }
-    p = D_8006CB18;
+    p = g_ObjLists;
     for (i = 0; i < SLOT_COUNT; i++) {
         p[0] = 2;
         p[1] = 0;
         p += 2;
     }
-    *(s32 *)D_8006CB10 = 0;
-    *(s32 *)(D_8006CB10 + 0x44) = 0;
-    *(s32 *)(D_8006CB10 + 0x4C) = 0;
-    *(s32 *)(D_8006CB10 + 0x48) = 0;
+    *(s32 *)g_PlayerSlot = 0;
+    *(s32 *)(g_PlayerSlot + 0x44) = 0;
+    *(s32 *)(g_PlayerSlot + 0x4C) = 0;
+    *(s32 *)(g_PlayerSlot + 0x48) = 0;
     return ERR_INIT;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001EE64);
+INCLUDE_ASM("asm/nonmatchings/game/8001D63C", Obj_InitPool);
 #endif
 
-extern s32 D_8005F38C;
-extern s32 D_8006CB10;
-extern s32 D_8006CB14;
+extern s32 g_Player;
+extern s32 g_PlayerSlot;
+extern s32 g_ObjPool;
 
-void func_8001EFD8(void) {
-    Heap_Free(D_8006CB14);
-    D_8005F38C = 0;
-    Heap_Free(D_8006CB10);
+void Obj_FreePool(void) {
+    Heap_Free(g_ObjPool);
+    g_Player = 0;
+    Heap_Free(g_PlayerSlot);
 }
 
 extern void *D_8006759C;
-extern s32 D_8006CB70;
+extern s32 g_GoolGlobals;
 
 s32 func_8001F018(void) {
-    D_8006CB70 = *(s32 *)((s8 *)D_8006759C + 8) << 8;
+    g_GoolGlobals = *(s32 *)((s8 *)D_8006759C + 8) << 8;
     if (*(s32 *)((s8 *)D_8006759C + 4) == 0) {
         return -0xE;
     }
@@ -1006,7 +1006,7 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
 
     obj = arg0;
     pos = arg1;
-    node = obj->unk_F0;
+    node = obj->entity;
     if (obj == 0 || node == 0) {
         return ERR_NO_PATH;
     }
@@ -1051,8 +1051,8 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
             len = func_80041A78(ax * ax + az * az);
             posBase = pos & ~FRAC_MASK;
             if (len != 0) {
-                t = ((((obj->unk_60[0] - out[0]) >> STEP_SHIFT) * (delta[0] >> STEP_SHIFT)) +
-                     (((obj->unk_60[2] - out[2]) >> STEP_SHIFT) * (delta[2] >> STEP_SHIFT))) / len;
+                t = ((((obj->pos[0] - out[0]) >> STEP_SHIFT) * (delta[0] >> STEP_SHIFT)) +
+                     (((obj->pos[2] - out[2]) >> STEP_SHIFT) * (delta[2] >> STEP_SHIFT))) / len;
                 frac = t / len;
                 if (frac >= FRAC_ONE && (pos >> FRAC_BITS) < count - 1) {
                     pos = (seg + 1) << FRAC_BITS;
@@ -1061,13 +1061,13 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
                 t4 = t >> STEP_SHIFT;
                 ax = ((t4 * (delta[0] >> STEP_SHIFT)) / len) + out[0];
                 az = ((t4 * (delta[2] >> STEP_SHIFT)) / len) + out[2];
-                da = ax - obj->unk_60[0];
+                da = ax - obj->pos[0];
                 if (da < 0) {
-                    da = obj->unk_60[0] - ax;
+                    da = obj->pos[0] - ax;
                 }
-                db = az - obj->unk_60[2];
+                db = az - obj->pos[2];
                 if (db < 0) {
-                    db = obj->unk_60[2] - az;
+                    db = obj->pos[2] - az;
                 }
                 /* Octagon-style distance estimate: max + min / 2 */
                 if (db < da) {
@@ -1078,7 +1078,7 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
                 if (obj->unk_134 < obj->unk_9C[1] || (frac < 0 && seg == 0) || frac >= FRAC_ONE) {
                     obj->unk_A8 |= FLAG_A8_OFF_SEGMENT;
                 }
-                if (((delta[2] * (obj->unk_60[0] >> FRAC_BITS)) - (delta[0] * (obj->unk_60[2] >> FRAC_BITS)) -
+                if (((delta[2] * (obj->pos[0] >> FRAC_BITS)) - (delta[0] * (obj->pos[2] >> FRAC_BITS)) -
                      (next[2] * (out[0] >> FRAC_BITS)) + (next[0] * (out[2] >> FRAC_BITS))) < 0) {
                     obj->unk_9C[1] = -obj->unk_9C[1];
                 }
@@ -1167,14 +1167,14 @@ INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F054);
 #endif
 
 extern u16 D_8006935C[];
-extern s32 D_8006B1C4[];
+extern s32 g_EntityFlags[];
 
 void func_8001F858(s32 arg0) {
     u16 *p;
 
     for (p = D_8006935C; *p != 0; p++) {
         if ((*p >> 9) == arg0) {
-            D_8006B1C4[*p & 0x1FF] |= 8;
+            g_EntityFlags[*p & 0x1FF] |= 8;
         }
     }
 }
@@ -1187,7 +1187,7 @@ void func_8001F858(s32 arg0) {
 #define KEY_HI_SHIFT 9
 #define KEY_LO_SHIFT 8
 
-extern char *D_800608CC;
+extern char *g_CurrentZone;
 
 void func_8001F8B4(s32 arg0) {
     u16 *p;
@@ -1197,7 +1197,7 @@ void func_8001F8B4(s32 arg0) {
     key = (arg0 >> KEY_LO_SHIFT) | (*(s32 *)((char *)D_8006759C + 8) << KEY_HI_SHIFT);
     free_slot = 0;
     p = D_8006935C;
-    if (*(s32 *)(*(char **)(D_800608CC + OWNER_OFFSET) + FLAGS_OFFSET) & FLAG_LOCKED) {
+    if (*(s32 *)(*(char **)(g_CurrentZone + OWNER_OFFSET) + FLAGS_OFFSET) & FLAG_LOCKED) {
         return;
     }
     for (; *p != 0; p++) {

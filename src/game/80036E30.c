@@ -27,7 +27,7 @@ s32 D_8005F29C[2] = { 0x3039, 0xBAEC2 };
 #define TABLE_SELECT_MASK 0x1C
 #define TABLE_SELECT_SHIFT 4
 
-s32 *func_80036E30(s32 arg0, s32 arg1, s32 arg2) {
+s32 *Gool_ResolveOperand(s32 arg0, s32 arg1, s32 arg2) {
     s32 src;
     s32 flip;
     s32 *slot;
@@ -95,7 +95,7 @@ s32 *func_80036E30(s32 arg0, s32 arg1, s32 arg2) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80036E30", func_80036E30);
+INCLUDE_ASM("asm/nonmatchings/game/80036E30", Gool_ResolveOperand);
 #endif
 
 #ifdef NON_MATCHING
@@ -130,7 +130,7 @@ extern u32 D_80069950[];
 #define TABLE_VALUE(word) \
     D_8005B440[(((word) & TABLE_INDEX_MASK) >> TABLE_INDEX_SHIFT) * TABLE_STRIDE_WORDS]
 
-s32 func_80036FAC(u32 arg0, s32 arg1) {
+s32 Gool_OpTestPad(u32 arg0, s32 arg1) {
     u32 *a;
     u32 *b;
     u32 *c;
@@ -205,7 +205,7 @@ s32 func_80036FAC(u32 arg0, s32 arg1) {
     return res;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80036E30", func_80036FAC);
+INCLUDE_ASM("asm/nonmatchings/game/80036E30", Gool_OpTestPad);
 #endif
 
 void func_80037440(void) {
@@ -222,7 +222,7 @@ void func_80037440(void) {
 #define OBJ_REGS_OFFSET 0x40
 #define WORD_SIZE 4
 
-#define SP_OF(obj) (&(obj)->unk_BC)
+#define SP_OF(obj) (&(obj)->sp)
 
 /* Resolves an operand to the address of its word; a pop moves the stack pointer down. */
 #define RESOLVE_OPERAND(out, obj, operand) \
@@ -234,10 +234,10 @@ void func_80037440(void) {
             (out) = (s32 *)((u8 *)(obj) + OBJ_REGS_OFFSET + ((operand) & OPERAND_REG_MASK) * WORD_SIZE); \
         } \
     } else { \
-        (out) = func_80036D0C((obj), (operand) & OPERAND_MASK); \
+        (out) = Gool_ResolveRef((obj), (operand) & OPERAND_MASK); \
     }
 
-void func_80037448(GoolObject *arg0, u32 arg1) {
+void Gool_OpEntityFieldRow(GoolObject *arg0, u32 arg1) {
     s32 first;
     s32 *first_ptr;
     s32 *second;
@@ -251,7 +251,7 @@ void func_80037448(GoolObject *arg0, u32 arg1) {
     RESOLVE_OPERAND(second, arg0, arg1)
     second_word = *second;
     dst = *SP_OF(arg0);
-    handle = (s32)arg0->unk_F0;
+    handle = (s32)arg0->entity;
     *SP_OF(arg0) = (s32 *)((u8 *)dst + WORD_SIZE);
     if (handle != 0) {
         *dst = func_800321D4(handle, second_word >> RESULT_SHIFT, first, 0, 0, 0, 0);
@@ -260,7 +260,7 @@ void func_80037448(GoolObject *arg0, u32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80036E30", func_80037448);
+INCLUDE_ASM("asm/nonmatchings/game/80036E30", Gool_OpEntityFieldRow);
 #endif
 
 #ifdef NON_MATCHING
@@ -270,13 +270,13 @@ inline static s32 *Pop(GoolObject *o, s32 reg)
   {
     if (reg == 0xE1F)
     {
-      s32 *p = o->unk_BC - 1;
-      o->unk_BC = p;
+      s32 *p = o->sp - 1;
+      o->sp = p;
       return p;
     }
     return (s32 *) ((u8 *) o + (((reg & 0x1FF) * 4) + 0x40));
   }
-  return func_80036D0C(o, reg);
+  return Gool_ResolveRef(o, reg);
 }
 
 inline static s32 *Push(GoolObject *o, s32 reg)
@@ -286,16 +286,16 @@ inline static s32 *Push(GoolObject *o, s32 reg)
   {
     if (reg == 0xE1F)
     {
-      p = o->unk_BC;
-      o->unk_BC = p + 1;
+      p = o->sp;
+      o->sp = p + 1;
       return p;
     }
     return (s32 *) ((u8 *) o + (((reg & 0x1FF) * 4) + 0x40));
   }
-  return func_80036D0C(o, reg);
+  return Gool_ResolveRef(o, reg);
 }
 
-void func_8003756C(GoolObject *o, u32 arg1)
+void Gool_OpEntityFieldValue(GoolObject *o, u32 arg1)
 {
   int new_var;
   s32 *dst;
@@ -304,15 +304,15 @@ void func_8003756C(GoolObject *o, u32 arg1)
   dst = Push(o, arg1 & 0xFFF);
   if (dst != 0)
   {
-    do { new_var = o->unk_F0 != 0; } while (0);
+    do { new_var = o->entity != 0; } while (0);
     if (new_var)
     {
-      *dst = func_800321D4((s32) o->unk_F0, ((unsigned int) ((u32) src)) >> 8, 0, 0, 0, 2, 0);
+      *dst = func_800321D4((s32) o->entity, ((unsigned int) ((u32) src)) >> 8, 0, 0, 0, 2, 0);
       return;
     }
     *dst = 0;
   }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80036E30", func_8003756C);
+INCLUDE_ASM("asm/nonmatchings/game/80036E30", Gool_OpEntityFieldValue);
 #endif

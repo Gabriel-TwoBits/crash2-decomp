@@ -397,13 +397,13 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80012BC4);
 extern s32 D_80067FB0[];
 extern s32 D_80067FC8;
 extern s16 D_8005F3E0;
-extern NsfEntry *D_800608CC;
+extern NsfEntry *g_CurrentZone;
 
 void func_80012DC0(void) {
     D_80067FC8 = 1;
     while (*D_80067FB0 != 0) {
-        if (D_800608CC != 0 && D_8005F3E0 != -1) {
-            func_80034254((s32)D_800608CC->items[0] + 0x2A4);
+        if (g_CurrentZone != 0 && D_8005F3E0 != -1) {
+            func_80034254((s32)g_CurrentZone->items[0] + 0x2A4);
         }
         func_80012BC4(-1);
     }
@@ -1655,7 +1655,7 @@ typedef char *(*NameLookupFn)(s32, s32);
 extern int printf(const char *, ...);
 extern char D_80010110[];
 extern Unk8005B1E0 D_8005B1E0[];
-extern s32 D_8005F38C;
+extern s32 g_Player;
 extern s32 D_8005F3EC;
 extern s32 D_8005F3F0;
 extern s32 D_8006903C[];
@@ -1683,7 +1683,7 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
         return RET_DONE;
     }
     D_8005F3F0 = -1;
-    D_8005F38C = 0;
+    g_Player = 0;
     D_8005F3EC = arg1;
     arg0->is_open = 1;
     arg0->unk_A2C = 0;

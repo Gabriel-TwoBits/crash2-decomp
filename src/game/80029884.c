@@ -43,7 +43,7 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
     *(s32 *)((u8 *)arg0->unk_8 + 0x48) = 0;
     kind = *(u32 *)((u8 *)D_8006759C + 8);
     if (kind == 0x1D || kind == 0x17 || kind == 0x22 || kind == 0x25) {
-        if (arg0->unk_100 & SPEED_FLAGS_MASK) {
+        if (arg0->state_flags & SPEED_FLAGS_MASK) {
             speed = SPEED_BOOSTED;
         } else {
             speed = SPEED_DEFAULT;
@@ -52,7 +52,7 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
         speed = SPEED_DEFAULT;
     }
     D_8005F204 = speed;
-    /* GoolObject.unk_60 read through a plain pointer: as a structure member, GCC schedules the store to D_8005F204
+    /* GoolObject.pos read through a plain pointer: as a structure member, GCC schedules the store to D_8005F204
        after these loads */
     pos[0] = *(s32 *)((u8 *)arg0 + 0x60);
     pos[1] = *(s32 *)((u8 *)arg0 + 0x64);
@@ -68,9 +68,9 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
     }
     func_80029D0C(arg0, arg2, pos, vel);
     if (D_8005F2D0 == 0 && (in[0] != 0 || in[2] != 0) &&
-        NEAR_ABS(arg0->unk_60[0], pos[0], POS_TOLERANCE_OUTPUT) &&
-        NEAR_ABS(arg0->unk_60[1], pos[1], POS_TOLERANCE_OUTPUT) &&
-        NEAR_ABS(arg0->unk_60[2], pos[2], POS_TOLERANCE_OUTPUT)) {
+        NEAR_ABS(arg0->pos[0], pos[0], POS_TOLERANCE_OUTPUT) &&
+        NEAR_ABS(arg0->pos[1], pos[1], POS_TOLERANCE_OUTPUT) &&
+        NEAR_ABS(arg0->pos[2], pos[2], POS_TOLERANCE_OUTPUT)) {
         D_8005F4A0 = in[0];
         D_8005F4A4 = in[1];
         D_8005F2D0 = 1;
@@ -78,9 +78,9 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
     } else {
         D_8005F2D0 = 0;
     }
-    arg0->unk_60[0] = pos[0];
-    arg0->unk_60[1] = pos[1];
-    arg0->unk_60[2] = pos[2];
+    arg0->pos[0] = pos[0];
+    arg0->pos[1] = pos[1];
+    arg0->pos[2] = pos[2];
     if (!(arg0->unk_A8 & FLAG_ACTIVE)) {
         return;
     }
@@ -99,7 +99,7 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
     switch (state) {
     case 0x3000:
     case 0x3100:
-        func_8001D194(0, state, 0, 0, 0);
+        Gool_BroadcastEvent(0, state, 0, 0, 0);
         return;
     case 0x1F00:
         if (*(s32 *)((u8 *)arg2 + 0x1040) != 0) {
@@ -112,7 +112,7 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
         }
         break;
     case 0x4200:
-        if (!(arg0->unk_60[1] < (D_8006CD48 - LEVEL_FLOOR_MARGIN))) {
+        if (!(arg0->pos[1] < (D_8006CD48 - LEVEL_FLOOR_MARGIN))) {
             return;
         }
         arg0->unk_11C = 0x2100;
@@ -121,7 +121,7 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
     default:
         break;
     }
-    func_8001CC10(0, (s32)arg0, (u32)arg0->unk_11C, 1, &shiftArg[1]);
+    Gool_SendEvent(0, (s32)arg0, (u32)arg0->unk_11C, 1, &shiftArg[1]);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80029884", func_80029884);
@@ -145,7 +145,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_80029884);
 #define SHIFT_Y 46
 #define AXES 3
 
-extern u8 *D_8005F38C;
+extern u8 *g_Player;
 extern s32 D_80062AD8;
 extern s32 D_8006CB94;
 
@@ -183,8 +183,8 @@ void func_80029D0C(GoolObject *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     nx = 0;
     nz = 0;
     if ((D_8006CB94 & FLAG_COLLIDE_ON) && (D_80062AD8 & MODE_STEP) &&
-        (!(D_80062AD8 & MODE_SLIDE) || (arg0->unk_100 & OBJ_FLAG_SOLID))) {
-        if ((D_80062AD8 & MODE_ALT) && (((GoolObject *)D_8005F38C)->unk_100 & OBJ_FLAG_SOLID)) {
+        (!(D_80062AD8 & MODE_SLIDE) || (arg0->state_flags & OBJ_FLAG_SOLID))) {
+        if ((D_80062AD8 & MODE_ALT) && (((GoolObject *)g_Player)->state_flags & OBJ_FLAG_SOLID)) {
             step = STEP_ALT;
         } else if (D_80062AD8 & MODE_SLIDE) {
             step = STEP_SLIDE;
@@ -278,7 +278,7 @@ s32 func_8002A1B8(GoolObject *p, s32 arg1) {
     case 4:
         p->unk_11C = 0x1F00;
         p->unk_A8 |= 0x400;
-        if ((p->unk_100 & 0x40000000) && a3 == 1) {
+        if ((p->state_flags & 0x40000000) && a3 == 1) {
             p->unk_11C = 0x900;
             return 1;
         }
@@ -319,7 +319,7 @@ s32 func_8002A1B8(GoolObject *p, s32 arg1) {
             return 1;
         }
         r = 1;
-        if ((p->unk_100 & 0x24000000) == 0x24000000) {
+        if ((p->state_flags & 0x24000000) == 0x24000000) {
             r = 0;
         }
         return r;
@@ -385,13 +385,13 @@ typedef struct { s32 n; u8 pad[0x28C]; s32 *p[1]; } Unk8006CB6C;
 
 extern Unk8006CB6C D_8006CB6C;
 
-/* The first item of GoolObject.unk_C, as this function reads it */
+/* The first item of GoolObject.exe, as this function reads it */
 typedef struct {
     u8 pad0[0x4];
     s32 unk4;
 } Unk8002A554_C10;
 
-#define KIND(obj) (((Unk8002A554_C10 *)(obj)->unk_C->items[0])->unk4)
+#define KIND(obj) (((Unk8002A554_C10 *)(obj)->exe->items[0])->unk4)
 
 typedef struct {
     s32 unk0;
@@ -441,7 +441,7 @@ s32 func_8002A554(GoolObject *arg0, s32 *arg1, s32 *arg2, u8 *arg3) {
     *(s32 *)(arg3 + 0x102C) = arg2[0] + BOX_HALF_EXTENT;
     y = arg2[1];
     box = (s32 *)(arg3 + 0x1020);
-    if (!(arg0->unk_100 & 0x40000000)) {
+    if (!(arg0->state_flags & 0x40000000)) {
         top = y + ((Unk8002A554_8 *)arg0->unk_8)->unk40;
     } else {
         top = y + 0x29900;
@@ -461,14 +461,14 @@ s32 func_8002A554(GoolObject *arg0, s32 *arg1, s32 *arg2, u8 *arg3) {
                             (obj->unk_AC & 0x200) ? (s32)obj->unk_9C : 0);
         if (res != NO_HIT) {
             if ((obj->unk_AC & 0x20000) &&
-                ((((!(arg0->unk_100 & 0x10) && arg0->unk_108 != 5) ||
-                    ((KIND(obj) != 0x300 || (obj->unk_B0 & 0x1012)) && !(obj->unk_100 & 0x20))) &&
-                   !(arg0->unk_100 & 0x10000)) ||
-                  (obj->unk_100 & 0x10000))) {
-                s32 flags = arg0->unk_100;
+                ((((!(arg0->state_flags & 0x10) && arg0->unk_108 != 5) ||
+                    ((KIND(obj) != 0x300 || (obj->block_flags & 0x1012)) && !(obj->state_flags & 0x20))) &&
+                   !(arg0->state_flags & 0x10000)) ||
+                  (obj->state_flags & 0x10000))) {
+                s32 flags = arg0->state_flags;
                 s32 mode = flags & 0xA00000;
-                if (mode != 0x200000 || (obj->unk_B0 & mode) ||
-                    ((flags & 8) ? obj->unk_100 < 0 : (obj->unk_100 & 0x200))) {
+                if (mode != 0x200000 || (obj->block_flags & mode) ||
+                    ((flags & 8) ? obj->state_flags < 0 : (obj->state_flags & 0x200))) {
                     obj->unk_A8 |= 0x4000;
                     ret = res + 1;
                     best = res;
@@ -564,7 +564,7 @@ s32 func_8002A8D0(void *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5,
     switch (o[0] & KIND_MASK) {
     case KIND_BOX:
         pad = 0;
-        if (*(s32 *)((char *)((GoolObject *)D_8005F38C)->unk_8 + 0x4C) & FLAG_BIT) {
+        if (*(s32 *)((char *)((GoolObject *)g_Player)->unk_8 + 0x4C) & FLAG_BIT) {
             pad = ((GoolObject *)o[1])->unk_128;
         }
         if (arg3 != 0) {
@@ -924,7 +924,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002B164);
 #define NO_HIT 0xC4653601
 #define FLAG_BIG 0x40000000
 /* Re-read at each use: the box overlaps the object when the caller's buffers alias. */
-#define IS_BIG(o) (((o)->unk_100 & FLAG_BIG) != 0)
+#define IS_BIG(o) (((o)->state_flags & FLAG_BIG) != 0)
 #define FLAG_MODE_40 0x40
 #define FLAG_SKIP_BOUND 0x200000
 #define FLAG_PROBE_SRC 0x08000000
@@ -970,7 +970,7 @@ typedef struct Unk8002B57CEntry {
 /* What GoolObject.unk_8 points to, as this function reads it */
 #define SCALE_OF(o) ((Unk8002B57CScale *)(o)->unk_8)
 
-extern void *D_800608CC;
+extern void *g_CurrentZone;
 
 
 s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
@@ -996,7 +996,7 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     box = (s32 *)((u8 *)arg2 + BOX_OFFSET);
 
     box[0] = arg1[0] - HALF_SMALL;
-    if (self->unk_100 & FLAG_MODE_40) {
+    if (self->state_flags & FLAG_MODE_40) {
         if (!IS_BIG(self)) {
             box[1] = arg1[1] - SCALE_OF(self)->unk_40 / 4;
         } else {
@@ -1084,12 +1084,12 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     }
     hit = func_8003D040(arg0, arg2, (u8 *)arg2 + BOUNDS_OFFSET, box, 2, 6, 1, NO_HIT, 1);
 
-    if (*(s32 *)(self->unk_18->items[0] + QUERY_FLAGS_OFFSET) & FLAG_QUERY_20000) {
+    if (*(s32 *)(self->zone->items[0] + QUERY_FLAGS_OFFSET) & FLAG_QUERY_20000) {
         sp28[0] = arg1[0];
         sp28[1] = box[4];
         sp28[2] = arg1[2];
-        if ((s32)func_80027DEC(D_800608CC, sp28) >= SKIP_THRESHOLD) {
-            info = (Unk8002B57CInfo *)self->unk_18->items[1];
+        if ((s32)func_80027DEC(g_CurrentZone, sp28) >= SKIP_THRESHOLD) {
+            info = (Unk8002B57CInfo *)self->zone->items[1];
             bound = (info->unk_04 + info->unk_10) << 8;
             if (bound < sp28[1]) {
                 hit = bound;
@@ -1105,13 +1105,13 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
         self->unk_A8 |= STATE_TOUCHED;
         if (self->unk_84[1] >= 0 || best_obj->unk_84[1] < 0) {
             sp38[0] = PARAM_6400;
-            func_8001CC10((s32)self, (s32)best_obj, PARAM_1700, 1, sp38);
+            Gool_SendEvent((s32)self, (s32)best_obj, PARAM_1700, 1, sp38);
         }
-        if (!(self->unk_100 & FLAG_SKIP_BOUND)) {
+        if (!(self->state_flags & FLAG_SKIP_BOUND)) {
             return best;
         }
     }
-    if (self->unk_100 & FLAG_MODE_40) {
+    if (self->state_flags & FLAG_MODE_40) {
         return hit;
     } else if (!IS_BIG(self)) {
         if (arg1[1] + SCALE_OF(self)->unk_40 < hit) {
@@ -1202,7 +1202,7 @@ fail:
             sp18 = 0;
             y = ret - ((F(arg0, 0x100) & 0x40000000) ? 0x29900 : F(SUB(arg0), 0x40)) - 1;
             arg2[1] = func_8001E5FC(arg1[1], y, 0x4E20);
-            func_8001CC10(0, (s32)arg0, 0x3300, 1, &sp18);
+            Gool_SendEvent(0, (s32)arg0, 0x3300, 1, &sp18);
         }
     }
 }
@@ -1210,7 +1210,7 @@ fail:
 INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002BC38);
 #endif
 
-extern void *D_800608CC;
+extern void *g_CurrentZone;
 extern void *D_8006759C;
 extern s32 D_8006CB64;
 extern s32 D_8006CD48;
@@ -1226,9 +1226,9 @@ s32 func_8002BF58(GoolObject *arg0, void *arg1) {
     void *temp_a1;
     void *temp_s2;
 
-    temp_v0 = func_80027DEC(D_800608CC);
+    temp_v0 = func_80027DEC(g_CurrentZone);
     if (temp_v0 >= -0xFE) {
-        temp_a1 = arg0->unk_18;
+        temp_a1 = arg0->zone;
         temp_s2 = *(void **)((s8 *)temp_a1 + 0x14);
         if (*(s32 *)((s8 *)arg1 + 4) < ((*(s32 *)((s8 *)temp_s2 + 4) << 8) - *(s32 *)((s8 *)arg0->unk_8 + 0x34))) {
             var_a0 = 1;
@@ -1247,12 +1247,12 @@ s32 func_8002BF58(GoolObject *arg0, void *arg1) {
                     }
                 } else {
 block_8:
-                    if (!(*(s32 *)((s8 *)*(void **)((s8 *)D_800608CC + 0x10) + 0x29C) & 0x800)) {
+                    if (!(*(s32 *)((s8 *)*(void **)((s8 *)g_CurrentZone + 0x10) + 0x29C) & 0x800)) {
                         var_a2 = 0x2100;
                         sp18 = D_8006CD48;
                     }
                 }
-                func_8001CC10(0, (s32)arg0, var_a2, 1, &sp18);
+                Gool_SendEvent(0, (s32)arg0, var_a2, 1, &sp18);
                 var_a0 = 0;
             }
             if (var_a0 != 0) {
@@ -1267,7 +1267,7 @@ block_8:
             }
         }
     } else {
-        arg0->unk_18 = (void *)temp_v0;
+        arg0->zone = (void *)temp_v0;
     }
     return -0xFF;
 }
@@ -1324,7 +1324,7 @@ void func_8002C0F0(GoolObject *arg0, void *arg1, s32 *arg2, s32 *arg3, s32 *arg4
 }
 
 #ifdef NON_MATCHING
-extern u8 *D_8005F38C;
+extern u8 *g_Player;
 
 #define F(p, off) (*(s32 *)((u8 *)(p) + (off)))
 #define SLOT_STRIDE 0x28
@@ -1482,7 +1482,7 @@ s32 *func_8002C324(void *arg0, s32 arg1, s32 arg2) {
         v = pos[2] + ext[3];
     }
     box[7] = v;
-    if ((D_80062AD8 & FLAG_OFFSET_ON) && (F(D_8005F38C, 0x100) & OBJ_FLAG_SHIFT)) {
+    if ((D_80062AD8 & FLAG_OFFSET_ON) && (F(g_Player, 0x100) & OBJ_FLAG_SHIFT)) {
         box[2] += SHIFT_NEG;
         box[4] += SHIFT_NEG;
         box[5] += SHIFT_POS;
@@ -1671,7 +1671,7 @@ void func_8002D6E4(s32 *arg0, s32 *arg1, void *arg2, void *arg3, s32 arg4) {
     checkSelf = 0;
     originX = arg0[0];
     originZ = arg0[2];
-    if (!(FIELD(FIELD(D_800608CC, void *, 0x10), s32, 0x29C) & FLAG_PLAYER_NO_CHECK)) {
+    if (!(FIELD(FIELD(g_CurrentZone, void *, 0x10), s32, 0x29C) & FLAG_PLAYER_NO_CHECK)) {
         checkSelf = (FIELD(arg2, s32, 0x100) & FLAG_SELF_SKIP) == 0;
     }
     if (D_8006CB6C.n == 0) {
@@ -1829,8 +1829,8 @@ void func_8002DE08(s32 *arg0, s32 *arg1, GoolObject *arg2, void *arg3) {
     s32 base;
     s32 x;
 
-    if (!(*(s32 *)(*(s8 **)((s8 *)D_800608CC + 0x10) + WORLD_FLAGS_OFFSET) & WORLD_FLAG_SKIP)) {
-        if (!(arg2->unk_100 & OBJ_FLAG_SKIP)) {
+    if (!(*(s32 *)(*(s8 **)((s8 *)g_CurrentZone + 0x10) + WORLD_FLAGS_OFFSET) & WORLD_FLAG_SKIP)) {
+        if (!(arg2->state_flags & OBJ_FLAG_SKIP)) {
             p = (s32 *)((s8 *)D_8005F3C4 + TABLE_A_LAST);
             for (i = TABLE_A_WORDS - 1; i >= 0; i--) {
                 *p = 0;
@@ -1842,7 +1842,7 @@ void func_8002DE08(s32 *arg0, s32 *arg1, GoolObject *arg2, void *arg3) {
                 p--;
             }
             mode = arg2->unk_108;
-            flags = arg2->unk_B0;
+            flags = arg2->block_flags;
             if ((u32)(mode - OBJ_MODE_MIN) < OBJ_MODE_SPAN) {
                 flags = OBJ_ALT_VALUE;
             } else if (mode == OBJ_MODE_ALT) {
@@ -1851,12 +1851,12 @@ void func_8002DE08(s32 *arg0, s32 *arg1, GoolObject *arg2, void *arg3) {
                 flags = flags & OBJ_BITS_MASK;
             }
             base = arg0[1];
-            if (arg2->unk_100 & OBJ_FLAG_FIXED_BASE) {
+            if (arg2->state_flags & OBJ_FLAG_FIXED_BASE) {
                 base += FIXED_BASE_OFFSET;
             } else {
                 base += *(s32 *)((s8 *)arg2->unk_8 + PARENT_BASE_OFFSET);
             }
-            x = arg2->unk_60[1];
+            x = arg2->pos[1];
             func_8003C88C(arg3, (s8 *)arg3 + BUF_B_OFFSET, flags, x + D_8005F204,
                           x + OBJ_X_END_DELTA, base, arg0[0], arg0[2]);
         }
@@ -2046,7 +2046,7 @@ s32 func_8002E280(s32 *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4, void *arg
     for (;;) {
         step = D_8005B520;
         if (func_8002DF68(x, y) != 0
-            || (FIELD(FIELD(D_800608CC, void *, 0x10), s32, CTX_FLAGS_OFFSET) & FLAG_BLOCKED)
+            || (FIELD(FIELD(g_CurrentZone, void *, 0x10), s32, CTX_FLAGS_OFFSET) & FLAG_BLOCKED)
             || (FIELD(arg5, s32, 0x100) & OBJ_NO_SEARCH)) {
             *arg3 = x;
             *arg4 = y;

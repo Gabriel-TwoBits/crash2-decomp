@@ -375,7 +375,7 @@ s32 func_80032B7C(GoolObject *arg0, s32 arg1, s32 arg2) {
     if (D_8006CBF8 == 0) {
         return 0;
     }
-    if (!(D_8006CB94 & CTRL_REQUIRED) && !(arg0->unk_100 & OBJ_FLAGS_REQUIRED)) {
+    if (!(D_8006CB94 & CTRL_REQUIRED) && !(arg0->state_flags & OBJ_FLAGS_REQUIRED)) {
         return 0;
     }
     voice = func_800328D4();
@@ -413,10 +413,10 @@ s32 func_80032B7C(GoolObject *arg0, s32 arg1, s32 arg2) {
     }
     e->key = arg0;
     if (arg0 != 0) {
-        ENT_W(e, 0x30) = arg0->unk_60[0];
-        ENT_W(e, 0x34) = arg0->unk_60[1];
-        ENT_W(e, 0x38) = arg0->unk_60[2];
-        func_8001EC2C(arg0->unk_60, pos, 1);
+        ENT_W(e, 0x30) = arg0->pos[0];
+        ENT_W(e, 0x34) = arg0->pos[1];
+        ENT_W(e, 0x38) = arg0->pos[2];
+        func_8001EC2C(arg0->pos, pos, 1);
         ENT_W(e, 0x24) = pos[0];
         ENT_W(e, 0x28) = pos[1];
         ENT_W(e, 0x2C) = pos[2];
@@ -547,7 +547,7 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
     volatile s32 peek[3];
     volatile Unk80032F18Raw4 *rawp;
 
-    if (!(D_8006CB94 & GATE_FLAG_ACTIVE) && !(arg3->unk_100 & OBJ_FLAG_ACTIVE)) {
+    if (!(D_8006CB94 & GATE_FLAG_ACTIVE) && !(arg3->state_flags & OBJ_FLAG_ACTIVE)) {
         return 0;
     }
     slot = D_8005F304;
@@ -807,7 +807,7 @@ extern void func_8005182C(u8 *);
 extern void func_800518B8(s32 *);
 extern s32 D_8005F18C;
 extern u8 D_8005FC6C[];
-extern void *D_800608CC;
+extern void *g_CurrentZone;
 extern s32 D_80067FB0;
 extern s32 D_8005F304;
 extern s32 D_8006CBFC;
@@ -846,8 +846,8 @@ void func_800334A0(void) {
         D_8005F258 = D_8006CBFC;
         func_80033C84((D_8006CBFC * MIX_SCALE_MUL) >> MIX_SCALE_SHIFT);
     }
-    if (D_800608CC != 0) {
-        func_80034254(*(s32 *)((u8 *)D_800608CC + 0x10) + 0x2A4);
+    if (g_CurrentZone != 0) {
+        func_80034254(*(s32 *)((u8 *)g_CurrentZone + 0x10) + 0x2A4);
     }
     if (D_8005F300 != 0) {
         if (D_8005F300 < 0 && D_8005F2FC < -D_8005F300) {
