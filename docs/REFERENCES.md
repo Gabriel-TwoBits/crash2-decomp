@@ -27,3 +27,8 @@
 - [Can LLMs really do matching decompilation?](https://gambiconf.substack.com/p/can-llms-really-do-matching-decompilation):
   an agent with m2c, objdiff and decomp-permuter on 60 functions of two games, and what worked.
 - [Retro Reversing: PS1 games with debug symbols](https://www.retroreversing.com/ps1-debug-symbols).
+
+## The hardware
+
+- [psx-spx](https://psx-spx.consoledev.net/): the PlayStation's hardware, documented from tests. Its GTE chapter (the
+  registers, RTPS/RTPT and the division) is what `tools/gte.py` and `include/gte.h` model.

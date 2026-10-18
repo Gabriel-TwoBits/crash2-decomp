@@ -8,13 +8,14 @@ called equivalent only when every trial agrees; random trials are evidence, not 
 FILE.c is compiled as the build compiles it, with NON_MATCHING defined, and FUNCTION's code relocated into a scratch area:
 every name the retail executable knows resolves to its retail address (the file's own .sdata and .sbss variables
 included), what has no retail name (jump tables, labels, literals) to the scratch copies. Calls out of the function are
-recorded and answered, not run. A trial whose retail run faults on a memory access through a word of its inputs gets
+recorded and answered, not run. The GTE's instructions run on a model of it (tools/gte.py), its registers random on
+entry and compared after. A trial whose retail run faults on a memory access through a word of its inputs gets
 that word replaced and starts over (MAX_REPAIRS), before the candidate runs from the same repaired state. Compared
 after each trial: how it ended, the return value, the callee-saved registers, each call's target and arguments, and
 every byte either side changed outside its own stack frame.
 
 Exit status: 0 when every trial agrees, 1 on a disagreement or an error, 2 when the code needs what the emulator lacks
-(the GTE). Needs the build (build/SCUS_941.54.elf) and orig/USA/SCUS_941.54.
+(a GTE command the model doesn't have). Needs the build (build/SCUS_941.54.elf) and orig/USA/SCUS_941.54.
 """
 import argparse
 import bisect
@@ -33,6 +34,7 @@ from unicorn import UC_ARCH_MIPS, UC_HOOK_CODE, UC_HOOK_INTR, UC_HOOK_MEM_UNMAPP
 from unicorn import UC_MODE_LITTLE_ENDIAN, UC_MODE_MIPS32, UC_PROT_ALL, UC_PROT_EXEC, UC_PROT_READ, Uc, UcError
 from unicorn import mips_const as mips
 
+import gte
 from psx_cc import DEFAULT_ASPSX, DEFAULT_CFLAGS, DEFAULT_GCC, HERE, compile_c, compiler, cpp_command
 
 RETAIL_ELF = HERE / "build" / "SCUS_941.54.elf"
@@ -111,9 +113,33 @@ JUMP_FIELD = 0x03FFFFFF
 JUMP_SHIFT = 2
 JUMP_SEGMENT = 0xF0000000
 OPCODE_SHIFT = 26
-# The GTE's instructions (coprocessor 2), which Unicorn's MIPS32 doesn't have
+# The GTE's instructions (coprocessor 2), which Unicorn's MIPS32 doesn't have: each runs on tools/gte.py's model from a
+# code hook, which then skips it. TRADEOFF: mfc2's and cfc2's result is there at once, where the hardware gives the
+# instruction after them the old value; the code the build writes waits a slot (include/gte.h), retail's handwritten too
 GTE_OPCODES = {0x12: "cop2", 0x32: "lwc2", 0x3A: "swc2"}
-GTE_SHOWN = 3
+OP_LWC2 = 0x32
+OP_SWC2 = 0x3A
+# cop2 with this bit is a command; without, rs picks a move: mfc2, cfc2, mtc2, ctc2
+COP2_COMMAND = 1 << 25
+COP2_MFC2, COP2_CFC2, COP2_MTC2, COP2_CTC2 = 0x00, 0x02, 0x04, 0x06
+# What has a delay slot, which a hook skipping its instruction can't run: the branches and jumps by opcode (REGIMM, j,
+# jal, beq, bne, blez, bgtz), SPECIAL's jr and jalr, a coprocessor's branch (rs 8)
+BRANCH_OPCODES = range(0x01, 0x08)
+JUMP_REGISTER_FUNCTS = {0x08, 0x09}
+COPROCESSOR_OPCODES = range(0x10, 0x14)
+COPROCESSOR_BRANCH = 0x08
+# The GTE's registers on entry: random words, and in about half the trials a rotation, translation, screen offset and
+# projection plane distance near the game's (RT entries within +-1.0 in 4.12, the object in front of the camera), so
+# that RTPS/RTPT also project without flagging an error
+GTE_PLAUSIBLE_ODDS = 0.5
+GTE_ROTATION_LIMIT = 0x1000
+GTE_TRANSLATION_XY_LIMIT = 0x400
+GTE_TRANSLATION_Z_RANGE = (0x100, 0x4000)
+GTE_SCREEN_OFFSET_LIMIT = 0x200
+GTE_PROJECTION_RANGE = (0x80, 0x400)
+# The rotation matrix's nine halves, in five words: the last word's upper half is unused
+GTE_ROTATION_HALVES = 9
+GTE_ROTATION_WORDS = 5
 
 # Address space. Unicorn maps kseg0 and kseg1 to physical memory as the PS1 does (address & 0x1FFFFFFF) and kuseg to
 # itself; its memory calls and hooks take physical addresses, its code hooks virtual ones. kseg2 needs a TLB and faults.
@@ -246,12 +272,14 @@ LIMIT = "the limit"
 # Unicorn's exception numbers (QEMU's), as UC_HOOK_INTR reports them
 EXCEPTIONS = {12: "address error on load", 13: "address error on store", 17: "syscall", 18: "break", 21: "overflow",
               22: "trap", 26: "TLB miss on load", 27: "TLB miss on store"}
+EXCEPTION_ADDRESS_LOAD, EXCEPTION_ADDRESS_STORE, EXCEPTION_TLB_LOAD, EXCEPTION_TLB_STORE = 12, 13, 26, 27
 UNSUPPORTED_EXCEPTIONS = {19: "coprocessor unusable", 20: "reserved instruction"}
 # Followed by the address, in a run's ending
 UNMAPPED = "access to unmapped"
 STORE_TO_CODE = "store to the retail code or read-only data at"
 # The endings a repair may lift: address errors and TLB misses, then the two above
-ACCESS_EXCEPTIONS = {EXCEPTIONS[12], EXCEPTIONS[13], EXCEPTIONS[26], EXCEPTIONS[27]}
+ACCESS_EXCEPTIONS = {EXCEPTIONS[EXCEPTION_ADDRESS_LOAD], EXCEPTIONS[EXCEPTION_ADDRESS_STORE],
+                     EXCEPTIONS[EXCEPTION_TLB_LOAD], EXCEPTIONS[EXCEPTION_TLB_STORE]}
 ACCESS_PREFIXES = (UNMAPPED, STORE_TO_CODE)
 
 # A name followed by an argument list, in the preprocessed C: a prototype, a definition or a call
@@ -750,6 +778,28 @@ class Fuzz:
             values[index] = narrowed(values[index], narrow)
         return values
 
+    def gte_words(self):
+        """The GTE's 64 registers on entry, data then control (GTE_PLAUSIBLE_ODDS)"""
+        generator = self.generator("gte")
+        words = self.words(generator, 2 * gte.REGISTERS)
+        if generator.random() < GTE_PLAUSIBLE_ODDS:
+            control = gte.REGISTERS
+            halves = [generator.randint(-GTE_ROTATION_LIMIT, GTE_ROTATION_LIMIT) & HALF_MASK
+                      for _ in range(GTE_ROTATION_HALVES)] + [0]
+            for index in range(GTE_ROTATION_WORDS):
+                words[control + gte.RT + index] = halves[2 * index] | (halves[2 * index + 1] << HALF_BITS)
+            words[control + gte.TRX] = generator.randint(-GTE_TRANSLATION_XY_LIMIT, GTE_TRANSLATION_XY_LIMIT) & WORD_MASK
+            words[control + gte.TRY] = generator.randint(-GTE_TRANSLATION_XY_LIMIT, GTE_TRANSLATION_XY_LIMIT) & WORD_MASK
+            words[control + gte.TRZ] = generator.randint(*GTE_TRANSLATION_Z_RANGE)
+            for register in (gte.OFX, gte.OFY):
+                offset = generator.randint(-GTE_SCREEN_OFFSET_LIMIT, GTE_SCREEN_OFFSET_LIMIT)
+                words[control + register] = (offset << HALF_BITS) & WORD_MASK
+            words[control + gte.H] = generator.randint(*GTE_PROJECTION_RANGE)
+        else:
+            # Random words throughout
+            pass
+        return words
+
     def repair(self, root, role):
         """Replaces an input word by what its role takes (MAX_REPAIRS)"""
         generator = self.generator("repair", len(self.repairs))
@@ -905,6 +955,8 @@ class Call:
 class Run:
     status: str = None
     unsupported: str = None
+    # The GTE's registers at the end (gte.Gte.registers)
+    gte: tuple = ()
     # Where an exception stopped it
     fault_pc: int = None
     registers: dict = field(default_factory=dict)
@@ -968,7 +1020,7 @@ def decode(code):
         rt = (word >> RT_SHIFT) & REGISTER_FIELD
         rd = (word >> RD_SHIFT) & REGISTER_FIELD
         funct = word & FUNCT_MASK
-        access = rs if opcode in LOAD_OPCODES or opcode in STORE_OPCODES else 0
+        access = rs if opcode in LOAD_OPCODES or opcode in STORE_OPCODES or opcode in (OP_LWC2, OP_SWC2) else 0
         source, other, destination = 0, 0, 0
         if opcode == OP_LW:
             effect, source, destination = EFFECT_LW, rs, rt
@@ -1140,6 +1192,10 @@ class Machine:
         self.start = entry if start is None else start
         self.size = size
         self.code = memory.code
+        # The pages Unicorn keeps read-only (make_emulator), where a store is a store to code
+        self.protected = (align(self.code[0], PAGE_SIZE), self.code[1] // PAGE_SIZE * PAGE_SIZE)
+        self.gte_instructions = gte_addresses(memory, self.start, size)
+        self.gte = None
         self.traced_hook = traced
         self.buffers = {start: bytearray(len(content)) for start, content in memory.regions.items()}
         # A memoryview copies a trial's memory in about three times faster than slice assignment does
@@ -1159,7 +1215,7 @@ class Machine:
         for start, buffer in self.buffers.items():
             address = ctypes.addressof((ctypes.c_char * len(buffer)).from_buffer(buffer))
             emulator.mem_map_ptr(start, len(buffer), UC_PROT_ALL, address)
-        code_start, code_end = align(self.code[0], PAGE_SIZE), self.code[1] // PAGE_SIZE * PAGE_SIZE
+        code_start, code_end = self.protected
         emulator.mem_protect(code_start, code_end - code_start, UC_PROT_READ | UC_PROT_EXEC)
         emulator.hook_add(UC_HOOK_MEM_UNMAPPED, self.unmapped)
         emulator.hook_add(UC_HOOK_MEM_WRITE_PROT, self.store_to_code)
@@ -1168,6 +1224,8 @@ class Machine:
         emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=0, end=self.start - 1)
         emulator.hook_add(UC_HOOK_CODE, self.call_out, begin=self.start + self.size, end=WORD_MASK)
         emulator.hook_add(UC_HOOK_INTR, self.exception)
+        for address in self.gte_instructions:
+            emulator.hook_add(UC_HOOK_CODE, self.coprocessor, begin=address, end=address)
         return emulator, emulator.context_save()
 
     def run(self, memory, fuzz, tracer=None):
@@ -1178,6 +1236,7 @@ class Machine:
         self.tracer = tracer
         # The values calls return, drawn in call order: the same for the same calls on both sides
         self.returned = fuzz.generator("calls")
+        self.gte = gte.Gte(fuzz.gte_words())
         emulator = self.emulator
         emulator.context_restore(self.fresh)
         for start, content in memory.regions.items():
@@ -1195,6 +1254,7 @@ class Machine:
         if outcome.status is None:
             outcome.status = RETURNED if emulator.reg_read(mips.UC_MIPS_REG_PC) == SENTINEL_RETURN else LIMIT
         outcome.registers = {name: emulator.reg_read(REGISTERS[name]) for name in REGISTER_NAMES}
+        outcome.gte = self.gte.registers()
         outcome.regions = self.buffers
         code = physical(self.start)
         for start, buffer in self.buffers.items():
@@ -1265,7 +1325,10 @@ class Machine:
 
     def exception(self, uc, number, data):
         outcome = self.outcome
-        if number in UNSUPPORTED_EXCEPTIONS:
+        if outcome.status is not None:
+            # A hook ended the run already, on the instruction that raised this
+            pass
+        elif number in UNSUPPORTED_EXCEPTIONS:
             outcome.unsupported = UNSUPPORTED_EXCEPTIONS[number]
             outcome.status = outcome.unsupported
         elif number in EXCEPTIONS:
@@ -1275,17 +1338,95 @@ class Machine:
             outcome.status = f"exception {number}"
         uc.emu_stop()
 
-
-def gte_instructions(code, address):
-    """'mnemonic at address' of the GTE instructions in a function's code"""
-    found = []
-    for offset in range(0, len(code), WORD):
-        opcode = read_word(code, offset) >> OPCODE_SHIFT
-        if opcode in GTE_OPCODES:
-            found.append(f"{GTE_OPCODES[opcode]} at {address + offset:#010x}")
+    def coprocessor(self, uc, address, size, data):
+        """Runs a GTE instruction on the model and skips it"""
+        outcome = self.outcome
+        word = read_word(uc.mem_read(physical(address), WORD), 0)
+        opcode = word >> OPCODE_SHIFT
+        rs = (word >> RS_SHIFT) & REGISTER_FIELD
+        rt = (word >> RT_SHIFT) & REGISTER_FIELD
+        rd = (word >> RD_SHIFT) & REGISTER_FIELD
+        if opcode == OP_COP2 and word & COP2_COMMAND:
+            if not self.gte.command(word):
+                outcome.unsupported = f"GTE command {word:#010x}, which tools/gte.py doesn't model"
+                outcome.status = outcome.unsupported
+        elif opcode == OP_COP2 and rs in (COP2_MFC2, COP2_CFC2):
+            value = self.gte.read_data(rd) if rs == COP2_MFC2 else self.gte.read_control(rd)
+            if rt:
+                uc.reg_write(REGISTER_NUMBERS[rt], value)
+            else:
+                # A move to $zero
+                pass
+        elif opcode == OP_COP2 and rs == COP2_MTC2:
+            self.gte.write_data(rd, register_value(uc, rt))
+        elif opcode == OP_COP2 and rs == COP2_CTC2:
+            self.gte.write_control(rd, register_value(uc, rt))
+        elif opcode in (OP_LWC2, OP_SWC2):
+            store = opcode == OP_SWC2
+            target = (register_value(uc, rs) + signed16(word & HALF_MASK)) & WORD_MASK
+            if self.gte_access_fault(target, store):
+                outcome.fault_pc = address
+            elif store:
+                uc.mem_write(physical(target), struct.pack("<I", self.gte.read_data(rt)))
+            else:
+                self.gte.write_data(rt, read_word(uc.mem_read(physical(target), WORD), 0))
         else:
-            continue
+            outcome.unsupported = f"coprocessor 2 instruction {word:#010x}, which tools/gte.py doesn't model"
+            outcome.status = outcome.unsupported
+        if outcome.status is None:
+            uc.reg_write(mips.UC_MIPS_REG_PC, address + WORD)
+        else:
+            uc.emu_stop()
+
+    def gte_access_fault(self, target, store):
+        """Sets the run's ending when lwc2 or swc2 at target faults as a load or store there would; whether it does"""
+        outcome = self.outcome
+        address = physical(target)
+        if target % WORD:
+            outcome.status = EXCEPTIONS[EXCEPTION_ADDRESS_STORE if store else EXCEPTION_ADDRESS_LOAD]
+        elif target >= KSEG2:
+            outcome.status = EXCEPTIONS[EXCEPTION_TLB_STORE if store else EXCEPTION_TLB_LOAD]
+        elif store and self.protected[0] <= address < self.protected[1]:
+            outcome.status = f"{STORE_TO_CODE} {virtual(address):#010x}"
+        elif not any(start <= address < start + len(buffer) for start, buffer in self.buffers.items()):
+            outcome.status = f"{UNMAPPED} {virtual(address):#010x}"
+        else:
+            return False
+        return True
+
+
+def gte_addresses(memory, start, size):
+    """The addresses of the GTE instructions in a function's own code; one in a delay slot ends the program, unsupported"""
+    region = next(base for base in memory.regions if base <= physical(start) < base + len(memory.regions[base]))
+    code = memory.regions[region][physical(start) - region:physical(start) - region + size]
+    found = []
+    previous = 0
+    for offset in range(0, len(code), WORD):
+        word = read_word(code, offset)
+        if word >> OPCODE_SHIFT in GTE_OPCODES:
+            if delayed(previous):
+                print(f"unsupported: the GTE instruction at {start + offset:#010x} is in a delay slot, which the model's "
+                      f"hook can't run")
+                sys.exit(EXIT_UNSUPPORTED)
+            else:
+                found.append(start + offset)
+        else:
+            pass
+        previous = word
     return found
+
+
+def delayed(word):
+    """Whether the instruction after word is in its delay slot"""
+    opcode = word >> OPCODE_SHIFT
+    if opcode in BRANCH_OPCODES:
+        return True
+    elif opcode == OP_SPECIAL:
+        return word & FUNCT_MASK in JUMP_REGISTER_FUNCTS
+    elif opcode in COPROCESSOR_OPCODES:
+        return (word >> RS_SHIFT) & REGISTER_FIELD == COPROCESSOR_BRANCH
+    else:
+        return False
 
 
 def changed(memory, outcome):
@@ -1351,6 +1492,14 @@ def compare(memory, retail, declared, expected, actual, restored=()):
             differences.append(f"${name} is {expected.registers[name]:#010x} after the retail code, "
                                f"{actual.registers[name]:#010x} after the candidate")
 
+    for number, (want, have) in enumerate(zip(expected.gte, actual.gte)):
+        if want != have:
+            kind = "data" if number < gte.REGISTERS else "control"
+            differences.append(f"GTE {kind} register {number % gte.REGISTERS} is {want:#010x} after the retail code, "
+                               f"{have:#010x} after the candidate")
+        else:
+            continue
+
     frame = range(physical(ENTRY_SP - STACK_RESERVE), physical(ENTRY_SP + ARGUMENT_HOME_SIZE))
     for word in sorted(word for word in changed(memory, expected) | changed(memory, actual) if word not in frame):
         want, have = (next(read_word(content, word - start) for start, content in outcome.regions.items()
@@ -1407,7 +1556,6 @@ def main():
     candidate = compile_candidate(source, arguments.function, retail)
     declared = declarations(source, arguments.function, retail)
     retail_code = retail.kept[retail_entry - retail.kept_start:retail_entry - retail.kept_start + retail_size]
-    candidate_code = candidate.image[candidate.start - SCRATCH_BASE:candidate.start - SCRATCH_BASE + candidate.size]
 
     agreeing = 0
     repaired = 0
@@ -1436,14 +1584,12 @@ def main():
         if fuzz.repairs:
             repaired += 1
             replaced += len(fuzz.repairs)
-        for side, outcome, code, address in (("retail code", expected, retail_code, retail_entry),
-                                             ("candidate", actual, candidate_code, candidate.start)):
+        for side, outcome in (("retail code", expected), ("candidate", actual)):
             if outcome.unsupported is not None:
-                found = gte_instructions(code, address)
-                more = f" and {len(found) - GTE_SHOWN} more" if len(found) > GTE_SHOWN else ""
-                detail = f"GTE instructions ({', '.join(found[:GTE_SHOWN])}{more})" if found else "an instruction Unicorn lacks"
-                print(f"unsupported: trial {trial}: the {side} raised {outcome.unsupported}; it has {detail}")
+                print(f"unsupported: trial {trial}: the {side} ran into {outcome.unsupported}")
                 sys.exit(EXIT_UNSUPPORTED)
+            else:
+                continue
         differences = compare(memory, retail, declared, expected, actual)
         if differences:
             if again_machine is None:
