@@ -3,16 +3,21 @@
 equivalent track's, the same pad presses at the same frames for both, and compares what each displays frame by frame.
 
     python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                             [--baseline EXE]
+                             [--baseline EXE] [--real-time]
 
-The schedule boots the disc, opens the title's menu, starts a new game, skips the intro, waits out Cortex's speech in
-the first warp room, walks into Turtle Woods and runs, jumps and spins there: 8,000 frames (2 minutes 13 of the game),
-about 15 seconds to run, both runs at once and the emulator unthrottled. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a
-copy of the image first (tools/patch_disc.py). `--against retail` runs the retail image twice instead: the emulator is
+By default frames are game frames, on the game clock (tools/run_game.lua): the game's time is pinned to its frames, each
+lasting two vsyncs for the game whatever the code's speed, so faster or slower equivalent C plays the same game. The
+schedule boots the disc, starts a new game from the title's menu, skips the intro, waits out Cortex's speech, walks into
+Turtle Woods from the first warp room and runs, jumps and spins there: 3,450 game frames, about a minute and a half to
+run on the emulator's interpreter, both runs at once. `--real-time` keeps the game's own clock and counts vsyncs
+instead: 8,000 of them (2 minutes 13 of the game), about 15 seconds on the emulator's recompiler, where a difference may
+be only timing. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a copy of
+the image first (tools/patch_disc.py). `--against retail` runs the retail image twice instead: the emulator is
 deterministic when both runs agree on every frame. `--baseline EXE` runs that executable in place of retail: the same
-equivalent build with and without a change, when the change can't be tested alone (docs/WORKFLOW.md).
+equivalent build with and without a change, when the change can't be tested alone (docs/WORKFLOW.md); on the game clock
+its ELF must sit beside it (EXE with the suffix .elf), for the clock's symbols.
 
-Each run is checked for health: it reaches the last frame (a run without a new frame for 20 seconds is stopped: the game
+Each run is checked for health: it reaches the last frame (a run without a new vsync for 20 seconds is stopped: the game
 crashed or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls,
 and its display isn't frozen at the end. The two are then compared by a hash of the displayed image at every frame; at
 each checkpoint both images are written side by side into build/run_game/.
@@ -39,6 +44,8 @@ OUT = HERE / "build" / "run_game"
 BASELINE_OUT = DEFAULT_OUT.with_name("baseline.cue")
 # Headless (no window, logs on stdout), safe mode (no settings file read), emulation started at once, OpenBIOS
 EMULATOR_FLAGS = ["-cli", "-testmode", "-run"]
+# The game clock's breakpoints only fire on the interpreter, with the debugger on
+GAME_CLOCK_FLAGS = ["-interpreter", "-debugger"]
 DISPLAY_VARIABLES = ("DISPLAY", "WAYLAND_DISPLAY")
 # A run stalls when its trace doesn't grow for 20 seconds (the script writes it a few times a second); it then gets 10
 # seconds to quit
@@ -46,7 +53,42 @@ POLL_SECONDS = 1
 STALL_SECONDS = 20
 STOP_SECONDS = 10
 
-# Frames are counted in vsyncs (60 a second) from power-on; the timings are the retail run's
+# On the game clock, frames are counted in game frames from power-on (Gfx_EndFrame's calls), each lasting 34 of
+# g_TimerTicks for the game: two vsyncs, the length most of a real-time retail run's frames take
+GAME_FRAME_TICKS = 34
+GAME_CLOCK_SYMBOLS = ("Gfx_EndFrame", "Sys_TimerHandler", "g_TimerTicks")
+LAST_GAME_FRAME = 3450
+# Retail reaches its last game frame by vsync 8,693; a run still short of it at this vsync is stuck
+GAME_VSYNC_LIMIT = 12000
+GAME_TAP_FRAMES = 3
+GAME_PRESSES = [
+    (1050, GAME_TAP_FRAMES, "START"),  # New Game, from the title's menu
+    (1350, GAME_TAP_FRAMES, "CROSS"),  # during the intro
+    (2750, 100, "UP"),  # into Turtle Woods' portal, once Cortex's speech is over
+    (2950, 150, "UP"),
+    (3000, GAME_TAP_FRAMES, "CROSS"),
+    (3050, GAME_TAP_FRAMES, "SQUARE"),
+    (3100, 100, "RIGHT"),
+    (3150, GAME_TAP_FRAMES, "CROSS"),
+]
+GAME_CHECKPOINTS = [
+    (300, "intro"),
+    (500, "naughty_dog"),
+    (1000, "title"),
+    (1800, "cortex_speech"),
+    (2750, "warp_room"),
+    (2900, "level_entry"),
+    (3100, "turtle_woods"),
+    (3440, "turtle_woods_end"),
+]
+# The executables' symbols, for the game clock: the default build's ELF holds retail's bytes
+RETAIL_ELF = HERE / "build" / "SCUS_941.54.elf"
+NONMATCHING_ELF = DEFAULT_EXE.with_suffix(".elf")
+NM = "mipsel-linux-gnu-nm"
+NM_FIELDS = ("address", "type", "name")
+HEXADECIMAL = 16
+
+# In real time, frames are counted in vsyncs (60 a second) from power-on; the timings are the retail run's
 LAST_FRAME = 8000
 TAP_FRAMES = 6
 PRESSES = [
@@ -71,8 +113,9 @@ CHECKPOINTS = [
     (7950, "turtle_woods_end"),
 ]
 
-# A trace line, as tools/run_game.lua writes it
+# A trace line and a game frame's line, as tools/run_game.lua writes them
 TRACE_FIELDS = ("frame", "image hash", "program counter", "exception code")
+GAME_FRAME_FIELDS = ("game frame", "vsync", "image hash")
 # Where a healthy program counter is: main RAM through its three segments (2 MB), and the BIOS ROM (512 KB)
 PC_RANGES = [
     (0x00000000, 0x00200000),
@@ -104,26 +147,56 @@ PAIR_GAP = 8
 PERCENT = 100
 
 
-def schedule_text():
-    lines = [f"press {first} {first + frames - 1} {button}" for first, frames, button in PRESSES]
-    lines += [f"shot {frame}" for frame, _ in CHECKPOINTS]
-    lines.append(f"end {LAST_FRAME}")
+def clock_symbols(elf):
+    """The game clock's symbols' addresses in an executable's ELF, in GAME_CLOCK_SYMBOLS' order"""
+    if not elf.exists():
+        sys.exit(f"{elf} is missing: the game clock reads its symbols from it (or run with --real-time)")
+    listing = subprocess.run([NM, str(elf)], capture_output=True, text=True, check=True).stdout
+    found = {}
+    for line in listing.splitlines():
+        fields = line.split()
+        if len(fields) == len(NM_FIELDS):
+            found[fields[2]] = int(fields[0], HEXADECIMAL)
+        else:
+            # An undefined symbol, listed without an address
+            continue
+    missing = [name for name in GAME_CLOCK_SYMBOLS if name not in found]
+    if missing:
+        sys.exit(f"{elf} has no {', '.join(missing)}")
+    return [found[name] for name in GAME_CLOCK_SYMBOLS]
+
+
+def schedule_text(elf):
+    """The schedule for tools/run_game.lua: on the game clock of the executable elf, or in real time when elf is None"""
+    if elf is None:
+        lines = [f"press {first} {first + frames - 1} {button}" for first, frames, button in PRESSES]
+        lines += [f"shot {frame}" for frame, _ in CHECKPOINTS]
+        lines.append(f"end {LAST_FRAME}")
+    else:
+        addresses = " ".join(f"{address:x}" for address in clock_symbols(elf))
+        lines = [f"clock game {addresses} {GAME_FRAME_TICKS}", f"limit {GAME_VSYNC_LIMIT}"]
+        lines += [f"press {first} {first + frames - 1} {button}" for first, frames, button in GAME_PRESSES]
+        lines += [f"shot {frame}" for frame, _ in GAME_CHECKPOINTS]
+        lines.append(f"end {LAST_GAME_FRAME}")
     return "".join(f"{line}\n" for line in lines)
 
 
-def start(name, cue):
-    """Starts the emulator on cue, writing into OUT/name; returns (process, folder)"""
+def start(name, cue, elf):
+    """Starts the emulator on cue, writing into OUT/name, on elf's game clock or in real time when elf is None; returns
+    (process, folder)"""
     folder = OUT / name
     folder.mkdir(parents=True, exist_ok=True)
-    for stale in [*folder.glob("shot_*.raw"), folder / "trace.txt", folder / "memcard1.mcd", folder / "memcard2.mcd"]:
+    for stale in [*folder.glob("shot_*.raw"), folder / "trace.txt", folder / "game_frames.txt", folder / "memcard1.mcd",
+                  folder / "memcard2.mcd"]:
         stale.unlink(missing_ok=True)
     schedule = folder / "schedule.txt"
-    schedule.write_text(schedule_text())
+    schedule.write_text(schedule_text(elf))
     environment = {**os.environ, "RUN_GAME_SCHEDULE": str(schedule), "RUN_GAME_OUT": str(folder)}
     # Without a display the emulator can't open a window, whatever its flags
     for variable in DISPLAY_VARIABLES:
         environment.pop(variable, None)
-    command = [str(EMULATOR), *EMULATOR_FLAGS, "-portable", str(folder), "-iso", str(cue), "-dofile", str(SCRIPT)]
+    flags = EMULATOR_FLAGS if elf is None else EMULATOR_FLAGS + GAME_CLOCK_FLAGS
+    command = [str(EMULATOR), *flags, "-portable", str(folder), "-iso", str(cue), "-dofile", str(SCRIPT)]
     with open(folder / "emulator.log", "w") as log:
         process = subprocess.Popen(command, cwd=folder, stdout=log, stderr=subprocess.STDOUT, env=environment)
     return process, folder
@@ -172,8 +245,22 @@ def read_trace(folder):
     return frames
 
 
-def health(name, status, frames):
-    """The run's problems, as lines of text (none when healthy)"""
+def read_game_frames(folder):
+    """[(hash, vsync)] by game frame from 0"""
+    path = folder / "game_frames.txt"
+    if not path.exists():
+        return []
+    frames = []
+    for line in path.read_text().splitlines():
+        words = line.split()
+        if len(words) != len(GAME_FRAME_FIELDS) or int(words[0]) != len(frames):
+            sys.exit(f"{path}: unexpected line {line!r}")
+        frames.append((words[2], int(words[1])))
+    return frames
+
+
+def health(name, status, frames, game_frames):
+    """The run's problems, as lines of text (none when healthy); game_frames is None in real time"""
     problems = []
     if status is None:
         problems.append(f"no frame for {STALL_SECONDS} seconds: the game crashed or hung (see its emulator.log)")
@@ -182,8 +269,14 @@ def health(name, status, frames):
     else:
         # The emulator quit when the script asked it to
         pass
-    if len(frames) < LAST_FRAME:
+    if game_frames is None and len(frames) < LAST_FRAME:
         problems.append(f"stopped at frame {len(frames)} of {LAST_FRAME}")
+    elif game_frames is not None and len(game_frames) <= LAST_GAME_FRAME:
+        problems.append(f"stopped after {len(game_frames)} of {LAST_GAME_FRAME + 1} game frames, at vsync "
+                        f"{len(frames)}")
+    else:
+        # It reached its last frame
+        pass
     for number, (_, pc, _) in enumerate(frames, 1):
         if not any(low <= pc < high for low, high in PC_RANGES):
             problems.append(f"frame {number}: program counter {pc:08x} outside RAM and the BIOS")
@@ -259,6 +352,8 @@ def main():
                         help="what the retail run is compared with (default: %(default)s)")
     parser.add_argument("--baseline", type=Path,
                         help="an executable run in place of retail (another build of the equivalent track)")
+    parser.add_argument("--real-time", action="store_true",
+                        help="keep the game's own clock and count vsyncs, not game frames")
     args = parser.parse_args()
     if not args.image.exists():
         sys.exit(f"{args.image} doesn't exist")
@@ -266,47 +361,75 @@ def main():
         sys.exit(f"{args.baseline} doesn't exist")
     if not EMULATOR.exists():
         sys.exit(f"{EMULATOR} is missing: tools/setup_toolchain.py fetches it")
+
+    def elf(path):
+        """The ELF whose game clock a run uses, or None in real time"""
+        if args.real_time:
+            return None
+        else:
+            return path
+
     if args.against == "nonmatching":
         if not DEFAULT_EXE.exists():
             sys.exit(f"{DEFAULT_EXE} is missing: build it first (ninja nonmatching)")
         patch(args.image, DEFAULT_EXE.read_bytes(), DEFAULT_OUT)
-        other = ("nonmatching", DEFAULT_OUT)
+        other = ("nonmatching", DEFAULT_OUT, elf(NONMATCHING_ELF))
     elif args.against == "retail":
-        other = ("retail_again", args.image)
+        other = ("retail_again", args.image, elf(RETAIL_ELF))
     else:
         sys.exit(f"unknown --against {args.against}")
 
     if args.baseline is None:
-        first = ("retail", args.image)
+        first = ("retail", args.image, elf(RETAIL_ELF))
     else:
-        first = ("baseline", BASELINE_OUT)
+        first = ("baseline", BASELINE_OUT, elf(args.baseline.with_suffix(".elf")))
         patch(args.image, args.baseline.read_bytes(), BASELINE_OUT)
-    print(f"running {first[0]} and {other[0]} to frame {LAST_FRAME}", flush=True)
+    for _, _, path in (first, other):
+        if path is not None:
+            clock_symbols(path)
+        else:
+            # In real time: no symbols needed
+            continue
+    if args.real_time:
+        unit, last, checkpoints = "frame", LAST_FRAME, CHECKPOINTS
+    else:
+        unit, last, checkpoints = "game frame", LAST_GAME_FRAME, GAME_CHECKPOINTS
+    print(f"running {first[0]} and {other[0]} to {unit} {last}", flush=True)
     runs = [start(*first), start(*other)]
     names = [first[0], other[0]]
     statuses = [wait(*run) for run in runs]
     traces = [read_trace(folder) for _, folder in runs]
+    game_frames = [None, None] if args.real_time else [read_game_frames(folder) for _, folder in runs]
 
     problems = []
-    for name, status, frames in zip(names, statuses, traces):
-        problems += health(name, status, frames)
+    for name, status, frames, played in zip(names, statuses, traces, game_frames):
+        problems += health(name, status, frames, played)
     for problem in problems:
         print(problem)
 
-    common = min(len(trace) for trace in traces)
-    differing = [number for number in range(1, common + 1) if traces[0][number - 1][0] != traces[1][number - 1][0]]
-    if differing:
-        print(f"the displays differ from frame {differing[0]} on, in {len(differing)} of {common} frames")
+    if args.real_time:
+        images = [[image for image, _, _ in trace] for trace in traces]
+        first_number = 1
     else:
-        print(f"the displays agree on all {common} frames")
-    for frame, checkpoint in CHECKPOINTS:
+        images = [[image for image, _ in played] for played in game_frames]
+        first_number = 0
+    common = min(len(sequence) for sequence in images)
+    differing = [index + first_number for index in range(common) if images[0][index] != images[1][index]]
+    if differing:
+        print(f"the displays differ from {unit} {differing[0]} on, in {len(differing)} of {common} {unit}s")
+    else:
+        print(f"the displays agree on all {common} {unit}s")
+    if not args.real_time and common > 0:
+        vsyncs = [played[common - 1][1] for played in game_frames]
+        print(f"  {unit} {common - 1} shown at vsync {vsyncs[0]} by {names[0]}, at {vsyncs[1]} by {names[1]}")
+    for frame, checkpoint in checkpoints:
         shots = [read_shot(folder, frame) for _, folder in runs]
         if None in shots:
-            print(f"  {checkpoint} (frame {frame}): not reached by both")
+            print(f"  {checkpoint} ({unit} {frame}): not reached by both")
             continue
         path = OUT / f"{checkpoint}.png"
         share = compare_shots(shots[0], shots[1], path)
-        print(f"  {checkpoint} (frame {frame}): {share:.1f}% of pixels differ, {path.relative_to(HERE)}")
+        print(f"  {checkpoint} ({unit} {frame}): {share:.1f}% of pixels differ, {path.relative_to(HERE)}")
     sys.exit(1 if problems or differing else 0)
 
 

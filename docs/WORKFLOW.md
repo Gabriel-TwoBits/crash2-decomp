@@ -213,7 +213,7 @@ notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside t
 ### Running the game
 
     .venv/bin/python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                                       [--baseline EXE]
+                                       [--baseline EXE] [--real-time]
 
 equiv.py judges one function at a time; this plays the equivalent executable as a whole, in the game. It needs the
 `ninja nonmatching` build and the player's disc image (a MODE2/2352 `.cue` and `.bin`, never copied into the repository),
@@ -223,30 +223,43 @@ and writes into `build/` only:
    place of `SCUS_941.54`: the file's sectors rewritten with their EDC and ECC, its directory record given the size. An
    executable that outgrows the file's 160 sectors (327,680 bytes, the retail size, which `ninja` pads to) is refused.
    Written with the retail executable, the copy is the original image byte for byte.
-2. PCSX-Redux (`tools/setup_toolchain.py` fetches it) boots the retail image and the copy at once, headless, unthrottled,
-   on its own BIOS (OpenBIOS, no Sony BIOS needed). `tools/run_game.lua` presses the same buttons at the same frames in
-   both: the title's menu, New Game, the intro skipped, Cortex's speech in the first warp room waited out, into Turtle
-   Woods, run, jump, spin; 8,000 frames, about 15 seconds. At every frame it records a hash of the displayed image, the
-   program counter and the last exception's code, and at eight checkpoints the image.
-3. A run is healthy when it reaches its last frame (one without a new frame for 20 seconds is stopped: the game crashed
-   or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls, and
-   its display isn't frozen over its last 300 frames. The two runs agree when every frame's image is the same; the
-   checkpoints go side by side to `build/run_game/<checkpoint>.png`. Exit status 0 only when both hold.
+2. PCSX-Redux (`tools/setup_toolchain.py` fetches it) boots the retail image and the copy at once, headless,
+   unthrottled, on its own BIOS (OpenBIOS, no Sony BIOS needed), and `tools/run_game.lua` plays both on the game clock.
+   The game measures each frame with `g_TimerTicks`, which `Sys_TimerHandler` counts up from a root counter's interrupt,
+   and moves its objects by it, so code of another speed plays another game. The script undoes each of the handler's
+   increments before it happens and, on entering `Gfx_EndFrame`, sets `g_TimerTicks` to 34 times the game frame's
+   number: every game frame lasts two vsyncs for the game however long it took. Presses and checkpoints are keyed to
+   game frames (`Gfx_EndFrame`'s calls from power-on), and a game frame's image is the one on the display when the next
+   call starts: New Game from the title's menu, the intro, Cortex's speech, into Turtle Woods from the first warp room,
+   run, jump, spin; 3,450 game frames, about a minute. The three symbols' addresses come from each executable's ELF (the
+   default build's for retail); the breakpoints need the emulator's interpreter and debugger. At every vsync the script
+   also records a hash of the displayed image, the program counter and the last exception's code, for the run's health.
+   `--real-time` keeps the game's own clock instead and counts vsyncs: presses at fixed vsyncs, 8,000 of them, about 15
+   seconds on the emulator's recompiler.
+3. A run is healthy when it reaches its last frame (one without a new vsync for 20 seconds is stopped: the game crashed
+   or hung; on the game clock, one short of its last game frame at vsync 12,000 too, where retail reaches it by 8,695),
+   its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls, and its display
+   isn't frozen over its last 300 vsyncs. The two runs agree when every frame's image is the same; the checkpoints go
+   side by side to `build/run_game/<checkpoint>.png`. Exit status 0 only when both hold.
 
-The emulator is deterministic: two retail runs (`--against retail`) agree on all 8,000 frames, throttled or not (only
-the program counter sampled at each vsync moves by a few cycles), so a difference comes from the executable. That holds
-only with the emulated pads cut off from the host: on their default, Auto, they read the host's gamepads (a wireless
-receiver, a virtual HID device), and a button the host reports lands in the pad buffer (`D_80069920`) at a moment that
-varies from run to run; three pairs of retail runs then differed from frames 1,496 to 2,245. `tools/run_game.lua` sets
-both pads to the keyboard, which a headless emulator gets no events from. One from the executable doesn't necessarily
-come from its C, though: the game is
-sensitive to timing (the retail executable under PCSX-Redux's interpreter instead of its recompiler displays otherwise
-from frame 2,004) and to where its data sits (docs/ROADMAP.md, section 4).
+The emulator is deterministic: two retail runs (`--against retail`) agree on every frame, on the game clock and in real
+time (there throttled or not: only the program counter sampled at each vsync moves by a few cycles), so a difference
+comes from the executable. That holds only with the emulated pads cut off from the host: on their default, Auto, they
+read the host's gamepads (a wireless receiver, a virtual HID device), and a button the host reports lands in the pad
+buffer (`D_80069920`) at a moment that varies from run to run; three pairs of retail runs then differed from frames
+1,496 to 2,245. `tools/run_game.lua` sets both pads to the keyboard, which a headless emulator gets no events from.
 
-Slower or faster functions add up: with enough equivalents in, a load ends a frame later and the inputs then land on
-another state of the game. Such a difference is told from a wrong function by splitting the equivalents (by source
-file, a block's declarations being shared with its neighbours: `#ifdef NON_MATCHING` turned to `#if 0` for the others):
-when each group alone agrees on every frame, every function ran right and only their sum's timing differs.
+On the game clock a difference comes from the C, not from its speed. The whole equivalent build displays retail's image
+at all 3,451 game frames, 6 vsyncs behind at the end, where in real time it differs from vsync 4,035: one game frame
+there takes 2 vsyncs instead of 3, the game moves by the shorter time, and every frame after is another. Half its files'
+equivalents alone end 13 vsyncs behind retail and still agree on every game frame of a run through the attract demo. In
+real time a difference may be only timing (the retail executable under PCSX-Redux's interpreter instead of its
+recompiler displays otherwise from vsync 2,004).
+
+A difference on the game clock is narrowed to a function by splitting the equivalents: by source file (each file's
+object from the equivalent build or from the default one), then within the file by block (`#ifdef NON_MATCHING` turned
+to `#if 0` for the others, a block's declarations being shared with its neighbours). Two runs at a time: with four the
+interpreter's vsyncs come slower than the stall limit.
 
 A group must fit in the retail file's room on the disc, and functions that grow much (the GTE's routines, by the model,
 1,996 bytes) only fit beside others that shrink, which may themselves diverge in combination. Then the group is compared

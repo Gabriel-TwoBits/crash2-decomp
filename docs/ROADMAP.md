@@ -212,6 +212,8 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
+2. **The attract demo** (section 4, "Next"): a second `tools/run_game.py` schedule through it, and the two equivalents
+   it shows wrong, `func_80028C48` and `func_800328D4`.
 
 ## 4. The engine in C
 
@@ -438,8 +440,29 @@ reaching the game's pad buffer at a different frame each run. With the pads set 
 retail agrees with itself on all 8,000 frames again, and the equivalent build, run twice, gives the same trace both
 times (docs/WORKFLOW.md, "Running the game").
 
-Next: each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that
-tolerates timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).
+`tools/run_game.py` now plays on the game clock by default (docs/WORKFLOW.md, "Running the game"): the game measures
+each frame with `g_TimerTicks` and moves its objects by it, so the script freezes that counter's interrupt-driven
+increments and sets it to 34 ticks per game frame on entering `Gfx_EndFrame`, and keys presses and images to game frames
+(`Gfx_EndFrame`'s calls). The schedule moved to game frames, found from screenshots of a retail run on the clock: New
+Game at 1,050, Turtle Woods' portal at 2,750, its first steps from 2,950, 3,450 game frames in all. The whole
+equivalent build then displays retail's image at all 3,451 game frames, 6 vsyncs behind at the end, where in real time
+it differs from vsync 4,035 on. `func_80027CD0`'s equivalent alone, which in real time differs from vsync 4,035 too,
+agrees on all 2,937 game frames of a run through the attract demo (below). `--real-time` keeps the old schedule.
+
+Left alone at the title's menu, the game plays its attract demo, and there the equivalent build differs: from game frame
+2,071 by a 16 by 17 pixel area of the image, and it stops at game frame 2,200 on a read from 0x16E1F088. Split by file,
+then by block, on the game clock:
+
+- The difference is `func_80028C48`'s equivalent (`src/game/80026CA0.c`), a search through the zone's entries and the
+  objects' boxes around a point, alone of its file's 13 blocks.
+- The stop is `func_800328D4`'s (`src/game/800324A8.c`), which picks an SPU voice. It passes `SpuGetVoiceAttr`
+  (`func_800521A8`) a structure whose word at offset 4, the attribute mask, neither it nor the retail code sets: what
+  the SDK reads there is what the stack held, which may differ between the builds (not checked yet).
+
+The schedule shows no difference from either.
+
+Next: the attract demo as a second schedule, and `func_80028C48`'s and `func_800328D4`'s equivalents fixed against it;
+each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md).
 
 ## 5. Readable C (in progress)
 
