@@ -27,7 +27,7 @@ extern Unk80060884 D_80060884;
 /* A primitive's colour word: red, green, blue, and the GPU command code in the top byte */
 typedef union PrimColour {
     u32 word;
-    u8 c[4];
+    u8 c[sizeof(u32)];
 } PrimColour;
 
 #define PRIM_COLOUR_CODE 3

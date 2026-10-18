@@ -92,6 +92,11 @@
 
 /* RTPT's three vectors */
 #define GTE_RTPT_VECTORS 3
+/* A vector's and the rotation matrix's dimension; a vector's registers (VXYn, VZn), a word's halves, the screen's axes */
+#define GTE_DIMENSION 3
+#define GTE_VECTOR_REGISTERS 2
+#define GTE_HALVES_PER_WORD 2
+#define GTE_SCREEN_AXES 2
 
 typedef struct GteRegs {
     u32 data[GTE_REGISTERS];
@@ -162,10 +167,10 @@ static void Gte_Restore(GteRegs *regs) {
 
 /* RT(row+1)(column+1) */
 static inline s32 Gte_Rotation(GteRegs *regs, s32 row, s32 column) {
-    s32 index = row * 3 + column;
-    u32 word = regs->control[GTE_RT11RT12 + index / 2];
+    s32 index = row * GTE_DIMENSION + column;
+    u32 word = regs->control[GTE_RT11RT12 + index / GTE_HALVES_PER_WORD];
 
-    if (index % 2 != 0) {
+    if (index % GTE_HALVES_PER_WORD != 0) {
         return (s16)(word >> GTE_HALF_BITS);
     } else {
         return (s16)word;
@@ -252,7 +257,7 @@ static u32 Gte_Divide(GteRegs *regs, u32 h, u32 sz3) {
 /* RTPS on vector index, as the game encodes it (sf = 1, lm = 0): rotated and translated into MAC1-3 and IR1-3, its Z
    pushed on the SZ FIFO, its screen position on the SXY FIFO; the depth cue into MAC0 and IR0 for the last vector only */
 static void Gte_Perspective(GteRegs *regs, s32 index, s32 last) {
-    s32 vector[3];
+    s32 vector[GTE_DIMENSION];
     u32 xy;
     s32 row;
     s32 column;
@@ -260,16 +265,16 @@ static void Gte_Perspective(GteRegs *regs, s32 index, s32 last) {
     s32 mac;
     s32 sz3;
     u32 quotient;
-    s32 screen[2];
+    s32 screen[GTE_SCREEN_AXES];
     s32 axis;
 
-    xy = regs->data[GTE_VXY0 + index * 2];
+    xy = regs->data[GTE_VXY0 + index * GTE_VECTOR_REGISTERS];
     vector[0] = (s16)xy;
     vector[1] = (s16)(xy >> GTE_HALF_BITS);
-    vector[2] = (s16)regs->data[GTE_VZ0 + index * 2];
-    for (row = 0; row < 3; row++) {
+    vector[2] = (s16)regs->data[GTE_VZ0 + index * GTE_VECTOR_REGISTERS];
+    for (row = 0; row < GTE_DIMENSION; row++) {
         value = (s64)(s32)regs->control[GTE_TRX + row] << GTE_FRACTION_BITS;
-        for (column = 0; column < 3; column++) {
+        for (column = 0; column < GTE_DIMENSION; column++) {
             value = Gte_MacChecked(regs, row, value + Gte_Rotation(regs, row, column) * vector[column]);
         }
         mac = value >> GTE_FRACTION_BITS;
@@ -283,7 +288,7 @@ static void Gte_Perspective(GteRegs *regs, s32 index, s32 last) {
     regs->data[GTE_SZ2] = regs->data[GTE_SZ3];
     regs->data[GTE_SZ3] = sz3;
     quotient = Gte_Divide(regs, regs->control[GTE_H] & GTE_HALF_MASK, sz3);
-    for (axis = 0; axis < 2; axis++) {
+    for (axis = 0; axis < GTE_SCREEN_AXES; axis++) {
         value = Gte_Mac0Checked(regs, (s64)(s32)quotient * (s16)regs->data[GTE_IR1 + axis]
                                           + (s32)regs->control[GTE_OFX + axis]);
         regs->data[GTE_MAC0] = value;

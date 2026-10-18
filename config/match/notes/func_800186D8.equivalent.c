@@ -27,7 +27,7 @@ extern Unk80060884 D_80060884;
 /* A primitive's colour word: red, green, blue, and the GPU command code in the top byte */
 typedef union PrimColour {
     u32 word;
-    u8 c[4];
+    u8 c[sizeof(u32)];
 } PrimColour;
 
 #define PRIM_COLOUR_CODE 3
@@ -78,11 +78,12 @@ typedef struct PolyGT4 {
 #define GT4_CODE 0x3C
 /* The object's halfwords at 0x28: a red, green and blue scale per vertex, 1.0 at 0x80 */
 #define SHADE_FIRST 4
+#define SHADE_COMPONENTS 3
 #define SHADE_SHIFT 7
 
 /* A component of a glyph's colour scaled by the object's shade for a vertex */
 #define SHADED(glyph, obj, vertex, component) \
-    (((glyph)->colour.c[component] * (obj)->unk_20[SHADE_FIRST + (vertex) * 3 + (component)]) >> SHADE_SHIFT)
+    (((glyph)->colour.c[component] * (obj)->unk_20[SHADE_FIRST + (vertex) * SHADE_COMPONENTS + (component)]) >> SHADE_SHIFT)
 
 /* A box's quad in front of the camera, textured from a glyph, shaded per vertex by the object when shade is set, sorted
    into the ordering table by its depth; nothing when the GTE flags an error projecting the first three corners */
