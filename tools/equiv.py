@@ -54,7 +54,9 @@ EXE_LOAD_ADDRESS_OFFSET = 0x18
 EXE_LOAD_SIZE_OFFSET = 0x1C
 # Linker script symbols: the retail image keeps its read-only data and code. Each word of its data keeps its retail value
 # or is random, at even odds per trial: tables read as constants stay meaningful in some trials, state variables vary in
-# others. Its .bss is random like the rest of RAM
+# others. In one trial in RETAIL_DATA_ODDS every word keeps its value, for a table of several words read whole
+# (func_8002FFFC's vertex indices: one trial in 64 kept all six). Its .bss is random like the rest of RAM
+RETAIL_DATA_ODDS = 4
 GP_SYMBOL = "_gp"
 LINKER_MARKER = re.compile(r"^(?:main|header)_|^_gp$")
 KEPT_START_SYMBOL = "main_VRAM"
@@ -884,6 +886,11 @@ class Memory:
         # Bit n of the draw keeps word n's retail value
         words = len(retail.data) // WORD
         kept_words = format(generator.getrandbits(words), f"0{words}b")[::-1]
+        if fuzz.generator("data").randrange(RETAIL_DATA_ODDS) == 0:
+            kept_words = KEPT_BIT * words
+        else:
+            # Word by word, as drawn
+            pass
         first = (kept + len(retail.kept)) // WORD
         with memoryview(ram) as ram_view, memoryview(retail.data) as data_view:
             ram_words, data_words = ram_view.cast(WORD_FORMAT), data_view.cast(WORD_FORMAT)
