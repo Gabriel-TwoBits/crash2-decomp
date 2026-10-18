@@ -20,6 +20,10 @@
 #define CLIP_WINDOW_HI 0x2F
 #define MIN_CLIPPED_EDGES 3
 #define POINT_WORDS 3
+/* func_8002FFFC's segments: two points each, 6 at most */
+#define CLIP_POINTS 12
+/* A row's lowest and highest cell */
+#define ROW_BOUNDS 2
 
 typedef struct {
     /* 0x00 */ s32 unk_0;
@@ -37,7 +41,15 @@ typedef struct {
     /* 0x3C */ s32 unk_3C;
 } Unk8002CC50;
 
-s32 func_8002FFFC(s32, s32 *, s32 *);
+s32 *D_8005F3C4;
+/* A point of func_8002FFFC's, as 8002FE58.c defines it */
+typedef struct Unk8002FFFCVec {
+    /* 0x0 */ s32 x;
+    /* 0x4 */ s32 y;
+    /* 0x8 */ s32 z;
+} Unk8002FFFCVec;
+
+s32 func_8002FFFC(s32, Unk8002FFFCVec *, Unk8002FFFCVec *);
 void func_8003EAD4(s32 *, s32 *, s32, void *, s32, s32);
 
 /* (d * 4) / 8192 with the compiler's signed-division rounding, pre-shift */
@@ -73,12 +85,9 @@ static inline void func_8002CC50_Widen(s8 *row, s32 x) {
 typedef struct {
     s32 pad_0[2];
     s32 corners[NUM_BOX_CORNERS * POINT_WORDS];
-    s32 pts[POINT_WORDS * 12];
-    s8 tbl[GRID_ROWS * 2];
+    s32 pts[POINT_WORDS * CLIP_POINTS];
+    s8 tbl[GRID_ROWS * ROW_BOUNDS];
 } Frame8002CC50;
-#define corners f.corners
-#define pts f.pts
-#define tbl f.tbl
 
 s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
     Frame8002CC50 f;
@@ -114,31 +123,31 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
         return ret;
     }
 
-    corners[0] = obj->unk_8;
-    corners[1] = obj->unk_C;
-    corners[2] = obj->unk_10;
-    corners[3] = obj->unk_8;
-    corners[4] = obj->unk_18;
-    corners[5] = obj->unk_10;
-    corners[6] = obj->unk_14;
-    corners[7] = obj->unk_18;
-    corners[8] = obj->unk_10;
-    corners[9] = obj->unk_14;
-    corners[10] = obj->unk_C;
-    corners[11] = obj->unk_10;
-    corners[12] = obj->unk_8;
-    corners[13] = obj->unk_C;
-    corners[14] = obj->unk_1C;
-    corners[15] = obj->unk_8;
-    corners[16] = obj->unk_18;
-    corners[17] = obj->unk_1C;
-    corners[18] = obj->unk_14;
-    corners[19] = obj->unk_18;
-    corners[20] = obj->unk_1C;
-    corners[21] = obj->unk_14;
-    corners[22] = obj->unk_C;
-    corners[23] = obj->unk_1C;
-    func_8003EAD4(corners, corners, obj->unk_4[2], obj->unk_20, 8, 4);
+    f.corners[0] = obj->unk_8;
+    f.corners[1] = obj->unk_C;
+    f.corners[2] = obj->unk_10;
+    f.corners[3] = obj->unk_8;
+    f.corners[4] = obj->unk_18;
+    f.corners[5] = obj->unk_10;
+    f.corners[6] = obj->unk_14;
+    f.corners[7] = obj->unk_18;
+    f.corners[8] = obj->unk_10;
+    f.corners[9] = obj->unk_14;
+    f.corners[10] = obj->unk_C;
+    f.corners[11] = obj->unk_10;
+    f.corners[12] = obj->unk_8;
+    f.corners[13] = obj->unk_C;
+    f.corners[14] = obj->unk_1C;
+    f.corners[15] = obj->unk_8;
+    f.corners[16] = obj->unk_18;
+    f.corners[17] = obj->unk_1C;
+    f.corners[18] = obj->unk_14;
+    f.corners[19] = obj->unk_18;
+    f.corners[20] = obj->unk_1C;
+    f.corners[21] = obj->unk_14;
+    f.corners[22] = obj->unk_C;
+    f.corners[23] = obj->unk_1C;
+    func_8003EAD4(f.corners, f.corners, obj->unk_4[2], obj->unk_20, 8, 4);
 
     lvlEnd = arg1[4];
     lvl = arg1[1];
@@ -157,16 +166,16 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
     }
 
     for (;;) {
-        n = func_8002FFFC(lvl, corners, pts);
+        n = func_8002FFFC(lvl, (Unk8002FFFCVec *)f.corners, (Unk8002FFFCVec *)f.pts);
         /* The retail code returns whatever v0 holds at exit; ret tracks it. */
         ret = n * 2;
         if (n >= MIN_CLIPPED_EDGES) {
-            minX = pts[0];
-            maxX = pts[0];
-            minZ = pts[2];
-            maxZ = pts[2];
+            minX = f.pts[0];
+            maxX = f.pts[0];
+            minZ = f.pts[2];
+            maxZ = f.pts[2];
             for (i = 1; i <= n * 2 - 1; i++) {
-                p = &pts[i * POINT_WORDS];
+                p = &f.pts[i * POINT_WORDS];
                 if (p[0] < minX) {
                     minX = p[0];
                 }
@@ -240,12 +249,12 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
                 rowHi = GRID_LAST;
             }
 
-            words = (s32 *)tbl;
+            words = (s32 *)f.tbl;
             for (i = 0; i < ROW_TABLE_WORDS; i++) {
                 words[i] = ROW_EMPTY_WORD;
             }
 
-            p = pts;
+            p = f.pts;
             for (e = n - 1; e >= 0; e--) {
                 x1 = (func_8002CC50_ScaleRaw(p[0] - bx) >> EDGE_FRAC_SHIFT) + GRID_ORIGIN;
                 z1 = (func_8002CC50_ScaleRaw(p[2] - bz) >> EDGE_FRAC_SHIFT) + GRID_ORIGIN;
@@ -270,7 +279,7 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
                 if (dz == 0) {
                     /* horizontal edge */
                     if ((u32)z1 < GRID_ROWS) {
-                        row = &tbl[z1 * 2];
+                        row = &f.tbl[z1 * 2];
                         func_8002CC50_Widen(row, x1);
                         func_8002CC50_Widen(row, x2);
                     }
@@ -326,7 +335,7 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
                             x1 += step;
                         } while (z1 < rowLo);
                     }
-                    row = &tbl[(z1 < 0 ? 0 : z1) * 2];
+                    row = &f.tbl[(z1 < 0 ? 0 : z1) * 2];
                     if ((u32)z1 < GRID_ROWS) {
                         func_8002CC50_Widen(row, x1);
                     }
@@ -384,7 +393,7 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
                             z1 += 1;
                         } while (z1 < rowLo);
                     }
-                    row = &tbl[(z1 < 0 ? 0 : z1) * 2];
+                    row = &f.tbl[(z1 < 0 ? 0 : z1) * 2];
                     do {
                         if ((u32)z1 < GRID_ROWS) {
                             func_8002CC50_Widen(row, x1);
@@ -416,7 +425,7 @@ s32 func_8002CC50(void *arg0, s32 *arg1, s32 *p2, s32 p3) {
             }
 
             bits = D_8005F3C4;
-            row = tbl;
+            row = f.tbl;
             for (i = GRID_LAST; i >= 0; i--) {
                 lo = row[0];
                 hi = row[1];
@@ -456,9 +465,9 @@ next_level:
     }
     return ret;
 }
-#undef corners
-#undef pts
-#undef tbl
+#undef f.corners
+#undef f.pts
+#undef f.tbl
 #undef arg2
 #undef arg3
 #undef lvlEnd
