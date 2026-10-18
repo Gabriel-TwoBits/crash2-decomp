@@ -215,7 +215,7 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     FIELD(s32, 0x1C) = arg1;
     entry = (Unk8001C340Entry *)(*(char **)(*(char **)((char *)arg0 + 0xC) + 0x20) + arg1 * ENTRY_STRIDE);
     FIELD(s32, 0xB0) = entry->unk_4;
-    own = func_80014260(*(char **)(*(char **)((char *)arg0 + 0x10) + 0x18) + entry->unk_8 * 4, 1, 0);
+    own = Nsf_OpenEntry(*(char **)(*(char **)((char *)arg0 + 0x10) + 0x18) + entry->unk_8 * 4, 1, 0);
     FIELD(void *, 0x14) = own;
 
     word = entry->unk_E;

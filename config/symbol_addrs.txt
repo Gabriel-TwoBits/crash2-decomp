@@ -962,3 +962,21 @@ Zone_QueueEntities = 0x8001A054; // type:func
 
 // queues the kills (0x13B) and spawns (0x13C) of a camera node's draw lists, properties 0x13B and 0x13C (CrashEdit's drawlista and drawlistb), swapped by direction, as Crash2Recomp's notes say; func_800200A8 calls it at each node it steps through
 Zone_QueueDrawLists = 0x8001A13C; // type:func
+
+// resolves an entry reference (an EID, looked up with Nsf_LookupEid and stored back, or an NSD record) and adds references to its page, reading it first with flag 1 (func_80013FD8); the CHNK opcode's handler uses it for CrashEdit's "open file" (kind 1 async, kind 6 blocking), Crash2Recomp's notes for a load list's rows; 31 callers
+Nsf_OpenEntry = 0x80014260; // type:func
+
+// resolves an entry reference as Nsf_OpenEntry does and drops references to its page through func_8001434C, 0 of them only telling whether the entry is loaded; the CHNK opcode's handler uses it for CrashEdit's "close file" (kind 2) and "file is loaded" (kind 3); 8 callers
+Nsf_CloseEntry = 0x800143C0; // type:func
+
+// Nsf_CloseEntry on a resolved NSD record: drops references to the page of an entry not loaded yet (func_80014078); Crash2Recomp's notes give it an unload row's drop (rec, -1); Nsf_CloseEntry and func_80021900 call it
+Nsf_CloseRecord = 0x8001434C; // type:func
+
+// decrements a page slot's reference count (0xF) and frees the slot at zero (func_80013F28), as the Crash 1 decomp's func_800148C4 does to its slots' references; func_80013E7C, func_80014078, func_80033448 and func_800334A0 call it
+Nsf_DropPageRef = 0x80013E10; // type:func
+
+// sets a page slot's state (0x4) to 1, clears its counts and stores -0x12 in the page table at the slot's page index, the Crash 1 decomp's slot release (func_80014930); func_80012A20, func_80013200, func_80013E10 and func_80013EB0 call it
+Nsf_FreePageSlot = 0x80013F28; // type:func
+
+// the handler of opcode 0x40 in the dispatch table at 0x8005C514, CrashEdit's CHNK; its kinds 1 to 6 open (Nsf_OpenEntry), close (Nsf_CloseEntry) and count files and pages as CrashEdit's comments list them
+Gool_OpChunk = 0x80038F00; // type:func

@@ -96,8 +96,8 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                     for (i = 0; i < FIELD(data, s32, DATA_COUNT); i++) {
                         if (FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) {
                             sub = data + DATA_ENTRIES + i * ENTRY_STRIDE;
-                            if (func_800143C0((void *)sub, 0) != 0) {
-                                entry = func_80014260((void *)sub, 1, 0);
+                            if (Nsf_CloseEntry((void *)sub, 0) != 0) {
+                                entry = Nsf_OpenEntry((void *)sub, 1, 0);
                                 if (Zone_IsLinked(arg0, (s32 *)entry) == 0) {
                                     func_8002001C((char *)entry);
                                 }
@@ -138,7 +138,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         D_80060918[2] = D_80060800[2];
 
         if (*FIELD(arg0, s32 *, OBJ_DATA) != 0 && (flags & FLAG_ANY_RELOAD)) {
-            list = (s32 *)func_80014260(Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1, 1);
+            list = (s32 *)Nsf_OpenEntry(Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1, 1);
             steps = seg - D_800608E8;
             dist = steps;
             if (steps < 0) {
@@ -188,7 +188,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                     Zone_QueueDrawLists(arg1, idx << SEGMENT_SHIFT, 1);
                 }
             }
-            func_800143C0((void *)Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1);
+            Nsf_CloseEntry((void *)Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1);
             Zone_RunEntityQueue(FIELD(arg1, void *, 4), 0x13B);
         }
 
@@ -211,8 +211,8 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                 }
                 for (i = 0; i < FIELD(data, s32, DATA_COUNT); i++) {
                     sub = data + DATA_ENTRIES + i * ENTRY_STRIDE;
-                    if ((FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) && func_800143C0((void *)sub, 0) != 0) {
-                        entry = func_80014260((void *)sub, 1, 0);
+                    if ((FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) && Nsf_CloseEntry((void *)sub, 0) != 0) {
+                        entry = Nsf_OpenEntry((void *)sub, 1, 0);
                         if (!(FIELD(FIELD(entry, s32, OBJ_DATA), s32, DATA_FLAG_OFF) & 1)) {
                             func_8001FFCC(entry);
                         }

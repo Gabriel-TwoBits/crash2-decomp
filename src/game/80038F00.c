@@ -13,7 +13,7 @@
 #define OPERAND_SHIFT 12
 
 
-void func_80038F00(GoolObject *arg0, u32 arg1) {
+void Gool_OpChunk(GoolObject *arg0, u32 arg1) {
     s32 *src;
     u8 *sp;
     s32 op;
@@ -24,16 +24,16 @@ void func_80038F00(GoolObject *arg0, u32 arg1) {
     src = Gool_ResolveOperand((s32)arg0, arg1 & OPERAND_MASK, 0);
     switch (op) {
     case OP_LOAD_A:
-        arg0->unk_D4 = (s32)func_80014260(src, 0, 1);
+        arg0->unk_D4 = (s32)Nsf_OpenEntry(src, 0, 1);
         break;
     case OP_LOAD_F:
-        arg0->unk_D4 = (s32)func_80014260(src, 1, 1);
+        arg0->unk_D4 = (s32)Nsf_OpenEntry(src, 1, 1);
         break;
     case OP_CALL_B:
-        arg0->unk_D4 = func_800143C0(src, 1);
+        arg0->unk_D4 = Nsf_CloseEntry(src, 1);
         break;
     case OP_CALL_C:
-        v = func_800143C0(src, 0);
+        v = Nsf_CloseEntry(src, 0);
         *arg0->sp++ = v;
         break;
     case OP_CALL_D:
@@ -52,7 +52,7 @@ void func_80038F00(GoolObject *arg0, u32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80038F00", func_80038F00);
+INCLUDE_ASM("asm/nonmatchings/game/80038F00", Gool_OpChunk);
 #endif
 
 #ifdef NON_MATCHING

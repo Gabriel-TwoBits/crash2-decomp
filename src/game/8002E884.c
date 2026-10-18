@@ -51,7 +51,7 @@ void func_8002E884(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3) {
     memset(&name[NAME_PAD_OFFSET], 0, NAME_PAD_LEN);
     name[NAME_TAG_OFFSET] = func_800120EC(D_8006758C);
     key[0] = Nsf_NameToEid(name);
-    map = *(s32 **)((char *)func_80014260(key, 1, 0) + MAP_DATA_OFFSET);
+    map = *(s32 **)((char *)Nsf_OpenEntry(key, 1, 0) + MAP_DATA_OFFSET);
     cells = (s32 *)((char *)map + MAP_CELLS_OFFSET);
     cellW = map[3];
     pz = (arg0[2] + arg1[2] - map[2]) >> FIXED_SHIFT;
@@ -299,13 +299,13 @@ void func_8002EE48(void) {
         D_8006CB88 = Obj_Spawn(cb20, 4, 1, 0, 0, 0);
         D_8006CBA8 = Obj_Spawn(cb20, 4, 5, 0, 0, 0);
         D_8006CBE4 = Obj_Spawn(cb20, 4, 0x16, 0, 0, 0);
-        func_80014260(D_8006759C[0] + 0x10, 0, 1);
-        func_80014260(D_8006759C[0] + 0x24, 0, 1);
-        func_80014260(D_8006759C[0] + 0x84, 0, 1);
-        func_80014260(D_8006759C[0] + 0x98, 0, 1);
-        func_80014260(D_8006759C[0] + 0x1C, 0, 1);
-        func_80014260(D_8006759C[0] + 0x20, 0, 1);
-        func_80014260(D_8006759C[0] + 0x34, 0, 1);
+        Nsf_OpenEntry(D_8006759C[0] + 0x10, 0, 1);
+        Nsf_OpenEntry(D_8006759C[0] + 0x24, 0, 1);
+        Nsf_OpenEntry(D_8006759C[0] + 0x84, 0, 1);
+        Nsf_OpenEntry(D_8006759C[0] + 0x98, 0, 1);
+        Nsf_OpenEntry(D_8006759C[0] + 0x1C, 0, 1);
+        Nsf_OpenEntry(D_8006759C[0] + 0x20, 0, 1);
+        Nsf_OpenEntry(D_8006759C[0] + 0x34, 0, 1);
         break;
     }
     }
@@ -694,8 +694,8 @@ void func_8002F6C8(u8 *arg0) {
         D_800608D0 = -1;
         for (i = 0; i < *(s32 *)(obj + 0x190); i++) {
             slot = obj + 0x194 + i * 4;
-            if (func_800143C0(slot, 0) != 0) {
-                func_8002001C(func_80014260(slot, 1, 0));
+            if (Nsf_CloseEntry(slot, 0) != 0) {
+                func_8002001C(Nsf_OpenEntry(slot, 1, 0));
             }
         }
         func_80014790((u32 *)(arg0 + 0x1040));
@@ -717,7 +717,7 @@ void func_8002F6C8(u8 *arg0) {
     }
     func_8001F858(*(s32 *)(D_8006759C[0] + 8));
     sp18 = *(s32 *)(arg0 + 0x24);
-    t0 = func_80014260(&sp18, 1, 1);
+    t0 = Nsf_OpenEntry(&sp18, 1, 1);
     {
         s32 a1 = *(s32 *)(t0 + (*(s32 *)(arg0 + 0x28) * 3 + *(s32 *)(*(u8 **)(t0 + 0x10) + 0x184)) * 4 + 0x10);
         s32 kind;
@@ -728,7 +728,7 @@ void func_8002F6C8(u8 *arg0) {
         }
         func_800200A8((s32)t0, a1, *(s32 *)(arg0 + 0x2C), kind);
     }
-    func_800143C0(&sp18, 1);
+    Nsf_CloseEntry(&sp18, 1);
     if (g_Player == 0) {
         Obj_Spawn(D_8006CB48, 0, 0, 0, 0, 1);
     }

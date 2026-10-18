@@ -451,7 +451,7 @@ s32 func_80027664(s32 *arg0) {
     s32 flag;
     s32 *out;
 
-    list = func_80014260(arg0, 1, 1);
+    list = Nsf_OpenEntry(arg0, 1, 1);
     hdr = 0;
     n = 0;
     for (i = 0; i < list->count; i++) {
@@ -574,7 +574,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800277A8);
 
 void func_800278F8(s32 arg0) {
     if (*(s32 *)(arg0 + 0xC) != 1) {
-        func_800143C0((void *)(arg0 + 0x4C), 1);
+        Nsf_CloseEntry((void *)(arg0 + 0x4C), 1);
         if (*(s32 *)(arg0 + 0x24) != 0) {
             func_80013A54(8, 0);
             func_80013A54(9, 0);
@@ -840,7 +840,7 @@ void *func_80027DEC(char *arg0, void *arg1) {
     global = &g_CurrentZone;
     for (i = p->count - 1; i >= 0; i--) {
         if (p->flags[i] & 4) {
-            r = func_80014260(&p->ent[i], 1, 0);
+            r = Nsf_OpenEntry(&p->ent[i], 1, 0);
             if (func_80030D74(r, arg1)) {
                 return r;
             }
@@ -850,7 +850,7 @@ void *func_80027DEC(char *arg0, void *arg1) {
         p = *(Unk80027DEC **)(g_CurrentZone + 0x10);
         for (i = p->count - 1; i >= 0; i--) {
             if (p->flags[i] & 4) {
-                r = func_80014260(&p->ent[i], 1, 0);
+                r = Nsf_OpenEntry(&p->ent[i], 1, 0);
                 if (func_80030D74(r, arg1)) {
                     return r;
                 }
@@ -1057,7 +1057,7 @@ s32 func_80028750(Vec3i80028750 *arg0, Vec3i80028750 *arg1) {
         pos = *arg0;
         for (i = 0; i < p->count; i++) {
             if (p->flags[i] & 4) {
-                e = func_80014260(&p->ent[i], 1, 0);
+                e = Nsf_OpenEntry(&p->ent[i], 1, 0);
                 if (func_80030D74(e, arg0) != 0) {
                     q = *(s32 **)((char *)e + 0x14);
                     box[0] = q[0] << 8;
@@ -1147,7 +1147,7 @@ void *func_80028A28(void *unused, s32 *arg) {
         if (*(s32 *)(p + 0x190) > 0) {
             do {
                 if (*(s32 *)(p + 0x1B4 + i * 4) & 4) {
-                    ent = func_80014260(p + 0x194 + i * 4, 1, 0);
+                    ent = Nsf_OpenEntry(p + 0x194 + i * 4, 1, 0);
                     if (func_80030D74(ent, arg) != 0) {
                         res = func_8003DA00(ent[5], arg, 9);
                         break;
@@ -1255,7 +1255,7 @@ void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
         if (*(s32 *)(p + 0x190) > 0) {
             do {
                 if (*(s32 *)(p + 0x1B4 + i * 4) & 4) {
-                    ent = func_80014260(p + 0x194 + i * 4, 1, 0);
+                    ent = Nsf_OpenEntry(p + 0x194 + i * 4, 1, 0);
                     if (func_80030D74(ent, arg) != 0) {
                         rng = (s32 *)ent[5];
                         res = ((Func8003DA00Full)func_8003DA00)(
@@ -1401,7 +1401,7 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
         if (*(s32 *)(level + LIST_COUNT) > 0) {
             do {
                 if (*(s32 *)(level + LIST_FLAGS + i * WORD_BYTES) & LIST_FLAG_CHECK) {
-                    found = func_80014260(level + LIST_ENTRIES + i * WORD_BYTES, 1, 0);
+                    found = Nsf_OpenEntry(level + LIST_ENTRIES + i * WORD_BYTES, 1, 0);
                     if (func_80030D74(found, pos) != 0) {
                         rec = (s32 *)found[5];
                         hit = ((Unk8003DA00Fn)func_8003DA00)((s32)rec, pos, arg2 & MODE_MASK, arg3,
@@ -1588,7 +1588,7 @@ void func_80029538(s32 arg0, s32 arg1, s32 arg2) {
     s = c->b;
     for (i = 0; i < l->n; i++) {
         if (*(s32 *)((char *)l + 0x1B4 + i * 4) & SLOT_ACTIVE) {
-            t = *(s32 **)((char *)func_80014260((char *)l + 0x194 + i * 4, 1, 0) + 0x14);
+            t = *(s32 **)((char *)Nsf_OpenEntry((char *)l + 0x194 + i * 4, 1, 0) + 0x14);
             if (func_80030E1C(s, t) != 0) {
                 c->count = func_8003BF90(t, s, &c->ent[c->count], c->count);
             }

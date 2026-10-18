@@ -47,7 +47,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8002FB84", func_8002FB84);
 #endif
 
 s32 func_8002FC78(void *arg0, s32 arg1, s32 arg2) {
-    s32 *p = (s32 *)((char *)func_80014260(arg0, 1, 0) + 0x14);
+    s32 *p = (s32 *)((char *)Nsf_OpenEntry(arg0, 1, 0) + 0x14);
     return p[arg1 * 2 + arg2] + 3;
 }
 
@@ -148,7 +148,7 @@ void func_8002FDCC(s32 *arg0) {
     s32 *temp_v0;
 
     D_800675AC = 0;
-    temp_v0 = func_80014260(arg0, 1, 1);
+    temp_v0 = Nsf_OpenEntry(arg0, 1, 1);
     do { new_var2 = 0x6396347F; new_var = arg0; } while (0);
     *new_var = new_var2;
     D_8005F3D8 = temp_v0[4];

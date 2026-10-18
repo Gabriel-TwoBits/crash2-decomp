@@ -177,7 +177,7 @@ s32 func_8001F9C4(void) {
     D_800608D4 = 0;
     D_800608E0 = 0;
     off = slot * ENTRY_STRIDE;
-    obj = (u8 *)func_80014260(D_8006759C + off + ENTRY_BASE_OFFSET, 1, 1);
+    obj = (u8 *)Nsf_OpenEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1, 1);
     D_8005F388 = SAVE_MAGIC;
     D_8006094C = 0;
     D_8006094D = 0;
@@ -190,7 +190,7 @@ s32 func_8001F9C4(void) {
     func_800200A8((s32)obj,
                   FIELD(obj, (FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * 3 + FIELD((u8 *)FIELD(obj, 0x10), 0x184)) * 4 + 0x10),
                   extra, 0);
-    func_800143C0(D_8006759C + off + ENTRY_BASE_OFFSET, 1);
+    Nsf_CloseEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1);
     D_8005F1F8 = 0;
     return RETURN_CODE;
 }

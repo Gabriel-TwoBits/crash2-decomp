@@ -65,7 +65,7 @@ void func_8002648C(Arg *arg0, s32 arg1) {
         if (arg1 != 1) a2 = D_800608E4;
         e = (Ent *)((u8 *)Ent_GetProperty((s32)D_800608D4, 0x109, a2, 0, 0, 1, 0, 0, 0) + arg0->b * 4);
         p = (s32 *)(((s32 *)D_800608D4[1])[4] + (e->c * 4 + 0x194));
-        v = (s32 *)func_80014260(p, 1, 0);
+        v = (s32 *)Nsf_OpenEntry(p, 1, 0);
         s = *(s32 *)((u8 *)v + (e->b * 3 + *(s32 *)(v[4] + 0x184)) * 4 + 0x10);
         D_8005BAD8 = *p;
         D_8005BADC = e->b;
@@ -163,7 +163,7 @@ s32 func_800267C4(Buf *out, s32 argAddr) {
     for (i = 0; i < count; i++) {
         if (mask & bit) {
             e = list + 1;
-            obj = func_80014260((u8 *)arg->obj[4] + (e[1] * ENTRY_BYTES + SLOT_TABLE_OFFSET), 1, 0);
+            obj = Nsf_OpenEntry((u8 *)arg->obj[4] + (e[1] * ENTRY_BYTES + SLOT_TABLE_OFFSET), 1, 0);
             b = ((s32 *)((u8 *)obj + ((e[0] * 3 + ((s32 *)obj[4])[0x184 / 4]) * 4)))[4];
             cur->a = (s32)obj;
             cur->b = b;

@@ -152,7 +152,7 @@ void Zone_RunEntityQueue(void *arg0, s32 arg1) {
             remove = 0;
             if (!(*(u32 *)(g_EntityFlags + (addr >> ADDR_FLAG_SHIFT)) & ADDR_FLAG_READY) && slot < SLOT_COUNT) {
                 e->unk4 = Obj_SpawnEntity(
-                    func_80014260((u8 *)*(s32 *)((u8 *)arg0 + OWNER_SLOTS_OFFSET) + (slot << SLOT_STRIDE_SHIFT) + SLOT_TABLE_OFFSET, 1, 0),
+                    Nsf_OpenEntry((u8 *)*(s32 *)((u8 *)arg0 + OWNER_SLOTS_OFFSET) + (slot << SLOT_STRIDE_SHIFT) + SLOT_TABLE_OFFSET, 1, 0),
                     (u32)e->unk0 >> ENTRY_BYTE3_SHIFT);
                 if (e->unk4 >= LOAD_FAILED_BELOW) {
                     remove = 1;
@@ -208,7 +208,7 @@ void func_8001A4A4(GoolObject *arg0, s32 *arg1) {
             if (((s32)(a + 4) & 0xFF800003) != 0x80000000) {
                 return;
             }
-            r = (s32)func_80014260(a + 4, 1, 0);
+            r = (s32)Nsf_OpenEntry(a + 4, 1, 0);
             INNER(arg0)->f28 = r;
             if (r >= -0xFE) {
                 INNER(arg0)->f28 = 0;
@@ -219,7 +219,7 @@ void func_8001A4A4(GoolObject *arg0, s32 *arg1) {
             do {
                 INNER(arg0)->f2C = func_8001A90C(arg0, (void **)&s, &INNER(arg0)->f24);
             } while (0);
-            INNER(arg0)->f28 = (s32)func_80014260((s32 *)(INNER(arg0)->f20 = (s32)s) + 4, 1, 0);
+            INNER(arg0)->f28 = (s32)Nsf_OpenEntry((s32 *)(INNER(arg0)->f20 = (s32)s) + 4, 1, 0);
             if ((s32)arg0 == g_Player) {
                 neg = arg1[0];
                 if (neg < 0) {
@@ -311,11 +311,11 @@ u32 func_8001A90C(GoolObject *arg0, s32 *arg1, s32 *arg2) {
 
     s2 = (char *)arg0->anim;
     s3 = s2 + 4;
-    func_80014260(s3, 1, 0);
+    Nsf_OpenEntry(s3, 1, 0);
     odd = *(s32 *)(s2 + 8) & 1;
     idx = arg0->anim_frame >> 8;
     if (arg2 == 0) {
-        p = (s32 *)((char *)func_80014260(s3, 1, 0) + 0x10);
+        p = (s32 *)((char *)Nsf_OpenEntry(s3, 1, 0) + 0x10);
         if (odd) {
             *arg1 = p[idx >> 1];
         } else {
@@ -324,15 +324,15 @@ u32 func_8001A90C(GoolObject *arg0, s32 *arg1, s32 *arg2) {
         return idx;
     }
     if (odd == 0) {
-        p = (s32 *)((char *)func_80014260(s3, 1, 0) + 0x10);
+        p = (s32 *)((char *)Nsf_OpenEntry(s3, 1, 0) + 0x10);
         *arg1 = *arg2 = p[idx];
     } else if ((idx & 1) && (s32)(idx + 1) < *(u16 *)(s2 + 2)) {
         u32 h = idx >> 1;
-        *arg1 = ((s32 *)((char *)func_80014260(s3, 1, 0) + 0x10))[h];
-        *arg2 = ((s32 *)((char *)func_80014260(s3, 1, 0) + 0x10))[h + 1];
+        *arg1 = ((s32 *)((char *)Nsf_OpenEntry(s3, 1, 0) + 0x10))[h];
+        *arg2 = ((s32 *)((char *)Nsf_OpenEntry(s3, 1, 0) + 0x10))[h + 1];
     } else {
         s32 h = (s32)(idx + 1) >> 1;
-        p = (s32 *)((char *)func_80014260(s2 + 4, 1, 0) + 0x10);
+        p = (s32 *)((char *)Nsf_OpenEntry(s2 + 4, 1, 0) + 0x10);
         *arg1 = *arg2 = p[h];
     }
     return idx;
@@ -959,7 +959,7 @@ void func_8001BD84(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
             off = *(s32 *)(base + 8);
         }
         arg2 = (s32)arg0->exe->items[5] + off * 4;
-        mem = func_80014260((void *)(arg2 + 4), 1, 0);
+        mem = Nsf_OpenEntry((void *)(arg2 + 4), 1, 0);
         q = arg0->sp;
         sprintf(buf, arg1, q[-2], q[-3], q[-4], arg0->sp[-5]);
         arg1 = buf;

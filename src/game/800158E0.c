@@ -1611,7 +1611,7 @@ void func_80018294(s32 *arg0) {
     off = FIRST_ENTRY_OFFSET;
     for (i = 0; i < *arg0; i++) {
         if (((mask & ACTIVE_MASK) >> i) & 1) {
-            src = (s32 *)func_80014260((u8 *)arg0 + off, 1, 0);
+            src = (s32 *)Nsf_OpenEntry((u8 *)arg0 + off, 1, 0);
             shape = (s32 *)src[4];
             if (shape[3] == SHAPE_FLAG_ZERO_OFFSET) {
                 entry[2] = 0;
@@ -1677,9 +1677,9 @@ void func_80018474(void *a0, void *a1) {
 
     idx = arg0->h6 >> 10;
     if (!(arg0->h6 & 0x200)) {
-        v = func_800143C0(arg1 + idx, 0);
+        v = Nsf_CloseEntry(arg1 + idx, 0);
         if (v != 0) {
-            r = (u32)func_80014260((void *)v, 3, 0);
+            r = (u32)Nsf_OpenEntry((void *)v, 3, 0);
             hi = (r >> 4) & 0x6030;
             flag = r & 0x80;
             arg0->h6 = (arg0->h6 & 0xFFE3) | (r & 0x1C) | 0x200;

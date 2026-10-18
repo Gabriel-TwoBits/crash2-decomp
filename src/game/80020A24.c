@@ -476,13 +476,13 @@ void func_80021900(s32 count, u32 *p, s32 flags, s32 arg3) {
             cur = (NsdRecord *)v;
         }
         if (flags & 8) {
-            func_80014260(cur, flags | 2, arg3);
+            Nsf_OpenEntry(cur, flags | 2, arg3);
         } else {
             neg = arg3;
             if (flags & 4) {
                 neg = -neg;
             }
-            func_8001434C((u32)cur, neg);
+            Nsf_CloseRecord((u32)cur, neg);
         }
         count--;
         p++;
@@ -1117,7 +1117,7 @@ void func_80022A5C(s32 *arg0) {
     f.cur[2] = D_800608E0;
     f.cur[3] = D_8005BAE4;
     f.path[2] = arg0[2];
-    obj = (s32 *)func_80014260((char *)&D_8005BAE4 - STATE_BASE_BACKOFF, 1, 0);
+    obj = (s32 *)Nsf_OpenEntry((char *)&D_8005BAE4 - STATE_BASE_BACKOFF, 1, 0);
     f.next[0] = (s32)obj;
     q = *(s32 **)((char *)obj + OBJ_CHILD_OFFSET);
     target = *(s32 **)((char *)obj + OBJ_CHILD_OFFSET +
@@ -1225,7 +1225,7 @@ void func_80022E74(s32 *arg0) {
     args[1] = arg0[1];
     args[2] = arg0[2];
     if (D_8005B99B != 0) {
-        p = (Unk80022E74 *)func_80014260(&D_8005B99B + UNK_80014260_OFFSET, UNK_80014260_FLAGS, 0);
+        p = (Unk80022E74 *)Nsf_OpenEntry(&D_8005B99B + UNK_80014260_OFFSET, UNK_80014260_FLAGS, 0);
         func_800200A8((s32)p,
                       ((s32 *)p)[(UNK_FIELD_OFFSET / 4) + D_8005BADC * UNK_TABLE_STRIDE + p->unk_10->unk_184],
                       D_8005BAE0, 0);

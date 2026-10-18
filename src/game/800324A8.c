@@ -309,7 +309,7 @@ u32 func_80032A98(s32 *arg0, s32 *arg1) {
         var_v0_2 = (arg0[0] & ~0x7000) | 0xA000;
         goto block_10;
     }
-    temp_v0_2 = (s32)func_80014260(arg1, 0, 1);
+    temp_v0_2 = (s32)Nsf_OpenEntry(arg1, 0, 1);
     if (temp_v0_2 != 0) {
         if (temp_v0_2 >= -0xFE) {
             return -0xE;
@@ -692,14 +692,14 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80032F18);
 #endif
 
-void func_80013E10(void *arg0);
+void Nsf_DropPageRef(void *arg0);
 void func_80051078(s32 arg0, s32 arg1);
 
 void func_80033448(void *arg0) {
     do { func_80051078(0, 1 << ((u16 *)arg0)[3]); } while (0);
     ((s32 *)arg0)[1] &= ~8;
     if (((void **)arg0)[6] != 0) {
-        func_80013E10(((void **)arg0)[6]);
+        Nsf_DropPageRef(((void **)arg0)[6]);
     }
 }
 
@@ -892,10 +892,10 @@ retry:
             addr = ((Unk800334A0Res *)e->res)->addr;
             goto start_voice;
         case SRC_QUEUE:
-            if (func_800143C0(e->handle, 0) == 0) {
+            if (Nsf_CloseEntry(e->handle, 0) == 0) {
                 break;
             }
-            vol = (s32)func_80014260(e->handle, 1, 0);
+            vol = (s32)Nsf_OpenEntry(e->handle, 1, 0);
             if ((vol & HDL_TAG_MASK) == HDL_TAG_MASK) {
                 addr = ((u32)vol << HDL_ADDR_PRE_SHIFT) >> HDL_ADDR_SHIFT;
                 goto start_voice;
@@ -903,7 +903,7 @@ retry:
             e->flags = (e->flags & ~EF_SRC_BITS) | EF_SRC_QUEUED;
             /* fall through */
         case SRC_QUEUED:
-            q = func_80014260(e->handle, 1, 0);
+            q = Nsf_OpenEntry(e->handle, 1, 0);
             res = (Unk800334A0Res *)func_8001557C(((s32 *)q)[1]);
             if (res != 0) {
                 if (res->state == RES_STATE_NEW) {
@@ -916,7 +916,7 @@ retry:
                 addr = res->addr;
                 res->refs = res->refs + 1;
                 e->res = (u32 *)res;
-                func_80013E10(func_80014148((u32)q));
+                Nsf_DropPageRef(func_80014148((u32)q));
                 goto start_voice;
             } else {
                 Unk800334A0Res *r2 = (Unk800334A0Res *)func_80014148((u32)q);
@@ -963,7 +963,7 @@ after:
                 *status = 1;
             } else if (e->tag != MIX_NO_RESOURCE) {
                 if (e->res != 0) {
-                    func_80013E10(e->res);
+                    Nsf_DropPageRef(e->res);
                 }
                 addr = func_80032A98((s32 *)&e->flags, (s32 *)&e->tag);
                 e->tag = MIX_NO_RESOURCE;
@@ -1208,15 +1208,15 @@ s32 Snd_LoadSequence(s32 addr) {
         if (D_8005F2F4 != NONE) {
             SsSepClose(D_8005F3E4);
             tmp = D_8005F2F4;
-            func_800143C0(&tmp, 1);
+            Nsf_CloseEntry(&tmp, 1);
         }
         if (*arg0 != NONE) {
-            hdr = func_80014260(arg0, 1, 1);
+            hdr = Nsf_OpenEntry(arg0, 1, 1);
             v = hdr->unk4;
             D_8005F2F4 = v;
             for (i = 0; i < 7; i++) {
                 if (hdr->unk10[i + 2] != NONE) {
-                    func_80014260(&hdr->unk10[i + 2], 0, 1);
+                    Nsf_OpenEntry(&hdr->unk10[i + 2], 0, 1);
                 }
             }
         } else {
@@ -1230,11 +1230,11 @@ s32 Snd_LoadSequence(s32 addr) {
         return 0;
     }
     D_8005F39C = 2;
-    hdr = func_80014260(arg0, 1, 0);
+    hdr = Nsf_OpenEntry(arg0, 1, 0);
     D_8005F254 = 0;
     for (i = 0; i < 7; i++) {
         if (hdr->unk10[i + 2] != NONE) {
-            if (func_800143C0(&hdr->unk10[i + 2], 0) == 0) {
+            if (Nsf_CloseEntry(&hdr->unk10[i + 2], 0) == 0) {
                 return 0;
             }
         }
@@ -1243,7 +1243,7 @@ s32 Snd_LoadSequence(s32 addr) {
     vab = D_8005F3E0;
     D_8005F39C = 3;
     if (vab == -1) {
-        D_8005F3E0 = SsVabFakeHead(((s32 *)func_80014260(&hdr->unk10[1], 1, 1))[5], -1, D_80067FB8);
+        D_8005F3E0 = SsVabFakeHead(((s32 *)Nsf_OpenEntry(&hdr->unk10[1], 1, 1))[5], -1, D_80067FB8);
         if (D_8005F3E0 == vab) {
             exit(-1);
         }

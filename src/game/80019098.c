@@ -388,7 +388,7 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     if (*entry == ENTRY_INVALID || arg1 >= ENTRY_COUNT) {
         return RESULT_BAD_ENTRY;
     }
-    res = func_80014260(entry, 1, 0);
+    res = Nsf_OpenEntry(entry, 1, 0);
     W(arg0, 0xC) = (s32)res;
     W(arg0, 0x10) = (s32)res;
     if (W(arg0, 0xC) >= RESULT_OK_LIMIT) {
@@ -522,8 +522,8 @@ void func_80019E5C(void) {
     if (g_CurrentZone != 0) {
         obj = g_CurrentZone->unk10;
         for (i = 0; i < obj->count; i++) {
-            if (func_800143C0(&obj->items[i], 0) != 0) {
-                Zone_KillObjects(func_80014260(&obj->items[i], 1, 0));
+            if (Nsf_CloseEntry(&obj->items[i], 0) != 0) {
+                Zone_KillObjects(Nsf_OpenEntry(&obj->items[i], 1, 0));
             }
         }
     }

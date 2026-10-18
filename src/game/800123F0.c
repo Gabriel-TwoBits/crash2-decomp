@@ -306,7 +306,7 @@ loop:
             i++;
         } while (i < arg0->page->entry_count);
     }
-    func_80013F28(arg0);
+    Nsf_FreePageSlot(arg0);
     return RESULT_DONE;
 }
 #else
@@ -701,7 +701,7 @@ loop:
     }
 
 cancel:
-    func_80013F28(s0);
+    Nsf_FreePageSlot(s0);
     D_80067FB4[0] = 0;
     D_80067FB0[0] = D_80067FB0[0] - 1;
     return;
@@ -734,7 +734,7 @@ play_queue:
         if (s0->page->type == KIND_TABLE) {
             return;
         }
-        func_80013F28(s0);
+        Nsf_FreePageSlot(s0);
         D_80067FB0[0] = D_80067FB0[0] - 1;
         return;
     }
@@ -1078,7 +1078,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80013C98);
 
 extern s32 D_80067FB0[];
 
-void func_80013E10(NsfPageSlot *arg0) {
+void Nsf_DropPageRef(NsfPageSlot *arg0) {
     s8 temp_v0;
     s8 temp_v0_2;
 
@@ -1087,7 +1087,7 @@ void func_80013E10(NsfPageSlot *arg0) {
         temp_v0_2 = temp_v0 - 1;
         arg0->unk_F = temp_v0_2;
         if (((temp_v0_2 << 0x18) <= 0) && (arg0->unk_6 == 0)) {
-            func_80013F28(arg0);
+            Nsf_FreePageSlot(arg0);
             D_80067FB0[0] -= 1;
         }
     }
@@ -1097,7 +1097,7 @@ void func_80013E7C(NsfPageSlot *arg0) {
     s8 t = arg0->unk_E;
     if (t != 0) {
         arg0->unk_E = t - 1;
-        func_80013E10(arg0);
+        Nsf_DropPageRef(arg0);
     }
 }
 
@@ -1108,13 +1108,13 @@ void func_80013EB0(NsfPageSlot *arg0) {
         arg0->unk_F = arg0->unk_F - d;
         arg0->unk_E = 0;
         if (arg0->unk_F <= 0 && arg0->unk_6 == 0) {
-            func_80013F28(arg0);
+            Nsf_FreePageSlot(arg0);
             *D_80067FB0 -= 1;
         }
     }
 }
 
-void func_80013F28(NsfPageSlot *arg0) {
+void Nsf_FreePageSlot(NsfPageSlot *arg0) {
     arg0->unk_4 = 1;
     arg0->unk_F = 0;
     arg0->unk_E = 0;
@@ -1180,7 +1180,7 @@ s32 func_80014078(s32 arg0, s32 arg1) {
         func_80013E7C(p);
     } else {
         for (i = 0; i < arg1; i++) {
-            func_80013E10(p);
+            Nsf_DropPageRef(p);
         }
     }
     return p->unk_F + 1;
@@ -1251,7 +1251,7 @@ s32 func_80014220(u32 arg0) {
 }
 
 #ifdef NON_MATCHING
-void *func_80014260(void *a0, s32 arg1, s32 arg2) {
+void *Nsf_OpenEntry(void *a0, s32 arg1, s32 arg2) {
     u32 *arg0 = a0;
     u32 *p;
     u32 v;
@@ -1288,10 +1288,10 @@ void *func_80014260(void *a0, s32 arg1, s32 arg2) {
     return (void *)v;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014260);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_OpenEntry);
 #endif
 
-s32 func_8001434C(u32 arg0, s32 arg1) {
+s32 Nsf_CloseRecord(u32 arg0, s32 arg1) {
     NsfPageSlot *t;
     s32 a;
     s32 r;
@@ -1317,7 +1317,7 @@ call:
     return r;
 }
 
-s32 func_800143C0(void *a, s32 arg1) {
+s32 Nsf_CloseEntry(void *a, s32 arg1) {
     u32 *arg0 = a;
     u32 v;
     u32 t;
@@ -1329,7 +1329,7 @@ s32 func_800143C0(void *a, s32 arg1) {
     } else {
         v = t;
     }
-    return func_8001434C(v, arg1);
+    return Nsf_CloseRecord(v, arg1);
 }
 
 #ifdef NON_MATCHING
