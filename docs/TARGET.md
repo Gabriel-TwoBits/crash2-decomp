@@ -78,7 +78,8 @@ file they were compiled in:
 - **Rodata** (jump tables, longer strings) is in link order too: a function whose rodata lies before an earlier
   function's shares its file.
 
-Handwritten code (from `0x8003A014` on, mostly) reads any variable through `$gp` and says nothing about files.
+Handwritten code (from `0x8003A014` on) says nothing about files: it reads the small data through `lui`, and its `$gp`
+is one more register, not the small data's base (below, "Addresses from the disc").
 
 | File | Functions | With evidence | Evidence and data | Could start at |
 | --- | --- | --- | --- | --- |
@@ -143,16 +144,36 @@ the formats (docs/REFERENCES.md).
 
 ## Addresses from the disc
 
-The disc's data seems to name some of the executable's variables by address. Heap objects read through `CdGetSector`
-hold 0x8005F340, inside `D_8005F338` in `.bss`, and keep it whatever the executable's layout; the disc image holds that
-word 21 times. Moving the data breaks the game where moving the code doesn't (`tools/run_game.py`, PCSX-Redux):
+No address of the executable turned up in the disc's data, and none holds `.data` in place. What breaks the game when
+`.data` moves is the handwritten code's `$gp`, which splat reads as the small data's base where it is a pointer to a
+structure.
 
-- With the default build's C and 8 bytes of padding at the start of `.data`, the display differs from retail's from
-  frame 1,390 and the game crashes in the first warp room (frame 4,124, a jump to 0x68); 32 bytes crash at frame 1,941.
-  The same padding in the code gives the same frames and crashes, since it moves the data too.
-- Moving only the heap's start changes nothing. With the data in place, the equivalent build's code, 568 bytes shorter
-  and everything after its first equivalent function moved, displays what retail does up to a difference of timing
-  (docs/ROADMAP.md, section 4).
+- **The disc.** Read entry by entry (the 38 `.NSF` files' pages but the texture pages, their entries' items), 7 aligned
+  words in the whole disc equal a symbol's address (0x80010000 twice), in three entry types at unrelated items and
+  offsets: chance bits. 0x8005F340, which heap objects read through `CdGetSector` hold, comes from one type 1 entry of
+  `S0/S000003C.NSF`: 21 identical frames hold it 48 bytes in, past the frame's 0x18-byte header, in its vertex data.
+  The `.NSD` files hold none.
+- **The handwritten `$gp`.** From `0x8003A014` on, the code loads `$gp` from the stack, a structure or the scratchpad,
+  computes with it, and reads through it at offsets from 0x0 to 0x118. splat writes 23 of those 43 accesses as
+  `%gp_rel` of the small variable the offset would reach from the retail `_gp` (`g_RandSeed`, `D_8005F1DC` to
+  `D_8005F1F0`), and leaves 20 as numbers. The bytes are the same at the retail layout; with `.data` moved and `_gp` at
+  its retail value, the linker moves those 23 offsets with the variables and the code reads its structures off by the
+  shift. At `0x80043788`, `sw $t9, %gp_rel(g_RandSeed)($gp)` writes into the heap, `$gp` 0x8009F8DC.
+- **Evidence** (`tools/run_game.py`'s schedule in PCSX-Redux, the default build's C, the RAM dumped from the emulator):
+  - In a retail run, no handwritten instruction reads 0x8005F17C to 0x8005F2A4 through `$gp` over the 8,000 frames (a
+    read watch: its two handwritten readers load through `$at`).
+  - `.data` 8 bytes later, the 23 accesses as they are: the display differs from frame 1,390 and the game stops between
+    frames 4,038 and 4,178 (four runs). Against a run with `_gp` moved along, the data and heap are the same every five
+    frames up to 1,385 (but for one word, 8 apart, at frame 1,355); in frame 1,385 the handwritten code's projected
+    vertices differ, and the write at `0x80043788` lands 8 bytes off.
+  - `.data` 8 bytes later, the 23 accesses written as their numbers: the same display as at the retail layout on all
+    8,000 frames, and at frames 1,389, 1,500, 2,000 and 2,500 the same RAM as with `_gp` moved along but the word where
+    the SDK saves `$gp`. The same display with 32 bytes and with 1 KB; moving `_gp` with the small data (8 bytes) gives
+    it too.
+  - The equivalent build without its padding before `.data` (`.data` 32 bytes earlier) and with the 23 numbers displays
+    what the equivalent build at the retail layout does on all 8,000 frames.
+- **What bounds the executable then**: its file's 160 sectors on the disc (327,680 bytes, the header's 2,048 included).
+  The image's data ends at `0x8005F2A4`, 1,372 bytes before the file's end; `tools/patch_disc.py` refuses a larger
+  executable (12 KB more was refused).
 
-The equivalent build keeps the data at its retail addresses (docs/WORKFLOW.md, "The equivalent track"). Which entries
-hold such addresses, and what the engine does with them, is still open.
+The equivalent build still keeps the data at its retail addresses (docs/WORKFLOW.md, "The equivalent track").

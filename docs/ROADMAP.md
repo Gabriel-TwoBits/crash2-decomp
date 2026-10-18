@@ -212,8 +212,9 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
-2. **The disc's addresses** (section 4, "Next"): the equivalent build has 32 bytes of code room left while the game
-   reads its data by absolute address; finding which data holds them would let the code move.
+2. **The data free to move** (section 4, "Next"): no disc data holds the executable's addresses; the handwritten code's
+   `$gp` offsets, which splat wrote as `%gp_rel`, held `.data` in place. The equivalent build writing them as numbers
+   and dropping its padding before `.data` would give its code 1,404 bytes of room (32 and the file's 1,372).
 
 ## 4. The engine in C
 
@@ -421,8 +422,18 @@ doesn't reach it either. With it, every function GCC compiled has C: 263 matched
 80.39%; the earlier counts here summed sizes that overstated it by 264 bytes). The equivalent build has 32 bytes of the
 retail code's room left.
 
-Next: find what in the disc's data holds the executable's addresses, which would let the equivalent code grow;
-each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates
+What held the data in place isn't the disc: its `.NSF` and `.NSD` files hold no address of the executable, and the
+0x8005F340 the heap held is vertex bits of one animation entry (docs/TARGET.md, "Addresses from the disc"). It is the
+handwritten code's `$gp`, a pointer to its structures, whose offsets splat wrote 23 times as `%gp_rel` of small data,
+so that the linker moved them with `.data`. With those 23 as their numbers, the default build's C with `.data` 8 bytes,
+32 bytes or 1 KB later displays what it does at the retail layout on all 8,000 frames, and so does the equivalent build
+with `.data` right after its code. The executable's file on the disc then bounds it: 1,372 bytes of room after the data.
+
+Two retail runs no longer agree on every frame: `run_game.py --against retail` differed from frame 7,233 (730 of the
+8,000 frames), and two runs one after the other from frame 4,121.
+
+Next: the equivalent build with the 23 offsets as numbers and `.data` after the code (the user's call); each batch
+checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates
 timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).
 
 ## 5. Readable C (in progress)

@@ -74,10 +74,11 @@ relocation writes: the equivalent build assembles a copy, `build/nonmatching/asm
 pairs is a `lui`/`addiu` of the function's symbol (found by address in splat's `.splat/splat_symbols.csv`), and
 `configure.py` stops unless it finds all 21 and leaves no such number.
 
-Only the code moves. The game reads some of its data by absolute address (docs/TARGET.md, "Addresses from the disc"):
-with no equivalent function, `.data` moved by 8 bytes displays otherwise from frame 1,390 of `tools/run_game.py` and
-crashes in the first warp room. So the equivalent build pads the end of the code to `.data`'s retail start (the main
-segment's data subsegment in `config/SCUS_941.54.yaml`), and `ninja nonmatching` stops, with the number of bytes over,
+Only the code moves. The handwritten code reads its structures through `$gp` at offsets splat wrote as `%gp_rel` of
+small data, which the linker moves with `.data` (docs/TARGET.md, "Addresses from the disc"): with no equivalent
+function, `.data` moved by 8 bytes displays otherwise from frame 1,390 of `tools/run_game.py` and crashes in the first
+warp room. So the equivalent build pads the end of the code to `.data`'s retail start (the main segment's data
+subsegment in `config/SCUS_941.54.yaml`), and `ninja nonmatching` stops, with the number of bytes over,
 when the equivalent code outgrows the retail code, or when `.data` or the end of `.bss` lands elsewhere.
 
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
@@ -231,10 +232,13 @@ and writes into `build/` only:
    its display isn't frozen over its last 300 frames. The two runs agree when every frame's image is the same; the
    checkpoints go side by side to `build/run_game/<checkpoint>.png`. Exit status 0 only when both hold.
 
-The emulator is deterministic: two retail runs (`--against retail`) agree on all 8,000 frames, throttled or not (only the
-program counter sampled at each vsync moves by a few cycles), so a difference comes from the executable. Not
-necessarily from its C, though: the game is sensitive to timing (the retail executable under PCSX-Redux's interpreter
-instead of its recompiler displays otherwise from frame 2,004) and to where its data sits (docs/ROADMAP.md, section 4).
+The emulator was deterministic: two retail runs (`--against retail`) agreed on all 8,000 frames, throttled or not (only
+the program counter sampled at each vsync moved by a few cycles), so a difference came from the executable. On
+2026-10-18 they no longer did (from frame 7,233; two runs one after the other from frame 4,121, and once the retail
+code with the equivalent build's `lui`/`addiu` pairs from frame 1,620): a difference may be the emulator's, and is
+confirmed by running both again. One from the executable doesn't necessarily come from its C, though: the game is
+sensitive to timing (the retail executable under PCSX-Redux's interpreter instead of its recompiler displays otherwise
+from frame 2,004) and to where its data sits (docs/ROADMAP.md, section 4).
 
 Slower or faster functions add up: with enough equivalents in, a load ends a frame later and the inputs then land on
 another state of the game. Such a difference is told from a wrong function by splitting the equivalents (by source
