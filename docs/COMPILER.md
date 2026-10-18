@@ -92,3 +92,11 @@ How the build follows it:
 GCC 2.7.2 calls `__main` first in a function named `main`, by itself. Proven by `main` (`0x800117BC`): retail starts with
 `jal __main`, and the C without the call compiles to it, the build's SHA-1 holding; while it was `func_800117BC` the C
 called `__main()` explicitly, and the same body named `main` with that call kept compiled to two `jal __main`.
+
+## Structure members and plain pointers
+
+GCC 2.7.2 schedules an access to a structure's member otherwise than the same access through a plain pointer: it tells
+memory in a structure from memory that isn't (`MEM_IN_STRUCT_P`) when it decides what may alias. Proven by
+`func_8002BF58`: its store to the game object's 0x114 written as `*(s32 *)((s8 *)arg0 + 0x114)` matches, the same store
+written as `arg0->unk_114` fails the build's SHA-1. Matched and equivalent C keeps such accesses at their raw offsets,
+with a comment, where the member would move code (`func_80029884`'s reads of 0x60 to 0x68 move a store after them).

@@ -212,7 +212,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **The last 4 functions** as equivalent C (section 4, "Next"): two need a decision on how C states the GTE.
-2. **Readable C, R2**: `GoolObject`, the game object's shared type (section 5).
+2. **Readable C, R3**: the NSF types (section 5).
 
 ## 4. The engine in C
 
@@ -430,8 +430,14 @@ Steps, in order:
   close, page reads and relocation. `main` needed its C's explicit `__main()` call dropped (docs/COMPILER.md, "`main`").
   Left for R2 and R3, without a grade A proof yet: the GOOL interpreter's and its operands' entry points, the player's
   pointer; left as code reading only: the heap's init and growth, the game loop's exit flag.
-- **R2, `GoolObject`**: the game object, which 50 functions in 13 files read at offsets 0xA8 to 0x12C, through 9
-  partial structures.
+- **R2, `GoolObject` (done).** The game object's one structure, `include/game/object.h`, in place of 17 partial
+  structures and most raw offset reads in 21 files; every field `unk_<offset>` with the width and signedness the code
+  reads, no name proven yet. The retail SHA-1 holds and the equivalent executable is byte for byte as before; where a
+  member moved code (docs/COMPILER.md, "Structure members and plain pointers") the access stays raw with a comment.
+  Left: the types 0x08, 0x0C and 0x18 point to (R3), the tree nodes of `800158E0.c`, which serve both 8-byte list heads
+  and objects, and about 800 accesses through equivalent C's offset macros (`FIELD`, `AT`, ...), part of rewriting
+  equivalent C for readability. `tools/progress.py`: 155 structures in `src/game/`, 1 in `include/game/`, 155 fields
+  read at a raw offset (172 and 240 before).
 - **R3**: the NSF types.
 - **R4**: `loop --equivalent` on the functions left as assembly, the shared types in its briefs.
 - **R5**: the other subsystems. **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
