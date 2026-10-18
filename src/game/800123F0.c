@@ -154,7 +154,7 @@ s32 func_800125F8(s32 arg0) {
     if (D_80067FB4[0] == (s32)entry) {
         D_80067FB4[0] = 0;
     }
-    entry->unk_4 = STATE_BUSY;
+    entry->state = STATE_BUSY;
     switch (entry->page->type) {
     case 0:
     case 5:
@@ -169,16 +169,16 @@ s32 func_800125F8(s32 arg0) {
                     dst++;
                 }
                 dst->entry = child;
-                entry->unk_F++;
+                entry->ref_count++;
                 handler = &D_8005B1E8[child->type];
                 if (handler->fn != 0) {
                     ((Unk800125F8Fn2)handler->fn)(child, child);
                 }
-                entry->unk_F--;
+                entry->ref_count--;
                 i++;
             } while (i < entry->page->entry_count);
         }
-        entry->unk_4 = STATE_READY;
+        entry->state = STATE_READY;
         return (s32)entry->page;
     case NSF_PAGE_TYPE_TEXTURE:
         id = func_80013888();
@@ -191,15 +191,15 @@ s32 func_800125F8(s32 arg0) {
         D_8005F1B0.x = (id - page * 4) << PAGE_X_SHIFT;
         D_8005F1B0.y = page << PAGE_Y_SHIFT;
         LoadImage(&D_8005F1B0, entry->page);
-        slot->unk_4 = STATE_READY;
+        slot->state = STATE_READY;
         slot->unk_18 = entry->page->unk_4;
         slot->unk_14 = entry->unk_14;
         slot->unk_20 = Nsf_LookupEid(slot->unk_18);
-        slot->unk_F = entry->unk_F;
+        slot->ref_count = entry->ref_count;
         slot->unk_E = entry->unk_E;
         slot->unk_20->entry = (NsfEntry *)slot->unk_1C;
-        entry->unk_4 = STATE_QUEUED;
-        entry->unk_F = 0;
+        entry->state = STATE_QUEUED;
+        entry->ref_count = 0;
         D_80067FC4[entry->unk_14 >> 1] = (s32)slot;
         func_800170B4(entry->page->unk_4, 1);
         return id * 2;
@@ -232,13 +232,13 @@ s32 func_800125F8(s32 arg0) {
                 i++;
             } while (i < entry->page->entry_count);
         }
-        next->unk_4 = STATE_READY;
-        entry->unk_4 = STATE_QUEUED;
-        entry->unk_F = 0;
+        next->state = STATE_READY;
+        entry->state = STATE_QUEUED;
+        entry->ref_count = 0;
         D_80067FC4[entry->unk_14 >> 1] = (s32)next;
         return next->unk_1C;
     default:
-        entry->unk_4 = STATE_READY;
+        entry->state = STATE_READY;
         return (s32)entry->page;
     }
 }
@@ -272,15 +272,15 @@ s32 func_80012A20(NsfPageSlot *arg0) {
     if (D_80067FB4[0] == (int)arg0) {
         D_80067FB4[0] = 0;
     }
-    if ((u16)(arg0->unk_4 - STATE_QUEUED_FIRST) < STATE_QUEUED_COUNT) {
+    if ((u16)(arg0->state - STATE_QUEUED_FIRST) < STATE_QUEUED_COUNT) {
         h = arg0->page;
         if (!(h->type == NSF_PAGE_TYPE_TEXTURE || (u16)(h->type - KIND_B_FIRST) < KIND_B_COUNT)) {
             goto loop;
         }
         D_80067FC4[arg0->unk_14 >> 1] = SLOT_FREED;
     }
-    arg0->unk_4 = STATE_IDLE;
-    arg0->unk_F = 0;
+    arg0->state = STATE_IDLE;
+    arg0->ref_count = 0;
     arg0->unk_E = 0;
     return RESULT_DONE;
 loop:
@@ -348,7 +348,7 @@ void func_80012BC4(s32 arg0) {
         if (D_80067FB4[0] == 0) {
             for (i = 0; i < D_80067950.count; i++) {
                 p = &D_80067950.e[i];
-                if (p->unk_4 == SLOT_STATE_IN_USE) {
+                if (p->state == SLOT_STATE_IN_USE) {
                     v = p->unk_14;
                     if ((arg0 == SLOT_KEY_ANY && (found == arg0 || v < key)) || v == arg0) {
                         key = v;
@@ -526,7 +526,7 @@ s32 func_80013038(NsfPageSlot *arg0, s32 arg1) {
 #define FIRST_STATE 2
 
 s32 func_80013084(NsfPageSlot *arg0) {
-    arg0->unk_4 = FIRST_STATE;
+    arg0->state = FIRST_STATE;
     arg0->unk_1C = 1;
     arg0->unk_24 = arg0;
     return CD_FAILURE;
@@ -544,11 +544,11 @@ NsfPageSlot *func_800130A0(NsfPageSlot *arg0) {
     NsfPageSlot *last;
 
     p = arg0;
-    state = p->unk_4;
+    state = p->state;
     count = p->unk_1C;
     off = 0;
     if (state == 3 || state == 13) {
-        p->unk_4 = 4;
+        p->state = 4;
         Nsf_RelocatePage(p->page);
         return 0;
     }
@@ -568,10 +568,10 @@ NsfPageSlot *func_800130A0(NsfPageSlot *arg0) {
                 off -= D_800675A0->unk_420[p->unk_14 >> 1] & 0x3F;
                 p->unk_8 = off;
             }
-            if (p->unk_4 == state) {
-                p->unk_4 = 3;
+            if (p->state == state) {
+                p->state = 3;
             } else {
-                p->unk_4 = 13;
+                p->state = 13;
                 if (flag != 0) {
                     p->unk_10 = (u16 *)((u8 *)p->page +
                                         (((D_800675A0->unk_420[p->unk_14 >> 1] & 0x3F) + p->unk_8) << 11));
@@ -635,7 +635,7 @@ void func_80013200(NsfPageSlot *entry, s32 arg1) {
 
     s0 = (NsfPageSlot *)entry;
 loop:
-    switch ((s16)(s0->unk_4 - 2)) {
+    switch ((s16)(s0->state - 2)) {
     case 0:
         if (D_80067FB4[0] != 0) {
             return;
@@ -693,8 +693,8 @@ loop:
     case 9:
         goto playing;
     case 29:
-        s0->unk_4 = STATE_IDLE;
-        s0->unk_F = 0;
+        s0->state = STATE_IDLE;
+        s0->ref_count = 0;
         return;
     default:
         return;
@@ -709,7 +709,7 @@ cancel:
 read_done:
     kind = s0->page->type;
     if ((s32)kind < KIND_TABLE && (s32)kind >= KIND_FIRST) {
-        s0->unk_4 = STATE_PLAY_QUEUE;
+        s0->state = STATE_PLAY_QUEUE;
         goto play_queue;
     }
     func_800125F8(s0->unk_C);
@@ -739,13 +739,13 @@ play_queue:
         return;
     }
     slot = &D_80062BB4[idx];
-    s0->unk_4 = STATE_PLAYING;
+    s0->state = STATE_PLAYING;
     s0->unk_24 = slot;
     D_80067FBC[0] = (int)s0;
-    slot->unk_4 = STATE_PLAYING;
+    slot->state = STATE_PLAYING;
     slot->unk_14 = s0->unk_14;
     key = s0->unk_18;
-    slot->unk_F = 0;
+    slot->ref_count = 0;
     slot->unk_E = 0;
     slot->unk_18 = key;
     func_80051298(slot->unk_1C, STATE_PLAYING);
@@ -783,8 +783,8 @@ playing:
         return;
     }
     if (s0->page->type == KIND_TABLE) {
-        s0->unk_4 = STATE_FINISHED;
-        s0->unk_24->unk_4 = STATE_FINISHED;
+        s0->state = STATE_FINISHED;
+        s0->unk_24->state = STATE_FINISHED;
     } else {
         func_800125F8(s0->unk_C);
     }
@@ -831,8 +831,8 @@ s32 func_800136C8(s32 *arg0, s32 arg1) {
             } else {
                 p = &D_800675B0.e[i + j];
             }
-            if (p->unk_4 != SLOT_FREE) {
-                if ((u16)(p->unk_4 - SLOT_STATE_FIRST_RELEASABLE) < SLOT_STATE_RELEASABLE_COUNT && p->unk_F <= 0) {
+            if (p->state != SLOT_FREE) {
+                if ((u16)(p->state - SLOT_STATE_FIRST_RELEASABLE) < SLOT_STATE_RELEASABLE_COUNT && p->ref_count <= 0) {
                     cost = cost + 1 + p->unk_28;
                 } else {
                     break;
@@ -967,7 +967,7 @@ s32 func_80013AE8(s32 arg0, s32 arg1) {
 
     for (i = 9; i >= 0; i--) {
         p = &D_80062BB4[i];
-        if (p->unk_4 == 1 && D_80062BB4[i].unk_6 == arg0 &&
+        if (p->state == 1 && D_80062BB4[i].unk_6 == arg0 &&
             (arg1 == -1 || arg1 == D_80062BB4[i].unk_C)) {
             return i;
         }
@@ -975,8 +975,8 @@ s32 func_80013AE8(s32 arg0, s32 arg1) {
     if (arg0 == 5) {
         for (i = 9; i >= 0; i--) {
             p = &D_80062BB4[i];
-            if ((u16)p->unk_4 - 0x14 < 2U && D_80062BB4[i].unk_6 == arg0 &&
-                D_80062BB4[i].unk_F == 0) {
+            if ((u16)p->state - 0x14 < 2U && D_80062BB4[i].unk_6 == arg0 &&
+                D_80062BB4[i].ref_count == 0) {
                 return i;
             }
         }
@@ -993,10 +993,10 @@ void *func_80013BD8(s32 arg0, s32 arg1, s32 arg2, s8 arg3) {
 
     for (i = 0; i < D_80067950.count; i++) {
         p = &D_80067950.e[i];
-        if (p->unk_4 == 1) {
-            p->unk_4 = 2;
+        if (p->state == 1) {
+            p->state = 2;
             p->unk_14 = arg0;
-            p->unk_F = arg3;
+            p->ref_count = arg3;
             if (arg2 & 4) {
                 p->unk_E = arg3;
             } else {
@@ -1053,17 +1053,17 @@ NsfPageSlot *func_80013C98(NsfPageSlot *arg0, s32 arg1, s32 arg2, s32 *arg3, s32
             } else {
                 dst->unk_18 = src->unk_18;
             }
-            src->unk_4 = 1;
-            dst->unk_F = src->unk_F;
-            src->unk_F = 0;
+            src->state = 1;
+            dst->ref_count = src->ref_count;
+            src->ref_count = 0;
             dst->unk_E = src->unk_E;
             dst->unk_28 = src->unk_28;
             dst->unk_24 = first;
             dst->unk_1C = *arg3;
             if (i == *arg3 - 1) {
-                dst->unk_4 = FLAG_LAST;
+                dst->state = FLAG_LAST;
             } else {
-                dst->unk_4 = FLAG_MID;
+                dst->state = FLAG_MID;
             }
             D_80067FC4[dst->unk_14 >> 1] = (s32)dst;
             dst--;
@@ -1082,10 +1082,10 @@ void Nsf_DropPageRef(NsfPageSlot *arg0) {
     s8 temp_v0;
     s8 temp_v0_2;
 
-    temp_v0 = arg0->unk_F;
+    temp_v0 = arg0->ref_count;
     if (temp_v0 > 0) {
         temp_v0_2 = temp_v0 - 1;
-        arg0->unk_F = temp_v0_2;
+        arg0->ref_count = temp_v0_2;
         if (((temp_v0_2 << 0x18) <= 0) && (arg0->unk_6 == 0)) {
             Nsf_FreePageSlot(arg0);
             D_80067FB0[0] -= 1;
@@ -1105,9 +1105,9 @@ void func_80013EB0(NsfPageSlot *arg0) {
     s8 d = arg0->unk_E;
 
     if (d != 0) {
-        arg0->unk_F = arg0->unk_F - d;
+        arg0->ref_count = arg0->ref_count - d;
         arg0->unk_E = 0;
-        if (arg0->unk_F <= 0 && arg0->unk_6 == 0) {
+        if (arg0->ref_count <= 0 && arg0->unk_6 == 0) {
             Nsf_FreePageSlot(arg0);
             *D_80067FB0 -= 1;
         }
@@ -1115,8 +1115,8 @@ void func_80013EB0(NsfPageSlot *arg0) {
 }
 
 void Nsf_FreePageSlot(NsfPageSlot *arg0) {
-    arg0->unk_4 = 1;
-    arg0->unk_F = 0;
+    arg0->state = 1;
+    arg0->ref_count = 0;
     arg0->unk_E = 0;
     D_80067FC4[arg0->unk_14 >> 1] = -0x12;
 }
@@ -1140,7 +1140,7 @@ u8 *func_80013F5C(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
             entry->unk_E += arg3;
         }
         entry->unk_18 = arg1;
-        entry->unk_F += arg3;
+        entry->ref_count += arg3;
         return (u8 *)entry;
     }
 }
@@ -1156,12 +1156,12 @@ loop:
     if (p == (NsfPageSlot *)-0xFF) {
         return 1;
     }
-    if ((arg1 & 1) && (u32)((u16)p->unk_4 - 0x14) >= 2U) {
+    if ((arg1 & 1) && (u32)((u16)p->state - 0x14) >= 2U) {
         func_80012BC4(arg0);
         arg2 = 0;
         goto loop;
     }
-    return p->unk_F;
+    return p->ref_count;
 }
 
 #ifdef NON_MATCHING
@@ -1183,7 +1183,7 @@ s32 func_80014078(s32 arg0, s32 arg1) {
             Nsf_DropPageRef(p);
         }
     }
-    return p->unk_F + 1;
+    return p->ref_count + 1;
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014078);
@@ -1215,7 +1215,7 @@ NsfPageSlot *func_80014148(u32 arg0) {
         }
         e = &D_80063000;
         for (i = SCAN_LAST_INDEX; i >= 0; i--, e--) {
-            if ((u32)((u16)e->unk_4 - KIND_SCAN_FIRST) < KIND_SCAN_COUNT &&
+            if ((u32)((u16)e->state - KIND_SCAN_FIRST) < KIND_SCAN_COUNT &&
                 arg0 == (u32)e->unk_1C) {
                 return e;
             }
@@ -1352,7 +1352,7 @@ void func_80014420(void) {
         q = e;
         do {
             p = q;
-            if (p->unk_4 != 1) {
+            if (p->state != 1) {
                 func_80013EB0(p);
             }
             i++;
@@ -1363,7 +1363,7 @@ void func_80014420(void) {
     if (D_800675B0.count > 0) {
         p = e = D_800675B0.e;
         do {
-            if (p->unk_4 != 1) {
+            if (p->state != 1) {
                 func_80013EB0(p);
             }
             i++;
@@ -1371,12 +1371,12 @@ void func_80014420(void) {
         } while (i < ((s32 *)e)[-1]);
     }
     for (i = 15, p = &D_80063000; i >= 0; i--, p--) {
-        if ((u16)(*(u16 *)&p->unk_4 - 0x14) < 2) {
+        if ((u16)(*(u16 *)&p->state - 0x14) < 2) {
             func_80013EB0(p);
         }
     }
     for (i = 9, p = &D_80062D40; i >= 0; i--, p--) {
-        if ((u16)(*(u16 *)&p->unk_4 - 0x14) < 2) {
+        if ((u16)(*(u16 *)&p->state - 0x14) < 2) {
             func_80013EB0(p);
         }
     }
@@ -1394,13 +1394,13 @@ s32 func_8001456C(void) {
     live = D_800675B0.count;
     for (i = 0; i < D_80067950.count; i++) {
         p = &D_80067950.e[i];
-        if (p->unk_4 != 1 && p->unk_F != 0) {
+        if (p->state != 1 && p->ref_count != 0) {
             live--;
         }
     }
     for (i = 0; i < D_800675B0.count; i++) {
         p = &D_800675B0.e[i];
-        if (p->unk_4 != 1 && p->unk_F != 0) {
+        if (p->state != 1 && p->ref_count != 0) {
             live--;
         }
     }
@@ -1422,7 +1422,7 @@ void func_80014638(u32 *arg0) {
     }
     for (i = 0; i < D_80067950.count; i++) {
         p = &D_80067950.e[i];
-        if (p->unk_4 != 1 && p->unk_F != 0) {
+        if (p->state != 1 && p->ref_count != 0) {
             bit = p->unk_14 >> 1;
             /* The redundant self-assignment orders the load before the mask, as in the retail code. */
             arg0[bit / 32] = arg0[bit / 32];
@@ -1431,7 +1431,7 @@ void func_80014638(u32 *arg0) {
     }
     for (i = 0; i < D_800675B0.count; i++) {
         p = &D_800675B0.e[i];
-        if (p->unk_4 != 1 && p->unk_F != 0) {
+        if (p->state != 1 && p->ref_count != 0) {
             bit = p->unk_14 >> 1;
             arg0[bit / 32] = arg0[bit / 32];
             arg0[bit / 32] |= 1 << (bit % 32);
@@ -1447,7 +1447,7 @@ void func_80014790(u32 *arg0) {
     NsfPageSlot *p;
     for (i = 0; i < D_80067950.count; i++) {
         p = &D_80067950.e[i];
-        if (p->unk_4 != 1 && p->unk_F != 0) {
+        if (p->state != 1 && p->ref_count != 0) {
             bit = p->unk_14 >> 1;
             word0 = arg0[bit / 32];
             if (!(word0 & (1 << (bit % 32)))) {
@@ -1457,7 +1457,7 @@ void func_80014790(u32 *arg0) {
     }
     for (i = 0; i < D_800675B0.count; i++) {
         p = &D_800675B0.e[i];
-        if (p->unk_4 != 1 && p->unk_F != 0) {
+        if (p->state != 1 && p->ref_count != 0) {
             bit = p->unk_14 >> 1;
             word = arg0[bit / 32];
             if (!(word & (1 << (bit % 32)))) {
@@ -1498,7 +1498,7 @@ s32 func_80014918(u32 **arg0, s32 arg1) {
             w = *r;
             if (!(w & 1)) {
                 e = func_80014148(w);
-                if (e != 0 && e->unk_6 != 2 && (e->unk_4 == 1 || e->unk_F == 0)) {
+                if (e != 0 && e->unk_6 != 2 && (e->state == 1 || e->ref_count == 0)) {
                     for (j = 0; j < n; j++) {
                         if (e->unk_14 == base[j]) break;
                     }
@@ -1519,7 +1519,7 @@ s32 func_80014918(u32 **arg0, s32 arg1) {
                         cnt++;
                         goto store;
                     }
-                } else if (v != -0xFF && ((NsfPageSlot *)v)->unk_6 < 2 && ((NsfPageSlot *)v)->unk_F == 0) {
+                } else if (v != -0xFF && ((NsfPageSlot *)v)->unk_6 < 2 && ((NsfPageSlot *)v)->ref_count == 0) {
                     for (j = 0; j < n; j++) {
                         if (((NsfPageSlot *)v)->unk_14 == base[j]) break;
                     }
@@ -1750,8 +1750,8 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
         do {
             e->unk_6 = 1;
             e->unk_C = i;
-            e->unk_F = 0;
-            e->unk_4 = 1;
+            e->ref_count = 0;
+            e->state = 1;
             e->page = (NsfPage *)((u8 *)arg0->page_slots[0].page + (i << NSF_PAGE_SHIFT));
             num++;
             i++;
@@ -1762,10 +1762,10 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
     i = 0;
     e = arg0->unk_3CC;
     do {
-        e->unk_4 = 1;
+        e->state = 1;
         e->unk_6 = 0;
         e->page = 0;
-        e->unk_F = 0;
+        e->ref_count = 0;
         i++;
         e++;
     } while (i < arg0->unk_3C8);
@@ -1791,20 +1791,20 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
         mapped = SLOT_NO_BUFFER;
         if ((u32)i >= SLOT_QUAD_SPLIT && (u32)(i - SLOT_QUAD_SPLIT) >= SLOT_QUAD_SPLIT) {
             mapped = SLOT_ACTIVE_STATE;
-            if ((u32)((u16)slot->unk_4 - SLOT_BUFFER) < 2) {
+            if ((u32)((u16)slot->state - SLOT_BUFFER) < 2) {
                 ent = func_80014B90(D_80062D84[i].v, hi);
                 if (ent < NO_ENTRY_LIMIT) {
                     D_80062D70[i].state = SLOT_BUFFER;
                     D_80062D80[i].v = *(s32 *)ent;
                     D_80062D8C[i].v = (s32 *)ent;
-                    slot->unk_F = 0;
+                    slot->ref_count = 0;
                     slot->unk_E = 0;
                     D_80067FC4[D_80062D80[i].v >> 1] = (s32)slot;
                     *(s32 *)ent = slot->unk_1C;
                     continue;
                 }
                 D_80062D70[i].state = SLOT_NO_BUFFER_TRY;
-                slot->unk_F = 0;
+                slot->ref_count = 0;
                 slot->unk_E = 0;
                 continue;
             }
@@ -1993,7 +1993,7 @@ void *func_8001557C(s32 arg0) {
 }
 
 void func_800155E0(NsfLevel *arg0, s32 arg1) {
-    if (arg0->page_slots[arg1].unk_4 != 0) {
-        arg0->page_slots[arg1].unk_4 = 0;
+    if (arg0->page_slots[arg1].state != 0) {
+        arg0->page_slots[arg1].state = 0;
     }
 }

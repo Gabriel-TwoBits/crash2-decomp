@@ -82,13 +82,15 @@ typedef struct Nsd {
    (func_80013AE8, func_800125F8) */
 typedef struct NsfPageSlot {
     /* 0x00 */ NsfPage *page; /* Nsf_OpenLevel's buffer, read by Nsf_ReadPages and relocated by func_800130A0 */
-    /* 0x04 */ s16 unk_4;
+    /* 1 free (Nsf_FreePageSlot), 2 once func_80013BD8 takes it, 20 and 21 once read (func_80013FD8 waits for them) */
+    /* 0x04 */ s16 state;
     /* 0x06 */ s16 unk_6;
     /* 0x08 */ s16 unk_8;
     /* 0x0A */ s16 unk_A;
     /* 0x0C */ s16 unk_C; /* the slot's index (Nsf_OpenLevel) */
+    /* The part of ref_count taken with flag 4 (the load lists', func_80021900); func_80013EB0 drops it whole */
     /* 0x0E */ s8 unk_E;
-    /* 0x0F */ s8 unk_F;
+    /* 0x0F */ s8 ref_count; /* Nsf_OpenEntry adds to it, Nsf_DropPageRef frees the slot at zero */
     /* 0x10 */ u16 *unk_10;
     /* 0x14 */ s32 unk_14; /* a page reference: Nsf_ReadPages reads the page unk_14 >> 1 */
     /* 0x18 */ s32 unk_18;
