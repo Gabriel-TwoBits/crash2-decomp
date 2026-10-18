@@ -76,8 +76,8 @@ DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(\
 PROTOTYPE = re.compile(r"^(?:extern[ \t]+)?(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>\w+)[ \t]*\([^;{\n]*\))"
                        r"[ \t]*;[ \t]*\n?", re.MULTILINE)
 IDENTIFIER = re.compile(r"[A-Za-z_]\w*")
-# A structure's definition, typedef'd or tagged, with one level of nested braces at most
-TYPE_DEFINITION = re.compile(r"^(?:typedef[ \t]+)?struct[ \t]*(?P<tag>\w*)[ \t]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[ \t]*"
+# A structure's or union's definition, typedef'd or tagged, with one level of nested braces at most
+TYPE_DEFINITION = re.compile(r"^(?:typedef[ \t]+)?(?:struct|union)[ \t]*(?P<tag>\w*)[ \t]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[ \t]*"
                              r"(?P<alias>\w*)[ \t]*;[ \t]*\n?", re.MULTILINE)
 # A function's definition in C: return type, name, parameters, then its body
 DEFINITION = re.compile(r"^(?P<declaration>[A-Za-z_][\w \t\*]*?\b(?P<name>\w+)[ \t]*\([^;{]*\))\s*\{", re.MULTILINE)
