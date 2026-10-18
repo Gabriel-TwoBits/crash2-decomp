@@ -120,4 +120,5 @@ ASPSX 2.34 assembles `li $r,0` as `ori $r,$zero,0`; maspsx (at the pinned commit
 assemblers (`aspsx/fixtures/expand_li.yaml`: `0x34020000` for 1.07 to 2.34) and by GCC 2.7.2's code for a 64-bit sum
 with a constant whose upper word is 0 (`(u64)a * b + 0x8000` loads that word with `li $3,0`): through maspsx it added
 `$3`'s old value. `tools/psx_cc.py` rewrites maspsx's line as ASPSX assembles it. Neither executable changed with the
-fix: no C of either build had hit it before `include/gte.h`'s division.
+fix: no C of either build had hit it before `include/gte.h`'s division. Reported upstream:
+[mkst/maspsx#154](https://github.com/mkst/maspsx/issues/154).
