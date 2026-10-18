@@ -27,6 +27,9 @@ MASPSX_FLAGS = ["--expand-div", "-G8", "--use-comm-section"]
 # A C file's data ends on a word: each file's data starts on one in the original layout, and the linker script's
 # SUBALIGN(2) would pack the next file's against a section of odd size
 DATA_END = "".join(f"\t.section {section}\n\t.align 2\n" for section in (".rodata", ".data", ".sdata"))
+# maspsx writes ASPSX's `li $r,0` as `ori $r,0`, which GNU as reads as `ori $r,$r,0`; ASPSX 2.34 assembles it as
+# `ori $r,$zero,0` (maspsx's own fixture, aspsx/fixtures/expand_li.yaml; docs/COMPILER.md, "Loading zero")
+MASPSX_LOAD_ZERO = re.compile(r"^(\s*ori\s+)(\$\w+),0$", re.MULTILINE)
 # A compiler's or assembler's message on a line of its input (`FILE:LINE: ...`) that isn't a warning
 SOURCE_ERROR = re.compile(r":\d+: (?!warning: )")
 
@@ -77,7 +80,7 @@ def compile_c(gcc, aspsx, source, cflags, obj, defines=()):
                 else:
                     return f"{Path(command[0]).name} failed"
             if stdout == rewritten:
-                rewritten.write_text(result.stdout + DATA_END)
+                rewritten.write_text(MASPSX_LOAD_ZERO.sub(r"\1\2,$zero,0", result.stdout) + DATA_END)
             elif stdout is not None:
                 stdout.write_text(result.stdout)
             else:

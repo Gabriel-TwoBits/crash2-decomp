@@ -112,3 +112,12 @@ How C spells an address moves GCC 2.7.2's code even where the value is the same:
   second leaves the equivalent executable as it was (`Nsf_OpenLevel`, `func_800170B4`). A member read straight from an
   array element (`arg0->page_slots[i].unk_4`) folds both offsets into the load's, as the raw offset does; through a
   temporary pointer to the element it costs an `addiu` (`func_800155E0`).
+
+## Loading zero
+
+ASPSX 2.34 assembles `li $r,0` as `ori $r,$zero,0`; maspsx (at the pinned commit and upstream's) writes it as
+`ori $r,0`, which GNU as reads as `ori $r,$r,0`, leaving `$r` as it was. Proven by maspsx's own fixture of the real
+assemblers (`aspsx/fixtures/expand_li.yaml`: `0x34020000` for 1.07 to 2.34) and by GCC 2.7.2's code for a 64-bit sum
+with a constant whose upper word is 0 (`(u64)a * b + 0x8000` loads that word with `li $3,0`): through maspsx it added
+`$3`'s old value. `tools/psx_cc.py` rewrites maspsx's line as ASPSX assembles it. Neither executable changed with the
+fix: no C of either build had hit it before `include/gte.h`'s division.
