@@ -1813,12 +1813,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_8001856C);
 #endif
 
 #ifdef NON_MATCHING
-/* A primitive's colour word: red, green, blue, and the GPU command code in the top byte */
-
-#define PRIM_COLOUR_CODE 3
-
-/* A glyph's first words, as its quad takes them: colour, then texture coordinates with the CLUT and texture page */
-
 /* libgpu's POLY_GT4: a textured quad shaded from a colour per vertex */
 typedef struct PolyGT4 {
     /* 0x00 */ u32 tag;
@@ -1838,21 +1832,6 @@ typedef struct PolyGT4 {
     /* 0x32 */ u16 pad3;
 } PolyGT4;
 
-/* A box's corners, as func_8001B83C keeps a string's bounds: x, y, z of one, then of the other */
-#define BOX_X0 0
-#define BOX_Y0 1
-#define BOX_X1 3
-#define BOX_Y1 4
-/* A vertex in the plane z = 0 for the GTE: x in the low half, y in the high */
-#define VERTEX_XY(x, y) ((u16)(x) | ((y) << GTE_HALF_BITS))
-/* The ordering table's last entry, and the depth a primitive at Z 0 sorts at before the projection's bias */
-#define OT_LAST 0x7FF
-#define OT_DEPTH_BIAS 0x800
-/* The three vertices' Z summed, / 32 */
-#define SZ_SUM_SHIFT 5
-#define PRIM_ADDRESS_MASK 0xFFFFFF
-/* addPrim: a primitive's words after its tag, in the tag's top byte */
-#define GT4_TAG_LENGTH 0x0C000000
 /* POLY_GT4's command code, ORed into the glyph's */
 #define GT4_CODE 0x3C
 /* The object's halfwords at 0x28: a red, green and blue scale per vertex, 1.0 at 0x80 */
