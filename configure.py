@@ -2,8 +2,8 @@
 """Splits the executable with splat (config/SCUS_941.54.yaml) and writes build.ninja, which compiles src/'s C
 (tools/psx_cc.py: the original compiler, its INCLUDE_ASM functions taken from asm/nonmatchings/) and assembles the rest of the
 split, links it with splat's linker script into build/SCUS_941.54.exe and checks that file's SHA-1 against the retail one.
-`ninja nonmatching` builds build/nonmatching/SCUS_941.54.exe with NON_MATCHING defined, its data at the retail addresses
-and nothing else checked: the equivalent track (docs/WORKFLOW.md).
+`ninja nonmatching` builds build/nonmatching/SCUS_941.54.exe with NON_MATCHING defined, checked only to fit the retail
+file's sectors on the disc: the equivalent track (docs/WORKFLOW.md).
 
     .venv/bin/python configure.py
     .venv/bin/ninja
@@ -17,8 +17,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-
-import yaml
 
 from tools.symbols import HEXADECIMAL, IMAGE_END, IMAGE_START, functions_by_address
 
@@ -76,17 +74,25 @@ ADDRESS_PAIR = re.compile(r"^(?P<lui>[ ]*/\*[^*]*\*/ +lui +)(?P<register>\$\w+),
                           r"(?P<ori>[ ]*/\*[^*]*\*/ +)ori +(?P=register), (?P=register), \((?P=address) & 0xFFFF\)$",
                           re.MULTILINE)
 ADDRESS_PAIRS = 21
+# The handwritten code's $gp is one more register, a pointer to its structures (docs/TARGET.md, "Addresses from the
+# disc"). splat writes 23 of its offsets as %gp_rel of the small variable each reaches from the retail _gp, which the
+# linker would move with .data; the equivalent build's copy writes each as the number its instruction holds (the word in
+# the comment, little-endian)
+GP_RELATIVE = re.compile(r"^(?P<head>[ ]*/\* [0-9A-F]+ [0-9A-F]+ (?P<word>[0-9A-F]{8}) \*/ +\w+ +\$\w+, )"
+                         r"%gp_rel\(\w+\)(?P<base>\(\$gp\))", re.MULTILINE)
+GP_RELATIVE_ACCESSES = 23
+GP_RELATIVE_LEFT = "%gp_rel"
+# A 16-bit immediate: the instruction's low halfword, and its sign
+IMMEDIATE_BYTES = 2
+IMMEDIATE_SIGN = 0x8000
+IMMEDIATE_RANGE = 0x10000
 # The high half of a number loaded with lui, left by the rewrite
 NUMERIC_HIGH_HALF = re.compile(r"\blui +\$\w+, \((0x[0-9A-F]+) >> 16\)")
 # The equivalent build's own copies of the split's assembly, by the default build's object
 NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: NONMATCHING_HANDWRITTEN}
-# The game reads some of its data by absolute address (docs/TARGET.md, "Addresses from the disc"), so the equivalent build
-# keeps .data, .sdata, .sbss and .bss where they are in retail: the code's end is padded to .data's retail start, the
-# main segment's first data subsegment in the split configuration
-MAIN_SEGMENT = "main"
-DATA_SUBSEGMENT_TYPES = ("data", ".data")
-TEXT_END = "        main_TEXT_END = .;"
-NONMATCHING_CODE_END = "nonmatching_CODE_END"
+# The equivalent build's data follows its code wherever that ends; the executable may only grow to the retail file's
+# size, the sectors tools/patch_disc.py writes it into. Where the linker's image ends in the file, the header included
+IMAGE_FILE_END = "main_ROM_END"
 LAYOUT_CHECK = "check-layout"
 NONMATCHING_LAYOUT_STAMP = NONMATCHING_BUILD / "layout.stamp"
 
@@ -141,7 +147,8 @@ def c_dependencies(source):
 
 
 def nonmatching_handwritten():
-    """The handwritten code with each lui/ori pair of a function's address made a lui/addiu pair of its symbol"""
+    """The handwritten code with each lui/ori pair of a function's address made a lui/addiu pair of its symbol, and its
+    offsets from $gp written as numbers"""
     functions = functions_by_address()
     pairs = 0
 
@@ -161,35 +168,31 @@ def nonmatching_handwritten():
             return (f"{pair.group('lui')}{register}, %hi({names[0]})\n{pair.group('branch')}"
                     f"{pair.group('ori')}addiu {register}, {register}, %lo({names[0]})")
 
+    def numeric(access):
+        word = bytes.fromhex(access.group("word"))
+        offset = int.from_bytes(word[:IMMEDIATE_BYTES], "little")
+        if offset >= IMMEDIATE_SIGN:
+            offset -= IMMEDIATE_RANGE
+        else:
+            # A positive offset
+            pass
+        return f"{access.group('head')}{offset:#x}{access.group('base')}"
+
     code = ADDRESS_PAIR.sub(symbolic, (HERE / HANDWRITTEN).read_text())
     if pairs != ADDRESS_PAIRS:
         sys.exit(f"{HANDWRITTEN}: {pairs} lui/ori pairs of a function's address, not {ADDRESS_PAIRS}")
     left = [high for high in NUMERIC_HIGH_HALF.findall(code) if IMAGE_START <= int(high, 0) < IMAGE_END]
     if left:
         sys.exit(f"{HANDWRITTEN}: lui of addresses into the image left as numbers: {', '.join(left)}")
+    code, accesses = GP_RELATIVE.subn(numeric, code)
+    if accesses != GP_RELATIVE_ACCESSES or GP_RELATIVE_LEFT in code:
+        sys.exit(f"{HANDWRITTEN}: {accesses} accesses through $gp written as {GP_RELATIVE_LEFT}, not "
+                 f"{GP_RELATIVE_ACCESSES}, or one in another form")
     return code
 
 
-def retail_data_start():
-    """.data's retail address: the main segment's address plus its first data subsegment's offset into it"""
-    config = yaml.safe_load((HERE / SPLAT_CONFIG).read_text())
-    for segment in config.get("segments", []):
-        if isinstance(segment, dict) and segment.get("name") == MAIN_SEGMENT:
-            for subsegment in segment.get("subsegments", []):
-                if isinstance(subsegment, list) and len(subsegment) > 1 and subsegment[1] in DATA_SUBSEGMENT_TYPES:
-                    return segment["vram"] + subsegment[0] - segment["start"]
-                else:
-                    # Code or read-only data, before .data
-                    continue
-            sys.exit(f"{SPLAT_CONFIG.name}: the {MAIN_SEGMENT} segment has no data subsegment")
-        else:
-            # Another segment (the header)
-            continue
-    sys.exit(f"{SPLAT_CONFIG.name}: no {MAIN_SEGMENT} segment")
-
-
 def check_layout(elf):
-    """Stops unless the equivalent build's data sits at its retail addresses: its code may not outgrow the retail code"""
+    """Stops when the equivalent executable outgrows the retail file's sectors on the disc"""
     symbols = {}
     listing = subprocess.run([BINUTILS_PREFIX + "nm", str(elf)], capture_output=True, text=True, check=True).stdout
     for line in listing.splitlines():
@@ -199,20 +202,14 @@ def check_layout(elf):
         else:
             # An undefined symbol, listed without an address
             continue
-    wanted = (NONMATCHING_CODE_END, "main_DATA_START", BSS_END)
-    missing = [name for name in wanted if name not in symbols]
-    if missing:
-        sys.exit(f"{elf} has no {', '.join(missing)}")
-    data_start = retail_data_start()
-    over = symbols[NONMATCHING_CODE_END] - data_start
+    if IMAGE_FILE_END not in symbols:
+        sys.exit(f"{elf} has no {IMAGE_FILE_END}")
+    over = symbols[IMAGE_FILE_END] - EXE_SIZE
     if over > 0:
-        sys.exit(f"the equivalent build's code ends {over} bytes past .data's retail start ({data_start:#x}): the game "
-                 "reads its data by absolute address, so .data can't move; the equivalent C must shrink by that much")
-    elif symbols["main_DATA_START"] != data_start or symbols[BSS_END] != IMAGE_END:
-        sys.exit(f"{elf}: .data starts at {symbols['main_DATA_START']:#x} and .bss ends at {symbols[BSS_END]:#x}, not at "
-                 f"their retail {data_start:#x} and {IMAGE_END:#x}")
+        sys.exit(f"the equivalent executable is {over} bytes longer than the retail file's {EXE_SIZE} on the disc, "
+                 "which tools/patch_disc.py writes it into: the equivalent C must shrink by that much")
     else:
-        print(f"{elf}: data at its retail addresses, {-over} bytes of padding after the code")
+        print(f"{elf}: {-over} bytes of the retail file's room left")
 
 
 def nonmatching_link_files():
@@ -226,12 +223,8 @@ def nonmatching_link_files():
     script = (HERE / LINKER_SCRIPT).read_text()
     if LINKER_SCRIPT_END not in script:
         sys.exit(f"{LINKER_SCRIPT} has no {LINKER_SCRIPT_END.strip()} section")
-    if TEXT_END not in script:
-        sys.exit(f"{LINKER_SCRIPT} has no `{TEXT_END.strip()}`")
-    # Inside the section the location counter counts from its start; check_layout stops a build whose code outgrows it
-    padding = f"        {NONMATCHING_CODE_END} = .;\n        . = MAX(., {retail_data_start() - IMAGE_START:#x});\n"
     script = script.replace(f"{BUILD}/src/", f"{NONMATCHING_BUILD}/src/").replace(
-        LINKER_SCRIPT_END, f"    {TEXT_SIZE}\n{LINKER_SCRIPT_END}", 1).replace(TEXT_END, padding + TEXT_END, 1)
+        LINKER_SCRIPT_END, f"    {TEXT_SIZE}\n{LINKER_SCRIPT_END}", 1)
     for obj in NONMATCHING_ASSEMBLY:
         if f"{obj}(" not in script:
             sys.exit(f"{LINKER_SCRIPT} doesn't link {obj}")
@@ -357,7 +350,7 @@ def write_ninja(linked):
         "  symbols = " + " ".join(f"-T {path}" for path in nonmatching_symbols),
         f"  map = {NONMATCHING_BUILD / NAME}.map",
         f"build {NONMATCHING_EXE}: exe_nonmatching {NONMATCHING_ELF}",
-        f"build {NONMATCHING_LAYOUT_STAMP}: layout {NONMATCHING_ELF} | configure.py {SPLAT_CONFIG.relative_to(HERE)}",
+        f"build {NONMATCHING_LAYOUT_STAMP}: layout {NONMATCHING_ELF} | configure.py",
         f"build nonmatching: phony {NONMATCHING_EXE} {NONMATCHING_LAYOUT_STAMP}",
         "",
     ]

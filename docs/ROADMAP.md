@@ -212,9 +212,6 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
-2. **The data free to move** (section 4, "Next"): no disc data holds the executable's addresses; the handwritten code's
-   `$gp` offsets, which splat wrote as `%gp_rel`, held `.data` in place. The equivalent build writing them as numbers
-   and dropping its padding before `.data` would give its code 1,404 bytes of room (32 and the file's 1,372).
 
 ## 4. The engine in C
 
@@ -427,14 +424,20 @@ What held the data in place isn't the disc: its `.NSF` and `.NSD` files hold no 
 handwritten code's `$gp`, a pointer to its structures, whose offsets splat wrote 23 times as `%gp_rel` of small data,
 so that the linker moved them with `.data`. With those 23 as their numbers, the default build's C with `.data` 8 bytes,
 32 bytes or 1 KB later displays what it does at the retail layout on all 8,000 frames, and so does the equivalent build
-with `.data` right after its code. The executable's file on the disc then bounds it: 1,372 bytes of room after the data.
+with `.data` right after its code. The executable's file on the disc then bounds it: 1,372 bytes of room after the
+retail image's data.
+
+The equivalent build now does so (the user's call): its copy of the handwritten code holds the 23 offsets as numbers,
+its `.data` follows the code (32 bytes earlier than retail's, at 0x8005B178), and `ninja nonmatching` stops only when
+the executable outgrows the retail file, with 1,392 bytes of room left now (the image's end rounded to 16 bytes). It is
+healthy over the 8,000 frames and displays what the same C at the retail layout does on all of them, and what retail
+does up to frame 4,035, as before.
 
 Two retail runs no longer agree on every frame: `run_game.py --against retail` differed from frame 7,233 (730 of the
 8,000 frames), and two runs one after the other from frame 4,121.
 
-Next: the equivalent build with the 23 offsets as numbers and `.data` after the code (the user's call); each batch
-checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates
-timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).
+Next: each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that
+tolerates timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).
 
 ## 5. Readable C (in progress)
 

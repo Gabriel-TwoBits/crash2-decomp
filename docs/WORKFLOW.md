@@ -74,12 +74,13 @@ relocation writes: the equivalent build assembles a copy, `build/nonmatching/asm
 pairs is a `lui`/`addiu` of the function's symbol (found by address in splat's `.splat/splat_symbols.csv`), and
 `configure.py` stops unless it finds all 21 and leaves no such number.
 
-Only the code moves. The handwritten code reads its structures through `$gp` at offsets splat wrote as `%gp_rel` of
-small data, which the linker moves with `.data` (docs/TARGET.md, "Addresses from the disc"): with no equivalent
-function, `.data` moved by 8 bytes displays otherwise from frame 1,390 of `tools/run_game.py` and crashes in the first
-warp room. So the equivalent build pads the end of the code to `.data`'s retail start (the main segment's data
-subsegment in `config/SCUS_941.54.yaml`), and `ninja nonmatching` stops, with the number of bytes over,
-when the equivalent code outgrows the retail code, or when `.data` or the end of `.bss` lands elsewhere.
+The data follows the code. The handwritten code reads its structures through `$gp` at offsets splat writes as
+`%gp_rel` of small data, which the linker would move with `.data` (docs/TARGET.md, "Addresses from the disc"): with no
+equivalent function, `.data` moved by 8 bytes so displays otherwise from frame 1,390 of `tools/run_game.py` and crashes
+in the first warp room. The equivalent build's copy writes those 23 offsets as the numbers their instructions hold, and
+`configure.py` stops unless it finds all 23 and leaves no `%gp_rel`. `ninja nonmatching` then stops, with the number of
+bytes over, only when the executable outgrows the retail file's 327,680 bytes, the sectors `tools/patch_disc.py` writes
+it into, and otherwise prints the room left.
 
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
 every trial.
@@ -245,11 +246,12 @@ another state of the game. Such a difference is told from a wrong function by sp
 file, a block's declarations being shared with its neighbours: `#ifdef NON_MATCHING` turned to `#if 0` for the others):
 when each group alone agrees on every frame, every function ran right and only their sum's timing differs.
 
-A group must fit in the retail code's room, and functions that grow (the GTE's routines, by the model) only fit beside
-others that shrink, which may themselves diverge in combination. Then the group is compared with itself without the
-new functions: `--baseline` runs that build in place of retail, and agreeing on every frame means the new functions
-display as the retail code did wherever the game reaches them. Whether it reaches them at all shows by sabotage: the
-same build with them drawing nothing differs (`func_8001856C` and `func_800186D8`, the title's menu: 41 frames).
+A group must fit in the retail file's room on the disc, and functions that grow much (the GTE's routines, by the model,
+1,996 bytes) only fit beside others that shrink, which may themselves diverge in combination. Then the group is compared
+with itself without the new functions: `--baseline` runs that build in place of retail, and agreeing on every frame
+means the new functions display as the retail code did wherever the game reaches them. Whether it reaches them at all
+shows by sabotage: the same build with them drawing nothing differs (`func_8001856C` and `func_800186D8`, the title's
+menu: 41 frames).
 
 ## Matching C and this project's style
 

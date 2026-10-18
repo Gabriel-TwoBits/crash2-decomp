@@ -173,7 +173,8 @@ structure.
   - The equivalent build without its padding before `.data` (`.data` 32 bytes earlier) and with the 23 numbers displays
     what the equivalent build at the retail layout does on all 8,000 frames.
 - **What bounds the executable then**: its file's 160 sectors on the disc (327,680 bytes, the header's 2,048 included).
-  The image's data ends at `0x8005F2A4`, 1,372 bytes before the file's end; `tools/patch_disc.py` refuses a larger
-  executable (12 KB more was refused).
+  The retail image's data ends at `0x8005F2A4`, 1,372 bytes before the file's end; `tools/patch_disc.py` refuses a
+  larger executable (12 KB more was refused).
 
-The equivalent build still keeps the data at its retail addresses (docs/WORKFLOW.md, "The equivalent track").
+The equivalent build writes the 23 offsets as numbers and lets its data follow its code (docs/WORKFLOW.md, "The
+equivalent track").
