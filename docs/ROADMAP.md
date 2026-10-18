@@ -211,7 +211,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The last 4 functions** as equivalent C (section 4, "Next"): two need a decision on how C states the GTE.
+1. **The last 2 functions** as equivalent C (section 4, "Next"): `func_8002CC50` and `func_8002FFFC`.
 2. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
 
 ## 4. The engine in C
@@ -386,10 +386,27 @@ callee, in random memory repairs don't reach (1,500 of 2,000 compared by their c
 was again a frame word the two layouts place apart. Not kept; `func_800334A0`'s callee, the other candidate, has GTE
 instructions.
 
-Next: find what in the disc's data holds the executable's addresses; `func_8002CC50` and `func_8002FFFC` (inputs built
-for the latter's paths); the GTE decision, then its two routines; each batch checked in the game too (by groups that
-each agree, docs/WORKFLOW.md); a run_game comparison that tolerates timing (the game's state at checkpoints, or inputs
-keyed to it rather than to frame numbers).
+The GTE's two routines, by hand (no agent runs): the GTE stated in C, as a native port needs it, rather than as PsyQ's
+inline-assembly macros. `include/gte.h` models RTPS and RTPT from psx-spx, its register moves one instruction each;
+`tools/gte.py` models the same for equiv.py, which now runs the GTE's instructions on it from a code hook, its registers
+random on entry (in half the trials a projection the game would use) and compared after. Writing the model found a
+maspsx bug: it writes ASPSX's `li $r,0` as an `ori` GNU as reads as `ori $r,$r,0` (docs/COMPILER.md, "Loading zero"),
+which the 64-bit sum of the GTE's division hit; no C before had. `func_8001856C` and `func_800186D8` (a box's textured
+quad and a glyph's shaded one, sorted into the ordering table by depth) agree on 2 seeds of 2,000 trials, about 30% of
+them projecting and drawing. In the game they can't run alone: with the model they outgrow the retail code by 1,996
+bytes, so they need equivalents that shrink beside them. Such a group, with and without the two routines, displays the
+same on all 8,000 frames (`run_game.py --baseline`, added for it), and the same group with them drawing nothing differs
+in 41 frames of the title's menu, so the game reaches them there. The group itself diverges from retail from frame
+3,435, as it does without them; so does another group from frame 4,035, narrowed to `80020A24.c`, `80012010.c`,
+`80036E30.c`, `80026CA0.c`, `80038700.c` and `800316EC.c` together, files from both of the earlier halves that each
+agreed: timing or a fault, not settled yet. The whole equivalent build diverges from frame 2,515 (2,867 before; 1,626 with the
+model's code in and the routines not), the frame moving with the layout. 201 equivalent functions, 2 left; the
+equivalent build has 208 bytes of the retail code's room left.
+
+Next: find what in the disc's data holds the executable's addresses, which would let the equivalent code grow;
+`func_8002CC50` and `func_8002FFFC` (inputs built for the latter's paths); why the six files above diverge together;
+each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates
+timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).
 
 ## 5. Readable C (in progress)
 
@@ -446,7 +463,7 @@ Steps, in order:
   executable as before; raw where the spelling moves code (docs/COMPILER.md, "Address arithmetic"). Left: the level
   header at `NsfLevel.unk_14`, `g_LevelFiles`' bitfields, globals that are views of one structure (joining them changes
   code). `tools/progress.py`: 127 structures in `src/game/`, 7 in `include/game/`, 114 fields read at a raw offset.
-- **R4 (done before R1 to R3)**: the equivalent passes on the functions left as assembly (section 4); 4 are left.
+- **R4 (done before R1 to R3)**: the equivalent passes on the functions left as assembly (section 4); 2 are left.
 - **R5, the other subsystems (in progress).** A first batch: 47 game functions, 11 data symbols and 22 of `GoolObject`'s
   fields, for the GOOL interpreter, the objects and the zones. The table of handlers by entry type at 0x8005B1D8 carries
   each type's four-character tag ("ZDAT", "OPAT", "GOOL", ...) beside its handlers for a level's open and close and a
