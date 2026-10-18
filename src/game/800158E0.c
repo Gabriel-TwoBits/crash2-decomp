@@ -1,6 +1,9 @@
 #include "common.h"
 #include "sdk.h"
 #include "game.h"
+#ifdef NON_MATCHING
+#include "gte.h"
+#endif
 
 s32 D_8005F1D4 = 0;
 s32 D_8005F1D8 = 0;
