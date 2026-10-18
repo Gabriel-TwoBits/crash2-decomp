@@ -131,7 +131,10 @@ Its limits, which a passing run doesn't lift:
   counter's bound, reached only when two other variables hold matching values, in `func_800237F8`). Run more trials for
   a large function.
 - Callees don't run: what they write and return for real is missing, so C that relies on a callee's effect isn't checked
-  beyond the arguments it passes.
+  beyond the arguments it passes. A made-up return value can take the caller down a path the game never runs; where the
+  callee's code bounds what it returns, `CALLEE_RETURN_RANGES` in equiv.py says so, with the reading that proves it, and
+  the caller's code for other values isn't checked (`func_8002FFFC`: 6 at most, which `func_8002CC50` uses as a count
+  of 12 points).
 - A frame address passed to a callee is compared by its first 4 words whatever the local's size; past a smaller local
   they may be other locals, which differently laid out C keeps elsewhere.
 - One word per parameter (no 64-bit or structure arguments), and a variadic callee's named parameters only.

@@ -211,8 +211,9 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **The last function** as equivalent C (section 4, "Next"): `func_8002CC50`.
-2. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
+1. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
+2. **The disc's addresses** (section 4, "Next"): the equivalent build has 32 bytes of code room left while the game
+   reads its data by absolute address; finding which data holds them would let the code move.
 
 ## 4. The engine in C
 
@@ -411,9 +412,16 @@ keeps all the retail data (a regression over the 201 equivalent functions on a f
 agrees on all 8,000 frames, but the same group with it returning 0 does too: the schedule doesn't reach it, or nothing
 shown depends on it. 202 equivalent functions, 1 left.
 
+`func_8002CC50` disagreed only where the made-up count `func_8002FFFC` returned exceeded what it can return (it clips
+6 quads, one segment each at most): its loops then read past its 12 points into frame words GCC places itself. equiv.py
+now bounds a callee's return value where the callee's code bounds it (`CALLEE_RETURN_RANGES`, the user's call: a
+caller's code for impossible values goes unchecked), and it lands with all 2,000 trials of each seed compared. In the
+game a group with it agrees on all 8,000 frames, but so does the same group with it returning at once: the schedule
+doesn't reach it either. With it, every function GCC compiled has C: 263 matched, 203 equivalent (134,080 bytes,
+80.39%; the earlier counts here summed sizes that overstated it by 264 bytes). The equivalent build has 32 bytes of the
+retail code's room left.
+
 Next: find what in the disc's data holds the executable's addresses, which would let the equivalent code grow;
-`func_8002CC50`, which disagrees only where the made-up count `func_8002FFFC` returns (it clips six quads, so 12
-points at most) exceeds what it can return: its loops then read past its 12 points into frame words GCC places itself;
 each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md); a run_game comparison that tolerates
 timing (the game's state at checkpoints, or inputs keyed to it rather than to frame numbers).
 
@@ -472,7 +480,7 @@ Steps, in order:
   executable as before; raw where the spelling moves code (docs/COMPILER.md, "Address arithmetic"). Left: the level
   header at `NsfLevel.unk_14`, `g_LevelFiles`' bitfields, globals that are views of one structure (joining them changes
   code). `tools/progress.py`: 127 structures in `src/game/`, 7 in `include/game/`, 114 fields read at a raw offset.
-- **R4 (done before R1 to R3)**: the equivalent passes on the functions left as assembly (section 4); 1 is left.
+- **R4 (done before R1 to R3)**: the equivalent passes on the functions left as assembly (section 4); none is left.
 - **R5, the other subsystems (in progress).** A first batch: 47 game functions, 11 data symbols and 22 of `GoolObject`'s
   fields, for the GOOL interpreter, the objects and the zones. The table of handlers by entry type at 0x8005B1D8 carries
   each type's four-character tag ("ZDAT", "OPAT", "GOOL", ...) beside its handlers for a level's open and close and a

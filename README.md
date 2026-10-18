@@ -19,7 +19,7 @@ The milestones are in [docs/ROADMAP.md](docs/ROADMAP.md).
 | Target | `SCUS_941.54`, SHA-1 `aabdade44a4ca863f71224daef51c45f34fb1bf8` ([docs/TARGET.md](docs/TARGET.md)) |
 | SDK | PsyQ 4.0, its libraries identified and split apart |
 | Compiler | PsyQ GCC 2.7.2, `-O2 -G8 -mcpu=r8000`, ASPSX 2.30 to 2.49 ([docs/COMPILER.md](docs/COMPILER.md)) |
-| Game code in C | 263 of 466 compiled functions match byte for byte, 32,700 of 166,780 bytes (19.61%), in 32 source files: `tools/progress.py`. 202 more have behaviour-equivalent C, tested, not matched (131,636 bytes, 78.93%; docs/WORKFLOW.md, "The equivalent track"), 1 is still assembly. The 97 functions from `0x80039D2C` on are assembly source, kept as such ([docs/TARGET.md](docs/TARGET.md)) |
+| Game code in C | 263 of 466 compiled functions match byte for byte, 32,700 of 166,780 bytes (19.61%), in 32 source files: `tools/progress.py`. The other 203 have behaviour-equivalent C, tested, not matched (134,080 bytes, 80.39%; docs/WORKFLOW.md, "The equivalent track"). The 97 functions from `0x80039D2C` on are assembly source, kept as such ([docs/TARGET.md](docs/TARGET.md)) |
 
 ## Why
 
