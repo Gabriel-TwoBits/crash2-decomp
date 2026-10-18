@@ -64,7 +64,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", Zone_QueueEntities);
 #endif
 
 #ifdef NON_MATCHING
-/* Zone_MoveCamera's direction toward the path's end, and one node's progress */
+/* Cam_MoveAlongPath's direction toward the path's end, and one node's progress */
 #define STEP_FORWARD 2
 #define NODE_PROGRESS 0x100
 

@@ -641,7 +641,7 @@ void func_80021A08(s32 *arg0, s32 arg1) {
         a1 = g_CameraPath;
         a2 = g_CameraProgress;
     }
-    Zone_MoveCamera(a0, a1, a2, 0);
+    Cam_MoveAlongPath(a0, a1, a2, 0);
 
     if (D_8005BA08 != 0) {
         g_CameraY -= (D_8005BA08 * BOB_SCALE) >> 10;
@@ -765,7 +765,7 @@ void func_80021F4C(s32 *arg0, s32 arg1) {
         a1 = g_CameraPath;
         a2 = g_CameraProgress;
     }
-    Zone_MoveCamera(a0, a1, a2, 0);
+    Cam_MoveAlongPath(a0, a1, a2, 0);
     func_800231B0(c);
 }
 #else
@@ -873,7 +873,7 @@ void func_80022314(s32 *arg0, s32 arg1) {
         y = g_CurrentZone[2];
         z = g_CurrentZone[5];
     }
-    Zone_MoveCamera(x, y, z, 0);
+    Cam_MoveAlongPath(x, y, z, 0);
     func_800224A0(a);
     func_800231B0(a);
 }
@@ -939,13 +939,13 @@ void func_800225C0(s32 *arg0, s32 arg1) {
         if (r > 0) {
             r = func_80024658(sp28, sp18, p[1], 0, p[2], 1);
             func_80023E60(sp28, r, sp48, arg1 != 0 ? 0x100 : -1);
-            Zone_MoveCamera(sp48[0], sp48[1], sp48[2], 0);
+            Cam_MoveAlongPath(sp48[0], sp48[1], sp48[2], 0);
         } else if (r < 0) {
             r = func_80024658(sp28, sp18, p[0], 1, p[2], 1) + 0;
             func_80023E60(sp28, r, sp48, arg1 != 0 ? 0x100 : -1);
-            Zone_MoveCamera(sp48[0], sp48[1], sp48[2], 0);
+            Cam_MoveAlongPath(sp48[0], sp48[1], sp48[2], 0);
         } else {
-            Zone_MoveCamera(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
+            Cam_MoveAlongPath(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
         }
     } while (0);
     func_800231B0(sp18);
@@ -975,13 +975,13 @@ void func_8002271C(s32 *arg0, s32 arg1) {
     if (r > 0) {
         t = func_80024658(v28, v18, v5C, 0, v60, 1);
         func_80023E60(v28, t, v48, arg1 != 0 ? 0x100 : -1);
-        Zone_MoveCamera(v48[0], v48[1], v48[2], 0);
+        Cam_MoveAlongPath(v48[0], v48[1], v48[2], 0);
     } else if (r < 0) {
         t = func_80024658(v28, v18, v58, 1, v60, 1);
         func_80023E60(v28, t, v48, arg1 != 0 ? 0x100 : -1);
-        Zone_MoveCamera(v48[0], v48[1], v48[2], 0);
+        Cam_MoveAlongPath(v48[0], v48[1], v48[2], 0);
     } else {
-        Zone_MoveCamera(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
+        Cam_MoveAlongPath(g_CurrentZone[0], g_CurrentZone[2], g_CurrentZone[5], 0);
     }
     func_800231B0(v18);
 }
@@ -1051,7 +1051,7 @@ void func_80022878(s32 *arg0) {
         var_a0 = g_CurrentZone[0];
         var_v1 = g_CurrentZone[2];
     }
-    Zone_MoveCamera(var_a0, var_v1, sp50, 0);
+    Cam_MoveAlongPath(var_a0, var_v1, sp50, 0);
     func_800224A0(sp40);
     func_800231B0(sp40);
 }
@@ -1146,12 +1146,12 @@ void func_80022A5C(s32 *arg0) {
                 f.next[i] = f.cur[i];
             }
         }
-        Zone_GetCameraPathPoint((s32 *)f.next[1], f.next[2], f.pos, 0);
+        Cam_GetPathPoint((s32 *)f.next[1], f.next[2], f.pos, 0);
         if (ret != 0) {
             func_80023E60(f.cur, mode, f.out, STEP_RANGE / D_8005BA14);
-            Zone_MoveCamera(f.out[0], f.out[1], f.out[2], 0);
+            Cam_MoveAlongPath(f.out[0], f.out[1], f.out[2], 0);
         } else {
-            Zone_MoveCamera(g_CurrentZone[0], g_CameraPath, g_CameraProgress, 0);
+            Cam_MoveAlongPath(g_CurrentZone[0], g_CameraPath, g_CameraProgress, 0);
         }
         scale = ((D_8005BA18 - (D_8005BA14 - 1)) << FIXED_SHIFT) / D_8005BA18;
         g_CameraX = (((f.pos[0] - D_8005BA1C) * scale) >> FIXED_SHIFT) + D_8005BA1C;
@@ -1175,7 +1175,7 @@ void func_80022A5C(s32 *arg0) {
             /* mode stays at the default */
         }
         func_80023E60(f.cur, mode, f.out, -1);
-        Zone_MoveCamera(f.out[0], f.out[1], f.out[2], 0);
+        Cam_MoveAlongPath(f.out[0], f.out[1], f.out[2], 0);
         func_800231B0(f.path);
         if (g_CameraPath == (s32)target) {
             g_CameraMode = TRIGGER_VALUE;
@@ -1223,14 +1223,14 @@ void func_80022E74(s32 *arg0) {
     args[2] = arg0[2];
     if (D_8005B99B != 0) {
         p = (Unk80022E74 *)Nsf_OpenEntry(&D_8005B99B + UNK_80014260_OFFSET, UNK_80014260_FLAGS, 0);
-        Zone_MoveCamera((s32)p,
+        Cam_MoveAlongPath((s32)p,
                       ((s32 *)p)[(UNK_FIELD_OFFSET / 4) + D_8005BADC * UNK_TABLE_STRIDE + p->unk_10->unk_184],
                       D_8005BAE0, 0);
         g_CameraMode = UNK_STATE_5;
         ((GoolObject *)g_Player)->zone = (void *)g_CurrentZone[0];
         return;
     } else {
-        Zone_MoveCamera(g_CurrentZone[0], g_CameraPath, g_CameraProgress, 0);
+        Cam_MoveAlongPath(g_CurrentZone[0], g_CameraPath, g_CameraProgress, 0);
         func_800231B0(args);
     }
 }
@@ -1273,12 +1273,12 @@ void func_80022F58(s32 *arg0) {
         in.unk_8 = g_CurrentZone[IDX_C];
         in.unk_C = g_CurrentZone[IDX_D];
         if (func_800267C4(out, &in, g_CurrentZone[IDX_C], g_CurrentZone[IDX_D]) == SEARCH_FOUND) {
-            Zone_MoveCamera(out[0], out[1], out[2], 0);
+            Cam_MoveAlongPath(out[0], out[1], out[2], 0);
             if (Ent_GetPropertyValue(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != g_CurrentZone[IDX_EXPECTED]) {
                 g_CameraMode = STATUS_DONE;
             }
         } else {
-            Zone_MoveCamera(g_CurrentZone[IDX_A], g_CurrentZone[IDX_B],
+            Cam_MoveAlongPath(g_CurrentZone[IDX_A], g_CurrentZone[IDX_B],
                           (Ent_GetPropertyRowLength(g_CurrentZone[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
             g_CameraMode = STATUS_DONE;
         }

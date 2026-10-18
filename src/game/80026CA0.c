@@ -2,7 +2,7 @@
 #include "sdk.h"
 #include "game.h"
 
-extern void Zone_MoveCamera(s32, s32, s32, s32);
+extern void Cam_MoveAlongPath(s32, s32, s32, s32);
 extern void func_80021A08(s32 *, s32);
 extern void func_80021F4C(s32 *, s32);
 extern void func_80022314(s32 *, s32);
@@ -26,7 +26,7 @@ extern s32 D_80069948;
 extern s32 D_8006CB94[];
 extern s32 D_8006CBB4;
 
-s32 Zone_UpdateCamera(void) {
+s32 Cam_Update(void) {
     s32 sp18;
     s32 s1;
     s32 *s0;
@@ -82,7 +82,7 @@ s32 Zone_UpdateCamera(void) {
     case 10: func_80021F4C(s0, s1); break;
     case 3: func_80022314(s0, s1); break;
     case 8: func_800225C0(s0, s1); break;
-    default: Zone_MoveCamera((s32)g_CurrentZone, g_CameraPath, g_CameraProgress, 0); break;
+    default: Cam_MoveAlongPath((s32)g_CurrentZone, g_CameraPath, g_CameraProgress, 0); break;
     }
     return 1;
 }

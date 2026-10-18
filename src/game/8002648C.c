@@ -189,7 +189,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8002648C", func_800267C4);
 #ifdef NON_MATCHING
 extern s32 D_800608D8;
 
-void Zone_GetCameraPathPoint(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
+void Cam_GetPathPoint(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     s32 t[10];
     s32 *base;
     s16 *a;
@@ -231,5 +231,5 @@ void Zone_GetCameraPathPoint(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8002648C", Zone_GetCameraPathPoint);
+INCLUDE_ASM("asm/nonmatchings/game/8002648C", Cam_GetPathPoint);
 #endif

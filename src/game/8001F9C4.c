@@ -187,7 +187,7 @@ s32 func_8001F9C4(void) {
     if (D_8006CBB4 == MODE_600) {
         func_8002FE58(&D_8005F388);
     }
-    Zone_MoveCamera((s32)obj,
+    Cam_MoveAlongPath((s32)obj,
                   FIELD(obj, (FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * 3 + FIELD((u8 *)FIELD(obj, 0x10), 0x184)) * 4 + 0x10),
                   extra, 0);
     Nsf_CloseEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1);

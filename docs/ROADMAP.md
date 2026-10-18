@@ -492,15 +492,15 @@ Steps, in order:
   properties, the spawn queue, the paging's reference counts and the camera. An entity's properties are laid out as
   CrashEdit reads them (8-byte headers sorted by id from 0x10, sparse rows, meta values, a row count), which
   `Ent_GetProperty` searches; the ids the code passes it (positions 0x4B, SLST 0x103, draw lists 0x13B and 0x13C, load
-  lists 0x208 and 0x209) are format constants that name the camera's walk along a path (`Zone_MoveCamera`,
+  lists 0x208 and 0x209) are format constants that name the camera's walk along a path (`Cam_MoveAlongPath`,
   `Zone_QueueDrawLists`, `Zone_ApplyLoadLists`). The opcodes CHNK and COLL name their handlers, CHNK's kinds the
   entries' opening and closing (`Nsf_OpenEntry`, `Nsf_CloseEntry`); the Crash 1 decomp's slot functions, the same
-  code, confirm the page slots' count and release. The camera has no prefix of its own: its path functions take
-  `Zone_`, the view `Gfx_`. Left without the evidence: the collision routines COLL calls (CrashEdit describes none of
+  code, confirm the page slots' count and release. The camera's functions then took a prefix of their own, `Cam_`
+  (`Cam_MoveAlongPath`, `Cam_Update`, `Cam_GetPathPoint`); the view stays `Gfx_`. Left without the evidence: the collision routines COLL calls (CrashEdit describes none of
   its modes), the page functions with one caller (func_80013F5C, func_80013FD8, func_80014078, func_8001456C,
   func_80014918), func_80014148, the camera's handlers by path kind and by mode. `tools/progress.py`: 120 of 564 game
   functions and 38 of 1,112 data symbols named, 131 structures in `src/game/`, 8 in `include/game/`. Next: the
-  collision, the camera's handlers, a `Cam` prefix if the camera's functions need one.
+  collision, the camera's handlers.
 - **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC

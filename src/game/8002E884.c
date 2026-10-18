@@ -726,7 +726,7 @@ void func_8002F6C8(u8 *arg0) {
         } else {
             kind = SCREEN_CALL_KIND_NORMAL;
         }
-        Zone_MoveCamera((s32)t0, a1, *(s32 *)(arg0 + 0x2C), kind);
+        Cam_MoveAlongPath((s32)t0, a1, *(s32 *)(arg0 + 0x2C), kind);
     }
     Nsf_CloseEntry(&sp18, 1);
     if (g_Player == 0) {

@@ -58,7 +58,7 @@ extern s32 D_8006CB48;
 extern void *D_8006759C;
 extern s32 D_80067FC8;
 
-void Zone_MoveCamera(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 flags;
     s32 keepScreen;
     s32 target;
@@ -231,7 +231,7 @@ void Zone_MoveCamera(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                 ((void (*)(s32))func_800221DC)(oldField48);
             }
             func_80022224(D_800608FC);
-            ((void (*)(s32 *, s32, s32 *, s32 *, s32))Zone_GetCameraPathPoint)((s32 *)g_CameraPath, g_CameraProgress, (s32 *)((u8 *)&D_800608FC - 0xE4), (s32 *)((u8 *)&D_800608FC + 0x28), 1);
+            ((void (*)(s32 *, s32, s32 *, s32 *, s32))Cam_GetPathPoint)((s32 *)g_CameraPath, g_CameraProgress, (s32 *)((u8 *)&D_800608FC - 0xE4), (s32 *)((u8 *)&D_800608FC + 0x28), 1);
             D_80060888 = Ent_GetPropertyValue(g_CameraPath, 0x1AA, g_CameraProgress, 0, 0, 3, 0);
             shortVal = NO_VALUE;
             if (flags & (FLAG_OBJECT | FLAG_TARGET)) {
@@ -249,7 +249,7 @@ void Zone_MoveCamera(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
             }
             Zone_RunEntityQueue(g_CurrentZone, -1);
         }
-        /* The camera's 9 words from g_CameraX take the ones Zone_GetCameraPathPoint wrote 0x24 bytes on */
+        /* The camera's 9 words from g_CameraX take the ones Cam_GetPathPoint wrote 0x24 bytes on */
         for (i = 0; i < 9; i++) {
             g_CameraX[i] = g_CameraX[i + 9];
         }
@@ -272,7 +272,7 @@ void Zone_MoveCamera(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800200A8", Zone_MoveCamera);
+INCLUDE_ASM("asm/nonmatchings/game/800200A8", Cam_MoveAlongPath);
 #endif
 
 #ifdef NON_MATCHING

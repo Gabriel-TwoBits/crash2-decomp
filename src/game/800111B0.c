@@ -432,7 +432,7 @@ void Sys_MainLoop(s32 arg0) {
         }
         func_80012BC4(-1);
         if (D_8005F180 == 0) {
-            Zone_UpdateCamera();
+            Cam_Update();
         } else {
             /* paused */
         }
