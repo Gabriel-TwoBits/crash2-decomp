@@ -24,9 +24,10 @@ The milestones are in [docs/ROADMAP.md](docs/ROADMAP.md).
 ## Why
 
 A decompilation is the game's source as it could have been written: readable, documented, and checked against the
-original, by its bytes where the C matches and by running both side by side where it doesn't. It is what makes fixes, mods and native ports possible without emulating anything. Crash 2 has
-recompilations ([Crash2Recomp](https://github.com/Zumbo06/Crash2Recomp)) and a machine translation
-([c2c](https://github.com/ughman/c2c)), which run the game, but no decompilation.
+original, by its bytes where the C matches and by running both side by side where it doesn't. It is what makes fixes,
+mods and native ports possible without emulating anything. Crash 2 has recompilations
+([Crash2Recomp](https://github.com/Zumbo06/Crash2Recomp)) and a machine translation ([c2c](https://github.com/ughman/c2c)),
+which run the game, but no decompilation.
 
 ## How it's made: AI-assisted
 
@@ -38,8 +39,8 @@ What makes that safe is that nothing rests on the AI's word. A function counts a
 turns its C into exactly the retail bytes, and the whole executable still has the retail SHA-1; the scripts check both, and
 the build fails otherwise. A function that doesn't match counts as equivalent only when `tools/equiv.py` runs its C and the
 retail code on the same random inputs and every compared trial agrees. So matched C is proven equal to the game and
-equivalent C is tested against it, whoever wrote it. What isn't
-proven is the meaning: names, types and comments the agent chose can be wrong, and corrections are welcome.
+equivalent C is tested against it, whoever wrote it. What isn't proven is the meaning: names, types and comments the
+agent chose can be wrong, and corrections are welcome.
 
 ## Getting started
 
