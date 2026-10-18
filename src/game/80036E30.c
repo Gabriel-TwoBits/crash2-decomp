@@ -254,7 +254,7 @@ void Gool_OpEntityFieldRow(GoolObject *arg0, u32 arg1) {
     handle = (s32)arg0->entity;
     *SP_OF(arg0) = (s32 *)((u8 *)dst + WORD_SIZE);
     if (handle != 0) {
-        *dst = func_800321D4(handle, second_word >> RESULT_SHIFT, first, 0, 0, 0, 0);
+        *dst = Ent_GetPropertyValue(handle, second_word >> RESULT_SHIFT, first, 0, 0, 0, 0);
     } else {
         *dst = 0;
     }
@@ -307,7 +307,7 @@ void Gool_OpEntityFieldValue(GoolObject *o, u32 arg1)
     do { new_var = o->entity != 0; } while (0);
     if (new_var)
     {
-      *dst = func_800321D4((s32) o->entity, ((unsigned int) ((u32) src)) >> 8, 0, 0, 0, 2, 0);
+      *dst = Ent_GetPropertyValue((s32) o->entity, ((unsigned int) ((u32) src)) >> 8, 0, 0, 0, 2, 0);
       return;
     }
     *dst = 0;

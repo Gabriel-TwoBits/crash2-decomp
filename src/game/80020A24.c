@@ -184,7 +184,7 @@ void func_80020A24(void) {
     D_80062AA4 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_X) - D_800607F4));
     D_80062AA6 = (s16)(FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Y) - D_800607F8));
     D_80062AA8 = FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Z) - D_800607FC);
-    p = (s32 *)func_80031AE8(D_800608DC, 0x185, D_800608E0, 0, 0, 0, 0, 0, 0);
+    p = (s32 *)Ent_GetProperty(D_800608DC, 0x185, D_800608E0, 0, 0, 0, 0, 0, 0);
     if (p != 0) {
         D_80062AD8 = *p;
     } else {
@@ -195,7 +195,7 @@ void func_80020A24(void) {
     ((void (*)(s32))func_80011E24)(D_800608DC);
     entry = 0;
     if (D_80062AD8 & SCENE_FLAG_ENTRY) {
-        entry = (s32 *)func_80031AE8(D_800608DC, 0x186, D_800608E0, 0, 0, 0, 0, 0, 0);
+        entry = (s32 *)Ent_GetProperty(D_800608DC, 0x186, D_800608E0, 0, 0, 0, 0, 0, 0);
     }
     if (entry != 0) {
         D_80062ACC = 6;
@@ -212,13 +212,13 @@ void func_80020A24(void) {
     }
     D_8006CD48 = v;
     if (D_80062AD8 & SCENE_FLAG_1000) {
-        p = (s32 *)func_80031AE8(D_800608DC, 0x297, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x297, D_800608E0, 0, 0, 0, 0, 0, 0);
         D_80062AD0 = p[1];
         D_80062AD4 = p[2];
         D_8006CCE4 = p[0];
     }
     if (D_80062AD8 & SCENE_FLAG_400000) {
-        p16 = (s16 *)func_80031AE8(D_800608DC, 0x2AA, D_800608E0, 0, 0, 3, &frame[0], 0, 0);
+        p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x2AA, D_800608E0, 0, 0, 3, &frame[0], 0, 0);
         if (p16 != 0) {
             D_80062AA0 = p16[0];
             D_80062A94 = p16[1];
@@ -229,7 +229,7 @@ void func_80020A24(void) {
         D_80062AA0 = 0;
     }
     if (D_80062AD8 & SCENE_FLAG_10) {
-        p16 = (s16 *)func_80031AE8(D_800608DC, 0x1B5, D_800608E0, 0, 0, 3, &frame[2], 0, 0);
+        p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x1B5, D_800608E0, 0, 0, 3, &frame[2], 0, 0);
         if (p16 != 0) {
             if (D_8005F180 == 0) {
                 D_80062A6C = D_80062A74[0];
@@ -254,7 +254,7 @@ void func_80020A24(void) {
             D_80062A88 = p16[4];
             D_80062A8C = p16[5];
         }
-        p = (s32 *)func_80031AE8(D_800608DC, 0x1B6, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1B6, D_800608E0, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062A7C = p[0];
             D_80062A80 = p[1];
@@ -264,7 +264,7 @@ void func_80020A24(void) {
         D_80062A90 = 0;
     }
     if (D_80062AD8 & (SCENE_FLAG_4 | SCENE_FLAG_800000)) {
-        func_80031AE8(D_800608DC, 0x1B7, D_800608E0, 0, 0, 0, 0, 0, 0);
+        Ent_GetProperty(D_800608DC, 0x1B7, D_800608E0, 0, 0, 0, 0, 0, 0);
         D_80062A28 = D_80044A70;
         D_80062A2C = func_80042420;
         D_80062A30 = D_80042698;
@@ -333,7 +333,7 @@ void func_80020A24(void) {
         D_80062AC4 = D_8006CD94;
     }
     if (D_80062AD8 & SCENE_FLAG_8) {
-        p = (s32 *)func_80031AE8(D_800608DC, 0x1B8, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1B8, D_800608E0, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062A48 = p[0];
             D_80062A4C = p[1];
@@ -346,7 +346,7 @@ void func_80020A24(void) {
         D_80062AC0 = D_8006CD90;
     }
     if (D_80062AD8 & SCENE_FLAG_20) {
-        p = (s32 *)func_80031AE8(D_800608DC, 0x1DE, D_800608E0, 0, 0, 0, 0, 0, 0);
+        p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, D_800608E0, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062AB4 = p[0];
             D_80062AB8 = p[1];
@@ -369,7 +369,7 @@ void func_80020A24(void) {
             D_80062A38 = D_80045AB4;
             D_80062A54 = D_8006CDC4;
         } else {
-            p = (s32 *)func_80031AE8(D_800608DC, 0x1DE, D_800608E0, 0, 0, 0, 0, 0, 0);
+            p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, D_800608E0, 0, 0, 0, 0, 0, 0);
             if (p != 0) {
                 D_80062AB4 = p[0];
                 D_80062AB8 = p[1];
@@ -429,7 +429,7 @@ void func_800217F8(s32 arg0, s32 arg1, s32 arg2) {
         type = RES_TYPE_A;
         offset = arg1 + OFFSET_DELTA;
     }
-    p = func_80031AE8(arg0, type, offset, 0, &count, 1, 0, 0, 0);
+    p = Ent_GetProperty(arg0, type, offset, 0, &count, 1, 0, 0, 0);
     if ((p != 0) && (count != 0)) {
         func_80021900(count, (u32 *)p, FLAGS_FIRST, 1);
     }
@@ -439,7 +439,7 @@ void func_800217F8(s32 arg0, s32 arg1, s32 arg2) {
     } else {
         type = RES_TYPE_B;
     }
-    p = func_80031AE8(arg0, type, arg1, 0, &count, 1, 0, 0, 0);
+    p = Ent_GetProperty(arg0, type, arg1, 0, &count, 1, 0, 0, 0);
     if ((p != 0) && (count != 0)) {
         func_80021900(count, (u32 *)p, FLAGS_SECOND, 1);
     }
@@ -816,7 +816,7 @@ void func_80022224(s32 arg0) {
     if (table == 0) {
         return;
     }
-    slot = func_800321D4(D_800608D4, UNK_CALL_ARG, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
+    slot = Ent_GetPropertyValue(D_800608D4, UNK_CALL_ARG, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
     table = (u8 *)g_CurrentZone[0];
     value = *(s32 *)(table + (slot + *(s32 *)(*(u8 **)(table + SUBTABLE_OFFSET) + BASE_INDEX_OFFSET)) * 4 + ENTRY_DEFAULT_OFFSET);
     D_800608D8[0] = value;
@@ -898,8 +898,8 @@ void func_800224A0(s32 *arg0) {
     s32 scale;
     s32 d;
 
-    if (func_80031AE8(D_800608D8[0], 0x252, D_800608E0, 0, 0, 0, 0, 0, 0) != 0) {
-        p = (s16 *)func_80031AE8(D_800608D8[0], 0x254, D_800608E0, 0, 0, 3, &sp28, 0, 0);
+    if (Ent_GetProperty(D_800608D8[0], 0x252, D_800608E0, 0, 0, 0, 0, 0, 0) != 0) {
+        p = (s16 *)Ent_GetProperty(D_800608D8[0], 0x254, D_800608E0, 0, 0, 3, &sp28, 0, 0);
         if (p != 0) {
             lo = p[0] << 8;
             hi = p[1];
@@ -1026,7 +1026,7 @@ void func_80022878(s32 *arg0) {
             D_800608F8 = DIR_SECOND;
         }
     }
-    var_a1 = func_800321D4(D_800608DC, QUERY_SELECTOR, D_800608E0, 0, 0, QUERY_MODE_A, QUERY_LIMIT);
+    var_a1 = Ent_GetPropertyValue(D_800608DC, QUERY_SELECTOR, D_800608E0, 0, 0, QUERY_MODE_A, QUERY_LIMIT);
     if (var_a1 < 0) {
         var_a1 = -var_a1;
         if (D_800608F8 == DIR_FIRST) {
@@ -1043,7 +1043,7 @@ void func_80022878(s32 *arg0) {
     if ((temp_v0 != 0) && (func_80026764((s32)sp20, (V *)sp30) != 0)) {
         sp50 = sp30[2];
         D_800608F8 = sp30[3];
-        if (func_800321D4(sp30[1], QUERY_SELECTOR_B, 0, 0, 0, QUERY_MODE_B, 0) == QUERY_MODE_B) {
+        if (Ent_GetPropertyValue(sp30[1], QUERY_SELECTOR_B, 0, 0, 0, QUERY_MODE_B, 0) == QUERY_MODE_B) {
             func_80024268(sp30, temp_v0, &sp50);
         } else {
             func_80023084(sp30[1], sp30[2]);
@@ -1277,12 +1277,12 @@ void func_80022F58(s32 *arg0) {
         in.unk_C = g_CurrentZone[IDX_D];
         if (func_800267C4(out, &in, g_CurrentZone[IDX_C], g_CurrentZone[IDX_D]) == SEARCH_FOUND) {
             func_800200A8(out[0], out[1], out[2], 0);
-            if (func_800321D4(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != g_CurrentZone[IDX_EXPECTED]) {
+            if (Ent_GetPropertyValue(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != g_CurrentZone[IDX_EXPECTED]) {
                 D_8005B994 = STATUS_DONE;
             }
         } else {
             func_800200A8(g_CurrentZone[IDX_A], g_CurrentZone[IDX_B],
-                          (func_800322C0(g_CurrentZone[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
+                          (Ent_GetPropertyRowLength(g_CurrentZone[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
             D_8005B994 = STATUS_DONE;
         }
         func_800231B0(arg0);
@@ -1301,9 +1301,9 @@ void func_80023084(s32 arg0, s32 arg1) {
     s32 kind;
     s32 step;
 
-    p = (s32 *)func_80031AE8(arg0, 0x198, arg1, 0, 0, 1, 0, 0, 0);
+    p = (s32 *)Ent_GetProperty(arg0, 0x198, arg1, 0, 0, 1, 0, 0, 0);
     if (p != 0) {
-        n = func_800322C0(arg0, 0x198, arg1, 1);
+        n = Ent_GetPropertyRowLength(arg0, 0x198, arg1, 1);
         if (n != 0) {
             do {
                 kind = p[1];
@@ -1420,9 +1420,9 @@ void func_800231B0(s32 *arg0) {
             var_s3 = v28[2];
         }
     } else {
-        p = (s16 *)func_80031AE8(D_800608DC, CAM_TYPE_BLEND, D_800608E0, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
+        p = (s16 *)Ent_GetProperty(D_800608DC, CAM_TYPE_BLEND, D_800608E0, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
         if (p == 0) {
-            p = (s16 *)func_80031AE8(D_800608D8[0], CAM_TYPE_BLEND, D_800608E0, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
+            p = (s16 *)Ent_GetProperty(D_800608D8[0], CAM_TYPE_BLEND, D_800608E0, 0, 0, CAM_ARG_COUNT, sp50, 0, 0);
         } else {
             /* first lookup hit */
         }
@@ -1467,7 +1467,7 @@ void func_800231B0(s32 *arg0) {
             /* ease skipped */
         }
     }
-    q = (s16 *)func_80031AE8(D_800608D8[0], CAM_TYPE_CLAMP, D_800608E0, 0, 0, CAM_ARG_COUNT, sp48, 0, 0);
+    q = (s16 *)Ent_GetProperty(D_800608D8[0], CAM_TYPE_CLAMP, D_800608E0, 0, 0, CAM_ARG_COUNT, sp48, 0, 0);
     if (q != 0) {
         temp_a2 = D_80060824 & ANGLE_MASK;
         var_a0 = (var_s1 & ANGLE_MASK) - temp_a2;

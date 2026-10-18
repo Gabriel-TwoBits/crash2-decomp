@@ -1521,7 +1521,7 @@ void func_800294B4(s16 *arg0) {
 
     temp_a0 = (s32)((GoolObject *)arg0)->entity;
     if (temp_a0 != 0) {
-        temp_v0 = func_800321D4(temp_a0, 0xF2, 0, 0, 0, 2, 0);
+        temp_v0 = Ent_GetPropertyValue(temp_a0, 0xF2, 0, 0, 0, 2, 0);
         if ((temp_v0 & 0xFFFF) != 0xFFFF) {
             var_a1 = (u32)(temp_v0 & 0x3F0) >> 4;
             if (var_a1 - 0x30 >= 0x10U) {

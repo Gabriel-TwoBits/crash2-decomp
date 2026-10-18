@@ -32,7 +32,7 @@ extern s32 g_EntityQueueCount;
 extern Unk80063034 g_EntityQueue[];
 
 /* Entries are 0xC bytes from g_EntityQueue: key, 0, value (D_80063034). */
-void func_8001A054(s32 arg0, s32 arg1, s32 arg2) {
+void Zone_QueueEntities(s32 arg0, s32 arg1, s32 arg2) {
     s32 *src;
     s32 n;
     s32 i;
@@ -56,11 +56,11 @@ void func_8001A054(s32 arg0, s32 arg1, s32 arg2) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001A054);
+INCLUDE_ASM("asm/nonmatchings/game/8001A014", Zone_QueueEntities);
 #endif
 
 #ifdef NON_MATCHING
-void func_8001A13C(s32 arg0, s32 a1, s32 a2) {
+void Zone_QueueDrawLists(s32 arg0, s32 a1, s32 a2) {
     s32 arg2 = a2;
     s32 arg1 = a1;
     s32 sp28;
@@ -74,18 +74,18 @@ void func_8001A13C(s32 arg0, s32 a1, s32 a2) {
     } else {
         var_a2 = arg1 + 0x100;
     }
-    temp_v0 = func_80031AE8(arg0, var_a1, var_a2, 0, &sp28, 1, 0, 0, 0);
+    temp_v0 = Ent_GetProperty(arg0, var_a1, var_a2, 0, &sp28, 1, 0, 0, 0);
     if (temp_v0 != 0 && sp28 != 0) {
-        func_8001A054(0x13B, temp_v0, sp28);
+        Zone_QueueEntities(0x13B, temp_v0, sp28);
     }
     var_a1 = (arg2 == 2) ? 0x13C : 0x13B;
-    temp_v0 = func_80031AE8(arg0, var_a1, arg1, 0, &sp28, 1, 0, 0, 0);
+    temp_v0 = Ent_GetProperty(arg0, var_a1, arg1, 0, &sp28, 1, 0, 0, 0);
     if (temp_v0 != 0 && sp28 != 0) {
-        func_8001A054(0x13C, temp_v0, sp28);
+        Zone_QueueEntities(0x13C, temp_v0, sp28);
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001A13C);
+INCLUDE_ASM("asm/nonmatchings/game/8001A014", Zone_QueueDrawLists);
 #endif
 
 #ifdef NON_MATCHING

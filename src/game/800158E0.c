@@ -660,13 +660,13 @@ int Gfx_EndFrame(void) {
         color2 = 0;
         res = 0;
         if (g_CurrentZone != 0) {
-            res = (s32 *)func_80031AE8(D_800608D8, BAND_KEY_A, D_800608E0, 0, 0, 0, 0, 0, 0);
+            res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_A, D_800608E0, 0, 0, 0, 0, 0, 0);
             if (res != 0) {
                 mode = res[0];
                 color = res[1];
                 if (mode == BAND_MODE_SPLIT) {
                     color2 = res[2];
-                    res = (s32 *)func_80031AE8(D_800608D8, BAND_KEY_B, D_800608E0, 0, 0, ARG_SLOT_SHORT, &sp28, 0, 0);
+                    res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_B, D_800608E0, 0, 0, ARG_SLOT_SHORT, &sp28, 0, 0);
                     y = 0;
                     if (res != 0) {
                         y = *(s16 *)res;
@@ -1537,7 +1537,7 @@ void func_80017BC4(void) {
         D_8006083C = D_800607F4;
         D_80060840 = D_800607F8;
         *(s32 *)((char *)&D_8006083C + 8) = D_800607FC;
-        if (func_800321D4(D_800608D4, QUERY_ARG1, 0, 0, 0, QUERY_ARG5, 0) != QUERY_RESULT_DONE) {
+        if (Ent_GetPropertyValue(D_800608D4, QUERY_ARG1, 0, 0, 0, QUERY_ARG5, 0) != QUERY_RESULT_DONE) {
             D_80060914 = D_80060828 & ANGLE_MASK;
         } else {
             /* result 4: angle kept */
@@ -1606,7 +1606,7 @@ void func_80018294(s32 *arg0) {
     s32 dy;
     s32 dz;
 
-    mask = func_800321D4(D_800608D4, MASK_QUERY_ID, -1, D_800608E8, 0, MASK_QUERY_MODE, 0);
+    mask = Ent_GetPropertyValue(D_800608D4, MASK_QUERY_ID, -1, D_800608E8, 0, MASK_QUERY_MODE, 0);
     entry = arg0;
     off = FIRST_ENTRY_OFFSET;
     for (i = 0; i < *arg0; i++) {

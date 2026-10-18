@@ -32,7 +32,7 @@ typedef struct Unk80031AE8Entry {
 
 #define LERP(a, b, t) ((((((b) - (a)) * (t)) >> LERP_ROUND_SHIFT) + 1) >> 1)
 
-s32 func_80031AE8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5, s32 *arg6, s32 arg7, s32 arg8) {
+s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5, s32 *arg6, s32 arg7, s32 arg8) {
     u8 *list;
     s32 lo;
     s32 hi;
@@ -320,15 +320,15 @@ interpolate:
     return (s32)arg6;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80031AE8", func_80031AE8);
+INCLUDE_ASM("asm/nonmatchings/game/80031AE8", Ent_GetProperty);
 #endif
 
-s32 func_800321D4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6) {
+s32 Ent_GetPropertyValue(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6) {
     s32 sp28[4];
     u8 *sp38;
     u8 *p;
 
-    p = (u8 *) func_80031AE8(arg0, arg1, arg2, arg3, (s32 *) arg4, arg5, sp28, 1, (s32) &sp38);
+    p = (u8 *) Ent_GetProperty(arg0, arg1, arg2, arg3, (s32 *) arg4, arg5, sp28, 1, (s32) &sp38);
     if (p == 0) {
         return arg6;
     }
@@ -346,11 +346,11 @@ s32 func_800321D4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s3
     }
 }
 
-s32 func_800322C0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+s32 Ent_GetPropertyRowLength(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 sp28[4];
     s32 sp38;
 
-    if (func_80031AE8(arg0, arg1, arg2, 0, &sp38, arg3, sp28, 1, 0) != 0) {
+    if (Ent_GetProperty(arg0, arg1, arg2, 0, &sp38, arg3, sp28, 1, 0) != 0) {
         return sp38;
     }
     return 0;

@@ -588,7 +588,7 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         *(s32 *)(arg1 + 0x24) = g_CurrentZone->eid;
         *(s32 *)(arg1 + 0x2C) = D_800608E0;
         *(s32 *)(arg1 + 0x30) = *(s32 *)(D_8006759C[0] + 8);
-        *(s32 *)(arg1 + 0x28) = func_800321D4(D_800608D4, ID_28, 0, 0, 0, CALL_FLAGS, 0);
+        *(s32 *)(arg1 + 0x28) = Ent_GetPropertyValue(D_800608D4, ID_28, 0, 0, 0, CALL_FLAGS, 0);
         if (D_8006CC84 < -1) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
         } else if (arg0->entity == 0) {
@@ -596,7 +596,7 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         } else if (isStatic) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
         } else {
-            id = func_800321D4((s32)arg0->entity, ID_38, 0, 0, 0, CALL_FLAGS, 0);
+            id = Ent_GetPropertyValue((s32)arg0->entity, ID_38, 0, 0, 0, CALL_FLAGS, 0);
             *(s32 *)(arg1 + 0x38) = id;
             if (id != 0) {
                 D_8006CDB8 = ((D_80069718[*(s32 *)(arg1 + 0x30) * TABLE_ROW_WORDS + id / NIBBLES_PER_WORD]

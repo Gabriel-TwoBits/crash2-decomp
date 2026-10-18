@@ -109,9 +109,9 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         }
         if (arg1 != D_800608D4 || (arg3 & ARG_FORCE)) {
             flags |= FLAG_TARGET;
-            count = func_800322C0(arg1, 0x4B, 0, 2);
+            count = Ent_GetPropertyRowLength(arg1, 0x4B, 0, 2);
             maxPos = (count - 1) << SEGMENT_SHIFT;
-            field48 = func_800321D4(arg1, 0x29, 0, 0, 0, 2, 0);
+            field48 = Ent_GetPropertyValue(arg1, 0x29, 0, 0, 0, 2, 0);
         } else {
             count = D_800608EC;
             maxPos = D_800608E4;
@@ -138,7 +138,7 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         D_80060918[2] = D_80060800[2];
 
         if (*FIELD(arg0, s32 *, OBJ_DATA) != 0 && (flags & FLAG_ANY_RELOAD)) {
-            list = (s32 *)func_80014260(func_80031AE8(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1, 1);
+            list = (s32 *)func_80014260(Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1, 1);
             steps = seg - D_800608E8;
             dist = steps;
             if (steps < 0) {
@@ -155,13 +155,13 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                     idx = 0;
                     D_8005F390 = (s32)func_80029800((u16 *)list[0 + OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 1);
                     func_800217F8(arg1, 0, 2);
-                    func_8001A13C(arg1, 0, 2);
+                    Zone_QueueDrawLists(arg1, 0, 2);
                     steps = seg - idx;
                 } else {
                     idx = count - 1;
                     D_8005F390 = (s32)func_80029800((u16 *)list[count + OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 0);
                     func_800217F8(arg1, idx << SEGMENT_SHIFT, 1);
-                    func_8001A13C(arg1, idx << SEGMENT_SHIFT, 1);
+                    Zone_QueueDrawLists(arg1, idx << SEGMENT_SHIFT, 1);
                     steps = seg - idx;
                 }
             } else {
@@ -178,17 +178,17 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                     steps--;
                     D_8005F390 = (s32)func_80029800((u16 *)p[OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 1);
                     func_800217F8(arg1, idx << SEGMENT_SHIFT, 2);
-                    func_8001A13C(arg1, idx << SEGMENT_SHIFT, 2);
+                    Zone_QueueDrawLists(arg1, idx << SEGMENT_SHIFT, 2);
                 } else {
                     D_8005F390 = (s32)func_80029800((u16 *)p[OBJ_DATA / 4], D_8005F390, (u16 *)tmp, 0);
                     p--;
                     idx--;
                     steps++;
                     func_800217F8(arg1, idx << SEGMENT_SHIFT, 1);
-                    func_8001A13C(arg1, idx << SEGMENT_SHIFT, 1);
+                    Zone_QueueDrawLists(arg1, idx << SEGMENT_SHIFT, 1);
                 }
             }
-            func_800143C0((void *)func_80031AE8(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1);
+            func_800143C0((void *)Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1);
             Zone_RunEntityQueue(FIELD(arg1, void *, 4), 0x13B);
         }
 
@@ -232,16 +232,16 @@ void func_800200A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
             }
             func_80022224(D_800608FC);
             ((void (*)(s32 *, s32, s32 *, s32 *, s32))func_80026A08)((s32 *)D_800608D4, D_800608E0, (s32 *)((u8 *)&D_800608FC - 0xE4), (s32 *)((u8 *)&D_800608FC + 0x28), 1);
-            D_80060888 = func_800321D4(D_800608D4, 0x1AA, D_800608E0, 0, 0, 3, 0);
+            D_80060888 = Ent_GetPropertyValue(D_800608D4, 0x1AA, D_800608E0, 0, 0, 3, 0);
             shortVal = NO_VALUE;
             if (flags & (FLAG_OBJECT | FLAG_TARGET)) {
-                res = func_80031AE8(D_800608D4, 0x176, 0, 0, 0, 1, 0, 0, 0);
+                res = Ent_GetProperty(D_800608D4, 0x176, 0, 0, 0, 1, 0, 0, 0);
                 if (res != 0) {
                     shortVal = *(s16 *)res;
                 }
                 D_80060900 = shortVal;
                 shortVal = NO_VALUE;
-                res = func_80031AE8(D_800608D4, 0x176, D_800608E4, 0, 0, 1, 0, 0, 0);
+                res = Ent_GetProperty(D_800608D4, 0x176, D_800608E4, 0, 0, 1, 0, 0, 0);
                 if (res != 0) {
                     shortVal = *(s16 *)res;
                 }

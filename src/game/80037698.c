@@ -319,7 +319,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             return;
         case 18:
             sp4C = 1;
-            list = (s16 *)func_80031AE8(FIELD(obj, OBJ_TARGET, s32), SPAWN_MSG, 0, 0, &sp48, SPAWN_COUNT_MAX, 0, 0, 0);
+            list = (s16 *)Ent_GetProperty(FIELD(obj, OBJ_TARGET, s32), SPAWN_MSG, 0, 0, &sp48, SPAWN_COUNT_MAX, 0, 0, 0);
             if (list == 0) {
                 return;
             }

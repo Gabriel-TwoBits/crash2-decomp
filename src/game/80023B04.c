@@ -53,8 +53,8 @@ void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
         key = D_800608F0;
         arg = D_800608DC;
     } else {
-        key = func_800321D4(arg0->unk4, KEY_QUERY, 0, 0, 0, QUERY_FLAGS, 0);
-        idx = func_800321D4(arg0->unk4, IDX_QUERY, 0, 0, 0, QUERY_FLAGS, 0);
+        key = Ent_GetPropertyValue(arg0->unk4, KEY_QUERY, 0, 0, 0, QUERY_FLAGS, 0);
+        idx = Ent_GetPropertyValue(arg0->unk4, IDX_QUERY, 0, 0, 0, QUERY_FLAGS, 0);
         obj = (u8 *)arg0->unk0;
         arg = *(s32 *)(obj + (idx * ENTRY_WORDS_PER_IDX + D_800608FC + *(s32 *)(*(s32 *)(obj + OBJ_CTX_OFFSET) + CTX_BASE_OFFSET)) * 4 + ENTRY_PRIMARY_OFFSET);
     }
@@ -63,7 +63,7 @@ void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
     if (key == 0) {
         tbl = D_8005BA28 + ALT_TABLE_WORDS;
     }
-    p = (s16 *)func_80031AE8(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, &sp28, 0, 0);
+    p = (s16 *)Ent_GetProperty(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, &sp28, 0, 0);
     if (p == 0) {
         if (arg0->unk4 == D_800608D4[0]) {
             arg = D_800608D8;
@@ -71,7 +71,7 @@ void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
             obj = (u8 *)arg0->unk0;
             arg = *(s32 *)(obj + (idx * ENTRY_WORDS_PER_IDX + *(s32 *)(*(s32 *)(obj + OBJ_CTX_OFFSET) + CTX_BASE_OFFSET)) * 4 + ENTRY_FALLBACK_OFFSET);
         }
-        p = (s16 *)func_80031AE8(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, &sp28, 0, 0);
+        p = (s16 *)Ent_GetProperty(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, &sp28, 0, 0);
     }
     switch (key) {
     case 0:
@@ -120,7 +120,7 @@ extern s32 D_800608D4[];
 extern s32 D_800608E0;
 
 void func_80023D7C(void) {
-    func_800321D4(*D_800608D4, UNK_ARG1, D_800608E0, 0, 0, 3, UNK_ARG6);
+    Ent_GetPropertyValue(*D_800608D4, UNK_ARG1, D_800608E0, 0, 0, 3, UNK_ARG6);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023D7C);
@@ -137,7 +137,7 @@ s32 func_80023DC4(void) {
     s32 a0;
     s32 a1;
 
-    v = func_80031AE8(D_800608DC, 0x16E, D_800608E0, 0, 0, 3, &sp28, 0, 0);
+    v = Ent_GetProperty(D_800608DC, 0x16E, D_800608E0, 0, 0, 3, &sp28, 0, 0);
     if (v == 0) {
         return 0;
     }
@@ -197,26 +197,26 @@ void func_80023E60(s32 *path, s32 arg1, s32 *out, s32 arg3) {
     } else {
         a = arg0->unk8;
         if (arg0->unkC == DIR_BACKWARD) {
-            a = ((func_800322C0(arg0->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT) - a;
+            a = ((Ent_GetPropertyRowLength(arg0->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT) - a;
         }
         dist = a;
         a = last->unk8;
         if (last->unkC == DIR_FORWARD) {
-            a = ((func_800322C0(last->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT) - a;
+            a = ((Ent_GetPropertyRowLength(last->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT) - a;
         }
         dist += a;
         i = arg1 - 2;
         if (i > 0) {
             p = arg0 + 1;
             do {
-                dist = dist + ((func_800322C0(p->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT) - 2;
+                dist = dist + ((Ent_GetPropertyRowLength(p->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT) - 2;
                 p++;
                 i--;
             } while (i != 0);
         }
     }
     if (arg3 < 0) {
-        speed = func_800321D4(arg0->unk4, SPEED_QUERY, 0, 0, 0, 2, 0);
+        speed = Ent_GetPropertyValue(arg0->unk4, SPEED_QUERY, 0, 0, 0, 2, 0);
         end = (dist * speed) >> POSITION_SHIFT;
         a = end;
         if (end < SPEED_MIN_DISTANCE) {
@@ -236,7 +236,7 @@ void func_80023E60(s32 *path, s32 arg1, s32 *out, s32 arg3) {
         p = arg0;
     }
     if (p->unkC == DIR_BACKWARD) {
-        end = (func_800322C0(p->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT;
+        end = (Ent_GetPropertyRowLength(p->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT;
     } else {
         end = 0;
     }
@@ -257,7 +257,7 @@ void func_80023E60(s32 *path, s32 arg1, s32 *out, s32 arg3) {
             dist -= pos;
         }
         p++;
-        a = (func_800322C0(p->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT;
+        a = (Ent_GetPropertyRowLength(p->unk4, SEGMENT_LENGTH_QUERY, 0, 2) - 1) << POSITION_SHIFT;
         if (p->unkC == DIR_BACKWARD) {
             end = a;
             pos = 1;
@@ -337,7 +337,7 @@ s32 func_80024268(s32 *p, s32 d, s32 *out) {
         v = p[2];
         if (k == 2) {
             v += d;
-            lim = (func_800322C0(p[1], 0x4B, 0, 2) - 1) << 8;
+            lim = (Ent_GetPropertyRowLength(p[1], 0x4B, 0, 2) - 1) << 8;
             over = v - lim;
             if (over > 0) {
                 *out = lim;
@@ -429,7 +429,7 @@ s32 func_8002433C(s32 *arg0, s32 *arg1, s32 *a2, s32 *a3, s32 *a4) {
     }
     obj = a0->unk4;
     ang = a0->unk8;
-    mode = func_800242F8(func_800321D4(obj, KEY_QUERY, 0, 0, 0, QUERY_FLAGS, 0));
+    mode = func_800242F8(Ent_GetPropertyValue(obj, KEY_QUERY, 0, 0, 0, QUERY_FLAGS, 0));
     if (obj == D_800608D4[0]) {
         dx = a1->x - D_800607F4;
         dy = a1->y - D_800607F8;
@@ -437,15 +437,15 @@ s32 func_8002433C(s32 *arg0, s32 *arg1, s32 *a2, s32 *a3, s32 *a4) {
         dz = a1->z - D_800607FC;
     } else {
         ang >>= FIXED_SHIFT;
-        e = (s16 *)func_80031AE8(obj, KEY_ENTRY, 0, ang, 0, QUERY_FLAGS, 0, 0, 0);
+        e = (s16 *)Ent_GetProperty(obj, KEY_ENTRY, 0, ang, 0, QUERY_FLAGS, 0, 0, 0);
         o = ((Unk8002433CObj *)obj)->info->pos;
         dx = a1->x - ((o->x + e[0]) << FIXED_SHIFT);
         dy = a1->y - ((o->y + e[1]) << FIXED_SHIFT);
         dz = a1->z - ((o->z + e[2]) << FIXED_SHIFT);
         if (mode != MODE_NO_ROTATE) {
             Unk8002433CRoot *rt = (Unk8002433CRoot *)a0->unk0;
-            s32 i = func_800321D4(obj, IDX_QUERY, 0, 0, 0, QUERY_FLAGS, 0);
-            e = (s16 *)func_80031AE8(*(s32 *)((s32)rt + (i * ENTRY_STRIDE_WORDS + rt->tab->base) * 4 + 0x14), KEY_ENTRY, 0, ang * 2, 0, QUERY_FLAGS, 0, 0, 0);
+            s32 i = Ent_GetPropertyValue(obj, IDX_QUERY, 0, 0, 0, QUERY_FLAGS, 0);
+            e = (s16 *)Ent_GetProperty(*(s32 *)((s32)rt + (i * ENTRY_STRIDE_WORDS + rt->tab->base) * 4 + 0x14), KEY_ENTRY, 0, ang * 2, 0, QUERY_FLAGS, 0, 0, 0);
             ang2 = e[1];
         } else {
             ang2 = 0;
@@ -525,7 +525,7 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     f.a3 = arg3;
     f.slot = arg5;
     entry = arg0 + (f.slot - FIRST_SLOT) * ENTRY_WORDS;
-    kind = func_800242F8(func_800321D4(entry[1], QUERY_KIND, 0, 0, 0, SKIP_TYPE, 0));
+    kind = func_800242F8(Ent_GetPropertyValue(entry[1], QUERY_KIND, 0, 0, 0, SKIP_TYPE, 0));
     f.type = kind;
     /* For SKIP_TYPE, hi and lo stay what the caller left in the registers */
     if (f.type != SKIP_TYPE) {
@@ -560,7 +560,7 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
         cand = f.list.list;
         /* The count is unsigned: any non-zero value runs that many entries */
         for (; count-- != 0; cand += ENTRY_WORDS) {
-            kind = func_800242F8(func_800321D4(cand[1], QUERY_KIND, 0, 0, 0, SKIP_TYPE, 0));
+            kind = func_800242F8(Ent_GetPropertyValue(cand[1], QUERY_KIND, 0, 0, 0, SKIP_TYPE, 0));
             if (f.type == kind) {
                 if (f.a3 != 0) {
                     other = func_800254D4(cand, (s32)arg1, (s32 *)f.a2, hi, lo, kind, &f.out);
@@ -735,8 +735,8 @@ s32 func_80024B6C(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg
     qz = q[2] >> 8;
     idx = pos >> 8;
     base = (Unk80024B6CBase *)((s32 **)((s32 **)obj)[1])[UNK_80024B6C_BASE_SLOT];
-    last = func_800322C0(obj, UNK_80024B6C_ENTRY_KIND, 0, UNK_80024B6C_ENTRY_SIZE) - 1;
-    p0 = (Unk80024B6CPoint *)func_80031AE8(obj, UNK_80024B6C_ENTRY_KIND, 0, idx, 0, UNK_80024B6C_ENTRY_SIZE, 0, 0, 0);
+    last = Ent_GetPropertyRowLength(obj, UNK_80024B6C_ENTRY_KIND, 0, UNK_80024B6C_ENTRY_SIZE) - 1;
+    p0 = (Unk80024B6CPoint *)Ent_GetProperty(obj, UNK_80024B6C_ENTRY_KIND, 0, idx, 0, UNK_80024B6C_ENTRY_SIZE, 0, 0, 0);
     next = idx + 1;
     if (idx < last) {
         p1 = p0 + 1;
@@ -793,7 +793,7 @@ s32 func_80024B6C(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg
                 /* more points */
             }
             next = cur + 1;
-            pn = (Unk80024B6CPoint *)func_80031AE8(obj, UNK_80024B6C_ENTRY_KIND, 0, (next << 8) >> 8, 0,
+            pn = (Unk80024B6CPoint *)Ent_GetProperty(obj, UNK_80024B6C_ENTRY_KIND, 0, (next << 8) >> 8, 0,
                                                    UNK_80024B6C_ENTRY_SIZE, 0, 0, 0);
             dprev = dnext;
             dnext = func_80024B6C_dist_at(arg5, pn, base, qx, qy, qz, c, s);
@@ -840,7 +840,7 @@ s32 func_80024B6C(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg
                 /* more points */
             }
             idx -= 1;
-            pn = (Unk80024B6CPoint *)func_80031AE8(obj, UNK_80024B6C_ENTRY_KIND, 0, (idx << 8) >> 8, 0,
+            pn = (Unk80024B6CPoint *)Ent_GetProperty(obj, UNK_80024B6C_ENTRY_KIND, 0, (idx << 8) >> 8, 0,
                                                    UNK_80024B6C_ENTRY_SIZE, 0, 0, 0);
             dprev = dcur;
             dcur = func_80024B6C_dist_at(arg5, pn, base, qx, qy, qz, c, s);
@@ -921,7 +921,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800253B0);
                            : (((dz) * (c)) >> SCALE_SHIFT) + (((dx) * (s)) >> SCALE_SHIFT))
 
 /* Point `i` of the path of `owner`. */
-#define PATH_POINT(owner, i) ((s16 *)func_80031AE8((owner), PATH_ITEM, 0, (i), 0, PATH_MODE, 0, 0, 0))
+#define PATH_POINT(owner, i) ((s16 *)Ent_GetProperty((owner), PATH_ITEM, 0, (i), 0, PATH_MODE, 0, 0, 0))
 
 s32 func_800254D4(void *arg0, s32 arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5, s32 *arg6) {
     s32 target = (s32)arg2;
@@ -942,7 +942,7 @@ s32 func_800254D4(void *arg0, s32 arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5,
     qz = ((s32 *)arg1)[2] >> FIXED_SHIFT;
     origin = *(s32 **)(*(s32 *)(owner + 4) + 0x14);
     idx = pos >> FIXED_SHIFT;
-    last = func_800322C0(owner, PATH_ITEM, 0, PATH_MODE) - 1;
+    last = Ent_GetPropertyRowLength(owner, PATH_ITEM, 0, PATH_MODE) - 1;
     p = PATH_POINT(owner, idx);
     if (idx < last) {
         next = idx + 1;
@@ -1132,7 +1132,7 @@ void func_80025D18(Unk80025D18Pos *arg0) {
     s32 rotX;
     s32 rotZ;
 
-    yRange = (Unk80025D18Range *)func_80031AE8(D_800608D8, ENTRY_TYPE_Y_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
+    yRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_Y_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
     if (yRange != 0) {
         xMin = yRange->min;
         xMax = yRange->max;
@@ -1144,7 +1144,7 @@ void func_80025D18(Unk80025D18Pos *arg0) {
             }
         }
     }
-    xRange = (Unk80025D18Range *)func_80031AE8(D_800608D8, ENTRY_TYPE_X_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
+    xRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_X_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
     if (xRange != 0) {
         xMin = xRange->min;
         xMax = xRange->max;
@@ -1152,7 +1152,7 @@ void func_80025D18(Unk80025D18Pos *arg0) {
             xRange = 0;
         }
     }
-    zRange = (Unk80025D18Range *)func_80031AE8(D_800608D8, ENTRY_TYPE_Z_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
+    zRange = (Unk80025D18Range *)Ent_GetProperty(D_800608D8, ENTRY_TYPE_Z_RANGE, D_800608E0, 0, 0, 0, 0, 0, 0);
     if (zRange != 0) {
         zMin = zRange->min;
         zMax = zRange->max;
@@ -1338,7 +1338,7 @@ void func_80026334(s32 arg0) {
 
     key = arg0 & ~D_8005B9E4;
     if (key != 0) {
-        p = (Unk80026334 *)func_80031AE8(D_800608D4[0], 0x1A8, (func_800322C0(D_800608D4[0], 0x4B, 0, 2) - 1) << 8, 0, 0, 1, 0, 0, 0);
+        p = (Unk80026334 *)Ent_GetProperty(D_800608D4[0], 0x1A8, (Ent_GetPropertyRowLength(D_800608D4[0], 0x4B, 0, 2) - 1) << 8, 0, 0, 1, 0, 0, 0);
         if (p != 0 && p->size != 0) {
             do {
                 if (p->key == key) {
@@ -1347,7 +1347,7 @@ void func_80026334(s32 arg0) {
                 p = (Unk80026334 *)((u8 *)p + p->size);
             } while (p->size != 0);
         }
-        p = (Unk80026334 *)func_80031AE8(D_800608D4[0], 0x1A8, 0, 0, 0, 1, 0, 0, 0);
+        p = (Unk80026334 *)Ent_GetProperty(D_800608D4[0], 0x1A8, 0, 0, 0, 1, 0, 0, 0);
         if (p != 0 && p->size != 0) {
             do {
                 if (p->key == key) {

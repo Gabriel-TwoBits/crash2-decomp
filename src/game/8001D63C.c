@@ -1016,20 +1016,20 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
         base = info->unk_14;
         shift = NODE_SHIFT_SHIFTED;
     }
-    count = func_800322C0((s32)node, PATH_KIND, 0, PATH_ARG_SHIFT);
+    count = Ent_GetPropertyRowLength((s32)node, PATH_KIND, 0, PATH_ARG_SHIFT);
     while (1) {
         if (pos >= 0) {
             seg = pos >> FRAC_BITS;
         } else {
             seg = -pos >> FRAC_BITS;
         }
-        t = func_800322C0((s32)node, PATH_KIND, 0, PATH_ARG_SHIFT);
+        t = Ent_GetPropertyRowLength((s32)node, PATH_KIND, 0, PATH_ARG_SHIFT);
         frac = pos & FRAC_MASK;
         if (seg == t - 1 && seg != 0) {
             frac = (pos & FRAC_MASK) + FRAC_ONE;
             seg = t - 2;
         }
-        pt = (s16 *)func_80031AE8((s32)node, PATH_KIND, 0, 0, 0, PATH_ARG_SHIFT, 0, 0, 0);
+        pt = (s16 *)Ent_GetProperty((s32)node, PATH_KIND, 0, 0, 0, PATH_ARG_SHIFT, 0, 0, 0);
         /* The segment index keeps its low 24 bits, sign-extended */
         pt += ((seg << INDEX_SIGN_SHIFT) >> INDEX_SIGN_SHIFT) * PATH_POINT_SIZE;
         out[0] = ((pt[0] << shift) + base[0]) << FRAC_BITS;

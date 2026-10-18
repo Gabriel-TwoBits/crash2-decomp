@@ -947,3 +947,18 @@ g_EntityQueue = 0x8006302C;
 
 // the number of rows of the entity queue at 0x8006302C, which func_8001A054 grows and func_8001A23C shrinks, at gp + 0x23C as Crash2Recomp's notes say
 g_EntityQueueCount = 0x8005F3B8;
+
+// binary-searches the entity's 8-byte property headers from 0x10 (count at 0xC) by id and returns the row's values, CrashEdit's entity layout (id, offset + 12, type flags 0x40 sparse and 0x20 meta values, element size, row count); Crash2Recomp's notes call it the generic entity-property accessor; Obj_SpawnEntity, the camera code (func_800200A8, func_80020A24) and the GOOL MISC opcode's handler call it
+Ent_GetProperty = 0x80031AE8; // type:func
+
+// Ent_GetProperty's first value read by the element type (1 u8, 17 s8, 2 u16, 18 s16, else a word), the default argument when there is none; the EFLR and EFLV opcodes' handlers (CrashEdit: entity field) and Obj_SpawnEntity read the type 0xA9, subtype 0xAA and id 0x9F (CrashEdit's names) through it
+Ent_GetPropertyValue = 0x800321D4; // type:func
+
+// returns the length Ent_GetProperty stores for the selected row; Obj_SpawnEntity, func_800200A8, func_8002648C and func_80023B04 take a path's node count from property 0x4B (CrashEdit's positions) with it
+Ent_GetPropertyRowLength = 0x800322C0; // type:func
+
+// stores an action for each value of a list in the entity queue at 0x8006302C, replacing the row of the same entity (value & 0xFFFF00), as Crash2Recomp's notes say (the last action per entity wins); func_8001A13C queues both actions with it
+Zone_QueueEntities = 0x8001A054; // type:func
+
+// queues the kills (0x13B) and spawns (0x13C) of a camera node's draw lists, properties 0x13B and 0x13C (CrashEdit's drawlista and drawlistb), swapped by direction, as Crash2Recomp's notes say; func_800200A8 calls it at each node it steps through
+Zone_QueueDrawLists = 0x8001A13C; // type:func

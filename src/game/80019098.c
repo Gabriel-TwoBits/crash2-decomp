@@ -69,8 +69,8 @@ extern s32 D_8006CDF4;
 extern s32 D_8006CDF8;
 extern char Obj_HasStateFlags[];
 
-#define PROP(o, id) func_800321D4(o, id, 0, 0, 0, PROP_ARG_MODE, 0)
-#define LOOKUP(o, id, out) func_80031AE8(o, id, 0, 0, out, PROP_ARG_MODE, PTR_NONE, 0, 0)
+#define PROP(o, id) Ent_GetPropertyValue(o, id, 0, 0, 0, PROP_ARG_MODE, 0)
+#define LOOKUP(o, id, out) Ent_GetProperty(o, id, 0, 0, out, PROP_ARG_MODE, PTR_NONE, 0, 0)
 /* The value of type T at byte offset off of p. */
 #define AT(p, off, T) (*(T *)((u8 *)(p) + (off)))
 
@@ -193,7 +193,7 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     AT(slot, 0x18, void *) = arg0;
     memset(slot + 0x20 / 4, 0, CLEAR_SIZE);
     AT(slot, 0xF0, s32) = obj;
-    AT(slot, 0xF8, s32) = func_800322C0(obj, PROP_POSITION, 0, PROP_ARG_MODE) << FIXED_SHIFT;
+    AT(slot, 0xF8, s32) = Ent_GetPropertyRowLength(obj, PROP_POSITION, 0, PROP_ARG_MODE) << FIXED_SHIFT;
     func_8001F054((GoolObject *)slot, 0, slot + 0x60 / 4);
     if ((s32)slot == g_Player) {
         row = D_8006759C + D_8006CD7C * ENTITY_POS_ROW_SIZE;
