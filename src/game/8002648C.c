@@ -63,7 +63,7 @@ void func_8002648C(Arg *arg0, s32 arg1) {
     common:
         a2 = 0;
         if (arg1 != 1) a2 = g_CameraProgressMax;
-        e = (Ent *)((u8 *)Ent_GetProperty((s32)g_CameraPath, 0x109, a2, 0, 0, 1, 0, 0, 0) + arg0->b * 4);
+        e = (Ent *)((u8 *)Ent_GetProperty((s32)g_CameraPath, ENT_PROP_NEIGHBORS, a2, 0, 0, 1, 0, 0, 0) + arg0->b * 4);
         p = (s32 *)(((s32 *)g_CameraPath[1])[4] + (e->c * 4 + 0x194));
         v = (s32 *)Nsf_OpenEntry(p, 1, 0);
         s = *(s32 *)((u8 *)v + (e->b * 3 + *(s32 *)(v[4] + 0x184)) * 4 + 0x10);
@@ -72,7 +72,7 @@ void func_8002648C(Arg *arg0, s32 arg1) {
         if (e->a == 1) {
             D_8005BAE0 = 0;
         } else {
-            D_8005BAE0 = (Ent_GetPropertyRowLength(s, 0x4B, 0, 2) - 1) << 8;
+            D_8005BAE0 = (Ent_GetPropertyRowLength(s, ENT_PROP_POSITIONS, 0, 2) - 1) << 8;
         }
         D_8005BAE4 = arg1;
         if (arg0->c == 3) {
@@ -138,17 +138,17 @@ s32 func_800267C4(Buf *out, s32 argAddr) {
     V *cur;
 
     if (arg->mode == MODE_DIRECT) {
-        list = (u8 *)Ent_GetProperty(arg->id, 0x109, 0, 0, 0, 1, 0, 0, 0);
+        list = (u8 *)Ent_GetProperty(arg->id, ENT_PROP_NEIGHBORS, 0, 0, 0, 1, 0, 0, 0);
         if (list != 0) {
-            count = Ent_GetPropertyRowLength(arg->id, 0x109, 0, 1);
+            count = Ent_GetPropertyRowLength(arg->id, ENT_PROP_NEIGHBORS, 0, 1);
             mask = D_80060900;
         } else {
             count = 0;
         }
     } else {
-        list = (u8 *)Ent_GetProperty(arg->id, 0x109, (Ent_GetPropertyRowLength(arg->id, 0x4B, 0, 2) - 1) << 8, 0, 0, 1, 0, 0, 0);
+        list = (u8 *)Ent_GetProperty(arg->id, ENT_PROP_NEIGHBORS, (Ent_GetPropertyRowLength(arg->id, ENT_PROP_POSITIONS, 0, 2) - 1) << 8, 0, 0, 1, 0, 0, 0);
         if (list != 0) {
-            count = Ent_GetPropertyRowLength(arg->id, 0x109, (Ent_GetPropertyRowLength(arg->id, 0x4B, 0, 2) - 1) << 8, 1);
+            count = Ent_GetPropertyRowLength(arg->id, ENT_PROP_NEIGHBORS, (Ent_GetPropertyRowLength(arg->id, ENT_PROP_POSITIONS, 0, 2) - 1) << 8, 1);
             mask = D_80060904;
         } else {
             count = 0;
@@ -172,7 +172,7 @@ s32 func_800267C4(Buf *out, s32 argAddr) {
                 cur->c = 0;
             } else {
                 cur->d = 1;
-                cur->c = (Ent_GetPropertyRowLength(b, 0x4B, 0, 2) - 1) << 8;
+                cur->c = (Ent_GetPropertyRowLength(b, ENT_PROP_POSITIONS, 0, 2) - 1) << 8;
             }
             cur++;
             n++;
@@ -200,9 +200,9 @@ void Zone_GetCameraPathPoint(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     s32 v;
 
     base = *(s32 **)(*(s32 *)(arg0 + 1) + 0x14);
-    a =(s16 *)Ent_GetProperty((s32)arg0, 0x4B, 0, idx = arg1 >> 8, 0, 2, 0, 0, 0);
+    a =(s16 *)Ent_GetProperty((s32)arg0, ENT_PROP_POSITIONS, 0, idx = arg1 >> 8, 0, 2, 0, 0, 0);
     new_var = &D_800608D8;
-    b = (s16 *)Ent_GetProperty(*new_var,0x4B, 0, idx * 2, 0, 2, 0, 0, 0);
+    b = (s16 *)Ent_GetProperty(*new_var,ENT_PROP_POSITIONS, 0, idx * 2, 0, 2, 0, 0, 0);
     arg2[0] = (base[0] + a[0]) << 8;
     arg2[1] = (base[1] + a[1]) << 8;
     arg2[2] = (base[2] + a[2]) << 8;
@@ -215,7 +215,7 @@ void Zone_GetCameraPathPoint(s32 *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
         arg3[2] = b[5];
     }
     frac = arg1 & 0xFF;
-    if (frac != 0 && idx + 1 < Ent_GetPropertyRowLength((s32)arg0, 0x4B, 0, 2)) {
+    if (frac != 0 && idx + 1 < Ent_GetPropertyRowLength((s32)arg0, ENT_PROP_POSITIONS, 0, 2)) {
         t[0] = (base[0] + a[3]) << 8;
         t[1] = (base[1] + a[4]) << 8;
         t[2] = (base[2] + a[5]) << 8;

@@ -16,12 +16,6 @@ typedef struct {
 #define PTR_NONE ((void *)0)
 #define OBJ_TYPE_ENTITY 7
 #define OBJ_TYPE_PLAYER 0x11
-#define PROP_KIND 0xA9
-#define PROP_SLOT 0xAA
-#define PROP_INDEX 0x9F
-#define PROP_POSITION 0x4B
-#define PROP_PARAMS 0xA4
-#define PROP_ARG_MODE 2
 #define KIND_CHAIN 0x22
 #define SLOT_FLAG_USED 1
 #define SLOT_FLAG_RESERVED 2
@@ -69,8 +63,8 @@ extern s32 D_8006CDF4;
 extern s32 D_8006CDF8;
 extern char Obj_HasStateFlags[];
 
-#define PROP(o, id) Ent_GetPropertyValue(o, id, 0, 0, 0, PROP_ARG_MODE, 0)
-#define LOOKUP(o, id, out) Ent_GetProperty(o, id, 0, 0, out, PROP_ARG_MODE, PTR_NONE, 0, 0)
+#define PROP(o, id) Ent_GetPropertyValue(o, id, 0, 0, 0, ENT_ROW_INDEX, 0)
+#define LOOKUP(o, id, out) Ent_GetProperty(o, id, 0, 0, out, ENT_ROW_INDEX, PTR_NONE, 0, 0)
 /* The value of type T at byte offset off of p. */
 #define AT(p, off, T) (*(T *)((u8 *)(p) + (off)))
 
@@ -99,15 +93,15 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
         e = AT(arg0, 0x10, u8 *);
         obj = AT(arg0, 0x10 + (arg1 + AT(e, 0x184, s32) + AT(e, 0x188, s32)) * 4, s32);
     }
-    if (PROP(obj, PROP_KIND) == 0 || (PROP(obj, PROP_INDEX) > INDEX_MIN_EXCL && PROP(obj, PROP_INDEX) < INDEX_MAX_EXCL)) {
+    if (PROP(obj, ENT_PROP_TYPE) == 0 || (PROP(obj, ENT_PROP_ID) > INDEX_MIN_EXCL && PROP(obj, ENT_PROP_ID) < INDEX_MAX_EXCL)) {
         if (g_Player != 0) {
             return ERR_NO_OBJECT;
         }
     }
-    if (PROP(obj, PROP_KIND) == KIND_CHAIN) {
+    if (PROP(obj, ENT_PROP_TYPE) == KIND_CHAIN) {
         if (D_8006CDF8 != 0) {
-            a = (s32 *)LOOKUP(obj, PROP_POSITION, PTR_NONE);
-            b = (s32 *)LOOKUP(D_8006CDF8, PROP_POSITION, PTR_NONE);
+            a = (s32 *)LOOKUP(obj, ENT_PROP_POSITIONS, PTR_NONE);
+            b = (s32 *)LOOKUP(D_8006CDF8, ENT_PROP_POSITIONS, PTR_NONE);
             if (D_8006CDF8 != 0
                 && func_80031668(((s16 *)a)[0], ((s16 *)b)[0]) < POS_TOLERANCE
                 && func_80031668(((s16 *)a)[2], ((s16 *)b)[2]) < POS_TOLERANCE
@@ -127,22 +121,22 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     } else {
         /* not a chain object */
     }
-    PROP(obj, PROP_INDEX);
-    idx = PROP(obj, PROP_INDEX);
+    PROP(obj, ENT_PROP_ID);
+    idx = PROP(obj, ENT_PROP_ID);
     first = g_EntityFlags[idx] & SLOT_FLAG_USED;
     if (first == 0) {
-        PROP(obj, PROP_INDEX);
-        idx = PROP(obj, PROP_INDEX);
+        PROP(obj, ENT_PROP_ID);
+        idx = PROP(obj, ENT_PROP_ID);
         first = g_EntityFlags[idx] & SLOT_FLAG_RESERVED;
     }
     if (first != 0) {
-        if (PROP(obj, PROP_KIND) == KIND_CHAIN) {
+        if (PROP(obj, ENT_PROP_TYPE) == KIND_CHAIN) {
             D_8006CDF4 += CHAIN_STEP;
         }
         return ERR_NO_OBJECT;
     }
 
-    if (PROP(obj, PROP_KIND) == 0 || (PROP(obj, PROP_INDEX) > INDEX_MIN_EXCL && PROP(obj, PROP_INDEX) < INDEX_MAX_EXCL)) {
+    if (PROP(obj, ENT_PROP_TYPE) == 0 || (PROP(obj, ENT_PROP_ID) > INDEX_MIN_EXCL && PROP(obj, ENT_PROP_ID) < INDEX_MAX_EXCL)) {
         slot = g_PlayerSlot[0];
         g_Player = (s32)slot;
         i = SLOT_FIRST_PLAYER;
@@ -173,27 +167,27 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     }
     Obj_SetParent(slot, (s32 *)(&g_ObjLists + i * SLOT_SIZE));
     slot[1] = SLOT_STATE_ACTIVE;
-    entry = (s32 *)LOOKUP(obj, PROP_PARAMS, &sp28);
+    entry = (s32 *)LOOKUP(obj, ENT_PROP_SETTINGS, &sp28);
     if (entry == PTR_NONE) {
         sp28 = 0;
     }
-    r = Obj_Init(slot, PROP(obj, PROP_KIND), PROP(obj, PROP_SLOT), sp28, (s32)entry);
+    r = Obj_Init(slot, PROP(obj, ENT_PROP_TYPE), PROP(obj, ENT_PROP_SUBTYPE), sp28, (s32)entry);
     if (r >= ERR_THRESHOLD) {
         Obj_SetParent(slot, (s32 *)(&g_ObjLists + SLOT_LIST_OFFSET));
         return r;
     }
     /* The flag goes at the first call's index; the second call's result is unused. */
-    idx = PROP(obj, PROP_INDEX);
-    PROP(obj, PROP_INDEX);
+    idx = PROP(obj, ENT_PROP_ID);
+    PROP(obj, ENT_PROP_ID);
     g_EntityFlags[idx] |= SLOT_FLAG_USED;
-    slot[0xB8 / 4] = PROP(obj, PROP_INDEX) << FIXED_SHIFT;
+    slot[0xB8 / 4] = PROP(obj, ENT_PROP_ID) << FIXED_SHIFT;
     if (AT(arg0, 8, s32) == OBJ_TYPE_PLAYER) {
         arg0 = (void *)g_CurrentZone;
     }
     AT(slot, 0x18, void *) = arg0;
     memset(slot + 0x20 / 4, 0, CLEAR_SIZE);
     AT(slot, 0xF0, s32) = obj;
-    AT(slot, 0xF8, s32) = Ent_GetPropertyRowLength(obj, PROP_POSITION, 0, PROP_ARG_MODE) << FIXED_SHIFT;
+    AT(slot, 0xF8, s32) = Ent_GetPropertyRowLength(obj, ENT_PROP_POSITIONS, 0, ENT_ROW_INDEX) << FIXED_SHIFT;
     func_8001F054((GoolObject *)slot, 0, slot + 0x60 / 4);
     if ((s32)slot == g_Player) {
         row = D_8006759C + D_8006CD7C * ENTITY_POS_ROW_SIZE;

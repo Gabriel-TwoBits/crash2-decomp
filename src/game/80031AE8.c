@@ -3,32 +3,14 @@
 #include "game.h"
 
 #ifdef NON_MATCHING
+/* sizeof(EntProperty), a plain int like the index it scales */
 #define ENTRY_STRIDE 8
-#define HEADER_COUNT_OFFSET 0xC
-#define HEADER_NEXT_OFFSET 8
-#define HEADER_ENTRIES_OFFSET 0x10
-
-#define FLAG_SIZES 0x40
-#define FLAG_TIMES 0x20
-#define FLAG_TYPE_MASK 0x1F
-
-#define MODE_FLOOR 0
-#define MODE_EXACT 1
-#define MODE_INDEX 2
 
 #define TIME_SHIFT 8
 #define LERP_ONE_SHIFT 8
 #define LERP_ROUND_SHIFT 7
 #define DATA_ALIGN_MASK (-4)
 #define DATA_ALIGN_ADD 3
-
-typedef struct Unk80031AE8Entry {
-    /* 0x0 */ s16 key;
-    /* 0x2 */ u16 unk_02;
-    /* 0x4 */ u8 flags;
-    /* 0x5 */ u8 unk_05;
-    /* 0x6 */ u16 count;
-} Unk80031AE8Entry;
 
 #define LERP(a, b, t) ((((((b) - (a)) * (t)) >> LERP_ROUND_SHIFT) + 1) >> 1)
 
@@ -49,7 +31,7 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
     s32 b;
     s32 type;
     s32 time;
-    Unk80031AE8Entry *entry;
+    EntProperty *entry;
     u16 *sizes;
     s16 *times;
     u8 *data;
@@ -59,7 +41,7 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
 
     list = (u8 *)arg0;
     while (1) {
-        n = *(s16 *)(list + HEADER_COUNT_OFFSET);
+        n = *(s16 *)(list + ENT_PROPERTY_COUNT_OFFSET);
         entry = 0;
         if (n > 0) {
             lo = 0;
@@ -67,11 +49,11 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
             mid = hi;
             while (1) {
                 mid = (lo + hi) >> 1;
-                entry = (Unk80031AE8Entry *)(list + HEADER_ENTRIES_OFFSET + mid * ENTRY_STRIDE);
-                if (arg1 == entry->key) {
+                entry = (EntProperty *)(list + ENT_PROPERTIES_OFFSET + mid * ENTRY_STRIDE);
+                if (arg1 == entry->id) {
                     break;
                 }
-                if (entry->key < arg1) {
+                if (entry->id < arg1) {
                     lo = mid + 1;
                 } else {
                     hi = mid - 1;
@@ -85,19 +67,19 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
         if (entry != 0) {
             break;
         }
-        list = *(u8 **)(list + HEADER_NEXT_OFFSET);
+        list = *(u8 **)(list + ENT_NEXT_OFFSET);
         if (list == 0) {
             return 0;
         }
     }
 
     if (arg8 != 0) {
-        *(Unk80031AE8Entry **)arg8 = entry;
+        *(EntProperty **)arg8 = entry;
     }
-    n = entry->count;
-    base = list + HEADER_COUNT_OFFSET + entry->unk_02;
+    n = entry->row_count;
+    base = list + ENT_DATA_OFFSET + entry->offset;
     t6 = 0;
-    if (entry->flags & FLAG_SIZES) {
+    if (entry->type & ENT_PROPERTY_SPARSE) {
         sizes = (u16 *)base;
         times = (s16 *)(base + n * 2);
     } else {
@@ -105,7 +87,7 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
         t6 = *(u16 *)base;
         times = (s16 *)(base + 2);
     }
-    if (entry->flags & FLAG_TIMES) {
+    if (entry->type & ENT_PROPERTY_META) {
         data = (u8 *)(times + n);
     } else {
         data = (u8 *)times;
@@ -113,7 +95,7 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
     }
     data = (u8 *)(((s32)data + DATA_ALIGN_ADD) & DATA_ALIGN_MASK);
 
-    if (arg5 == MODE_INDEX) {
+    if (arg5 == ENT_ROW_INDEX) {
         idx = arg2;
         if (!(arg2 < n)) {
             return 0;
@@ -143,9 +125,9 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
                 }
             }
         }
-        if (arg5 == MODE_FLOOR) {
+        if (arg5 == ENT_ROW_AT_OR_BEFORE) {
             /* fall through to the lookup */
-        } else if (arg5 == MODE_EXACT) {
+        } else if (arg5 == ENT_ROW_EXACT) {
             if (times[idx] != time) {
                 return 0;
             }
@@ -177,7 +159,7 @@ s32 Ent_GetProperty(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 *arg4, s32 arg5,
         }
     }
     if (skip != 0) {
-        data += skip * entry->unk_05;
+        data += skip * entry->element_size;
     }
     return (s32)data;
 
@@ -208,23 +190,23 @@ interpolate:
         }
     }
     if (skip != 0) {
-        data += skip * entry->unk_05;
+        data += skip * entry->element_size;
     }
     out = (u8 *)arg6;
 
-    data2 = data + t6 * entry->unk_05;
-    if (idx != entry->count - 1 && (sizes == 0 || t6 == sizes[idx + 1])) {
+    data2 = data + t6 * entry->element_size;
+    if (idx != entry->row_count - 1 && (sizes == 0 || t6 == sizes[idx + 1])) {
         num = arg2 - (times[idx] << TIME_SHIFT);
         denom = (times[idx + 1] << TIME_SHIFT) - (times[idx] << TIME_SHIFT);
         if (num != 0) {
             frac = (num << LERP_ONE_SHIFT) / denom;
-            type = entry->flags & FLAG_TYPE_MASK;
+            type = entry->type & ENT_PROPERTY_TYPE_MASK;
             switch (type) {
-            case 1:
-            case 17:
+            case ENT_TYPE_U8:
+            case ENT_TYPE_S8:
                 if (n != 0) {
                     do {
-                        if (type == 1) {
+                        if (type == ENT_TYPE_U8) {
                             a = *data;
                             b = *data2;
                         } else {
@@ -238,11 +220,11 @@ interpolate:
                     } while (--n != 0);
                 }
                 return (s32)arg6;
-            case 2:
-            case 18:
+            case ENT_TYPE_U16:
+            case ENT_TYPE_S16:
                 if (n != 0) {
                     do {
-                        if (type == 2) {
+                        if (type == ENT_TYPE_U16) {
                             a = *(u16 *)data;
                             b = *(u16 *)data2;
                         } else {
@@ -309,7 +291,7 @@ interpolate:
         /* last frame or differing sizes: plain copy below */
     }
 
-    n = n * entry->unk_05;
+    n = n * entry->element_size;
     if (n != 0) {
         do {
             *out = *data;
@@ -332,14 +314,15 @@ s32 Ent_GetPropertyValue(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 a
     if (p == 0) {
         return arg6;
     }
-    switch (sp38[4] & 0x1F) {
-    case 1:
+    /* EntProperty's type byte */
+    switch (sp38[4] & ENT_PROPERTY_TYPE_MASK) {
+    case ENT_TYPE_U8:
         return *p;
-    case 17:
+    case ENT_TYPE_S8:
         return *(s8 *) p;
-    case 2:
+    case ENT_TYPE_U16:
         return *(u16 *) p;
-    case 18:
+    case ENT_TYPE_S16:
         return *(s16 *) p;
     default:
         return *(s32 *) p;

@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "common.h"
+#include "game/entity.h"
 #include "game/nsf.h"
 #include "game/object.h"
 

@@ -109,7 +109,7 @@ void Zone_MoveCamera(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         }
         if (arg1 != g_CameraPath || (arg3 & ARG_FORCE)) {
             flags |= FLAG_TARGET;
-            count = Ent_GetPropertyRowLength(arg1, 0x4B, 0, 2);
+            count = Ent_GetPropertyRowLength(arg1, ENT_PROP_POSITIONS, 0, 2);
             maxPos = (count - 1) << SEGMENT_SHIFT;
             field48 = Ent_GetPropertyValue(arg1, 0x29, 0, 0, 0, 2, 0);
         } else {
@@ -138,7 +138,7 @@ void Zone_MoveCamera(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         D_80060918[2] = g_CameraAngleX[2];
 
         if (*FIELD(arg0, s32 *, OBJ_DATA) != 0 && (flags & FLAG_ANY_RELOAD)) {
-            list = (s32 *)Nsf_OpenEntry(Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1, 1);
+            list = (s32 *)Nsf_OpenEntry(Ent_GetProperty(arg1, ENT_PROP_SLST, 0, 0, 0, 2, 0, 0, 0), 1, 1);
             steps = seg - g_CameraNode;
             dist = steps;
             if (steps < 0) {
@@ -188,7 +188,7 @@ void Zone_MoveCamera(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                     Zone_QueueDrawLists(arg1, idx << SEGMENT_SHIFT, 1);
                 }
             }
-            Nsf_CloseEntry((void *)Ent_GetProperty(arg1, 0x103, 0, 0, 0, 2, 0, 0, 0), 1);
+            Nsf_CloseEntry((void *)Ent_GetProperty(arg1, ENT_PROP_SLST, 0, 0, 0, 2, 0, 0, 0), 1);
             Zone_RunEntityQueue(FIELD(arg1, void *, 4), 0x13B);
         }
 

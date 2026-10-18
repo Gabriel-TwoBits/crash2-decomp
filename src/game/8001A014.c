@@ -8,6 +8,10 @@ typedef struct {
     s32 unk8;
 } Unk80063034;
 
+/* The entity queue's actions, the draw lists' ids: a kill for list A's entities, a spawn for list B's */
+#define QUEUE_KILL ENT_PROP_DRAW_LIST_A
+#define QUEUE_SPAWN ENT_PROP_DRAW_LIST_B
+
 s32 g_EntityQueueCount;
 extern Unk80063034 D_80063034[];
 
@@ -20,7 +24,7 @@ void Zone_QueueKillAll(void) {
     do {
     } while (0);
     for (i = 0; i < n; i++) {
-        D_80063034[i].unk0 = 0x13B;
+        D_80063034[i].unk0 = QUEUE_KILL;
     }
 }
 
@@ -60,6 +64,10 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", Zone_QueueEntities);
 #endif
 
 #ifdef NON_MATCHING
+/* Zone_MoveCamera's direction toward the path's end, and one node's progress */
+#define STEP_FORWARD 2
+#define NODE_PROGRESS 0x100
+
 void Zone_QueueDrawLists(s32 arg0, s32 a1, s32 a2) {
     s32 arg2 = a2;
     s32 arg1 = a1;
@@ -68,20 +76,20 @@ void Zone_QueueDrawLists(s32 arg0, s32 a1, s32 a2) {
     s32 var_a1;
     s32 var_a2;
 
-    var_a1 = 0x13C;
-    if (arg2 == 2 && (var_a1 = 0x13B, arg2 == 2)) {
-        var_a2 = arg1 - 0x100;
+    var_a1 = ENT_PROP_DRAW_LIST_B;
+    if (arg2 == STEP_FORWARD && (var_a1 = ENT_PROP_DRAW_LIST_A, arg2 == STEP_FORWARD)) {
+        var_a2 = arg1 - NODE_PROGRESS;
     } else {
-        var_a2 = arg1 + 0x100;
+        var_a2 = arg1 + NODE_PROGRESS;
     }
-    temp_v0 = Ent_GetProperty(arg0, var_a1, var_a2, 0, &sp28, 1, 0, 0, 0);
+    temp_v0 = Ent_GetProperty(arg0, var_a1, var_a2, 0, &sp28, ENT_ROW_EXACT, 0, 0, 0);
     if (temp_v0 != 0 && sp28 != 0) {
-        Zone_QueueEntities(0x13B, temp_v0, sp28);
+        Zone_QueueEntities(QUEUE_KILL, temp_v0, sp28);
     }
-    var_a1 = (arg2 == 2) ? 0x13C : 0x13B;
-    temp_v0 = Ent_GetProperty(arg0, var_a1, arg1, 0, &sp28, 1, 0, 0, 0);
+    var_a1 = (arg2 == STEP_FORWARD) ? ENT_PROP_DRAW_LIST_B : ENT_PROP_DRAW_LIST_A;
+    temp_v0 = Ent_GetProperty(arg0, var_a1, arg1, 0, &sp28, ENT_ROW_EXACT, 0, 0, 0);
     if (temp_v0 != 0 && sp28 != 0) {
-        Zone_QueueEntities(0x13C, temp_v0, sp28);
+        Zone_QueueEntities(QUEUE_SPAWN, temp_v0, sp28);
     }
 }
 #else
@@ -90,11 +98,9 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", Zone_QueueDrawLists);
 
 #ifdef NON_MATCHING
 #define ENTRY_ANY (-1)
-#define ENTRY_KIND_PLAY 0x13B
-#define ENTRY_KIND_LOAD 0x13C
 #define ADDR_MASK 0xFFFF00
 #define ADDR_FLAG_SHIFT 6
-#define ADDR_FLAG_READY 1
+#define ENTITY_SPAWNED 1
 #define SLOT_MASK 0xFF
 #define SLOT_COUNT 8
 #define OWNER_SLOTS_OFFSET 0x10
@@ -130,9 +136,9 @@ void Zone_RunEntityQueue(void *arg0, s32 arg1) {
         if (arg1 != ENTRY_ANY && arg1 != e->unk8) {
             continue;
         }
-        if (e->unk8 == ENTRY_KIND_PLAY) {
+        if (e->unk8 == QUEUE_KILL) {
             addr = (u32)e->unk0 & ADDR_MASK;
-            if (*(u32 *)(g_EntityFlags + (addr >> ADDR_FLAG_SHIFT)) & ADDR_FLAG_READY) {
+            if (*(u32 *)(g_EntityFlags + (addr >> ADDR_FLAG_SHIFT)) & ENTITY_SPAWNED) {
                 if (e->unk4 == 0) {
                     e->unk4 = Obj_FindById((s32)addr);
                 }
@@ -143,14 +149,14 @@ void Zone_RunEntityQueue(void *arg0, s32 arg1) {
                     Obj_Kill((s32 *)obj, 1);
                 }
             } else {
-                /* not ready: dropped without starting */
+                /* not spawned: nothing to kill */
             }
-            remove = 1; /* a play entry is always consumed */
-        } else if (e->unk8 == ENTRY_KIND_LOAD) {
+            remove = 1; /* a kill is always consumed */
+        } else if (e->unk8 == QUEUE_SPAWN) {
             addr = (u32)e->unk0 & ADDR_MASK;
             slot = (u32)e->unk0 & SLOT_MASK;
             remove = 0;
-            if (!(*(u32 *)(g_EntityFlags + (addr >> ADDR_FLAG_SHIFT)) & ADDR_FLAG_READY) && slot < SLOT_COUNT) {
+            if (!(*(u32 *)(g_EntityFlags + (addr >> ADDR_FLAG_SHIFT)) & ENTITY_SPAWNED) && slot < SLOT_COUNT) {
                 e->unk4 = Obj_SpawnEntity(
                     Nsf_OpenEntry((u8 *)*(s32 *)((u8 *)arg0 + OWNER_SLOTS_OFFSET) + (slot << SLOT_STRIDE_SHIFT) + SLOT_TABLE_OFFSET, 1, 0),
                     (u32)e->unk0 >> ENTRY_BYTE3_SHIFT);

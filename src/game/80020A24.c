@@ -409,8 +409,6 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80020A24);
 #endif
 
 #ifdef NON_MATCHING
-#define RES_TYPE_A 0x208
-#define RES_TYPE_B 0x209
 #define SIDE_SELECT 2
 #define OFFSET_DELTA 0x100
 #define FLAGS_FIRST 0x14
@@ -423,10 +421,10 @@ void Zone_ApplyLoadLists(s32 arg0, s32 arg1, s32 arg2) {
     s32 p;
 
     if (arg2 == SIDE_SELECT) {
-        type = RES_TYPE_B;
+        type = ENT_PROP_LOAD_LIST_B;
         offset = arg1 - OFFSET_DELTA;
     } else {
-        type = RES_TYPE_A;
+        type = ENT_PROP_LOAD_LIST_A;
         offset = arg1 + OFFSET_DELTA;
     }
     p = Ent_GetProperty(arg0, type, offset, 0, &count, 1, 0, 0, 0);
@@ -435,9 +433,9 @@ void Zone_ApplyLoadLists(s32 arg0, s32 arg1, s32 arg2) {
     }
 
     if (arg2 == SIDE_SELECT) {
-        type = RES_TYPE_A;
+        type = ENT_PROP_LOAD_LIST_A;
     } else {
-        type = RES_TYPE_B;
+        type = ENT_PROP_LOAD_LIST_B;
     }
     p = Ent_GetProperty(arg0, type, arg1, 0, &count, 1, 0, 0, 0);
     if ((p != 0) && (count != 0)) {
@@ -788,7 +786,6 @@ void func_800221DC(void) {
 }
 
 #ifdef NON_MATCHING
-#define UNK_CALL_ARG 0x173
 #define UNK_CALL_MODE 2
 #define SLOT_STRIDE_WORDS 3
 #define SUBTABLE_OFFSET 0x10
@@ -816,7 +813,7 @@ void func_80022224(s32 arg0) {
     if (table == 0) {
         return;
     }
-    slot = Ent_GetPropertyValue(g_CameraPath, UNK_CALL_ARG, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
+    slot = Ent_GetPropertyValue(g_CameraPath, ENT_PROP_CAMERA_INDEX, 0, 0, 0, UNK_CALL_MODE, 0) * SLOT_STRIDE_WORDS;
     table = (u8 *)g_CurrentZone[0];
     value = *(s32 *)(table + (slot + *(s32 *)(*(u8 **)(table + SUBTABLE_OFFSET) + BASE_INDEX_OFFSET)) * 4 + ENTRY_DEFAULT_OFFSET);
     D_800608D8[0] = value;
