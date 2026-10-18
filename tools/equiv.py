@@ -268,6 +268,14 @@ CLOBBERED_BY_CALLS = ("at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2"
 CALLEE_SAVED = ("s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "fp", "gp", "sp")
 MULTIPLY_REGISTERS = (mips.UC_MIPS_REG_HI, mips.UC_MIPS_REG_LO)
 
+# What a callee can return, where a made-up value past it takes the caller down a path the game never runs: {callee:
+# (lowest, highest)} of its $v0, each bound read from the callee's code. TRADEOFF: a caller's code for values its callee
+# can't return isn't checked; the bound is only as right as its reading (docs/WORKFLOW.md)
+CALLEE_RETURN_RANGES = {
+    # One segment at most for each of the 6 quads it clips, or 1 when it returns early
+    "func_8002FFFC": (0, 6),
+}
+
 # How a run ended
 RETURNED = "returned"
 LIMIT = "the limit"
@@ -1209,6 +1217,9 @@ class Machine:
         self.views = {start: memoryview(buffer) for start, buffer in self.buffers.items()}
         # {callee address: the arguments compared at a call to it}
         self.arguments = arguments
+        # {callee address: (lowest, highest) of what it returns} (CALLEE_RETURN_RANGES)
+        self.return_ranges = {retail.addresses[name]: bounds for name, bounds in CALLEE_RETURN_RANGES.items()
+                              if name in retail.addresses}
         # The run in progress
         self.outcome = None
         self.fuzz = None
@@ -1324,8 +1335,16 @@ class Machine:
         outcome.calls.append(Call(address, registers, stack))
         call = len(outcome.calls) - 1
         values = self.fuzz.words(self.returned, len(CLOBBERED_BY_CALLS))
+        bounds = self.return_ranges.get(address)
         for name, value in zip(CLOBBERED_BY_CALLS, values):
-            uc.reg_write(REGISTERS[name], self.fuzz.repairs.get(Root(ROOT_CALL, (call, name)), value))
+            value = self.fuzz.repairs.get(Root(ROOT_CALL, (call, name)), value)
+            if name == "v0" and bounds is not None:
+                low, high = bounds
+                value = low + value % (high - low + 1)
+            else:
+                # Any word
+                pass
+            uc.reg_write(REGISTERS[name], value)
         if self.tracer is not None:
             self.tracer.called(call)
         uc.reg_write(mips.UC_MIPS_REG_PC, uc.reg_read(REGISTERS["ra"]))
