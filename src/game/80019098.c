@@ -469,33 +469,18 @@ s32 Obj_Kill(s32 *arg0, s32 arg1) {
     return -0xFF;
 }
 
-#ifdef NON_MATCHING
-#define FLAGS_A_BLOCK 0x1000000
-#define FLAGS_B_BLOCK 0x40000
-#define CALL_ARG_1A00 0x1A00
-#define RESULT_REJECTED -0xFF
-#define NO_VALUE -1
-
 extern s32 D_800608D0;
 
-s32 func_80019D30(GoolObject *obj, s32 key) {
-    if (obj->entity_id != 0) {
-        return RESULT_REJECTED;
+s32 func_80019D30(GoolObject *arg0, s32 arg1) {
+    if (arg0->entity_id == 0) {
+        if ((arg0->unk_0 != 0) && (arg0->zone == arg1) && !(arg0->status_b & 0x01000000) && !(arg0->state_flags & 0x40000) && ((Gool_SendEvent(0, (s32) arg0, 0x1A00, 0, 0), (arg0->zone == arg1)) || (D_800608D0 == -1))) {
+            return Obj_Kill(&arg0->unk_0, 0);
+        }
+        return -0xFF;
     }
-    if (obj->unk_0 == 0 || (s32)obj->zone != key ||
-        (obj->status_b & FLAGS_A_BLOCK) != 0 ||
-        (obj->state_flags & FLAGS_B_BLOCK) != 0) {
-        return RESULT_REJECTED;
-    }
-    Gool_SendEvent(0, (s32)obj, CALL_ARG_1A00, 0, 0);
-    if ((s32)obj->zone == key || D_800608D0 == NO_VALUE) {
-        return Obj_Kill((s32 *)obj, 0);
-    }
-    return RESULT_REJECTED;
+    arg1 = -0xFF;
+    return arg1;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/game/80019098", func_80019D30);
-#endif
 
 void Obj_KillWithEvent(s32 a0) {
     Obj_Kill((s32 *)a0, 1);
