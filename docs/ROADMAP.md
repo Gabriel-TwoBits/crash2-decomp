@@ -548,8 +548,21 @@ Steps, in order:
   (`Cam_MoveAlongPath`, `Cam_Update`, `Cam_GetPathPoint`); the view stays `Gfx_`. Left without the evidence: the collision routines COLL calls (CrashEdit describes none of
   its modes), the page functions with one caller (func_80013F5C, func_80013FD8, func_80014078, func_8001456C,
   func_80014918), func_80014148, the camera's handlers by path kind and by mode. `tools/progress.py`: 120 of 564 game
-  functions and 38 of 1,112 data symbols named, 131 structures in `src/game/`, 8 in `include/game/`. Next: the
-  collision, the camera's handlers.
+  functions and 38 of 1,112 data symbols named, 131 structures in `src/game/`, 8 in `include/game/`. A third batch: 40
+  game functions. Three debug messages carry the camera's own function names ("CamProcessMessage()",
+  "CamPullForwardBothDirs()", "CamPushBackBothDirs()"), and the queue the first empties gives its producer and consumer
+  their names (`Cam_QueueMessage`, `Cam_ProcessMessages`). The entry-type table's records are 0x1C bytes: the tag, then
+  handlers at 0x8 (Nsf_OpenLevel's start), 0xC (its end), 0x10 (page in), 0x14 (page out) and 0x18 (level close); 13
+  more handlers take their record's role (NONE's frame buffers, TGEO's and WGEO's page-in, SLST's sort lists, CPAT's
+  camera reset, ADIO's `Snd_Shutdown`, PBAK's playback, VIDO's video), and the two functions calling them per entry are
+  `Nsf_PageIn` and `Nsf_PageOut`, with the slot update that prints "ERROR: frame retry loading %s" by `Nsf_PageRefName`
+  ("p%d", "[%X]"). By their SDK calls: the view's transforms (`Gfx_WorldToView`, `Gfx_WorldToScreen`, `Gfx_ResetView`,
+  `Gfx_DrawFade`, `Math_MatrixFromAngles`, `Math_AngleToXZ`), the memory card's state machine (`Save_Update` and its
+  steps by `_card_info`, `_card_load`, open and read, and "BASCUS-94154"), and the sound's play, voice allocation and
+  parameters (GOOL's SNDP and SNDA) and per-frame update. Left without the evidence: BINF's and OPAT's handlers, the
+  TGEO and WGEO page-in workers, the save writer (func_80035444) and slot commands (func_8003670C), the VRAM transfers
+  (func_800176DC). `tools/progress.py`: 160 of 564 game functions named. Next: the collision, the camera's handlers by
+  path kind and by mode, the memory card's writer.
 - **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
