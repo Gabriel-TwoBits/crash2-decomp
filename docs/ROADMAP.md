@@ -598,9 +598,13 @@ Steps, in order:
   WGEO shaders, the SVTX transform) are reached through tables of labels rather than symbols here (0x8005B650,
   0x8005B690, 0x8005B708, 0x8005B75C), which splat and `tools/rename.py` don't name. `tools/progress.py`: 209 of 564
   game functions named. The equivalent C reads named fields where it read offsets, file by file, kept only when the
-  equivalent executable stays byte for byte the same: the GOOL operations (`80037698.c`, through `OBJ(p)->field`) first.
-  Where a block of `GoolObject` serves two uses, as 0x84 to 0xA4 read as a matrix's rows in func_8001ABF8, the offsets
-  stay.
+  equivalent executable stays byte for byte the same: the GOOL operations (`80037698.c`, through `OBJ(p)->field`), the
+  object update and state change (`8001BFDC.c`), the object physics (`8001D63C.c`), `80029884.c`, the entity spawn and
+  the nearest search, field by field, each kept only when the executable is unchanged. Some reads through the structure
+  make GCC write other code than the offset did (`vel`, `status_a` in `8001D63C.c`), so those stay offsets; fields still
+  `unk_` keep the files' named offsets. Where a block of `GoolObject` serves two uses, as 0x84 to 0xA4 read as a
+  matrix's rows in func_8001ABF8, the offsets stay too. 0x108 took CrashEdit's name, `display_mode`, the modes
+  func_8001BFDC switches on.
 - **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
