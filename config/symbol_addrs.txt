@@ -1130,3 +1130,21 @@ Gfx_OpenVideo = 0x80027A38; // type:func
 
 // the level-close handler of the "VIDO" record (type 21): Heap_Free of the buffers Gfx_OpenVideo allocates
 Gfx_CloseVideo = 0x80027B9C; // type:func
+
+// sprintf of a page reference into a static buffer: "p%d" (0x8005F1A0) with the page number for an odd one (>> 1), "[%X]" (0x8005F198) otherwise; the paging's error messages print it
+Nsf_PageRefName = 0x80011F1C; // type:func
+
+// points the NSD records of a read page's entries at them and calls each entry's page-in handler (+0x10) of the entry-type table at 0x8005B1D8; a texture page goes to VRAM with LoadImage instead
+Nsf_PageIn = 0x800125F8; // type:func
+
+// calls each entry's page-out handler (+0x14) of the entry-type table at 0x8005B1D8 for a slot's page, points their NSD records back at the page reference, then Nsf_FreePageSlot
+Nsf_PageOut = 0x80012A20; // type:func
+
+// steps a page slot through its read: Nsf_ReadPages once CdSync is idle, Cd_SyncRead, the relocation, then Nsf_PageIn; prints "ERROR: frame retry loading %s\n" (0x800100F0) and "ERROR: frame retry slave %s\n" (0x800100D0) with Nsf_PageRefName when a page must be read again
+Nsf_UpdatePageSlot = 0x80013200; // type:func
+
+// starts the read of the waiting page slot with the lowest page reference (func_80013C98) when none is in flight, then calls Nsf_UpdatePageSlot on each of the level's page slots (0x800675B0); Sys_MainLoop calls it
+Nsf_UpdatePaging = 0x80012BC4; // type:func
+
+// finds the run of consecutive page slots of the requested length cheapest to free (a free slot costs nothing, a releasable one 1 plus its word at 0x28), pages each out with Nsf_PageOut and returns the first; prints "!mem\n" (0x8005F1C8) when none fits and asked to
+Nsf_EvictPageSlots = 0x800136C8; // type:func

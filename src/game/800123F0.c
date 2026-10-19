@@ -127,7 +127,7 @@ typedef struct Unk800125F8Handler {
 typedef void (*Unk800125F8Fn2)(NsfEntry *, NsfEntry *);
 typedef void (*Unk800125F8Fn3)(NsfEntry *, NsfEntry *, s32);
 
-s32 func_80012A20(NsfPageSlot *arg0);
+s32 Nsf_PageOut(NsfPageSlot *arg0);
 extern int D_80067FB4[];
 extern s32 *D_80067FC4;
 extern NsdRecord **D_80067590;
@@ -136,7 +136,7 @@ extern s32 D_80060150[];
 extern NsfPageSlot D_80062D6C[];
 extern s32 D_800675B4;
 
-s32 func_800125F8(s32 arg0) {
+s32 Nsf_PageIn(s32 arg0) {
     NsfPageSlot *entry;
     NsfPageSlot *slot;
     NsfPageSlot *next;
@@ -183,7 +183,7 @@ s32 func_800125F8(s32 arg0) {
     case NSF_PAGE_TYPE_TEXTURE:
         id = func_80013888();
         if (id == NO_FREE_SLOT) {
-            func_80012A20(entry);
+            Nsf_PageOut(entry);
             return STATE_BUSY;
         }
         slot = &D_80062D6C[id];
@@ -243,7 +243,7 @@ s32 func_800125F8(s32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_800125F8);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_PageIn);
 #endif
 
 #ifdef NON_MATCHING
@@ -260,7 +260,7 @@ extern s32 *D_80067FC4;
 extern NsdRecord **D_80067590;
 extern struct { void (*fn)(void *); s32 pad[6]; } D_8005B1EC[];
 
-s32 func_80012A20(NsfPageSlot *arg0) {
+s32 Nsf_PageOut(NsfPageSlot *arg0) {
     NsfPage *h;
     s32 *s1;
     s32 *s0;
@@ -310,7 +310,7 @@ loop:
     return RESULT_DONE;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80012A20);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_PageOut);
 #endif
 
 /* A count and its slots: NsfLevel's page_slot_count and page_slots (D_800675B0), unk_3C8 and unk_3CC (D_80067950) */
@@ -329,9 +329,9 @@ extern s32 D_80067FB0[];
 extern Unk80013BD8Table D_80067950;
 extern Unk80013BD8Table D_800675B0;
 extern Nsd *D_800675A0;
-void func_80013200(NsfPageSlot *, s32);
+void Nsf_UpdatePageSlot(NsfPageSlot *, s32);
 
-void func_80012BC4(s32 arg0) {
+void Nsf_UpdatePaging(s32 arg0) {
     s32 sp18;
     s32 key;
     s32 found;
@@ -386,12 +386,12 @@ void func_80012BC4(s32 arg0) {
             }
         }
         for (i = 0; i < D_800675B0.count; i++) {
-            func_80013200(&D_800675B0.e[i], arg0);
+            Nsf_UpdatePageSlot(&D_800675B0.e[i], arg0);
         }
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80012BC4);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_UpdatePaging);
 #endif
 
 extern s32 D_80067FB0[];
@@ -405,7 +405,7 @@ void func_80012DC0(void) {
         if (g_CurrentZone != 0 && D_8005F3E0 != -1) {
             func_80034254((s32)g_CurrentZone->items[0] + 0x2A4);
         }
-        func_80012BC4(-1);
+        Nsf_UpdatePaging(-1);
     }
 }
 
@@ -522,7 +522,7 @@ s32 func_80013038(NsfPageSlot *arg0, s32 arg1) {
 
 /* The value Cd_SyncRead returns when a CD read fails */
 #define CD_FAILURE -0x10
-/* func_80013200 switches on the state from this one up */
+/* Nsf_UpdatePageSlot switches on the state from this one up */
 #define FIRST_STATE 2
 
 s32 func_80013084(NsfPageSlot *arg0) {
@@ -618,7 +618,7 @@ extern char D_800100F0[];
 extern s32 D_80067FC0;
 extern int D_80067FBC[];
 
-void func_80013200(NsfPageSlot *entry, s32 arg1) {
+void Nsf_UpdatePageSlot(NsfPageSlot *entry, s32 arg1) {
     NsfPageSlot *s0;
     NsfPageSlot *next;
     NsfPageSlot *slot;
@@ -663,7 +663,7 @@ loop:
         r = Cd_SyncRead(0);
         if (r == 1) {
             if (func_800130A0(s0) == (NsfPageSlot *)ERR_RETRY) {
-                printf(D_800100F0, func_80011F1C(s0->unk_14));
+                printf(D_800100F0, Nsf_PageRefName(s0->unk_14));
                 D_80067FB4[0] = 0;
                 goto loop;
             }
@@ -682,7 +682,7 @@ loop:
             return;
         }
         if (func_800130A0(s0) == (NsfPageSlot *)ERR_RETRY) {
-            printf(D_800100D0, func_80011F1C(s0->unk_14));
+            printf(D_800100D0, Nsf_PageRefName(s0->unk_14));
             goto loop;
         }
         goto read_done;
@@ -712,7 +712,7 @@ read_done:
         s0->state = STATE_PLAY_QUEUE;
         goto play_queue;
     }
-    func_800125F8(s0->unk_C);
+    Nsf_PageIn(s0->unk_C);
     D_80067FB0[0] = D_80067FB0[0] - 1;
     return;
 
@@ -786,14 +786,14 @@ playing:
         s0->state = STATE_FINISHED;
         s0->unk_24->state = STATE_FINISHED;
     } else {
-        func_800125F8(s0->unk_C);
+        Nsf_PageIn(s0->unk_C);
     }
     D_80067FBC[0] = 0;
     D_80067FB0[0] = D_80067FB0[0] - 1;
     return;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80013200);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_UpdatePageSlot);
 #endif
 
 #ifdef NON_MATCHING
@@ -804,9 +804,9 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80013200);
 
 extern Unk80013BD8Table D_800675B0;
 extern char D_8005F1C8[];
-s32 func_80012A20(NsfPageSlot *arg0);
+s32 Nsf_PageOut(NsfPageSlot *arg0);
 
-s32 func_800136C8(s32 *arg0, s32 arg1) {
+s32 Nsf_EvictPageSlots(s32 *arg0, s32 arg1) {
     s32 i, j, n, t, best, bestLen;
     u32 cost, bestCost;
     NsfPageSlot *p;
@@ -851,7 +851,7 @@ s32 func_800136C8(s32 *arg0, s32 arg1) {
     }
     if (best != NO_RUN) {
         for (j = best; j < best + bestLen; j++) {
-            func_80012A20((NsfPageSlot *)&D_800675B0.e[j]);
+            Nsf_PageOut((NsfPageSlot *)&D_800675B0.e[j]);
         }
         *arg0 = bestLen;
         return best;
@@ -866,7 +866,7 @@ s32 func_800136C8(s32 *arg0, s32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_800136C8);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_EvictPageSlots);
 #endif
 
 /* D_80062D70, D_80062D80, D_80062D84 and D_80062D8C read D_80062D6C's slots (NsfPageSlot) at 0x04, 0x14, 0x18 and
@@ -1031,7 +1031,7 @@ NsfPageSlot *func_80013C98(NsfPageSlot *arg0, s32 arg1, s32 arg2, s32 *arg3, s32
     NsfPageSlot *dst;
     NsfPageSlot *src;
 
-    idx = func_800136C8(arg3, arg4);
+    idx = Nsf_EvictPageSlots(arg3, arg4);
     if (idx == -1) {
         return (NsfPageSlot *)ERR_NO_SLOT;
     }
@@ -1157,7 +1157,7 @@ loop:
         return 1;
     }
     if ((arg1 & 1) && (u32)((u16)p->state - 0x14) >= 2U) {
-        func_80012BC4(arg0);
+        Nsf_UpdatePaging(arg0);
         arg2 = 0;
         goto loop;
     }

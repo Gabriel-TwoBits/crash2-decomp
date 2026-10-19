@@ -7,7 +7,7 @@
 
 /* Nsf_RelocatePage refuses a page without it */
 #define NSF_PAGE_MAGIC 0x1234
-/* A page LoadImage sends whole to VRAM (func_800125F8), which Nsf_RelocatePage leaves as it is */
+/* A page LoadImage sends whole to VRAM (Nsf_PageIn), which Nsf_RelocatePage leaves as it is */
 #define NSF_PAGE_TYPE_TEXTURE 1
 /* A page's size as a shift: Nsf_OpenLevel allocates its page buffers count << 16 bytes, one each 1 << 16 apart */
 #define NSF_PAGE_SHIFT 16
@@ -35,7 +35,7 @@
 typedef struct NsfEntry {
     /* 0x00 */ u16 unk_0;
     /* 0x02 */ u16 mark; /* NSF_ENTRY_MARK */
-    /* 0x04 */ u32 eid; /* the key func_800125F8 and func_80012A20 look the NSD's records up by */
+    /* 0x04 */ u32 eid; /* the key Nsf_PageIn and Nsf_PageOut look the NSD's records up by */
     /* 0x08 */ s32 type; /* what Nsf_EntryType returns for a loaded entry, Nsf_EidType's numbering otherwise */
     /* 0x0C */ s32 item_count; /* Nsf_RelocatePage's bound over items */
     /* item_count + 1 offsets from the entry, pointers once Nsf_RelocatePage ran; an item ends where the next starts
@@ -46,8 +46,8 @@ typedef struct NsfEntry {
 /* A page, as Nsf_ReadPages reads it into a page slot's buffer */
 typedef struct NsfPage {
     /* 0x00 */ u16 magic; /* NSF_PAGE_MAGIC */
-    /* 0x02 */ u16 type; /* NSF_PAGE_TYPE_TEXTURE, or the 0, 3, 4 and 5 func_800125F8 switches on */
-    /* 0x04 */ u32 unk_4; /* a texture page's EID: func_800125F8 passes it to Nsf_LookupEid */
+    /* 0x02 */ u16 type; /* NSF_PAGE_TYPE_TEXTURE, or the 0, 3, 4 and 5 Nsf_PageIn switches on */
+    /* 0x04 */ u32 unk_4; /* a texture page's EID: Nsf_PageIn passes it to Nsf_LookupEid */
     /* 0x08 */ s32 entry_count; /* Nsf_RelocatePage's bound over entries */
     /* 0x0C */ u32 unk_C;
     /* entry_count + 1 offsets from the page, pointers once Nsf_RelocatePage ran (the last one too) */
@@ -56,8 +56,8 @@ typedef struct NsfPage {
 
 /* One record per entry of the level, from the NSD's 0x520 */
 typedef struct NsdRecord {
-    /* The loaded entry when its two low bits are clear (Nsf_EntryType); else odd, the page reference func_80012A20
-       stores back, or a VRAM handle with bit 1 set (func_800125F8) */
+    /* The loaded entry when its two low bits are clear (Nsf_EntryType); else odd, the page reference Nsf_PageOut
+       stores back, or a VRAM handle with bit 1 set (Nsf_PageIn) */
     /* 0x00 */ NsfEntry *entry;
     /* 0x04 */ u32 eid; /* Nsf_EntryType decodes it with Nsf_EidType */
 } NsdRecord;
@@ -79,7 +79,7 @@ typedef struct Nsd {
 } Nsd;
 
 /* The 0x2C-byte slot a page is read into and tracked by: NsfLevel's, and the 10 at 0x80062BB4 and the 16 after them
-   (func_80013AE8, func_800125F8) */
+   (func_80013AE8, Nsf_PageIn) */
 typedef struct NsfPageSlot {
     /* 0x00 */ NsfPage *page; /* Nsf_OpenLevel's buffer, read by Nsf_ReadPages and relocated by func_800130A0 */
     /* 1 free (Nsf_FreePageSlot), 2 once func_80013BD8 takes it, 20 and 21 once read (func_80013FD8 waits for them) */
@@ -95,7 +95,7 @@ typedef struct NsfPageSlot {
     /* 0x14 */ s32 unk_14; /* a page reference: Nsf_ReadPages reads the page unk_14 >> 1 */
     /* 0x18 */ s32 unk_18;
     /* 0x1C */ s32 unk_1C;
-    /* 0x20 */ NsdRecord *unk_20; /* what Nsf_LookupEid returns for a texture page's EID (func_800125F8) */
+    /* 0x20 */ NsdRecord *unk_20; /* what Nsf_LookupEid returns for a texture page's EID (Nsf_PageIn) */
     /* 0x24 */ struct NsfPageSlot *unk_24;
     /* 0x28 */ s32 unk_28;
 } NsfPageSlot;
@@ -120,7 +120,7 @@ typedef struct NsfLevel {
     /* 0x3C8 */ s32 unk_3C8; /* NSF_LEVEL_UNK_SLOTS */
     /* 0x3CC */ NsfPageSlot unk_3CC[NSF_LEVEL_UNK_SLOTS]; /* slots without a buffer (Nsf_OpenLevel) */
     /* 0xA28 */ s32 unk_A28;
-    /* 0xA2C */ NsfPageSlot *unk_A2C; /* the slot Nsf_ReadPages is reading into (func_80013200) */
+    /* 0xA2C */ NsfPageSlot *unk_A2C; /* the slot Nsf_ReadPages is reading into (Nsf_UpdatePageSlot) */
     /* 0xA30 */ s32 unk_A30;
     /* 0xA34 */ NsfPageSlot *unk_A34;
     /* 0xA38 */ s32 unk_A38;

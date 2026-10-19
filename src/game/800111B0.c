@@ -430,7 +430,7 @@ void Sys_MainLoop(s32 arg0) {
         } else {
             /* no pending state */
         }
-        func_80012BC4(-1);
+        Nsf_UpdatePaging(-1);
         if (D_8005F180 == 0) {
             Cam_Update();
         } else {
