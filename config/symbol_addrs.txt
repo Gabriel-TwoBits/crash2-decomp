@@ -1160,3 +1160,24 @@ Snd_SetSoundParam = 0x80032F18; // type:func
 
 // Gfx_EndFrame calls it once a frame: follows the music and effect volumes at 0x8006CBF8 and 0x8006CBFC, the zone's audio, the master volume's fade (SsSetMVol) and each playing voice
 Snd_Update = 0x800334A0; // type:func
+
+// erases a save (erase) or creates and writes one: the path from "%s%s%02d%06d" (0x8001068C) with "BASCUS-94154", open, a 128-byte header "SC" with the title "Crash Bandicoot 2" (0x800106C4) and the icon from VRAM, then the icon and data blocks (write), 3 tries each; Save_Update runs it in states 6 to 8
+Save_WriteFile = 0x80035444; // type:func
+
+// turns an ASCII title into full-width Shift-JIS in place (letters from 0x8260 and 0x8281, digits from 0x824F, space 0x8140, others through the table at 0x8005C4B4), the encoding of a memory card header's title; Save_WriteFile calls it on "Crash Bandicoot 2"
+Save_TitleToShiftJis = 0x800352D8; // type:func
+
+// calls the given handler with its argument and returns 1 once the tries reach the limit, else returns 0; the memory card's open, read, write and erase loops call it with 3
+Save_CheckRetries = 0x800349F8; // type:func
+
+// Save_WriteFile's handler for failed tries: Save_CloseFile, then erase of the half-written file (up to 9 tries)
+Save_AbortWrite = 0x80034AC4; // type:func
+
+// Save_ReadFileHeader's handler for failed tries: resets the card state and Save_CloseFile
+Save_AbortRead = 0x80034A2C; // type:func
+
+// writes a 128-byte block starting 0xFF, 0xFF to sector 0 (_new_card, _card_write(0, 0)) where Save_IsCardFormatted looks for "MC"
+Save_UnformatCard = 0x800366B4; // type:func
+
+// reorders the directory's 0x14-byte entries: other files first, then the game's (Save_IsGameFile) in strcmp order; Save_LoadDirectory calls it
+Save_SortDirectory = 0x80035D48; // type:func

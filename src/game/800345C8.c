@@ -46,7 +46,7 @@ void Save_Update(void) {
     case 6:
     case 7:
     case 8:
-        func_80035444(Save_GetState());
+        Save_WriteFile(Save_GetState());
         break;
     case 3:
         Save_FormatCard();
@@ -134,7 +134,7 @@ void Save_LoadDirectory(void) {
     switch (Save_TestSwEvents()) {
     case 0:
         r = Save_ListFiles(D_8005F274, (char *)D_8005F264 + 0x49C);
-        func_80035D48((Unk80035D48 *)((char *)D_8005F264 + 0x49C), r);
+        Save_SortDirectory((Unk80035D48 *)((char *)D_8005F264 + 0x49C), r);
         if (r <= 0) {
             D_8005F264[7]++;
             if (D_8005F264[7] < 11) {
@@ -174,7 +174,7 @@ block_16:
     }
 }
 
-s32 func_800349F8(s32 arg0, s32 arg1, void (*arg2)(s32), s32 arg3) {
+s32 Save_CheckRetries(s32 arg0, s32 arg1, void (*arg2)(s32), s32 arg3) {
     s32 ret;
     if (arg0 < arg1) {
         ret = 0;
@@ -188,7 +188,7 @@ s32 func_800349F8(s32 arg0, s32 arg1, void (*arg2)(s32), s32 arg3) {
 typedef struct { s32 pad[10]; s32 f28; s32 pad2[8]; } Unk80034A2C;
 
 
-void func_80034A2C(s32 *arg0) {
+void Save_AbortRead(s32 *arg0) {
     Unk80034A2C *p;
 
     if (func_80035A94() != 0) {
@@ -217,7 +217,7 @@ typedef struct {
     s32 f10;
 } Unk80034AC4;
 
-void func_80034AC4(Unk80034AC4 *arg0) {
+void Save_AbortWrite(Unk80034AC4 *arg0) {
     s32 i;
     s32 r;
 
@@ -247,7 +247,7 @@ void func_80034AC4(Unk80034AC4 *arg0) {
 
 #ifdef NON_MATCHING
 extern char D_8001067C[];
-s32 func_800349F8(s32 arg0, s32 arg1, void (*arg2)(s32), s32 arg3);
+s32 Save_CheckRetries(s32 arg0, s32 arg1, void (*arg2)(s32), s32 arg3);
 
 typedef struct {
     u8 unk_00[0x28];
@@ -333,7 +333,7 @@ void Save_ReadFileHeader(void) {
             tries++;
         }
     } while (tries < SAVE_RETRIES);
-    if (func_800349F8(tries, SAVE_RETRIES, (void (*)(s32))func_80034A2C, (s32)ctx) != 0) {
+    if (Save_CheckRetries(tries, SAVE_RETRIES, (void (*)(s32))Save_AbortRead, (s32)ctx) != 0) {
         return;
     } else {
     }
@@ -345,7 +345,7 @@ void Save_ReadFileHeader(void) {
             tries++;
         }
     } while (tries < SAVE_RETRIES);
-    if (func_800349F8(tries, SAVE_RETRIES, (void (*)(s32))func_80034A2C, (s32)ctx) != 0) {
+    if (Save_CheckRetries(tries, SAVE_RETRIES, (void (*)(s32))Save_AbortRead, (s32)ctx) != 0) {
         return;
     } else {
     }
@@ -355,7 +355,7 @@ void Save_ReadFileHeader(void) {
         failed = 1;
         s->unk_2C = 1;
         if (s->unk_28 != 0 && D_8005F264[W_LIMIT_HI] < D_8005F264[W_LIMIT_LO]) {
-            func_80034A2C((s32 *)ctx);
+            Save_AbortRead((s32 *)ctx);
             return;
         } else {
         }
@@ -395,7 +395,7 @@ void Save_ReadFileHeader(void) {
                         tries++;
                     }
                 } while (tries < SAVE_RETRIES);
-                if (func_800349F8(tries, SAVE_RETRIES, (void (*)(s32))func_80034A2C, (s32)ctx) != 0) {
+                if (Save_CheckRetries(tries, SAVE_RETRIES, (void (*)(s32))Save_AbortRead, (s32)ctx) != 0) {
                     return;
                 } else {
                 }
@@ -416,7 +416,7 @@ void Save_ReadFileHeader(void) {
                     }
                 } while (tries < SAVE_RETRIES);
                 i++;
-                if (func_800349F8(tries, SAVE_RETRIES, (void (*)(s32))func_80034A2C, (s32)ctx) != 0) {
+                if (Save_CheckRetries(tries, SAVE_RETRIES, (void (*)(s32))Save_AbortRead, (s32)ctx) != 0) {
                     return;
                 } else {
                 }
@@ -425,7 +425,7 @@ void Save_ReadFileHeader(void) {
             if (func_800369F4() != 0) {
                 failed = 1;
                 if (D_8005F264[W_LIMIT_HI] < D_8005F264[W_LIMIT_LO]) {
-                    func_80034A2C((s32 *)ctx);
+                    Save_AbortRead((s32 *)ctx);
                     return;
                 } else {
                 }
@@ -555,7 +555,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_8003516C);
 #endif
 
 #ifdef NON_MATCHING
-void func_800352D8(s8 *arg0, s32 arg1) {
+void Save_TitleToShiftJis(s8 *arg0, s32 arg1) {
     char buf[0x40];
     s16 *out;
     u8 *in;
@@ -608,7 +608,7 @@ void func_800352D8(s8 *arg0, s32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800352D8);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_TitleToShiftJis);
 #endif
 
 #ifdef NON_MATCHING
@@ -647,7 +647,7 @@ extern s32 D_8005F318;
 extern s32 D_8005F31C;
 extern s32 D_8006CCB4;
 
-void func_80035444(s32 arg0) {
+void Save_WriteFile(s32 arg0) {
     s32 fd;
     s32 *ctx[6];
     char path[0x40];
@@ -697,7 +697,7 @@ void func_80035444(s32 arg0) {
                     tries++;
                 }
             } while (tries < MAX_TRIES);
-            if (func_800349F8(tries, MAX_TRIES, (void (*)(s32))func_80034AC4, (s32)ctx) == 0) {
+            if (Save_CheckRetries(tries, MAX_TRIES, (void (*)(s32))Save_AbortWrite, (s32)ctx) == 0) {
                 func_800360CC(MODE_CREATE);
             }
             return;
@@ -747,7 +747,7 @@ void func_80035444(s32 arg0) {
                 tries++;
             }
         } while (tries < MAX_TRIES);
-        if (func_800349F8(tries, MAX_TRIES, (void (*)(s32))func_80034AC4, (s32)ctx) == 0) {
+        if (Save_CheckRetries(tries, MAX_TRIES, (void (*)(s32))Save_AbortWrite, (s32)ctx) == 0) {
             printf(D_800106AC, fd);
             Save_CloseFile(&fd);
             D_8005F314 = 1;
@@ -773,7 +773,7 @@ void func_80035444(s32 arg0) {
             tries++;
         }
     } while (tries < MAX_TRIES);
-    if (func_800349F8(tries, MAX_TRIES, (void (*)(s32))func_80034AC4, (s32)ctx) != 0) {
+    if (Save_CheckRetries(tries, MAX_TRIES, (void (*)(s32))Save_AbortWrite, (s32)ctx) != 0) {
         return;
     } else {
         /* opened */
@@ -787,7 +787,7 @@ void func_80035444(s32 arg0) {
     header[2] = 0x13;
     header[3] = 1;
     sprintf(header + 4, D_800106C4);
-    func_800352D8((s8 *)header + 4, HEADER_TITLE_BYTES);
+    Save_TitleToShiftJis((s8 *)header + 4, HEADER_TITLE_BYTES);
     func_800176DC(2, D_8006CCB4, 0, (u8 *)header + HEADER_ICON_OFFSET, (u8 *)icons[0], 0);
     func_800176DC(2, D_8006CCB4, 0, 0, (u8 *)icons[1], 0);
     func_800176DC(2, D_8006CCB4, 0x100, 0, (u8 *)icons[2], 0);
@@ -801,7 +801,7 @@ void func_80035444(s32 arg0) {
             tries++;
         }
     } while (tries < MAX_TRIES);
-    if (func_800349F8(tries, MAX_TRIES, (void (*)(s32))func_80034AC4, (s32)ctx) != 0) {
+    if (Save_CheckRetries(tries, MAX_TRIES, (void (*)(s32))Save_AbortWrite, (s32)ctx) != 0) {
         return;
     } else {
         /* header written */
@@ -817,7 +817,7 @@ void func_80035444(s32 arg0) {
                 tries++;
             }
         } while (tries < MAX_TRIES);
-        if (func_800349F8(tries, MAX_TRIES, (void (*)(s32))func_80034AC4, (s32)ctx) != 0) {
+        if (Save_CheckRetries(tries, MAX_TRIES, (void (*)(s32))Save_AbortWrite, (s32)ctx) != 0) {
             return;
         } else {
             /* block written */
@@ -836,7 +836,7 @@ void func_80035444(s32 arg0) {
                 tries++;
             }
         } while (tries < MAX_TRIES);
-        if (func_800349F8(tries, MAX_TRIES, (void (*)(s32))func_80034AC4, (s32)ctx) != 0) {
+        if (Save_CheckRetries(tries, MAX_TRIES, (void (*)(s32))Save_AbortWrite, (s32)ctx) != 0) {
             return;
         } else {
             /* block written */
@@ -851,7 +851,7 @@ void func_80035444(s32 arg0) {
     func_800360AC(0x10);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80035444);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_WriteFile);
 #endif
 
 extern volatile u32 g_TimerTicks;
@@ -1015,7 +1015,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_ListFiles);
 s32 strcmp(char *, char *);
 
 
-void func_80035D48(Unk80035D48 *arg0, s32 arg1) {
+void Save_SortDirectory(Unk80035D48 *arg0, s32 arg1) {
     Unk80035D48 tmp;
     s32 i;
     s32 j;
@@ -1346,7 +1346,7 @@ s32 func_80036674(void) {
     return ret;
 }
 
-s32 func_800366B4(void) {
+s32 Save_UnformatCard(void) {
     u8 buf[0x80];
 
     bzero(buf, 0x80);
@@ -1374,7 +1374,7 @@ s32 func_8003670C(u32 arg0, s32 arg1) {
     case 10:
         return func_80036674();
     case 12:
-        return func_800366B4();
+        return Save_UnformatCard();
     case 13:
         return func_80036AC8(arg1);
     case 14:
