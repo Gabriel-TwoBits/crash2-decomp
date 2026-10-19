@@ -196,7 +196,7 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
         AT(slot, 0x68, s32) = AT(row, 0x1F0, s32);
         if ((s32)slot == g_Player && D_8005F3F0 == -1) {
             D_8006CC84 = D_8005F3F0;
-            func_8002F34C((GoolObject *)slot, &D_80060958, 1, 0);
+            Sys_SaveCheckpoint((GoolObject *)slot, &D_80060958, 1, 0);
         }
     }
     if (AT(AT(AT(slot, 0xC, u8 *), 0x10, u8 *), 4, s32) == MODEL_ID_SPECIAL) {
@@ -509,7 +509,7 @@ void Zone_KillObjects(void *arg0) {
 /* volatile: the retail code reloads it after the null check. */
 extern Unk608CC *volatile g_CurrentZone;
 
-void func_80019E5C(void) {
+void Zone_KillOutsideObjects(void) {
     Unk19E5C *obj;
     s32 i;
 

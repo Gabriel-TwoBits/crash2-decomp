@@ -268,7 +268,7 @@ void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         FIELD(g_Player, s32, 0x68) = FIELD(data, s32, 0x1F0);
         FIELD(g_Player, void *, 0x18) = g_CurrentZone;
         D_8006CC84 = -1;
-        func_8002F34C((GoolObject *)g_Player, (u8 *)&g_CurrentZone + 0x8C, 1, 0);
+        Sys_SaveCheckpoint((GoolObject *)g_Player, (u8 *)&g_CurrentZone + 0x8C, 1, 0);
     }
 }
 #else

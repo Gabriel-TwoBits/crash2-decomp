@@ -136,9 +136,9 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             b = vec[1];
         }
         if (sub & 1) {
-            v = func_8003118C((void *)a, (void *)b);
+            v = Math_Distance((void *)a, (void *)b);
         } else {
-            v = func_80030FEC(a, b);
+            v = Math_ApproxDistance(a, b);
         }
         PUSH(v);
         return;
@@ -205,14 +205,14 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             PROP(dst) |= PROP_B;
             return;
         case 4:
-            func_8001F94C(*dst);
+            Ent_ClearPermFlag(*dst);
             PROP(dst) &= ~PROP_C;
             return;
         case 2:
             PROP(dst) &= ~PROP_C;
             return;
         case 5:
-            func_8001F8B4(*dst);
+            Ent_SetPermFlag(*dst);
             PROP(dst) |= PROP_C;
             return;
         case 3:
@@ -254,7 +254,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         if (dst == 0) {
             v = g_CurrentZone;
         } else {
-            v = (s32)func_80027DEC((char *)g_CurrentZone, dst);
+            v = (s32)Zone_FindAt((char *)g_CurrentZone, dst);
         }
         if (v < MIN_VALID) {
             FIELD(SLOT(obj, arg1), 0x18, s32) = v;
@@ -263,10 +263,10 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
     case 12:
         switch ((arg1 >> ARG_SHIFT) & ARG_MASK) {
         case 0:
-            func_8002F34C((GoolObject *)obj, D_80060958 + FIELD(dst, 1, u8) * SPAWN_SIZE, 0, FIELD(dst, 2, u16));
+            Sys_SaveCheckpoint((GoolObject *)obj, D_80060958 + FIELD(dst, 1, u8) * SPAWN_SIZE, 0, FIELD(dst, 2, u16));
             return;
         case 1:
-            func_8002F6C8(D_80060958 + ((u32)*dst >> VALUE_SHIFT) * SPAWN_SIZE);
+            Sys_LoadCheckpoint(D_80060958 + ((u32)*dst >> VALUE_SHIFT) * SPAWN_SIZE);
             return;
         case 2:
             Obj_SetParent((void *)obj, g_ObjLists + ((u32)*dst >> VALUE_SHIFT) * ENTRY_STRIDE);
@@ -278,17 +278,17 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             FIELD(*dst, 0x18, s32) = D_800608D0;
             return;
         case 5:
-            func_80033DD0();
+            Snd_FadeOut();
             return;
         case 6:
-            func_80033DE0(*dst);
+            Snd_SelectMusic(*dst);
             return;
         case 7:
-            func_80019E5C();
+            Zone_KillOutsideObjects();
             return;
         case 8:
             slot = SLOT(obj, arg1);
-            PUSH(ratan2(FIELD(slot, 0x64, s32) - dst[1], func_80031208((s32 *)(slot + OBJ_POS), dst)));
+            PUSH(ratan2(FIELD(slot, 0x64, s32) - dst[1], Math_DistanceXZ((s32 *)(slot + OBJ_POS), dst)));
             return;
         case 9:
             D_8005F3F0 = (u32)*dst >> VALUE_SHIFT;
@@ -297,7 +297,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             Nsf_SeekLevel((u32)*dst >> VALUE_SHIFT);
             return;
         case 11:
-            func_8002F0DC(1);
+            Sys_ResetGameInfo(1);
             return;
         case 12:
             *dst = g_TimerTicks;
@@ -360,9 +360,9 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         query[QUERY_RESULT] = 0;
         query[QUERY_SLOT] = (s32)SLOT(obj, arg1);
         query[QUERY_VALUE] = *dst;
-        Obj_Find(D_8006CB38, (void *)func_80018E68, query);
+        Obj_Find(D_8006CB38, (void *)Obj_CheckNearest, query);
         if ((arg1 >> ARG_SHIFT) & SCRIPT_HANDLE_FLAGS) {
-            Obj_Find(D_8006CB38 - ENTRY_STRIDE, (void *)func_80018E68, query);
+            Obj_Find(D_8006CB38 - ENTRY_STRIDE, (void *)Obj_CheckNearest, query);
         }
         PUSH(query[QUERY_RESULT]);
         return;
@@ -382,7 +382,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         func_8002CA1C(sp);
         return;
     case 15:
-        FIELD(obj, OBJ_RESULT, s32) = func_8003670C((arg1 >> ARG_SHIFT) & ARG_MASK, *dst);
+        FIELD(obj, OBJ_RESULT, s32) = Save_RunCommand((arg1 >> ARG_SHIFT) & ARG_MASK, *dst);
         return;
     default:
         return;

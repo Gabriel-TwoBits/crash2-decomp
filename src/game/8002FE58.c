@@ -559,7 +559,7 @@ s32 func_80030F58(s32 *a, s32 *b) {
 INCLUDE_ASM("asm/nonmatchings/game/8002FE58", func_80030F58);
 #endif
 
-s32 func_80030FEC(s32 *arg0, s32 *arg1) {
+s32 Math_ApproxDistance(s32 *arg0, s32 *arg1) {
     s32 d[3];
     s32 x, y, z;
 
@@ -603,7 +603,7 @@ s32 func_800310EC(GoolObject *arg0, s32 *arg1, s32 *arg2, s32 arg3, s32 arg4, s3
 
 typedef struct { s32 x, y, z; } V;
 
-s32 func_8003118C(V *a, V *b) {
+s32 Math_Distance(V *a, V *b) {
     V v;
     v.x = (a->x - b->x) >> 8;
     v.y = (a->y - b->y) >> 8;
@@ -612,7 +612,7 @@ s32 func_8003118C(V *a, V *b) {
 }
 
 
-s32 func_80031208(s32 *arg0, s32 *arg1) {
+s32 Math_DistanceXZ(s32 *arg0, s32 *arg1) {
     V v;
 
     v.x = (arg0[0] - arg1[0]) >> 8;

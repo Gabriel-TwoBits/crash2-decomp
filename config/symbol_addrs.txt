@@ -1222,3 +1222,48 @@ g_SaveState = 0x8005F264;
 
 // "bu00:", the memory card device each save path starts with (sprintf in Save_ReadFileHeader and Save_WriteFile, Save_ListFiles)
 g_SaveDevice = 0x8005F274;
+
+// the square root (func_80041A78) of the sum of two points' squared differences, >> 8 and << 8; Gool_OpMisc's case 1 and 6 with subkind bit 0 set, CrashEdit's MISC "push exact distance"
+Math_Distance = 0x8003118C; // type:func
+
+// the largest of two points' absolute differences plus a quarter of the other two; Gool_OpMisc's case 1 and 6 with subkind bit 0 clear, CrashEdit's MISC "push approximate distance"
+Math_ApproxDistance = 0x80030FEC; // type:func
+
+// the square root (func_80041A78) of two points' squared x and z differences, the horizontal distance; MISC 12/8 takes ratan2 of the height against it
+Math_DistanceXZ = 0x80031208; // type:func
+
+// adds an entity ID with the level's number (the level header's word at 8) to the list at 0x8006935C unless there; Gool_OpMisc's case 10/5, CrashEdit's MISC "set entity ID status bit 4 and perm flag"
+Ent_SetPermFlag = 0x8001F8B4; // type:func
+
+// takes an entity ID with the level's number out of the list at 0x8006935C; Gool_OpMisc's case 10/4, CrashEdit's MISC "clear entity ID status bit 4 and perm flag"
+Ent_ClearPermFlag = 0x8001F94C; // type:func
+
+// sets the master volume's step to -0x2AA, which Snd_Update fades it by; Gool_OpMisc's case 12/5, CrashEdit's MISC "MIDI reset fade"
+Snd_FadeOut = 0x80033DD0; // type:func
+
+// plays one of the sequence's two SEPs and stops the other (Snd_ControlSequence), setting the second's volume; Gool_OpMisc's case 12/6, CrashEdit's MISC "MIDI playback"
+Snd_SelectMusic = 0x80033DE0; // type:func
+
+// returns the first zone, among a zone's neighbours (flag 4) then the current zone's, whose bounds func_80030D74 finds the point in; Gool_OpMisc's case 9, CrashEdit's MISC "set parent zone to zone at"
+Zone_FindAt = 0x80027DEC; // type:func
+
+// kills the objects of each of the current zone's neighbours its reference count lets go (Nsf_CloseEntry, Zone_KillObjects); Gool_OpMisc's case 12/7, CrashEdit's MISC "kill all objects outside current zone"
+Zone_KillOutsideObjects = 0x80019E5C; // type:func
+
+// zeroes the game's global counters and flags and clears the tables at 0x80069718 and 0x8006935C (memset); Gool_OpMisc's case 12/11, CrashEdit's MISC "reset game info global variables"
+Sys_ResetGameInfo = 0x8002F0DC; // type:func
+
+// the Obj_Find visitor of Gool_OpMisc's case 13 (CrashEdit's MISC "push object nearest to"): keeps the object of the queried kinds at the least approximate distance (Math_ApproxDistance)
+Obj_CheckNearest = 0x80018E68; // type:func
+
+// copies the player's state, position, zone, camera progress, level and entity flags into a continue block; Gool_OpMisc's case 12/0, CrashEdit's MISC "save continue point"
+Sys_SaveCheckpoint = 0x8002F34C; // type:func
+
+// kills the current zone's objects and restores the zone, camera and entity flags from a continue block; Gool_OpMisc's case 12/1, CrashEdit's MISC "load continue point"; Sys_MainLoop calls it too
+Sys_LoadCheckpoint = 0x8002F6C8; // type:func
+
+// runs a memory card command by number (directory check, format, load and save of a slot, names); Gool_OpMisc's case 15, CrashEdit's MISC "memory card operation", storing its result in the object
+Save_RunCommand = 0x8003670C; // type:func
+
+// the 16-bit list of entity IDs with their level's number that Ent_SetPermFlag and Ent_ClearPermFlag keep; Sys_ResetGameInfo clears it
+g_PermFlags = 0x8006935C;

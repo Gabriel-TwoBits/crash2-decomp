@@ -1116,7 +1116,7 @@ void Snd_InitSequencer(void) {
 /* Added to the master volume (D_8005F2FC, at most 0x3FFF) on each update of Snd_Update, until it reaches 0 */
 #define VOLUME_FADE_OUT_STEP -0x2AA
 
-void func_80033DD0(void) {
+void Snd_FadeOut(void) {
     D_8005F300 = VOLUME_FADE_OUT_STEP;
 }
 
@@ -1128,7 +1128,7 @@ extern s16 D_8005FCE4;
 extern s32 g_MusicVolume;
 s16 D_8005F2F8;
 
-void func_80033DE0(s32 arg0) {
+void Snd_SelectMusic(s32 arg0) {
     s32 a;
     Unk80033DE0 *p;
 

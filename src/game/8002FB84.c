@@ -128,7 +128,7 @@ void func_8002FCF8(void) {
     dst->unk_30[4] = w4;
     dst->unk_30[5] = w5;
     D_8006CC84 = NO_ENTRY;
-    func_8002F6C8(BLOCK->unk_0010);
+    Sys_LoadCheckpoint(BLOCK->unk_0010);
     D_8006CC00 = 0;
     D_8006CBF0 = 0;
 }

@@ -2138,7 +2138,7 @@ void *Obj_HasId(GoolObject *arg0, s32 arg1) {
 #define F(p, T, off) (*(T *)((u8 *)(p) + (off)))
 
 
-s32 func_80018E68(void *arg0, void *arg1) {
+s32 Obj_CheckNearest(void *arg0, void *arg1) {
     s32 sp10;
     s32 d;
     s32 sh;
@@ -2156,7 +2156,7 @@ s32 func_80018E68(void *arg0, void *arg1) {
     if (!((1 << sh) & F(arg1, u32, 0))) {
         return 0;
     }
-    d = func_80030FEC((s32 *)((u8 *)arg0 + 0x60), (s32 *)((u8 *)F(arg1, void *, 4) + 0x60));
+    d = Math_ApproxDistance((s32 *)((u8 *)arg0 + 0x60), (s32 *)((u8 *)F(arg1, void *, 4) + 0x60));
     if (d < F(arg1, s32, 0xC)) {
         t = F(arg1, s32, 0x10);
         if (t == 0xFF) {
@@ -2218,7 +2218,7 @@ cmp:
     return 0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018E68);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Obj_CheckNearest);
 #endif
 
 typedef struct { char pad[0x100]; s32 flags; } T;

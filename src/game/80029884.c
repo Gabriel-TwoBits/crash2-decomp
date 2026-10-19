@@ -1088,7 +1088,7 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
         sp28[0] = arg1[0];
         sp28[1] = box[4];
         sp28[2] = arg1[2];
-        if ((s32)func_80027DEC(g_CurrentZone, sp28) >= SKIP_THRESHOLD) {
+        if ((s32)Zone_FindAt(g_CurrentZone, sp28) >= SKIP_THRESHOLD) {
             info = (Unk8002B57CInfo *)self->zone->items[1];
             bound = (info->unk_04 + info->unk_10) << 8;
             if (bound < sp28[1]) {
@@ -1226,7 +1226,7 @@ s32 func_8002BF58(GoolObject *arg0, void *arg1) {
     void *temp_a1;
     void *temp_s2;
 
-    temp_v0 = func_80027DEC(g_CurrentZone);
+    temp_v0 = Zone_FindAt(g_CurrentZone);
     if (temp_v0 >= -0xFE) {
         temp_a1 = arg0->zone;
         temp_s2 = *(void **)((s8 *)temp_a1 + 0x14);

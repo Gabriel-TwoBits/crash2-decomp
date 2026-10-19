@@ -361,11 +361,11 @@ void func_8002EFE4(void) {
     D_8006CDE0 = 0xFF;
     D_8006CDE4 = 0xFF;
     D_8006CBB4 = 0;
-    func_8002F0DC(1);
+    Sys_ResetGameInfo(1);
 }
 
 #ifdef NON_MATCHING
-extern s32 D_8006935C[];
+extern s32 g_PermFlags[];
 extern s32 D_80069718[];
 extern s32 D_8006CB84;
 extern s32 D_8006CC00;
@@ -398,7 +398,7 @@ extern s32 D_8006CDA4;
 extern s32 D_8006CDA8;
 extern s32 D_8006CDC8;
 
-void func_8002F0DC(s32 arg0) {
+void Sys_ResetGameInfo(s32 arg0) {
     s32 t;
     s32 *p;
     if (arg0 != 0) {
@@ -435,12 +435,12 @@ void func_8002F0DC(s32 arg0) {
         D_8006CDB8 = 0;
         D_8006CBD0 = t;
         memset(p, 0, 0x200);
-        memset(D_8006935C, 0, 0x200);
+        memset(g_PermFlags, 0, 0x200);
         D_8006CBCC = 0;
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8002E884", func_8002F0DC);
+INCLUDE_ASM("asm/nonmatchings/game/8002E884", Sys_ResetGameInfo);
 #endif
 
 extern s32 D_80068FE4;
@@ -537,7 +537,7 @@ extern u8 D_800619B8[];
 extern s32 g_EntityFlags[];
 extern s32 D_8006CD08[];
 
-void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
+void Sys_SaveCheckpoint(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
     s32 *src;
     s32 *dst;
     s32 *end;
@@ -621,7 +621,7 @@ void func_8002F34C(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8002E884", func_8002F34C);
+INCLUDE_ASM("asm/nonmatchings/game/8002E884", Sys_SaveCheckpoint);
 #endif
 
 #ifdef NON_MATCHING
@@ -656,7 +656,7 @@ extern s32 D_8006CB80;
 extern s32 D_8006CC60;
 void SetGeomScreen(s32);
 
-void func_8002F6C8(u8 *arg0) {
+void Sys_LoadCheckpoint(u8 *arg0) {
     s32 sp18;
     s32 isSpecial;
     s32 i;
@@ -777,5 +777,5 @@ void func_8002F6C8(u8 *arg0) {
     D_8006CC68 = *(s32 *)(arg0 + 0x103C);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8002E884", func_8002F6C8);
+INCLUDE_ASM("asm/nonmatchings/game/8002E884", Sys_LoadCheckpoint);
 #endif

@@ -422,7 +422,7 @@ void Sys_MainLoop(s32 arg0) {
             func_8002EE48();
             if (pending != 0) {
                 D_8005F3F0 = STATE_NONE;
-                func_8002F6C8(D_80060958);
+                Sys_LoadCheckpoint(D_80060958);
             } else {
                 /* nothing to clear */
             }

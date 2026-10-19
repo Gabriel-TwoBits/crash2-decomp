@@ -1166,13 +1166,13 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
 INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F054);
 #endif
 
-extern u16 D_8006935C[];
+extern u16 g_PermFlags[];
 extern s32 g_EntityFlags[];
 
 void func_8001F858(s32 arg0) {
     u16 *p;
 
-    for (p = D_8006935C; *p != 0; p++) {
+    for (p = g_PermFlags; *p != 0; p++) {
         if ((*p >> 9) == arg0) {
             g_EntityFlags[*p & 0x1FF] |= 8;
         }
@@ -1189,14 +1189,14 @@ void func_8001F858(s32 arg0) {
 
 extern char *g_CurrentZone;
 
-void func_8001F8B4(s32 arg0) {
+void Ent_SetPermFlag(s32 arg0) {
     u16 *p;
     u16 *free_slot;
     u16 key;
 
     key = (arg0 >> KEY_LO_SHIFT) | (*(s32 *)((char *)D_8006759C + 8) << KEY_HI_SHIFT);
     free_slot = 0;
-    p = D_8006935C;
+    p = g_PermFlags;
     if (*(s32 *)(*(char **)(g_CurrentZone + OWNER_OFFSET) + FLAGS_OFFSET) & FLAG_LOCKED) {
         return;
     }
@@ -1214,7 +1214,7 @@ void func_8001F8B4(s32 arg0) {
     *free_slot = key;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F8B4);
+INCLUDE_ASM("asm/nonmatchings/game/8001D63C", Ent_SetPermFlag);
 #endif
 
 #ifdef NON_MATCHING
@@ -1223,13 +1223,13 @@ INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F8B4);
 #define KEY_MASK 0xFFFF
 
 
-void func_8001F94C(s32 arg0) {
+void Ent_ClearPermFlag(s32 arg0) {
     u16 *p;
     s32 key;
 
     key = (arg0 >> KEY_SHIFT_LOW) | (((s32 *)D_8006759C)[2] << KEY_SHIFT_HIGH);
     key &= KEY_MASK;
-    for (p = D_8006935C; *p != 0; p++) {
+    for (p = g_PermFlags; *p != 0; p++) {
         if (*p == key) {
             if (p[1] != 0) {
                 *p = 1;
@@ -1241,5 +1241,5 @@ void func_8001F94C(s32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001F94C);
+INCLUDE_ASM("asm/nonmatchings/game/8001D63C", Ent_ClearPermFlag);
 #endif

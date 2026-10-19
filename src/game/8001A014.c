@@ -267,8 +267,8 @@ s32 func_8001A710(GoolObject *arg0, s32 *arg1, GoolObject *arg2, s32 *arg3) {
             arg2->links[GOOL_LINK_COLLIDER] = arg0;
             return -0x1C;
         }
-        d = func_80030FEC(arg0->pos, other->pos);
-        if (!(func_80030FEC(arg0->pos, arg2->pos) < d) && !(other->state_flags & 0x800)) {
+        d = Math_ApproxDistance(arg0->pos, other->pos);
+        if (!(Math_ApproxDistance(arg0->pos, arg2->pos) < d) && !(other->state_flags & 0x800)) {
             return -0x1C;
         }
     }

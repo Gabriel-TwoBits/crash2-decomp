@@ -830,7 +830,7 @@ typedef struct {
     s32 flags[8];
 } Unk80027DEC;
 
-void *func_80027DEC(char *arg0, void *arg1) {
+void *Zone_FindAt(char *arg0, void *arg1) {
     Unk80027DEC *p;
     void *r;
     char **global;

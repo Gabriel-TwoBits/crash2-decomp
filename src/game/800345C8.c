@@ -1358,7 +1358,7 @@ s32 Save_UnformatCard(void) {
     return -(func_80035C40() != 0);
 }
 
-s32 func_8003670C(u32 arg0, s32 arg1) {
+s32 Save_RunCommand(u32 arg0, s32 arg1) {
     switch (arg0) {
     case 2:
         func_800360AC(0x80);
