@@ -3,19 +3,20 @@
 equivalent track's, the same pad presses at the same frames for both, and compares what each displays frame by frame.
 
     python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                             [--baseline EXE] [--real-time]
+                             [--baseline EXE] [--schedule {new-game,demo}] [--real-time]
 
 By default frames are game frames, on the game clock (tools/run_game.lua): the game's time is pinned to its frames, each
 lasting two vsyncs for the game whatever the code's speed, so faster or slower equivalent C plays the same game. The
 schedule boots the disc, starts a new game from the title's menu, skips the intro, waits out Cortex's speech, walks into
 Turtle Woods from the first warp room and runs, jumps and spins there: 3,450 game frames, about a minute and a half to
-run on the emulator's interpreter, both runs at once. `--real-time` keeps the game's own clock and counts vsyncs
-instead: 8,000 of them (2 minutes 13 of the game), about 15 seconds on the emulator's recompiler, where a difference may
-be only timing. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a copy of
-the image first (tools/patch_disc.py). `--against retail` runs the retail image twice instead: the emulator is
-deterministic when both runs agree on every frame. `--baseline EXE` runs that executable in place of retail: the same
-equivalent build with and without a change, when the change can't be tested alone (docs/WORKFLOW.md); on the game clock
-its ELF must sit beside it (EXE with the suffix .elf), for the clock's symbols.
+run on the emulator's interpreter, both runs at once. `--schedule demo` presses nothing instead: left at the title's
+menu, the game plays its attract demo, Turtle Woods then a river level, 4,800 game frames. `--real-time` keeps the
+game's own clock and counts vsyncs instead: 8,000 of them (2 minutes 13 of the game), about 15 seconds on the emulator's
+recompiler, where a difference may be only timing. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja
+nonmatching`) goes into a copy of the image first (tools/patch_disc.py). `--against retail` runs the retail image twice
+instead: the emulator is deterministic when both runs agree on every frame. `--baseline EXE` runs that executable in
+place of retail: the same equivalent build with and without a change, when the change can't be tested alone
+(docs/WORKFLOW.md); on the game clock its ELF must sit beside it (EXE with the suffix .elf), for the clock's symbols.
 
 Each run is checked for health: it reaches the last frame (a run without a new vsync for 20 seconds is stopped: the game
 crashed or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls,
@@ -32,6 +33,7 @@ import subprocess
 import sys
 import time
 import zlib
+from collections import namedtuple
 from pathlib import Path
 
 from patch_disc import DEFAULT_EXE, DEFAULT_OUT, patch
@@ -57,30 +59,54 @@ STOP_SECONDS = 10
 # g_TimerTicks for the game: two vsyncs, the length most of a real-time retail run's frames take
 GAME_FRAME_TICKS = 34
 GAME_CLOCK_SYMBOLS = ("Gfx_EndFrame", "Sys_TimerHandler", "g_TimerTicks")
-LAST_GAME_FRAME = 3450
-# Retail reaches its last game frame by vsync 8,693; a run still short of it at this vsync is stuck
-GAME_VSYNC_LIMIT = 12000
 GAME_TAP_FRAMES = 3
-GAME_PRESSES = [
-    (1050, GAME_TAP_FRAMES, "START"),  # New Game, from the title's menu
-    (1350, GAME_TAP_FRAMES, "CROSS"),  # during the intro
-    (2750, 100, "UP"),  # into Turtle Woods' portal, once Cortex's speech is over
-    (2950, 150, "UP"),
-    (3000, GAME_TAP_FRAMES, "CROSS"),
-    (3050, GAME_TAP_FRAMES, "SQUARE"),
-    (3100, 100, "RIGHT"),
-    (3150, GAME_TAP_FRAMES, "CROSS"),
-]
-GAME_CHECKPOINTS = [
-    (300, "intro"),
-    (500, "naughty_dog"),
-    (1000, "title"),
-    (1800, "cortex_speech"),
-    (2750, "warp_room"),
-    (2900, "level_entry"),
-    (3100, "turtle_woods"),
-    (3440, "turtle_woods_end"),
-]
+# A schedule on the game clock: presses (first game frame, game frames held, button), checkpoints (game frame, name),
+# the last game frame, and the vsync by which a run still short of it counts as stuck (about 1.4 times retail's)
+GameSchedule = namedtuple("GameSchedule", "presses checkpoints last vsync_limit")
+GAME_SCHEDULES = {
+    # Retail reaches game frame 3,450 by vsync 8,695
+    "new-game": GameSchedule(
+        presses=[
+            (1050, GAME_TAP_FRAMES, "START"),  # New Game, from the title's menu
+            (1350, GAME_TAP_FRAMES, "CROSS"),  # during the intro
+            (2750, 100, "UP"),  # into Turtle Woods' portal, once Cortex's speech is over
+            (2950, 150, "UP"),
+            (3000, GAME_TAP_FRAMES, "CROSS"),
+            (3050, GAME_TAP_FRAMES, "SQUARE"),
+            (3100, 100, "RIGHT"),
+            (3150, GAME_TAP_FRAMES, "CROSS"),
+        ],
+        checkpoints=[
+            (300, "intro"),
+            (500, "naughty_dog"),
+            (1000, "title"),
+            (1800, "cortex_speech"),
+            (2750, "warp_room"),
+            (2900, "level_entry"),
+            (3100, "turtle_woods"),
+            (3440, "turtle_woods_end"),
+        ],
+        last=3450,
+        vsync_limit=12000,
+    ),
+    # Nothing pressed: the title's menu left alone plays the attract demo, Turtle Woods then a river level; retail
+    # reaches game frame 4,800 by vsync 14,100
+    "demo": GameSchedule(
+        presses=[],
+        checkpoints=[
+            (1000, "title"),
+            (2000, "demo_turtle_woods"),
+            (2300, "demo_turtle_woods_end"),
+            (2800, "title_again"),
+            (3900, "demo_river"),
+            (4300, "demo_river_middle"),
+            (4600, "demo_river_end"),
+            (4790, "title_last"),
+        ],
+        last=4800,
+        vsync_limit=20000,
+    ),
+}
 # The executables' symbols, for the game clock: the default build's ELF holds retail's bytes
 RETAIL_ELF = HERE / "build" / "SCUS_941.54.elf"
 NONMATCHING_ELF = DEFAULT_EXE.with_suffix(".elf")
@@ -166,32 +192,32 @@ def clock_symbols(elf):
     return [found[name] for name in GAME_CLOCK_SYMBOLS]
 
 
-def schedule_text(elf):
-    """The schedule for tools/run_game.lua: on the game clock of the executable elf, or in real time when elf is None"""
+def schedule_text(elf, schedule):
+    """The schedule for tools/run_game.lua: on the game clock of the executable elf (schedule, a GameSchedule), or in
+    real time when elf is None"""
     if elf is None:
         lines = [f"press {first} {first + frames - 1} {button}" for first, frames, button in PRESSES]
         lines += [f"shot {frame}" for frame, _ in CHECKPOINTS]
         lines.append(f"end {LAST_FRAME}")
     else:
         addresses = " ".join(f"{address:x}" for address in clock_symbols(elf))
-        lines = [f"clock game {addresses} {GAME_FRAME_TICKS}", f"limit {GAME_VSYNC_LIMIT}"]
-        lines += [f"press {first} {first + frames - 1} {button}" for first, frames, button in GAME_PRESSES]
-        lines += [f"shot {frame}" for frame, _ in GAME_CHECKPOINTS]
-        lines.append(f"end {LAST_GAME_FRAME}")
+        lines = [f"clock game {addresses} {GAME_FRAME_TICKS}", f"limit {schedule.vsync_limit}"]
+        lines += [f"press {first} {first + frames - 1} {button}" for first, frames, button in schedule.presses]
+        lines += [f"shot {frame}" for frame, _ in schedule.checkpoints]
+        lines.append(f"end {schedule.last}")
     return "".join(f"{line}\n" for line in lines)
 
 
-def start(name, cue, elf):
-    """Starts the emulator on cue, writing into OUT/name, on elf's game clock or in real time when elf is None; returns
-    (process, folder)"""
+def start(name, cue, elf, schedule):
+    """Starts the emulator on cue, writing into OUT/name, on elf's game clock and schedule (a GameSchedule) or in real
+    time when elf is None; returns (process, folder)"""
     folder = OUT / name
     folder.mkdir(parents=True, exist_ok=True)
     for stale in [*folder.glob("shot_*.raw"), folder / "trace.txt", folder / "game_frames.txt", folder / "memcard1.mcd",
                   folder / "memcard2.mcd"]:
         stale.unlink(missing_ok=True)
-    schedule = folder / "schedule.txt"
-    schedule.write_text(schedule_text(elf))
-    environment = {**os.environ, "RUN_GAME_SCHEDULE": str(schedule), "RUN_GAME_OUT": str(folder)}
+    (folder / "schedule.txt").write_text(schedule_text(elf, schedule))
+    environment = {**os.environ, "RUN_GAME_SCHEDULE": str(folder / "schedule.txt"), "RUN_GAME_OUT": str(folder)}
     # Without a display the emulator can't open a window, whatever its flags
     for variable in DISPLAY_VARIABLES:
         environment.pop(variable, None)
@@ -259,8 +285,9 @@ def read_game_frames(folder):
     return frames
 
 
-def health(name, status, frames, game_frames):
-    """The run's problems, as lines of text (none when healthy); game_frames is None in real time"""
+def health(name, status, frames, game_frames, last_game_frame):
+    """The run's problems, as lines of text (none when healthy); game_frames and last_game_frame are None in real
+    time"""
     problems = []
     if status is None:
         problems.append(f"no frame for {STALL_SECONDS} seconds: the game crashed or hung (see its emulator.log)")
@@ -271,8 +298,8 @@ def health(name, status, frames, game_frames):
         pass
     if game_frames is None and len(frames) < LAST_FRAME:
         problems.append(f"stopped at frame {len(frames)} of {LAST_FRAME}")
-    elif game_frames is not None and len(game_frames) <= LAST_GAME_FRAME:
-        problems.append(f"stopped after {len(game_frames)} of {LAST_GAME_FRAME + 1} game frames, at vsync "
+    elif game_frames is not None and len(game_frames) <= last_game_frame:
+        problems.append(f"stopped after {len(game_frames)} of {last_game_frame + 1} game frames, at vsync "
                         f"{len(frames)}")
     else:
         # It reached its last frame
@@ -352,8 +379,10 @@ def main():
                         help="what the retail run is compared with (default: %(default)s)")
     parser.add_argument("--baseline", type=Path,
                         help="an executable run in place of retail (another build of the equivalent track)")
+    parser.add_argument("--schedule", choices=tuple(GAME_SCHEDULES), default="new-game",
+                        help="what the game clock's runs play (default: %(default)s)")
     parser.add_argument("--real-time", action="store_true",
-                        help="keep the game's own clock and count vsyncs, not game frames")
+                        help="keep the game's own clock and count vsyncs, not game frames (new-game's own schedule)")
     args = parser.parse_args()
     if not args.image.exists():
         sys.exit(f"{args.image} doesn't exist")
@@ -390,12 +419,16 @@ def main():
         else:
             # In real time: no symbols needed
             continue
-    if args.real_time:
+    if args.real_time and args.schedule != "new-game":
+        sys.exit("--real-time has only new-game's schedule")
+    elif args.real_time:
+        schedule = None
         unit, last, checkpoints = "frame", LAST_FRAME, CHECKPOINTS
     else:
-        unit, last, checkpoints = "game frame", LAST_GAME_FRAME, GAME_CHECKPOINTS
+        schedule = GAME_SCHEDULES[args.schedule]
+        unit, last, checkpoints = "game frame", schedule.last, schedule.checkpoints
     print(f"running {first[0]} and {other[0]} to {unit} {last}", flush=True)
-    runs = [start(*first), start(*other)]
+    runs = [start(*first, schedule), start(*other, schedule)]
     names = [first[0], other[0]]
     statuses = [wait(*run) for run in runs]
     traces = [read_trace(folder) for _, folder in runs]
@@ -403,7 +436,7 @@ def main():
 
     problems = []
     for name, status, frames, played in zip(names, statuses, traces, game_frames):
-        problems += health(name, status, frames, played)
+        problems += health(name, status, frames, played, None if args.real_time else schedule.last)
     for problem in problems:
         print(problem)
 

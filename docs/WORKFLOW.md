@@ -213,7 +213,7 @@ notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside t
 ### Running the game
 
     .venv/bin/python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                                       [--baseline EXE] [--real-time]
+                                       [--baseline EXE] [--schedule {new-game,demo}] [--real-time]
 
 equiv.py judges one function at a time; this plays the equivalent executable as a whole, in the game. It needs the
 `ninja nonmatching` build and the player's disc image (a MODE2/2352 `.cue` and `.bin`, never copied into the repository),
@@ -231,11 +231,12 @@ and writes into `build/` only:
    number: every game frame lasts two vsyncs for the game however long it took. Presses and checkpoints are keyed to
    game frames (`Gfx_EndFrame`'s calls from power-on), and a game frame's image is the one on the display when the next
    call starts: New Game from the title's menu, the intro, Cortex's speech, into Turtle Woods from the first warp room,
-   run, jump, spin; 3,450 game frames, about a minute. The three symbols' addresses come from each executable's ELF (the
-   default build's for retail); the breakpoints need the emulator's interpreter and debugger. At every vsync the script
-   also records a hash of the displayed image, the program counter and the last exception's code, for the run's health.
-   `--real-time` keeps the game's own clock instead and counts vsyncs: presses at fixed vsyncs, 8,000 of them, about 15
-   seconds on the emulator's recompiler.
+   run, jump, spin; 3,450 game frames, about a minute. `--schedule demo` presses nothing: left at the title's menu, the
+   game plays its attract demo, Turtle Woods then a river level, 4,800 game frames, about two minutes. The three
+   symbols' addresses come from each executable's ELF (the default build's for retail); the breakpoints need the
+   emulator's interpreter and debugger. At every vsync the script also records a hash of the displayed image, the
+   program counter and the last exception's code, for the run's health. `--real-time` keeps the game's own clock instead
+   and counts vsyncs: presses at fixed vsyncs, 8,000 of them, about 15 seconds on the emulator's recompiler.
 3. A run is healthy when it reaches its last frame (one without a new vsync for 20 seconds is stopped: the game crashed
    or hung; on the game clock, one short of its last game frame at vsync 12,000 too, where retail reaches it by 8,695),
    its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls, and its display
