@@ -37,7 +37,7 @@ OBJDIFF_VERSION = "v3.8.2"
 OBJDIFF_URL = f"https://github.com/encounter/objdiff/releases/download/{OBJDIFF_VERSION}/objdiff-cli-linux-x86_64"
 OBJDIFF_SHA256 = "e5445089a6f707e30cb5e02992451b604619cedfd2660ee2373a86bfefd9e718"
 REPOSITORIES = {
-    "maspsx": ("https://github.com/mkst/maspsx", "e85ecb373828aabea96d7e6400974d4f91ce8c74"),
+    "maspsx": ("https://github.com/mkst/maspsx", "d4661dfd0fad27fad4cab5781f18697b823369f9"),
     "m2c": ("https://github.com/matt-kempster/m2c", "708d2d2cb2698f091a92492b328f73b24209f72d"),
     "decomp-permuter": ("https://github.com/simonlindholm/decomp-permuter", "8556c81d80d1c1af98a858c8f4dc951357f29139"),
     # Byte signatures of PsyQ's library objects, per SDK version (tools/find_psyq.py); no licence, so fetched, never vendored
