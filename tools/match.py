@@ -11,6 +11,10 @@ and the result checked and landed by this script, never taken on the agent's wor
     python tools/match.py score FUNCTION FILE.c [--trials 500] [--seed 0]
                                                    an equivalent draft as it would land, judged by equiv.py (score.sh)
 
+With --again, next, prepare, run and loop make a second matching pass over the functions landed as equivalent C: each
+once, the closest earlier matching attempt first, the agent given that equivalent C as well; a match replaces the
+NON_MATCHING block, a miss leaves the function equivalent.
+
 With --equivalent, next, prepare, run, land and loop work on the equivalent track (docs/WORKFLOW.md): the agent writes
 behaviour-equivalent C (tools/match/EQUIVALENT.md), judged by tools/equiv.py, and land puts it into a NON_MATCHING block
 around the function's INCLUDE_ASM line, kept only when both builds hold and equiv.py agrees on the landed file.
@@ -137,6 +141,14 @@ GIVEN_UP = ("gave up", "rejected", EQUIVALENT_REFUSED)
 # From this size the matching loop matched about one function in seven to ten, at US$7-10 a match (docs/ROADMAP.md): one
 # not tried yet goes to the equivalent track without a matching run
 EQUIVALENT_FIRST_SIZE = 0x240
+# The second matching pass (--again) over equivalent functions: its runs' mode, its notes beside the first pass's as
+# <function>.again.md and .c, the equivalent C the agent is given, and the share of differing words a function never
+# tried for a match ranks by (behind every one that was)
+AGAIN_MODE = "again"
+AGAIN_NOTES = ".again"
+# A reference, not a candidate: it leans on types its file defines elsewhere, so it needn't compile alone
+LANDED_EQUIVALENT = "landed_equivalent.c.txt"
+UNTRIED_SHARE = 1.0
 # equiv.py's lines: its last, the trials agreeing without being compared, and the first disagreement
 AGREEING = re.compile(r"^(\d+) of (\d+) trials agree$", re.MULTILINE)
 UNCOMPARED = re.compile(r"^(\d+) trials agree by (?:the retail code reaching the limit|both taking the same exception|"
@@ -271,6 +283,47 @@ def next_function():
     return candidates[0][3]
 
 
+def closest_share(entry):
+    """The smallest share of differing words among a function's first-pass matching runs, UNTRIED_SHARE without one"""
+    shares = []
+    for attempt in entry.get("runs", []):
+        counted = DIFFERING.search(attempt.get("summary") or "")
+        if attempt.get("mode") is None and counted is not None and int(counted.group(2)) > 0:
+            shares.append(int(counted.group(1)) / int(counted.group(2)))
+        else:
+            # An equivalent or second-pass run, or one that left no count
+            continue
+    return min(shares, default=UNTRIED_SHARE)
+
+
+def tried_again(entry):
+    """Whether the second matching pass has had the function"""
+    return any(attempt.get("mode") == AGAIN_MODE for attempt in entry.get("runs", []))
+
+
+def next_again():
+    """The next function for the second matching pass: one landed as equivalent C, not tried by the pass yet, neither
+    skipped nor handwritten; the closest first-pass attempt first, then the smallest"""
+    ledger = load_ledger()
+    skip = skipped()
+    equivalent = equivalents()
+    keyed = [(address_name(name), name, size) for name, size in unmatched().items() if name in equivalent]
+    candidates = sorted((closest_share(ledger.get(key, {})), size, key, name) for key, name, size in keyed
+                        if size >= MIN_SIZE and key not in skip and not handwritten(name)
+                        and not tried_again(ledger.get(key, {})))
+    if not candidates:
+        return None
+    return candidates[0][3]
+
+
+def landed_equivalent(name):
+    """The function's equivalent C as its NON_MATCHING block holds it: what lies between #ifdef and #else"""
+    block = source_of(name)[1]
+    if not block.startswith("#ifdef NON_MATCHING\n"):
+        sys.exit(f"{name} has no NON_MATCHING block")
+    return block[len("#ifdef NON_MATCHING\n"):block.index("#else\n")]
+
+
 def settled_equivalent(entry):
     """Whether an equivalent run has had the function for good. A run that judged its draft alone couldn't see what its
     file refuses at landing, so a function such runs left refused at landing is tried again; a run that judged it in
@@ -338,8 +391,9 @@ def m2c_context(folder, source):
     return context
 
 
-def prepare(name, equivalent=False):
-    """The function's scratch directory, by its address name, for a matching run or, with equivalent, an equivalent one"""
+def prepare(name, equivalent=False, again=False):
+    """The function's scratch directory, by its address name, for a matching run or, with equivalent, an equivalent one;
+    with again, a second-pass matching run given the function's landed equivalent C"""
     key = address_name(name)
     folder = SCRATCH / key
     if folder.exists():
@@ -420,7 +474,10 @@ def prepare(name, equivalent=False):
         shutil.copy2(NOTES / f"{earlier}.md", folder / "EARLIER.md")
         # The C by the symbols' names now, though it was written before some were named
         (folder / "earlier.c").write_text(with_current_names((NOTES / f"{earlier}.c").read_text()))
-        if not equivalent:
+        if again:
+            told = ("The first matching pass gave it up: `EARLIER.md` has its notes, `earlier.c` its closest C. "
+                    "The function landed as equivalent C since (below).")
+        elif not equivalent:
             told = "An earlier run gave it up, under other compiler flags: `EARLIER.md` has its notes, `earlier.c` its best C."
         elif earlier != key:
             told = "An earlier equivalent run: `EARLIER.md` has its notes, `earlier.c` its best C."
@@ -435,6 +492,17 @@ def prepare(name, equivalent=False):
         else:
             # Gave up before any landing, or landed elsewhere: the notes say why
             pass
+    if again:
+        (folder / LANDED_EQUIVALENT).write_text(landed_equivalent(name))
+        brief += ["## Its equivalent C", "",
+                  f"`{LANDED_EQUIVALENT}` is the C that landed for it under NON_MATCHING in {source}: tools/equiv.py "
+                  "found it behaves as the retail function on every trial, but it compiles to other bytes. Its logic "
+                  "is right; its shape, statement order and types may not be the original's. It leans on types its "
+                  "file defines elsewhere, so it doesn't compile alone: copy it into a .c file with the types it needs "
+                  f"(from {source}) to score it, and start from the closest of base.c, earlier.c and it.", ""]
+    else:
+        # A first pass: m2c's draft and the earlier run's notes only
+        pass
     (folder / "BRIEF.md").write_text("\n".join(brief))
     template = EQUIVALENT_TEMPLATE if equivalent else TEMPLATE
     (folder / "CLAUDE.md").write_text(template.read_text().replace("$FUNCTION", name))
@@ -535,25 +603,31 @@ def agent_session(folder, prompt, tools, minutes, model):
             **session_result(folder)}
 
 
-def run(name, minutes, model):
-    folder = prepare(name)
+def run(name, minutes, model, again=False):
+    """A matching run; with again, a second-pass one, after which a function that didn't match stays equivalent"""
+    folder = prepare(name, again=again)
     session = agent_session(folder, PROMPT.format(minutes=minutes), AGENT_TOOLS, minutes, model)
+    if again:
+        session["mode"] = AGAIN_MODE
+        stem, rejected, missed = f"{address_name(name)}{AGAIN_NOTES}", EQUIVALENT_MODE, EQUIVALENT_MODE
+    else:
+        stem, rejected, missed = None, "rejected", "gave up"
 
     candidate = folder / "match.c"
     if candidate.exists():
-        keep_notes(name, folder, "match.c")
+        keep_notes(name, folder, "match.c", stem)
         if INLINE_ASSEMBLY.search(candidate.read_text()):
-            record(name, "rejected", reason="inline assembly in match.c", **session)
+            record(name, rejected, reason="inline assembly in match.c", **session)
             return False
         matched, summary = score(folder, candidate)
         if matched:
             record(name, "matched", summary=summary, **session)
             return True
-        record(name, "rejected", reason=f"match.c doesn't match: {summary}", **session)
+        record(name, rejected, reason=f"match.c doesn't match: {summary}", **session)
         return False
     best, summary = best_attempt(folder)
-    keep_notes(name, folder, best)
-    record(name, "gave up", summary=summary, best=best, **session)
+    keep_notes(name, folder, best, stem)
+    record(name, missed, summary=summary, best=best, **session)
     return False
 
 
@@ -1010,10 +1084,11 @@ def commit_records():
 
 
 def near_miss(entry):
-    """Whether the run that gave the function up came within NEAR_MISS of a match"""
+    """Whether the run that gave the function up, or the second pass's last run, came within NEAR_MISS of a match"""
     counted = DIFFERING.search(entry.get("summary", ""))
-    return (entry["outcome"] == "gave up" and counted is not None
-            and int(counted.group(1)) <= NEAR_MISS * int(counted.group(2)))
+    last = entry.get("runs", [{}])[-1]
+    missed = entry["outcome"] == "gave up" or (entry["outcome"] == EQUIVALENT_MODE and last.get("mode") == AGAIN_MODE)
+    return missed and counted is not None and int(counted.group(1)) <= NEAR_MISS * int(counted.group(2))
 
 
 def report():
@@ -1027,6 +1102,8 @@ def report():
             # Matching and equivalent runs apart: an equivalent run succeeds when its C agrees
             if attempt.get("mode") == EQUIVALENT_MODE:
                 key, success, verb = f"{attempt['model']}, {EQUIVALENT_MODE}", "equivalent, agrees", "agreed"
+            elif attempt.get("mode") == AGAIN_MODE:
+                key, success, verb = f"{attempt['model']}, {AGAIN_MODE}", "matched", "matched"
             else:
                 key, success, verb = attempt["model"], "matched", "matched"
             stats = models.setdefault(key, {"runs": 0, "succeeded": 0, "cost_usd": 0.0, "verb": verb})
@@ -1079,11 +1156,17 @@ def main():
     parser.add_argument("--retry-model", help="loop: a second model for near misses of the first")
     parser.add_argument("--trials", type=int, default=DEFAULT_TRIALS, help="score: equiv.py's trials")
     parser.add_argument("--seed", type=int, default=RUN_SEED, help="score: equiv.py's seed")
+    parser.add_argument("--again", action="store_true",
+                        help="next, prepare, run, loop: the second matching pass over equivalent functions")
     parser.add_argument("--equivalent", action="store_true",
                         help="next, prepare, run, land, loop: the equivalent track (behaviour-equivalent C under NON_MATCHING)")
     arguments = parser.parse_args()
 
-    if arguments.command == "next" and arguments.equivalent:
+    if arguments.again and arguments.equivalent:
+        sys.exit("--again is a matching pass: not with --equivalent")
+    elif arguments.command == "next" and arguments.again:
+        print(next_again() or "nothing left to try")
+    elif arguments.command == "next" and arguments.equivalent:
         print(next_equivalent() or "nothing left to try")
     elif arguments.command == "next":
         print(next_function() or "nothing left to try")
@@ -1104,6 +1187,19 @@ def main():
                 pass
             print(f"{name}: {entry_of(name)['outcome']}", flush=True)
         commit_records()
+    elif arguments.command == "loop" and arguments.again:
+        for _ in range(arguments.count):
+            name = next_again()
+            if name is None:
+                print("nothing left to try")
+                break
+            matched = run(name, arguments.minutes, arguments.model, again=True)
+            # The second model only where the first came close, as in the first pass
+            if not matched and arguments.retry_model and near_miss(entry_of(name)):
+                matched = run(name, arguments.minutes, arguments.retry_model, again=True)
+            landed = matched and land(name)
+            print(f"{name}: {'landed' if landed else entry_of(name)['outcome']}", flush=True)
+        commit_records()
     elif arguments.command == "loop":
         for _ in range(arguments.count):
             name = next_function()
@@ -1122,7 +1218,7 @@ def main():
     elif (function := game_function(arguments.function)) is None:
         sys.exit(f"{arguments.function} is no game function of the split")
     elif arguments.command == "prepare":
-        print(prepare(function, arguments.equivalent))
+        print(prepare(function, arguments.equivalent, arguments.again))
     elif arguments.command == "score" and arguments.draft is None:
         sys.exit("score needs a FUNCTION and a FILE.c")
     elif arguments.command == "score":
@@ -1132,7 +1228,7 @@ def main():
         print(f"{function}: {entry_of(function)}")
         sys.exit(0 if agrees else 1)
     elif arguments.command == "run":
-        matched = run(function, arguments.minutes, arguments.model)
+        matched = run(function, arguments.minutes, arguments.model, arguments.again)
         print(f"{function}: {entry_of(function)}")
         sys.exit(0 if matched else 1)
     elif arguments.command == "land":

@@ -21,6 +21,11 @@ committed at the end (`chore: record the matching runs`). Nothing is pushed. Aft
 up, and `git log` shows what landed. Runs use the user's Claude usage: a function costs between $0.10 and a few dollars
 at API prices. `config/match/skip.txt` lists functions not to try, with why.
 
+`--again` makes a second pass over the functions landed as equivalent C, each once, the closest first-pass attempt
+first: the agent also gets the landed C (`landed_equivalent.c.txt`, whose logic equiv.py vouched for) beside m2c's draft
+and the first pass's notes. A match replaces the NON_MATCHING block; a miss leaves the function equivalent, its notes in
+`config/match/notes/<function>.again.md` and `.c`.
+
 1. **Pick** a function from the split (`asm/`). Smaller ones and ones whose callees are already in C go
    first; a function's callers and callees give its meaning.
 2. **Draft** it with m2c from its assembly, with the context the project already has (`include/`'s types and declarations).
