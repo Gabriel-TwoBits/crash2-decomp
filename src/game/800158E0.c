@@ -452,8 +452,8 @@ s32 Gfx_AllocFrameBuffers(void) {
     if (D_8005F3EC == RETAIL_STATE_LOAD) {
         func_80036368();
     }
-    func_8003BC5C((u8 *)g_BuildBuffer[0] + CLEAR_OFFSET, CLEAR_BYTES);
-    func_8003BC5C(g_DrawBuffer + CLEAR_OFFSET, CLEAR_BYTES);
+    Gfx_ResetOt((u8 *)g_BuildBuffer[0] + CLEAR_OFFSET, CLEAR_BYTES);
+    Gfx_ResetOt(g_DrawBuffer + CLEAR_OFFSET, CLEAR_BYTES);
     i = 0;
     shared = Heap_Alloc(SHARED_BUF_BYTES);
     if (g_FrameBuffers.count > 0) {

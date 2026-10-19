@@ -541,7 +541,7 @@ void Gool_InitScratchpad(void) {
     }
     *p = n;
     *(char **)0x1F800058 = g_GoolGlobals;
-    func_8003B940(g_GoolOpcodeHandlers, (void *)0x1F800060, (D_8005C650 - g_GoolOpcodeHandlers) / 2);
+    Sys_Memcpy(g_GoolOpcodeHandlers, (void *)0x1F800060, (D_8005C650 - g_GoolOpcodeHandlers) / 2);
     *(s32 *)0x1F80005C = 0x1F800060;
 }
 

@@ -1029,9 +1029,9 @@ void Save_SortDirectory(Unk80035D48 *arg0, s32 arg1) {
         for (j = i + 1; j < arg1; j++) {
             r = Save_IsGameFile(arg0[j].b);
             if (first != 0 && (r == 0 || strcmp(a, arg0[j].b) > 0)) {
-                func_8003B940(&arg0[i], &tmp, 0x14);
-                func_8003B940(&arg0[j], &arg0[i], 0x14);
-                func_8003B940(&tmp, &arg0[j], 0x14);
+                Sys_Memcpy(&arg0[i], &tmp, 0x14);
+                Sys_Memcpy(&arg0[j], &arg0[i], 0x14);
+                Sys_Memcpy(&tmp, &arg0[j], 0x14);
                 i--;
                 break;
             }

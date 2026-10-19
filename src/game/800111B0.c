@@ -465,7 +465,7 @@ void Sys_MainLoop(s32 arg0) {
             func_8002FB84(0);
             D_8006CCB8 = func_80041E5C(D_8005F390, g_BuildBuffer, D_80062A18, D_80060944);
         } else {
-            func_8003BC5C((u8 *)g_BuildBuffer + PAUSE_BUF_OFFSET, PAUSE_BUF_SIZE);
+            Gfx_ResetOt((u8 *)g_BuildBuffer + PAUSE_BUF_OFFSET, PAUSE_BUF_SIZE);
         }
         if (D_8006CB94 & SAVE_FLAGS_MASK) {
             if ((D_80062A90 != 0) && (D_80062AD8 & FLAG_16)) {

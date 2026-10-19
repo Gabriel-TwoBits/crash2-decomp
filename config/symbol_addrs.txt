@@ -1315,3 +1315,39 @@ g_Paused = 0x8005F180;
 
 // Sys_MainLoop runs its frames until it is set, then ends the frame twice and closes the level (Nsf_CloseLevel)
 g_Quit = 0x8005F1D0;
+
+// copies a2 bytes from a0 to a1, by halfwords or by words unrolled through the five tails before it; Save_SortDirectory, Gool_InitScratchpad and func_80029800 copy with it; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RMemcpy (src, dst, bytes), whose tails for 0 to 4 words are laid out the same
+Sys_Memcpy = 0x8003B940; // type:func
+
+// Sys_Memcpy's tail for 0 words left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RMemcpy_0
+Sys_Memcpy0 = 0x8003B89C; // type:func
+
+// Sys_Memcpy's tail for 1 words left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RMemcpy_1
+Sys_Memcpy1 = 0x8003B8BC; // type:func
+
+// Sys_Memcpy's tail for 2 words left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RMemcpy_2
+Sys_Memcpy2 = 0x8003B8DC; // type:func
+
+// Sys_Memcpy's tail for 3 words left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RMemcpy_3
+Sys_Memcpy3 = 0x8003B8FC; // type:func
+
+// Sys_Memcpy's tail for 4 words left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RMemcpy_4
+Sys_Memcpy4 = 0x8003B91C; // type:func
+
+// links an ordering table forward: each word the 24-bit address of the next, 64 entries a pass, the rest through the five tails before it; Gfx_AllocFrameBuffers, Sys_MainLoop (paused) and func_80041E5C clear a frame's table with it; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RGpuResetOT (ot, len), whose tails are laid out the same
+Gfx_ResetOt = 0x8003BC5C; // type:func
+
+// Gfx_ResetOt's tail for 0 entries left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RGpuResetOT_0
+Gfx_ResetOt0 = 0x8003BBB4; // type:func
+
+// Gfx_ResetOt's tail for 1 entries left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RGpuResetOT_1
+Gfx_ResetOt1 = 0x8003BBD4; // type:func
+
+// Gfx_ResetOt's tail for 2 entries left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RGpuResetOT_2
+Gfx_ResetOt2 = 0x8003BBF4; // type:func
+
+// Gfx_ResetOt's tail for 3 entries left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RGpuResetOT_3
+Gfx_ResetOt3 = 0x8003BC14; // type:func
+
+// Gfx_ResetOt's tail for 4 entries left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RGpuResetOT_4
+Gfx_ResetOt4 = 0x8003BC34; // type:func
