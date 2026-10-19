@@ -40,9 +40,9 @@ and the first pass's notes. A match replaces the NON_MATCHING block; a miss leav
    `src/` the whole executable's SHA-1 must still be the retail one (`ninja`).
 6. **Record** it: the C replaces the function's `INCLUDE_ASM` line in its file in `src/game/` (docs/TARGET.md, "The game's
    source files"), with names (below) for what became clear and its declarations: a game function's prototype once, in
-   `include/game.h`, the SDK's in `include/sdk.h`. A variable it reads through `$gp` is defined in that file: `.sdata` at
-   the top of it, with its value; `.sbss` as a tentative definition (`s32 D_8005F304;`), which resolves to the split's
-   symbol. `configure.py` splits again (splat leaves out the assembly of a function written in C), then `ninja` must
+   `include/game.h` (in the file when another file gives the function other types, a structure of its own), the SDK's in
+   `include/sdk.h`. A variable it reads through `$gp` is defined in that file: `.sdata` at the top of it, with its value;
+   `.sbss` as a tentative definition (`s32 D_8005F304;`), which resolves to the split's symbol. `configure.py` splits again (splat leaves out the assembly of a function written in C), then `ninja` must
    pass. A function that can't be matched yet stays as assembly in the build.
 
 ## What counts as matched
