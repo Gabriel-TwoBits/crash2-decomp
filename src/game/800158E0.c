@@ -86,13 +86,13 @@ extern s32 D_8006CDD0[6];
 extern s32 D_8005B440[][3];
 extern s32 D_8005F180;
 extern s32 *D_8005F374;
-extern u8 *D_8005F3D8;
+extern u8 *g_DemoBlock;
 extern s32 *g_CurrentZone;
 extern u8 *g_DisplayBuffer;
 extern s32 D_8006CB80;
 extern s32 D_8006CB94;
 extern s32 D_8006CCA0;
-extern s32 D_8006CD14;
+extern s32 g_PlaybackState;
 extern s32 D_8006CD18;
 extern s32 D_8006CD60;
 extern s32 D_8006CD64;
@@ -200,20 +200,20 @@ void Input_Update(void) {
         }
 
         if (i == 0) {
-            switch ((u32)D_8006CD14) {
+            switch ((u32)g_PlaybackState) {
             case STATE_PLAYBACK_END:
                 p->unk_28 = 0;
                 break;
             case STATE_PLAYBACK_START:
                 if ((u32)(D_8006CD18 + 1) < 2U) {
                     sel = D_8006CCA0;
-                    stream_flag = (u32)D_8005F374 >= (u32)(D_8005F3D8 + (*(s32 *)D_8005F3D8 * STREAM_COUNT_SCALE) + STREAM_END_OFFSET);
+                    stream_flag = (u32)D_8005F374 >= (u32)(g_DemoBlock + (*(s32 *)g_DemoBlock * STREAM_COUNT_SCALE) + STREAM_END_OFFSET);
                     if (sel != 0) {
                         Gool_SendEvent(0, sel, STREAM_ID, 1, &stream_flag);
                         D_8006CB80 = STREAM_UNK_VALUE;
-                        D_8006CD14 = STATE_PLAYBACK_END;
+                        g_PlaybackState = STATE_PLAYBACK_END;
                     } else {
-                        D_8006CD14 = 0;
+                        g_PlaybackState = 0;
                     }
                 } else {
                     /* other values of D_8006CD18 leave the state alone */
@@ -223,17 +223,17 @@ void Input_Update(void) {
                 p->unk_3C = 0;
                 p->unk_40 = DIR_NEUTRAL;
                 sel = p->unk_28;
-                if ((u8 *)D_8005F374 == D_8005F3D8 + STREAM_END_OFFSET) {
-                    *(s32 *)(g_DisplayBuffer + STREAM_RESTART_DST) = *(s32 *)(D_8005F3D8 + STREAM_RESTART_OFFSET);
+                if ((u8 *)D_8005F374 == g_DemoBlock + STREAM_END_OFFSET) {
+                    *(s32 *)(g_DisplayBuffer + STREAM_RESTART_DST) = *(s32 *)(g_DemoBlock + STREAM_RESTART_OFFSET);
                 } else {
                     /* not at the first record */
                 }
                 p->unk_28 = *(s32 *)((u8 *)D_8005F374 + STREAM_RECORD_BTN);
                 D_8005F374 = (s32 *)((u8 *)D_8005F374 + STREAM_RECORD_SIZE);
                 if (((sel & BTN_SEL_MASK) && p->unk_00 == 0)
-                    || (u32)D_8005F374 >= (u32)(D_8005F3D8 + (*(s32 *)D_8005F3D8 * STREAM_COUNT_SCALE) + STREAM_END_OFFSET)) {
+                    || (u32)D_8005F374 >= (u32)(g_DemoBlock + (*(s32 *)g_DemoBlock * STREAM_COUNT_SCALE) + STREAM_END_OFFSET)) {
                     if (D_8006CCA0 != 0) {
-                        D_8006CD14 = STATE_PLAYBACK_START;
+                        g_PlaybackState = STATE_PLAYBACK_START;
                         D_8006CB80 &= FLAGS_80_CLEAR;
                         if (D_8006CD18 == 0) {
                             D_8006CD18 = DEFAULT_D18;
@@ -241,7 +241,7 @@ void Input_Update(void) {
                             /* D_8006CD18 already set */
                         }
                     } else {
-                        D_8006CD14 = 0;
+                        g_PlaybackState = 0;
                     }
                 } else {
                     /* playback continues */
@@ -264,7 +264,7 @@ void Input_Update(void) {
         }
 
         if ((!(D_8006CB94 & PAD_FLAG_ENABLE) && D_8005F180 == 0)
-            || (p->unk_00 != 0 && D_8006CD14 == 0)) {
+            || (p->unk_00 != 0 && g_PlaybackState == 0)) {
             p->unk_3C = 0;
             p->unk_40 = DIR_NEUTRAL;
             p->unk_28 &= BTN_CLEAR_MASK;
@@ -610,7 +610,7 @@ extern s32 D_8006CB94;
 extern s32 D_8006CC1C;
 extern s32 D_8006CC94;
 extern s32 g_FrameCount;
-extern s32 D_8006CD14;
+extern s32 g_PlaybackState;
 extern s32 D_8006CD18;
 extern s32 D_8006CD1C;
 extern s32 D_8005F1D4;
@@ -704,7 +704,7 @@ int Gfx_EndFrame(void) {
     Snd_Update();
     FRAME_FIELD(g_DrawBuffer, FRAME_END_TIME_OFFSET, s32) = g_TimerTicks;
     DrawSync(0);
-    if (D_8006CD14 == 0) {
+    if (g_PlaybackState == 0) {
         D_8006CC1C = g_TimerTicks - FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32);
     } else {
         D_8006CC1C = FRAME_TIME_DEFAULT;
@@ -737,7 +737,7 @@ int Gfx_EndFrame(void) {
         D_8005F1D8 = 0;
     }
     EnterCriticalSection();
-    if (D_8006CD14 == 2) {
+    if (g_PlaybackState == 2) {
         g_TimerTicks = *D_8005F374;
     }
     FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32) = g_TimerTicks;

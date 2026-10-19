@@ -65,7 +65,7 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 
 extern u32 g_TimerTicks;
 extern s32 g_Player;
-extern u32 D_8005F3F0;
+extern u32 g_LevelRequest;
 extern s32 g_CurrentZone;
 extern s32 D_800608D0;
 extern u8 D_80060958[];
@@ -291,7 +291,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             PUSH(ratan2(FIELD(slot, 0x64, s32) - dst[1], Math_DistanceXZ((s32 *)(slot + OBJ_POS), dst)));
             return;
         case 9:
-            D_8005F3F0 = (u32)*dst >> VALUE_SHIFT;
+            g_LevelRequest = (u32)*dst >> VALUE_SHIFT;
             return;
         case 10:
             Nsf_SeekLevel((u32)*dst >> VALUE_SHIFT);

@@ -1285,3 +1285,27 @@ Gfx_BindSceneryTextures = 0x80016F44; // type:func
 
 // for a texture slot in state 0x14: unbinds its page's polygons (Gfx_BindTexturePage with 0), points its NSD record back at the page reference and marks the page unread (-0x12); then sets the slot free (state 1)
 Nsf_ReleaseTextureSlot = 0x80013968; // type:func
+
+// sets the game's defaults (g_SfxVolume and g_MusicVolume 0x100, g_FrameCount 0, ...) and calls Sys_ResetGameInfo(1); Sys_MainLoop calls it before the first level opens
+Sys_InitGame = 0x8002EFE4; // type:func
+
+// Sys_MainLoop calls it after each Nsf_OpenLevel: Input_Update, the HUD objects (Obj_Spawn) and the level header's entries (Nsf_OpenEntry) but in levels 0x28, 0x29, 0x3B and 0x3C, func_8002F228, and the opcode table's pointer at 0x1F80005C
+Sys_InitLevel = 0x8002EE48; // type:func
+
+// opens the demo entry g_DemoEid names, clears it to the null EID 0x6396347F, points g_DemoBlock at the entry's first item and calls Input_StartPlayback; Sys_MainLoop calls it while g_DemoEid holds an EID and the player exists
+Input_LoadDemo = 0x8002FDCC; // type:func
+
+// sets g_PlaybackState to 2, the playback record (0x8005F374) to g_DemoBlock's records at 0x1090, which Input_Update reads, the random seed (Rand_SetSeedAlt) and frame counter from the block, then Sys_LoadCheckpoint of the block's continue point
+Input_StartPlayback = 0x8002FCF8; // type:func
+
+// the EID of the demo to play, which Sys_MainLoop passes Input_LoadDemo while it is not the null EID 0x6396347F
+g_DemoEid = 0x8005F388;
+
+// the playing demo's block: Input_LoadDemo points it at the PBAK entry's first item, Input_ResetPlayback clears it, Input_Update ends playback past its record count
+g_DemoBlock = 0x8005F3D8;
+
+// the demo playback's state: 2 playing (Input_Update takes the first pad's buttons and Gfx_EndFrame the timer from the records), 3 and 4 ending, 0 off (Input_ResetPlayback)
+g_PlaybackState = 0x8006CD14;
+
+// the level Sys_MainLoop closes the current one for and opens (Nsf_CloseLevel, Nsf_OpenLevel) when set; it sets the death state with "dead\n" (0x8005F190)
+g_LevelRequest = 0x8005F3F0;

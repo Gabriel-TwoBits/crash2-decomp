@@ -7,7 +7,7 @@ char D_8005F218[] = "pb??B";
 typedef struct { char c[6]; } S6;
 extern char D_8005F218[];
 extern NsfLevel D_80067588;
-extern s32 D_8006758C, D_800675AC, D_8006CBB4, D_8006CD14, D_8005F3EC;
+extern s32 D_8006758C, D_800675AC, D_8006CBB4, g_PlaybackState, D_8005F3EC;
 void func_8002FE58(s32 *arg0) {
     char buf[8];
     s32 r = Nsf_CountEntriesOfType(&D_80067588, 0x13);
@@ -25,7 +25,7 @@ void func_8002FE58(s32 *arg0) {
         buf[3] = func_800120EC(D_8006758C);
         *arg0 = Nsf_NameToEid(buf);
         D_800675AC = -1;
-        D_8006CD14 = 3;
+        g_PlaybackState = 3;
     }
 }
 

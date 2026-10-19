@@ -283,7 +283,7 @@ extern s32 D_8006CBA0;
 extern s32 D_8006CBA8;
 extern s32 D_8006CBE4;
 
-void func_8002EE48(void) {
+void Sys_InitLevel(void) {
     Input_Update();
     D_8006CBA0 = 0;
     switch (D_8005F3EC) {
@@ -337,7 +337,7 @@ extern s32 D_8006CDE0;
 extern s32 D_8006CDE4;
 extern s32 D_8006CDE8;
 
-void func_8002EFE4(void) {
+void Sys_InitGame(void) {
     D_8006CBC0 = 0x63;
     D_8006CBBC = -1;
     D_8006CBB8 = 7;
@@ -453,7 +453,7 @@ extern s32 D_8006CC84;
 extern s32 D_8006CC94;
 extern s32 D_8006CC98;
 extern s32 D_8006CCA0;
-extern s32 D_8006CD14;
+extern s32 g_PlaybackState;
 extern s32 D_8006CD18;
 extern s32 D_8006CD1C;
 extern s32 D_8006CD20;
@@ -472,7 +472,7 @@ void func_8002F228(s32 arg0) {
     D_8006CC94 = 0;
     D_8006CC68 = 0;
     D_8006CC74 = 0;
-    if (D_8006CD14 != 2) {
+    if (g_PlaybackState != 2) {
         D_8006CCA0 = 0;
     }
     D_8006CC98 = 1;

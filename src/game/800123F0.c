@@ -1657,7 +1657,7 @@ extern char D_80010110[];
 extern Unk8005B1E0 D_8005B1E0[];
 extern s32 g_Player;
 extern s32 D_8005F3EC;
-extern s32 D_8005F3F0;
+extern s32 g_LevelRequest;
 extern s32 D_8006903C[];
 
 s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
@@ -1682,7 +1682,7 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
     if (arg0->is_open != 0) {
         return RET_DONE;
     }
-    D_8005F3F0 = -1;
+    g_LevelRequest = -1;
     g_Player = 0;
     D_8005F3EC = arg1;
     arg0->is_open = 1;

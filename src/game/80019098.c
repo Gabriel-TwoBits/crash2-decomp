@@ -51,7 +51,7 @@ extern s32 D_8006CBA4;
 
 /* volatile: the retail code reloads it after the null check. */
 extern Unk608CC *volatile g_CurrentZone;
-extern s32 D_8005F3F0;
+extern s32 g_LevelRequest;
 extern u8 D_80060958;
 extern u8 *D_8006759C;
 extern u8 g_ObjLists;
@@ -194,8 +194,8 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
         AT(slot, 0x60, s32) = AT(row, 0x1E8, s32);
         AT(slot, 0x64, s32) = AT(row, 0x1EC, s32);
         AT(slot, 0x68, s32) = AT(row, 0x1F0, s32);
-        if ((s32)slot == g_Player && D_8005F3F0 == -1) {
-            D_8006CC84 = D_8005F3F0;
+        if ((s32)slot == g_Player && g_LevelRequest == -1) {
+            D_8006CC84 = g_LevelRequest;
             Sys_SaveCheckpoint((GoolObject *)slot, &D_80060958, 1, 0);
         }
     }

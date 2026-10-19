@@ -51,12 +51,12 @@ s32 func_8002FC78(void *arg0, s32 arg1, s32 arg2) {
     return p[arg1 * 2 + arg2] + 3;
 }
 
-extern s32 D_8005F3D8;
-extern s32 D_8006CD14;
+extern s32 g_DemoBlock;
+extern s32 g_PlaybackState;
 
 void Input_ResetPlayback(void) {
-    D_8005F3D8 = 0;
-    D_8006CD14 = 0;
+    g_DemoBlock = 0;
+    g_PlaybackState = 0;
 }
 
 void Input_ClosePlayback(void) {
@@ -74,7 +74,7 @@ typedef struct Unk8002FCF8Cam {
     /* 0x0C */ s32 unk_0C;
 } Unk8002FCF8Cam;
 
-/* What GoolObject.unk_8 points to, as func_8002FCF8 reads it */
+/* What GoolObject.unk_8 points to, as Input_StartPlayback reads it */
 typedef struct Unk8002FCF8Dst {
     /* 0x00 */ char unk_00[0x30];
     /* 0x30 */ s32 unk_30[6];
@@ -94,20 +94,20 @@ typedef struct Unk8002FCF8Block {
 
 extern void *D_8005F374;
 extern GoolObject *g_Player;
-#define BLOCK ((Unk8002FCF8Block *)D_8005F3D8)
+#define BLOCK ((Unk8002FCF8Block *)g_DemoBlock)
 extern s32 D_80060944;
 extern Unk8002FCF8Cam *g_DrawBuffer;
 extern s32 D_8006CBF0;
 extern s32 D_8006CC00;
 extern s32 D_8006CC84;
 
-void func_8002FCF8(void) {
+void Input_StartPlayback(void) {
     Unk8002FCF8Block *block;
     GoolObject *holder;
     Unk8002FCF8Dst *dst;
     s32 w0, w1, w2, w3, w4, w5;
 
-    D_8006CD14 = STATE_LOADING;
+    g_PlaybackState = STATE_LOADING;
     D_8005F374 = BLOCK->unk_1090;
     Rand_SetSeedAlt(BLOCK->unk_0004);
     block = BLOCK;
@@ -133,15 +133,15 @@ void func_8002FCF8(void) {
     D_8006CBF0 = 0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8002FB84", func_8002FCF8);
+INCLUDE_ASM("asm/nonmatchings/game/8002FB84", Input_StartPlayback);
 #endif
 
 #ifdef NON_MATCHING
-extern s32 D_8005F3D8;
+extern s32 g_DemoBlock;
 extern s32 D_800675AC;
 extern s32 D_8006CB20;
 
-void func_8002FDCC(s32 *arg0) {
+void Input_LoadDemo(s32 *arg0) {
     int new_var2;
     s32 buf[2];
     s32 *new_var;
@@ -151,12 +151,12 @@ void func_8002FDCC(s32 *arg0) {
     temp_v0 = Nsf_OpenEntry(arg0, 1, 1);
     do { new_var2 = 0x6396347F; new_var = arg0; } while (0);
     *new_var = new_var2;
-    D_8005F3D8 = temp_v0[4];
+    g_DemoBlock = temp_v0[4];
     buf[1] = 0x6400;
     buf[0] = 0;
     Obj_Spawn(&D_8006CB20, 4, 8, 2, (s32)buf, 1);
-    func_8002FCF8();
+    Input_StartPlayback();
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8002FB84", func_8002FDCC);
+INCLUDE_ASM("asm/nonmatchings/game/8002FB84", Input_LoadDemo);
 #endif

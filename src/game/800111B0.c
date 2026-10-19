@@ -300,7 +300,7 @@ s32 main(void) {
 #define PAUSE_BUF_SIZE 0x800
 #define PAUSE_BUF_OFFSET 0x18
 #define BUF_FIELD_2088 0x2088
-#define CD14(off) (*(s32 *)(D_8006CD14 + (off)))
+#define CD14(off) (*(s32 *)(g_PlaybackState + (off)))
 
 extern s32 g_TimerTicks;
 extern s32 D_8005F180;
@@ -310,11 +310,11 @@ extern s32 D_8005F1D0;
 extern s32 D_8005F1F4;
 extern s32 D_8005F2C4;
 extern s32 D_8005F2C8;
-extern s32 D_8005F388;
+extern s32 g_DemoEid;
 extern s32 g_Player;
 extern s32 D_8005F390;
 extern s32 g_EntityQueueCount;
-extern s32 D_8005F3F0;
+extern s32 g_LevelRequest;
 extern char g_ViewMatrix[];
 extern NsfEntry *g_CurrentZone;
 extern s32 D_80060944;
@@ -334,7 +334,7 @@ extern s32 D_8006CB98;
 extern s32 D_8006CBA0;
 extern s32 D_8006CBB4;
 extern s32 D_8006CCB8;
-extern char D_8006CD14[];
+extern char g_PlaybackState[];
 extern s32 D_8006CD7C;
 
 void SetRotMatrix(void *);
@@ -350,15 +350,15 @@ void Sys_MainLoop(s32 arg0) {
     s32 *out;
     s32 *list;
 
-    func_8002EFE4();
+    Sys_InitGame();
     Nsf_OpenLevel(&D_80067588, arg0);
-    func_8002EE48();
+    Sys_InitLevel();
     do {
         if (((D_80069944 & POWER_BUTTON_MASK) || ((D_8005F180 == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
             D_8005F180 = D_8005F180 == 0;
             if (D_8005F180 != 0) {
                 if (CD14(-0x174) == 0) {
-                    CD14(-0x174) = Obj_Spawn(D_8006CD14 - 0x1C4, 4, 4, 0, 0, 0);
+                    CD14(-0x174) = Obj_Spawn(g_PlaybackState - 0x1C4, 4, 4, 0, 0, 0);
                     if (CD14(-0x174) >= -0xFE) {
                         D_8005F180 = 0;
                         CD14(-0x174) = 0;
@@ -384,13 +384,13 @@ void Sys_MainLoop(s32 arg0) {
             D_8005F18C = 0;
         }
         func_80011E80();
-        if ((g_Player != 0) && (D_8005F388 != SAVE_MAGIC)) {
-            func_8002FDCC(&D_8005F388);
+        if ((g_Player != 0) && (g_DemoEid != SAVE_MAGIC)) {
+            Input_LoadDemo(&g_DemoEid);
         }
-        if (D_8005F3F0 == STATE_NONE) {
+        if (g_LevelRequest == STATE_NONE) {
             if ((*(s32 *)((char *)D_8006759C + 8) != 2) && ((D_8006CBB4 == LEVEL_A) || (D_8006CBB4 == LEVEL_B) || (D_8006CBB4 == LEVEL_C))) {
                 printf(D_8005F190);
-                D_8005F3F0 = STATE_DEAD;
+                g_LevelRequest = STATE_DEAD;
                 D_8006CD7C = 0;
             } else {
                 /* no death transition */
@@ -398,11 +398,11 @@ void Sys_MainLoop(s32 arg0) {
         } else {
             /* a state change is pending */
         }
-        if (D_8005F3F0 != STATE_NONE) {
-            state = D_8005F3F0;
+        if (g_LevelRequest != STATE_NONE) {
+            state = g_LevelRequest;
             Gool_BroadcastEvent(0, 0x2900, 0, 0, 0);
             pending = 0;
-            if (D_8005F3F0 == STATE_PENDING) {
+            if (g_LevelRequest == STATE_PENDING) {
                 state = D_80060988;
                 pending = 1;
                 D_8005F1F4 = 1;
@@ -419,9 +419,9 @@ void Sys_MainLoop(s32 arg0) {
                 /* other states keep the saved level */
             }
             Nsf_OpenLevel(&D_80067588, state);
-            func_8002EE48();
+            Sys_InitLevel();
             if (pending != 0) {
-                D_8005F3F0 = STATE_NONE;
+                g_LevelRequest = STATE_NONE;
                 Sys_LoadCheckpoint(D_80060958);
             } else {
                 /* nothing to clear */

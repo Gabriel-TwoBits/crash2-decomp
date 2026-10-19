@@ -27,7 +27,7 @@ s32 D_8005F1F8 = 1;
 
 extern s32 g_TimerTicks;
 extern s32 D_8005B914[];
-extern s32 D_8005F388;
+extern s32 g_DemoEid;
 extern s32 D_8005F3B0;
 extern s32 D_8005F3B4;
 extern s32 D_8005F3EC;
@@ -53,7 +53,7 @@ extern s32 D_8006CBC0;
 extern s32 D_8006CBDC;
 extern s32 D_8006CCD4;
 extern s32 D_8006CCD8;
-extern s32 D_8006CD14;
+extern s32 g_PlaybackState;
 extern s32 D_8006CD7C;
 
 #define FIELD(base, off) (*(s32 *)((base) + (off)))
@@ -67,7 +67,7 @@ s32 func_8001F9C4(void) {
     s32 off;
     u8 *obj;
 
-    D_8006CD14 = 0;
+    g_PlaybackState = 0;
     if (*D_80067598 == SAVE_MAGIC) {
         FIELD(D_8006759C, 4) = 0;
         D_8005F1F8 = 0;
@@ -178,14 +178,14 @@ s32 func_8001F9C4(void) {
     g_CameraProgress = 0;
     off = slot * ENTRY_STRIDE;
     obj = (u8 *)Nsf_OpenEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1, 1);
-    D_8005F388 = SAVE_MAGIC;
+    g_DemoEid = SAVE_MAGIC;
     D_8006094C = 0;
     D_8006094D = 0;
     D_8006094E = 0;
     D_8006094F = 0;
     D_80060954 = g_TimerTicks;
     if (D_8006CBB4 == MODE_600) {
-        func_8002FE58(&D_8005F388);
+        func_8002FE58(&g_DemoEid);
     }
     Cam_MoveAlongPath((s32)obj,
                   FIELD(obj, (FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * 3 + FIELD((u8 *)FIELD(obj, 0x10), 0x184)) * 4 + 0x10),
