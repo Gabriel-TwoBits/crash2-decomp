@@ -481,7 +481,16 @@ read, the shifted build displays retail's image at all 6,001 game frames. So the
 this schedule only once the handwritten GOOL operations keep their retail addresses (or their low bytes), or once a C
 rewrite of the renderer reads the bytes retail does.
 
-Next: each batch checked in the game too, on the three schedules (by groups that each agree, docs/WORKFLOW.md).
+A fourth, `--schedule memory-card`, presses through Load Game, Load/Save, Save Game and Enter Name blindly and saves on
+the empty card, 3,500 game frames. Unpaced the equivalent build differs from game frame 1,464: split by file then by
+block, `func_800186D8`'s equivalent (the menu's quads) alone does it, by taking 4 vsyncs a game frame on the card's
+screen where retail takes 3, so the card, which answers in real time, ends its directory read 50 game frames earlier.
+Paced (each game frame from 1,100 to 3,000 lasting 10 vsyncs in both runs, docs/WORKFLOW.md) the equivalent build
+displays retail's image at all 3,501 game frames, as retail does against itself, and the new-game and demo schedules
+still agree at every frame. The two saves differ by 12 bytes, a random number the game draws while waiting for the card
+and puts in the save's name; retail's two runs save the same bytes.
+
+Next: each batch checked in the game too, on the four schedules (by groups that each agree, docs/WORKFLOW.md).
 
 ## 5. Readable C (in progress)
 

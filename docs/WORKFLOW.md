@@ -218,7 +218,8 @@ notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside t
 ### Running the game
 
     .venv/bin/python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                                       [--baseline EXE] [--schedule {new-game,demo}] [--real-time]
+                                       [--baseline EXE] [--schedule {new-game,turtle-woods,memory-card,demo}]
+                                       [--real-time]
 
 equiv.py judges one function at a time; this plays the equivalent executable as a whole, in the game. It needs the
 `ninja nonmatching` build and the player's disc image (a MODE2/2352 `.cue` and `.bin`, never copied into the repository),
@@ -239,17 +240,25 @@ and writes into `build/` only:
    run, jump, spin; 3,450 game frames, about a minute. `--schedule turtle-woods` runs on into Turtle Woods blindly,
    jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames: there the equivalent
    build differs from game frame 3,524, where a renderer reads code addresses' bytes (docs/TARGET.md, "Code addresses
-   read as data"). `--schedule demo` presses nothing: left at the title's menu, the game plays its attract demo, Turtle
-   Woods then a river level, 4,800 game frames, about two minutes. The three symbols' addresses come from each
-   executable's ELF (the default build's for retail); the breakpoints need the emulator's interpreter and debugger. At
-   every vsync the script also records a hash of the displayed image, the program counter and the last exception's code,
-   for the run's health. `--real-time` keeps the game's own clock instead and counts vsyncs: presses at fixed vsyncs,
-   8,000 of them, about 15 seconds on the emulator's recompiler.
+   read as data"). `--schedule memory-card` picks Load Game from the title's menu and presses through the memory card's
+   screens blindly, one button of a cycle every 30 game frames: on the empty card it goes through Load/Save, Save Game
+   and Enter Name, saves, and comes back to the warp room, 3,500 game frames. The card answers in real time, so slower
+   code reaches its screens in fewer game frames (`func_800186D8`'s equivalent, which draws the menu, takes 4 vsyncs a
+   frame there where retail takes 3, and the equivalent build left the card's directory 50 game frames earlier); the
+   schedule paces game frames 1,100 to 3,000 instead: the SDK's `VSync(0)` that `Gfx_EndFrame` calls first is given 10,
+   so each lasts 10 vsyncs in both runs. The saves still differ by 12 bytes, by design: the game steps `Rand_Below` in
+   the loops that wait for the card's events (`Save_TestSwEvents`, `Save_TestHwEvents`) and names the save with the next
+   number. `--schedule demo` presses nothing: left at the title's menu, the game plays its attract demo, Turtle Woods
+   then a river level, 4,800 game frames, about two minutes. The three symbols' addresses come from each executable's
+   ELF (the default build's for retail); the breakpoints need the emulator's interpreter and debugger. At every vsync
+   the script also records a hash of the displayed image, the program counter and the last exception's code, for the
+   run's health. `--real-time` keeps the game's own clock instead and counts vsyncs: presses at fixed vsyncs, 8,000 of
+   them, about 15 seconds on the emulator's recompiler.
 3. A run is healthy when it reaches its last frame (one without a new vsync for 20 seconds is stopped: the game crashed
-   or hung; on the game clock, one short of its last game frame at vsync 12,000 too, where retail reaches it by 8,695),
-   its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls, and its display
-   isn't frozen over its last 300 vsyncs. The two runs agree when every frame's image is the same; the checkpoints go
-   side by side to `build/run_game/<checkpoint>.png`. Exit status 0 only when both hold.
+   or hung; on the game clock, one short of its last game frame at its schedule's vsync limit too), its program counter
+   stays in RAM or the BIOS, it takes no exception but interrupts and system calls, and its display isn't frozen over
+   its last 300 vsyncs. The two runs agree when every frame's image is the same; the checkpoints go side by side to
+   `build/run_game/<checkpoint>.png`. Exit status 0 only when both hold.
 
 The emulator is deterministic: two retail runs (`--against retail`) agree on every frame, on the game clock and in real
 time (there throttled or not: only the program counter sampled at each vsync moves by a few cycles), so a difference
@@ -269,6 +278,10 @@ A difference on the game clock is narrowed to a function by splitting the equiva
 object from the equivalent build or from the default one), then within the file by block (`#ifdef NON_MATCHING` turned
 to `#if 0` for the others, a block's declarations being shared with its neighbours). Two runs at a time: with four the
 interpreter's vsyncs come slower than the stall limit.
+
+A run lasts at most about 32,700 vsyncs: the emulator's vsync event listener leaks Lua stack slots at each call (an
+empty listener too) and overflows LuaJIT's stack there, a vsync's trace line lost. `tools/run_game.py` refuses a
+schedule whose vsync limit passes 32,000.
 
 A group must fit in the retail file's room on the disc, and functions that grow much (the GTE's routines, by the model,
 1,996 bytes) only fit beside others that shrink, which may themselves diverge in combination. Then the group is compared
