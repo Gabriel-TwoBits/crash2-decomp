@@ -64,8 +64,8 @@ for line in io.lines(schedulePath) do
     elseif words[1] == 'clock' and words[2] == 'game' then
         clock = { endFrame = tonumber(words[3], HEXADECIMAL), handler = tonumber(words[4], HEXADECIMAL),
                   timer = tonumber(words[5], HEXADECIMAL), ticks = tonumber(words[6]) }
-        for _, value in pairs({ clock.endFrame, clock.handler, clock.timer, clock.ticks }) do
-            if value == nil then error('a clock line needs three hexadecimal addresses and a tick count') end
+        if clock.endFrame == nil or clock.handler == nil or clock.timer == nil or clock.ticks == nil then
+            error('a clock line needs three hexadecimal addresses and a tick count')
         end
     elseif words[1] == 'limit' then
         vsyncLimit = tonumber(words[2])
