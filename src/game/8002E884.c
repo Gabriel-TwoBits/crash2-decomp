@@ -745,17 +745,17 @@ void Sys_LoadCheckpoint(u8 *arg0) {
     *(s32 *)dst = *(s32 *)src;
     {
         GoolObject *base = (GoolObject *)g_Player;
-        s32 v1 = base->unk_A8;
-        s32 a0 = base->unk_6C[1];
+        s32 v1 = base->status_a;
+        s32 a0 = base->rot[1];
         GoolObject *a2 = base->links[GOOL_LINK_COLLIDER];
         base->zone = g_CurrentZone;
         base->unk_110 = 0;
-        base->unk_84[0] = 0;
-        base->unk_84[1] = 0;
-        base->unk_84[2] = 0;
+        base->vel[0] = 0;
+        base->vel[1] = 0;
+        base->vel[2] = 0;
         base->unk_104 = 0;
-        base->unk_A8 = v1;
-        base->unk_90[1] = a0;
+        base->status_a = v1;
+        base->target_rot[1] = a0;
         if (a2 != 0) {
             a2->links[GOOL_LINK_COLLIDER] = 0;
             base->links[GOOL_LINK_COLLIDER] = 0;

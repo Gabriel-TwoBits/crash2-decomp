@@ -87,12 +87,12 @@ s32 func_8001CEDC(GoolObject *a, UnkB *b) {
         if (v == 0) {
             return FAIL_RESULT;
         }
-        box.min.x = b->e->pos[0] - b->e->unk_90[0];
-        box.min.y = b->e->pos[1] - b->e->unk_90[1];
-        box.min.z = b->e->pos[2] - b->e->unk_90[2];
-        box.max.x = b->e->unk_90[0] + b->e->pos[0];
-        box.max.y = b->e->unk_90[1] + b->e->pos[1];
-        box.max.z = b->e->unk_90[2] + b->e->pos[2];
+        box.min.x = b->e->pos[0] - b->e->target_rot[0];
+        box.min.y = b->e->pos[1] - b->e->target_rot[1];
+        box.min.z = b->e->pos[2] - b->e->target_rot[2];
+        box.max.x = b->e->target_rot[0] + b->e->pos[0];
+        box.max.y = b->e->target_rot[1] + b->e->pos[1];
+        box.max.z = b->e->target_rot[2] + b->e->pos[2];
         r = func_80030EC0((s32 *)((u8 *)v + 8), (s32 *)&box);
         func_8002CA1C();
         if (r == 0) {
@@ -200,24 +200,24 @@ void func_8001D2C4(GoolObject *arg0, s32 *arg1, s32 *arg2) {
     speed = D_8006995C;
     mode = D_80069960;
     angle = D_80069958;
-    if (speed < 0x99 || !(arg0->unk_AC & 0x80)) {
+    if (speed < 0x99 || !(arg0->status_b & 0x80)) {
         mode = 8;
         speed = 0;
     } else {
-        arg0->unk_90[1] = func_8001E3DC(arg0->unk_90[1], (D_80060914 + angle) & 0xFFF, arg1[0x10 / 4], 0);
+        arg0->target_rot[1] = func_8001E3DC(arg0->target_rot[1], (D_80060914 + angle) & 0xFFF, arg1[0x10 / 4], 0);
     }
-    if (arg0->unk_11C == 0x3500) {
+    if (arg0->event_received == 0x3500) {
         x = (arg0->pos[0] - arg2[0]) * 30;
         z = (arg0->pos[2] - arg2[2]) * 30;
-        vx = arg0->unk_84[0];
+        vx = arg0->vel[0];
         dx = x - vx;
-        dz = z - arg0->unk_84[2];
+        dz = z - arg0->vel[2];
         if (abs(dx) > 1000000 || abs(dz) > 1000000) {
             if ((vx ^ x) >= 0) {
-                arg0->unk_84[0] = x;
+                arg0->vel[0] = x;
             }
-            if ((arg0->unk_84[2] ^ z) >= 0) {
-                arg0->unk_84[2] = z;
+            if ((arg0->vel[2] ^ z) >= 0) {
+                arg0->vel[2] = z;
             }
         }
     }
@@ -230,32 +230,32 @@ void func_8001D2C4(GoolObject *arg0, s32 *arg1, s32 *arg2) {
     in[1] = 0;
     in[2] = ((Math_Cos(angle) >> 4) * speed) >> 8;
     func_8001EAD8(in, out);
-    arg0->unk_84[0] += out[0];
-    arg0->unk_84[2] += out[2];
-    if (mode == 8 || !(arg0->unk_A8 & 0x02000000)) {
+    arg0->vel[0] += out[0];
+    arg0->vel[2] += out[2];
+    if (mode == 8 || !(arg0->status_a & 0x02000000)) {
         scale = arg1[2];
-        if (!(arg0->unk_A8 & 0x02000000)) {
+        if (!(arg0->status_a & 0x02000000)) {
             scale = 0xC7;
         }
-        arg0->unk_84[0] = (arg0->unk_84[0] * scale) >> 8;
-        arg0->unk_84[2] = (arg0->unk_84[2] * scale) >> 8;
+        arg0->vel[0] = (arg0->vel[0] * scale) >> 8;
+        arg0->vel[2] = (arg0->vel[2] * scale) >> 8;
     }
     lim = arg1[1];
-    if (arg0->unk_84[0] < lim) {
+    if (arg0->vel[0] < lim) {
         lim = -lim;
-        if (arg0->unk_84[0] >= lim) {
-            lim = arg0->unk_84[0];
+        if (arg0->vel[0] >= lim) {
+            lim = arg0->vel[0];
         }
     }
-    arg0->unk_84[0] = lim;
+    arg0->vel[0] = lim;
     lim = arg1[1];
-    if (arg0->unk_84[2] < lim) {
+    if (arg0->vel[2] < lim) {
         lim = -lim;
-        if (arg0->unk_84[2] >= lim) {
-            lim = arg0->unk_84[2];
+        if (arg0->vel[2] >= lim) {
+            lim = arg0->vel[2];
         }
     }
-    arg0->unk_84[2] = lim;
+    arg0->vel[2] = lim;
     dx = (arg0->pos[0] - arg2[0]) >> 6;
     dz = (arg0->pos[2] - arg2[2]) >> 6;
     dist = func_80041A78(dx * dx + dz * dz) * 0xF00 << 1;

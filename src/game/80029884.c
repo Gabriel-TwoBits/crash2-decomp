@@ -81,10 +81,10 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
     arg0->pos[0] = pos[0];
     arg0->pos[1] = pos[1];
     arg0->pos[2] = pos[2];
-    if (!(arg0->unk_A8 & FLAG_ACTIVE)) {
+    if (!(arg0->status_a & FLAG_ACTIVE)) {
         return;
     }
-    state = (u32)arg0->unk_11C;
+    state = (u32)arg0->event_received;
     if (state > STATE_MAX_SIMPLE) {
         if (state > STATE_RANGE_END) {
             shiftArg[0] = (state - STATE_RANGE_END) << 8;
@@ -107,7 +107,7 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
         }
         break;
     case 0x900:
-        if (arg0->unk_A8 & 1) {
+        if (arg0->status_a & 1) {
             return;
         }
         break;
@@ -115,13 +115,13 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
         if (!(arg0->pos[1] < (D_8006CD48 - LEVEL_FLOOR_MARGIN))) {
             return;
         }
-        arg0->unk_11C = 0x2100;
+        arg0->event_received = 0x2100;
         shiftArg[1] = D_8006CD48;
         break;
     default:
         break;
     }
-    Gool_SendEvent(0, (s32)arg0, (u32)arg0->unk_11C, 1, &shiftArg[1]);
+    Gool_SendEvent(0, (s32)arg0, (u32)arg0->event_received, 1, &shiftArg[1]);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80029884", func_80029884);
@@ -272,45 +272,45 @@ s32 func_8002A1B8(GoolObject *p, s32 arg1) {
         a3 = 0;
     }
     switch ((u32)(arg1 & 0x3F0) >> 4) {
-    case 1: p->unk_11C = 0x700; p->unk_A8 |= 0x400; break;
-    case 2: p->unk_11C = 0xC00; p->unk_A8 |= 0x400; break;
-    case 5: p->unk_11C = 0x1E00; p->unk_A8 |= 0x400; break;
+    case 1: p->event_received = 0x700; p->status_a |= 0x400; break;
+    case 2: p->event_received = 0xC00; p->status_a |= 0x400; break;
+    case 5: p->event_received = 0x1E00; p->status_a |= 0x400; break;
     case 4:
-        p->unk_11C = 0x1F00;
-        p->unk_A8 |= 0x400;
+        p->event_received = 0x1F00;
+        p->status_a |= 0x400;
         if ((p->state_flags & 0x40000000) && a3 == 1) {
-            p->unk_11C = 0x900;
+            p->event_received = 0x900;
             return 1;
         }
         break;
-    case 3: p->unk_11C = 0x2100; p->unk_A8 |= 0x400; break;
-    case 12: p->unk_11C = 0x2300; p->unk_A8 |= 0x400; break;
+    case 3: p->event_received = 0x2100; p->status_a |= 0x400; break;
+    case 12: p->event_received = 0x2300; p->status_a |= 0x400; break;
     case 11:
-        p->unk_11C = 0x900;
-        p->unk_A8 |= 0x400;
+        p->event_received = 0x900;
+        p->status_a |= 0x400;
         return 1;
-    case 6: p->unk_11C = 0xD00; p->unk_A8 |= 0x400; break;
-    case 13: p->unk_11C = 0x3300; p->unk_A8 |= 0x400; break;
-    case 18: p->unk_11C = 0x4200; p->unk_A8 |= 0x400; break;
-    case 14: p->unk_11C = 0x3500; p->unk_A8 |= 0x02000400; break;
-    case 15: p->unk_A8 |= 0x04000000; break;
+    case 6: p->event_received = 0xD00; p->status_a |= 0x400; break;
+    case 13: p->event_received = 0x3300; p->status_a |= 0x400; break;
+    case 18: p->event_received = 0x4200; p->status_a |= 0x400; break;
+    case 14: p->event_received = 0x3500; p->status_a |= 0x02000400; break;
+    case 15: p->status_a |= 0x04000000; break;
     case 7: case 8: case 9: case 10:
-        p->unk_11C = 0x1200; p->unk_A8 |= 0x2000; break;
-    case 27: p->unk_11C = 0x3000; p->unk_A8 |= 0x400; break;
-    case 28: p->unk_11C = 0x3100; p->unk_A8 |= 0x400; break;
+        p->event_received = 0x1200; p->status_a |= 0x2000; break;
+    case 27: p->event_received = 0x3000; p->status_a |= 0x400; break;
+    case 28: p->event_received = 0x3100; p->status_a |= 0x400; break;
     case 29: case 30: case 31: case 32: case 33:
     case 34: case 35: case 36: case 37: case 38:
-        p->unk_11C = ((u32)(arg1 & 0x3F0) >> 4) + 0x40000; p->unk_A8 |= 0x400; break;
+        p->event_received = ((u32)(arg1 & 0x3F0) >> 4) + 0x40000; p->status_a |= 0x400; break;
     default:
         break;
     }
     if (a3 == 4) {
-        p->unk_11C = 0x900;
-        p->unk_A8 |= 0x400;
+        p->event_received = 0x900;
+        p->status_a |= 0x400;
         return 1;
     } else if (a3 == 6) {
-        p->unk_11C = 0x4000;
-        p->unk_A8 |= 0x400;
+        p->event_received = 0x4000;
+        p->status_a |= 0x400;
         return 0;
     } else if (a3 == 5) {
         return 1;
@@ -452,15 +452,15 @@ s32 func_8002A554(GoolObject *arg0, s32 *arg1, s32 *arg2, u8 *arg3) {
     for (i = 0; i < D_8006CB6C.n; i++) {
         entry = (Unk8002A554_Entry *)D_8006CB6C.p[i];
         obj = entry->unk4;
-        if ((obj->unk_AC & 0x400000) == 1) {
+        if ((obj->status_b & 0x400000) == 1) {
             lim = NO_HIT;
         } else {
             lim = limit;
         }
         res = func_8002A8D0(entry, box, 1, 1, best, lim,
-                            (obj->unk_AC & 0x200) ? (s32)obj->unk_9C : 0);
+                            (obj->status_b & 0x200) ? (s32)obj->unk_9C : 0);
         if (res != NO_HIT) {
-            if ((obj->unk_AC & 0x20000) &&
+            if ((obj->status_b & 0x20000) &&
                 ((((!(arg0->state_flags & 0x10) && arg0->unk_108 != 5) ||
                     ((KIND(obj) != 0x300 || (obj->block_flags & 0x1012)) && !(obj->state_flags & 0x20))) &&
                    !(arg0->state_flags & 0x10000)) ||
@@ -469,7 +469,7 @@ s32 func_8002A554(GoolObject *arg0, s32 *arg1, s32 *arg2, u8 *arg3) {
                 s32 mode = flags & 0xA00000;
                 if (mode != 0x200000 || (obj->block_flags & mode) ||
                     ((flags & 8) ? obj->state_flags < 0 : (obj->state_flags & 0x200))) {
-                    obj->unk_A8 |= 0x4000;
+                    obj->status_a |= 0x4000;
                     ret = res + 1;
                     best = res;
                     ((Unk8002A554_8 *)arg0->unk_8)->unk48 = obj;
@@ -1064,7 +1064,7 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
 
     for (i = 0; i < D_8006CB6C.n; i++) {
         obj = (Unk8002B57CEntry *)D_8006CB6C.p[i];
-        if ((obj->unk_04->unk_AC & FLAG_PROBE_SRC) && !(obj->unk_04->unk_A8 & FLAG_PROBE_SKIP)) {
+        if ((obj->unk_04->status_b & FLAG_PROBE_SRC) && !(obj->unk_04->status_a & FLAG_PROBE_SKIP)) {
             hit = func_8002A8D0(obj, box, 0, 1, best, NO_HIT, 0);
             if (hit != NO_HIT) {
                 best = hit;
@@ -1098,12 +1098,12 @@ s32 func_8002B57C(void *arg0, s32 *arg1, void *arg2, s32 arg3) {
     }
 
     if (hit != NO_HIT) {
-        self->unk_A8 |= STATE_TOUCHED;
+        self->status_a |= STATE_TOUCHED;
     }
     if (best != NO_HIT && (hit == NO_HIT || best < hit)) {
-        best_obj->unk_A8 |= STATE_TOUCHED;
-        self->unk_A8 |= STATE_TOUCHED;
-        if (self->unk_84[1] >= 0 || best_obj->unk_84[1] < 0) {
+        best_obj->status_a |= STATE_TOUCHED;
+        self->status_a |= STATE_TOUCHED;
+        if (self->vel[1] >= 0 || best_obj->vel[1] < 0) {
             sp38[0] = PARAM_6400;
             Gool_SendEvent((s32)self, (s32)best_obj, PARAM_1700, 1, sp38);
         }
@@ -1257,7 +1257,7 @@ block_8:
             }
             if (var_a0 != 0) {
                 *(s32 *)(new_var + 4) = (s32)((*(s32 *)((s8 *)temp_s2 + 4) << 8) - *(s32 *)((s8 *)arg0->unk_8 + 0x34));
-                temp_v1_2 = arg0->unk_84[1];
+                temp_v1_2 = arg0->vel[1];
                 *(s32 *)((s8 *)(temp_s2 = arg0) + 0x88) = 0;
                 /* GoolObject.unk_114 and unk_A8 stored through a plain pointer: as structure members they compile
                    otherwise */
@@ -1313,7 +1313,7 @@ void func_8002C0F0(GoolObject *arg0, void *arg1, s32 *arg2, s32 *arg3, s32 *arg4
     }
     *(s32 *)((u8 *)arg1 + 0x104C) += 1;
     if ((temp_s2 != 0x10 || temp_s3 != temp_s2) && temp_s2 == sp44 && temp_s3 == sp48) {
-        arg0->unk_A8 |= 0x100;
+        arg0->status_a |= 0x100;
     }
     func_8002BC38(arg0, arg2, pos, arg1);
     func_8002BF58(arg0, pos);

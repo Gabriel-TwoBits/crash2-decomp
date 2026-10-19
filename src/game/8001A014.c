@@ -286,7 +286,7 @@ s32 func_8001A710(GoolObject *arg0, s32 *arg1, GoolObject *arg2, s32 *arg3) {
             box0[4] = arg1[4];
             box0[5] = arg1[5] - arg0->unk_128;
             if (func_80030EC0(box0, arg3) != 0) {
-                arg0->unk_A8 |= 0x1000;
+                arg0->status_a |= 0x1000;
             }
         }
         if (arg2->unk_128 != 0) {
@@ -297,7 +297,7 @@ s32 func_8001A710(GoolObject *arg0, s32 *arg1, GoolObject *arg2, s32 *arg3) {
             box1[4] = arg3[4];
             box1[5] = arg3[5] - arg2->unk_128;
             if (func_80030EC0(box1, arg1) != 0) {
-                arg2->unk_A8 |= 0x1000;
+                arg2->status_a |= 0x1000;
             }
         }
     }
@@ -374,7 +374,7 @@ void func_8001AA80(GoolObject *obj, s32 *out) {
                 idx = D_80062AE0;
                 out[0] = D_8005B690[idx];
             }
-            D_8005B650[idx](obj->unk_8, obj->unk_6C, obj->scale, 0);
+            D_8005B650[idx](obj->unk_8, obj->rot, obj->scale, 0);
             break;
         case 1:
             idx = obj->unk_120;
@@ -383,7 +383,7 @@ void func_8001AA80(GoolObject *obj, s32 *out) {
                 idx = D_80062AE4;
                 out[0] = D_8005B690[idx];
             }
-            D_8005B650[idx](obj->unk_8, obj->unk_6C, obj->scale,
+            D_8005B650[idx](obj->unk_8, obj->rot, obj->scale,
                             *(s32 *)(*(u8 **)((u8 *)obj->unk_8 + 0x28) + 0x10));
             break;
         default:
@@ -952,7 +952,7 @@ void func_8001BD84(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
     }
     cnt = t / 27279;
     if (func_8003D3CC(arg0->pos, D_8006083C, (u32)(arg0->unk_120 - 6) < 2U, cnt, D_8006083C - 0x68, D_80060884,
-                      0x3C00, (((u32)arg0->unk_AC >> 18) ^ 1) & 1) != 0) {
+                      0x3C00, (((u32)arg0->status_b >> 18) ^ 1) & 1) != 0) {
         arg1 = base + 0xC;
         for (i = 0; i < arg2;) {
             if (*arg1 == 0) {

@@ -1045,7 +1045,7 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
         delta[0] = next[0] - out[0];
         delta[1] = next[1] - out[1];
         delta[2] = next[2] - out[2];
-        if (obj->unk_AC & FLAG_AC_SEGMENT) {
+        if (obj->status_b & FLAG_AC_SEGMENT) {
             ax = delta[0] >> FRAC_BITS;
             az = delta[2] >> FRAC_BITS;
             len = func_80041A78(ax * ax + az * az);
@@ -1076,22 +1076,22 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
                     obj->unk_9C[1] = db + da / 2;
                 }
                 if (obj->unk_134 < obj->unk_9C[1] || (frac < 0 && seg == 0) || frac >= FRAC_ONE) {
-                    obj->unk_A8 |= FLAG_A8_OFF_SEGMENT;
+                    obj->status_a |= FLAG_A8_OFF_SEGMENT;
                 }
                 if (((delta[2] * (obj->pos[0] >> FRAC_BITS)) - (delta[0] * (obj->pos[2] >> FRAC_BITS)) -
                      (next[2] * (out[0] >> FRAC_BITS)) + (next[0] * (out[2] >> FRAC_BITS))) < 0) {
                     obj->unk_9C[1] = -obj->unk_9C[1];
                 }
             } else {
-                obj->unk_A8 |= FLAG_A8_OFF_SEGMENT;
+                obj->status_a |= FLAG_A8_OFF_SEGMENT;
             }
             if (frac < FRAC_MAX) {
-                obj->unk_D4 = posBase;
+                obj->misc = posBase;
                 if (frac >= 0) {
-                    obj->unk_D4 = posBase + frac;
+                    obj->misc = posBase + frac;
                 }
             } else {
-                obj->unk_D4 = posBase + FRAC_MAX;
+                obj->misc = posBase + FRAC_MAX;
             }
             if (len == 0) {
                 obj->unk_9C[1] = 0;
@@ -1100,28 +1100,28 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
         break;
     }
 
-    oldA8 = obj->unk_A8;
+    oldA8 = obj->status_a;
     if (obj->unk_F4 < 0 || (pos >> FRAC_BITS) >= count - 1) {
-        obj->unk_A8 = oldA8 | FLAG_A8_EDGE;
+        obj->status_a = oldA8 | FLAG_A8_EDGE;
     } else {
-        obj->unk_A8 = oldA8 & ~FLAG_A8_EDGE;
+        obj->status_a = oldA8 & ~FLAG_A8_EDGE;
     }
-    curA8 = obj->unk_A8;
+    curA8 = obj->status_a;
     if ((curA8 & FLAG_A8_EDGE) != (oldA8 & FLAG_A8_EDGE) && !(curA8 & FLAG_A8_EDGE_CHANGED)) {
-        obj->unk_A8 = curA8 | FLAG_A8_EDGE_CHANGED;
+        obj->status_a = curA8 | FLAG_A8_EDGE_CHANGED;
     } else {
-        obj->unk_A8 = obj->unk_A8 & ~FLAG_A8_EDGE_CHANGED;
+        obj->status_a = obj->status_a & ~FLAG_A8_EDGE_CHANGED;
     }
 
-    flags = obj->unk_AC;
+    flags = obj->status_b;
     if (flags & FLAG_AC_FACE) {
-        if ((flags & FLAG_AC_MIRROR) && (obj->unk_A8 & FLAG_A8_EDGE)) {
-            obj->unk_90[1] = ratan2(-delta[0], -delta[2]);
+        if ((flags & FLAG_AC_MIRROR) && (obj->status_a & FLAG_A8_EDGE)) {
+            obj->target_rot[1] = ratan2(-delta[0], -delta[2]);
         } else {
-            obj->unk_90[1] = ratan2(delta[0], delta[2]);
+            obj->target_rot[1] = ratan2(delta[0], delta[2]);
         }
-        if (obj->unk_AC & FLAG_AC_PITCH) {
-            obj->unk_6C[2] = ratan2(delta[0], delta[2]);
+        if (obj->status_b & FLAG_AC_PITCH) {
+            obj->rot[2] = ratan2(delta[0], delta[2]);
             if (delta[0] < 0) {
                 delta[0] = -delta[0];
             }
@@ -1133,7 +1133,7 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
             } else {
                 da = delta[2] + delta[0] / 2;
             }
-            obj->unk_90[2] = -ratan2(delta[1], da);
+            obj->target_rot[2] = -ratan2(delta[1], da);
         }
     } else if (flags & FLAG_AC_PITCH) {
         if (delta[0] < 0) {
@@ -1151,8 +1151,8 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
         } else {
             da = db + da / 2;
         }
-        obj->unk_90[2] = ratan2(delta[1], da);
-        obj->unk_6C[2] = ratan2(-delta[0], -delta[2]);
+        obj->target_rot[2] = ratan2(delta[1], da);
+        obj->rot[2] = ratan2(-delta[0], -delta[2]);
     } else {
         /* neither flag: no angles are written */
     }

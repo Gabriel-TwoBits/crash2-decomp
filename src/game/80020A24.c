@@ -1628,12 +1628,12 @@ void func_800237F8(void) {
     Unk800237F8 *e;
     char *q;
 
-    notFlag = (u32)((GoolObject *)g_Player)->unk_AC >> 7;
+    notFlag = (u32)((GoolObject *)g_Player)->status_b >> 7;
     notFlag = notFlag ^ 1;
     notFlag = notFlag & 1;
     bits = 0;
     if (notFlag == 0) {
-        d = (s32)((((GoolObject *)g_Player)->unk_6C[1] - D_80060914) << 20) >> 20;
+        d = (s32)((((GoolObject *)g_Player)->rot[1] - D_80060914) << 20) >> 20;
         if ((u32)(d - 0x71) < 0x71E) {
             bits = 2;
         } else if ((u32)(d + 0x78E) < 0x71E) {

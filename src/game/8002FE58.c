@@ -591,9 +591,9 @@ s32 func_800310EC(GoolObject *arg0, s32 *arg1, s32 *arg2, s32 arg3, s32 arg4, s3
         (d = arg1[2] - arg2[2], arg5 < d) || nz > d) {
         if (arg0) {
             if (nz) {
-                arg0->unk_A8 |= 0x8000;
+                arg0->status_a |= 0x8000;
             } else {
-                arg0->unk_A8 |= 0x8000;
+                arg0->status_a |= 0x8000;
             }
         }
         return 1;

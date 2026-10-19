@@ -24,13 +24,13 @@ void Gool_OpChunk(GoolObject *arg0, u32 arg1) {
     src = Gool_ResolveOperand((s32)arg0, arg1 & OPERAND_MASK, 0);
     switch (op) {
     case OP_LOAD_A:
-        arg0->unk_D4 = (s32)Nsf_OpenEntry(src, 0, 1);
+        arg0->misc = (s32)Nsf_OpenEntry(src, 0, 1);
         break;
     case OP_LOAD_F:
-        arg0->unk_D4 = (s32)Nsf_OpenEntry(src, 1, 1);
+        arg0->misc = (s32)Nsf_OpenEntry(src, 1, 1);
         break;
     case OP_CALL_B:
-        arg0->unk_D4 = Nsf_CloseEntry(src, 1);
+        arg0->misc = Nsf_CloseEntry(src, 1);
         break;
     case OP_CALL_C:
         v = Nsf_CloseEntry(src, 0);
@@ -210,7 +210,7 @@ s32 Gool_OpSendEvent(GoolObject *o, u32 arg1, s32 arg2) {
     } else {
         src = Gool_ResolveRef(o, idx);
     }
-    o->unk_A8 &= 0xFFFDFFFF;
+    o->status_a &= 0xFFFDFFFF;
     sel = (arg1 >> 12) & 0x3F;
     if (sel == 0x1F) {
         q = o->sp - 1;
@@ -228,9 +228,9 @@ s32 Gool_OpSendEvent(GoolObject *o, u32 arg1, s32 arg2) {
         }
         Gool_SendEvent((s32)o, first, *src, n, args);
     } else {
-        o->unk_D4 = 0;
+        o->misc = 0;
     }
-    if (!(o->unk_A8 & 0x20000)) {
+    if (!(o->status_a & 0x20000)) {
         o->sp = (s32 *)((u8 *)o->sp - ((arg1 >> 16) & 0x1C));
         return 0;
     }
@@ -268,7 +268,7 @@ s32 Gool_OpCascadeEvent(GoolObject *o, u32 ins, s32 arg2) {
     } else {
         src = Gool_ResolveRef(o, temp_a0);
     }
-    o->unk_A8 = o->unk_A8 & 0xFFFDFFFF;
+    o->status_a = o->status_a & 0xFFFDFFFF;
     idx = (ins >> 12) & 0x3F;
     if (idx == 0x1F) {
         chk = o->sp - 1;
@@ -289,9 +289,9 @@ s32 Gool_OpCascadeEvent(GoolObject *o, u32 ins, s32 arg2) {
         }
         Gool_CascadeEvent((s32)o, fn, *src, (ins >> 21) & 7, n, (s32)args);
     } else {
-        o->unk_D4 = 0;
+        o->misc = 0;
     }
-    if (!(o->unk_A8 & 0x20000)) {
+    if (!(o->status_a & 0x20000)) {
         o->sp = (s32 *)((u8 *)o->sp - ((ins >> 16) & 0x1C));
         goto ret0;
     }
@@ -349,7 +349,7 @@ s32 Gool_OpBroadcastEvent(GoolObject *arg0, u32 arg1, s32 arg2) {
     } else {
         p = Gool_ResolveRef(arg0, idx);
     }
-    obj->unk_A8 &= ~FLAG_HALT;
+    obj->status_a &= ~FLAG_HALT;
     reg = (arg1 >> REG_SHIFT) & REG_MASK;
     if (reg == REG_POP) {
         q = obj->sp - 1;
@@ -365,9 +365,9 @@ s32 Gool_OpBroadcastEvent(GoolObject *arg0, u32 arg1, s32 arg2) {
         }
         Gool_BroadcastEvent((s32)arg0, *p, (arg1 >> MODE_SHIFT) & MODE_MASK, n, (s32)buf);
     } else {
-        obj->unk_D4 = 0;
+        obj->misc = 0;
     }
-    if (!(obj->unk_A8 & FLAG_HALT)) {
+    if (!(obj->status_a & FLAG_HALT)) {
         obj->sp = (s32 *)((u8 *)obj->sp - ((arg1 >> POP_BYTES_SHIFT) & POP_BYTES_MASK));
         return 0;
     } else if (!(arg2 & ARG2_SKIP)) {
@@ -549,7 +549,7 @@ void func_80039B14(GoolObject *arg0, u32 arg1) {
     } else {
         var_v0 = Gool_ResolveRef(arg0, temp_a0_2);
     }
-    arg0->unk_D4 = func_800270C4((s32 *) *var_v0, *var_s1);
+    arg0->misc = func_800270C4((s32 *) *var_v0, *var_s1);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80038F00", func_80039B14);

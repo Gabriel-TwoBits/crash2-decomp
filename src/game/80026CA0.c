@@ -1086,7 +1086,7 @@ extern s32 D_8005BB68[];
 void func_8002890C(GoolObject *arg0, s32 arg1, s32 arg2) {
     s32 off;
 
-    if (arg0->unk_AC & 0x04000000) {
+    if (arg0->status_b & 0x04000000) {
         off = -((arg0->state_flags & 0x10) == 0) & 0x18;
         if (arg1 >= 0) {
             arg0->unk_118 = off + D_8005BB68[arg1];
@@ -1180,7 +1180,7 @@ void *func_80028A28(void *unused, s32 *arg) {
             i = 0;
         again:
             o = *(GoolObject **)(*q + 4);
-            if (o->unk_AC & 0x20000) {
+            if (o->status_b & 0x20000) {
                 d = func_8002A8D0((void *)*q, box, 1, 0, bestd, pos.y, 0);
                 if (d != -0x3B9AC9FF) {
                     best = o;
@@ -1243,7 +1243,7 @@ void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
     res = 0;
     best = 0;
     hit = 0;
-    if (!(arg0->unk_AC & FLAG_ACTIVE)) {
+    if (!(arg0->status_b & FLAG_ACTIVE)) {
         return;
     }
     p = *(char **)(g_CurrentZone + 0x10);
@@ -1281,7 +1281,7 @@ void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
         q = (s32 *)((char *)&D_8006CB6C + LIST_OFFSET);
         for (i = 0; i < D_8006CB6C; i++, q++) {
             o = *(GoolObject **)(*q + 4);
-            if ((o->unk_AC & SLOT_FLAG_MASK) != SLOT_FLAG_VALUE) {
+            if ((o->status_b & SLOT_FLAG_MASK) != SLOT_FLAG_VALUE) {
                 continue;
             }
             if ((*(s32 *)*q & KIND_MASK) == KIND_ALT) {
@@ -1378,10 +1378,10 @@ void func_80028FE0(s32 arg0, s32 *arg1, s32 arg2, s32 arg3) {
     pend = 0;
     hitIsBox = 0;
     bestTop = SCORE_MIN;
-    if (!(((GoolObject *)arg0)->unk_AC & OBJ_FLAG_ACTIVE)) {
+    if (!(((GoolObject *)arg0)->status_b & OBJ_FLAG_ACTIVE)) {
         return;
     } else if ((arg2 & MODE_LINKED) &&
-               !(((GoolObject *)arg0)->links[GOOL_LINK_PARENT]->unk_AC & OBJ_FLAG_ACTIVE)) {
+               !(((GoolObject *)arg0)->links[GOOL_LINK_PARENT]->status_b & OBJ_FLAG_ACTIVE)) {
         return;
     } else {
         /* active: continue */

@@ -581,7 +581,7 @@ s32 Gool_SendEvent(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
     r = RESULT_PENDING;
     if (obj != 0) {
         if (self != 0) {
-            self->unk_D4 = 1;
+            self->misc = 1;
         }
         obj->links[GOOL_LINK_INTERRUPTER] = self;
         if (obj->event_pc != 0) {
@@ -598,7 +598,7 @@ s32 Gool_SendEvent(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
                 }
             }
             if (self != 0) {
-                self->unk_D4 = out[1];
+                self->misc = out[1];
             }
         }
         if (r >= -0xFE) {
@@ -608,10 +608,10 @@ s32 Gool_SendEvent(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
                 s3 = SCRIPT_NONE;
             }
             if (self != 0) {
-                self->unk_D4 = s3 != SCRIPT_NONE;
+                self->misc = s3 != SCRIPT_NONE;
             }
             if (s3 & SCRIPT_RUNS) {
-                obj->unk_11C = id;
+                obj->event_received = id;
                 i = 0;
                 if (n > 0) {
                     src = args;
@@ -643,16 +643,16 @@ s32 Gool_SendEvent(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
             }
         }
         if (st == 0) {
-            obj->unk_11C = id;
+            obj->event_received = id;
             if (id == ID_1800 || id == ID_1900) {
-                obj->unk_A8 |= OBJ_FLAG_A8_SET;
+                obj->status_a |= OBJ_FLAG_A8_SET;
             }
             Gool_ChangeState(obj, s3, n, (s32 *)args);
             return RESULT_NONE;
         }
     }
     if (self != 0) {
-        self->unk_D4 = 0;
+        self->misc = 0;
     }
     return RESULT_NONE;
 }

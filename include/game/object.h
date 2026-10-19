@@ -47,13 +47,13 @@ typedef struct GoolObject {
     /* Six vectors: 0x60 and 0x90 read as x, y, z (func_8001CEDC), 0x6C and 0x78 passed by address (func_8001AA80),
        0x84, 0x90 and 0x9C read as a matrix's rows (func_8001ABF8) */
     /* 0x60 */ s32 pos[3]; /* a path point (Obj_SpawnEntity) or the level's start (the player's) */
-    /* 0x6C */ s32 unk_6C[3];
+    /* 0x6C */ s32 rot[3]; /* CrashEdit's rotx, roty, rotz: passed with scale to the model's drawer */
     /* 0x78 */ s32 scale[3]; /* 0x1000 each without a parent (Obj_Init); x negated to flip (Gool_OpPlayAnim) */
-    /* 0x84 */ s32 unk_84[3];
-    /* 0x90 */ s32 unk_90[3];
+    /* 0x84 */ s32 vel[3]; /* CrashEdit's velx, vely, velz */
+    /* 0x90 */ s32 target_rot[3]; /* CrashEdit's trotx, troty, trotz: the yaw turned towards (ratan2) */
     /* 0x9C */ s32 unk_9C[3];
-    /* 0xA8 */ s32 unk_A8;
-    /* 0xAC */ s32 unk_AC;
+    /* 0xA8 */ s32 status_a; /* CrashEdit's statusa */
+    /* 0xAC */ s32 status_b; /* CrashEdit's statusb */
     /* 0xB0 */ s32 block_flags; /* the state's block flags (Gool_ChangeState), masking the states it may enter */
     /* 0xB4 */ s32 subtype; /* Obj_Init's, which picks the first state */
     /* 0xB8 */ s32 entity_id; /* the entity's id << 8 (Obj_SpawnEntity), g_EntityFlags' index */
@@ -63,7 +63,7 @@ typedef struct GoolObject {
     /* 0xC8 */ s32 trans_pc; /* the state's trans hook (Gool_ChangeState), run each frame by Obj_Update */
     /* 0xCC */ s32 event_pc; /* the state's event hook (Gool_ChangeState), run by Gool_SendEvent */
     /* 0xD0 */ s32 unk_D0;
-    /* 0xD4 */ s32 unk_D4;
+    /* 0xD4 */ s32 misc; /* CrashEdit's misc: Gool_OpChunk's and Save_RunCommand's results */
     /* 0xD8 */ s32 unk_D8;
     /* 0xDC */ u32 frame_time; /* the tick of the last frame Obj_Update ran */
     /* 0xE0 */ u32 state_time; /* the tick Gool_ChangeState entered the state at */
@@ -81,14 +81,14 @@ typedef struct GoolObject {
     /* 0x110 */ s32 unk_110;
     /* 0x114 */ s32 unk_114;
     /* 0x118 */ s32 unk_118;
-    /* 0x11C */ s32 unk_11C;
+    /* 0x11C */ s32 event_received; /* CrashEdit's eventreceived: the event an object accepted */
     /* 0x120 */ u8 unk_120; /* 0x120 to 0x123 also read as a u32 (func_8001ABF8) and cleared as one (Obj_Init) */
     /* 0x121 */ u8 unk_121;
     /* 0x122 */ u8 unk_122;
     /* 0x123 */ u8 unk_123[1];
     /* 0x124 */ s32 unk_124;
     /* 0x128 */ s32 unk_128;
-    /* 0x12C */ s32 unk_12C;
+    /* 0x12C */ s32 voice; /* CrashEdit's voice: the handle Snd_PlaySound returns */
     /* 0x130 */ u8 unk_130[4];
     /* 0x134 */ s32 unk_134;
     /* 0x138 */ s32 unk_138;

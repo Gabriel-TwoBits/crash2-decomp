@@ -157,9 +157,9 @@ void Gool_OpSpawn(GoolObject *arg0, u32 arg1) {
             r = (s32 *)Obj_Spawn(arg0, (arg1 >> 0xC) & 0xFF, (arg1 >> 6) & 0x3F, k, (s32)(arg0->sp + k * -1), (arg1 >> 0x18) == 0x46);
             if ((s32)r < -0xFE) {
                 r[0x50 / 4] = (s32)arg0;
-                arg0->unk_D4 = (s32)r;
+                arg0->misc = (s32)r;
             } else {
-                arg0->unk_D4 = 0;
+                arg0->misc = 0;
             }
             i++;
         } while (i < count);
@@ -191,7 +191,7 @@ void Gool_OpPlaySound(GoolObject *obj, u32 arg1) {
 
     a = operand_address(obj, (arg1 >> 12) & 0xFFF);
     b = operand_address(obj, arg1 & 0xFFF);
-    obj->unk_12C = Snd_PlaySound(obj, b, *(s16 *)a);
+    obj->voice = Snd_PlaySound(obj, b, *(s16 *)a);
 }
 
 void Gool_OpSetAudio(GoolObject *obj, u32 op) {
@@ -223,7 +223,7 @@ void Gool_OpSetAudio(GoolObject *obj, u32 op) {
     if (op & 0x80000) {
         flags |= 0x20000000;
     }
-    obj->unk_D4 = Snd_SetSoundParam(val, flags, dst, obj);
+    obj->misc = Snd_SetSoundParam(val, flags, dst, obj);
 }
 
 void func_80038E14(GoolObject *obj, u32 arg1) {

@@ -482,7 +482,7 @@ s32 func_80019D30(GoolObject *obj, s32 key) {
         return RESULT_REJECTED;
     }
     if (obj->unk_0 == 0 || (s32)obj->zone != key ||
-        (obj->unk_AC & FLAGS_A_BLOCK) != 0 ||
+        (obj->status_b & FLAGS_A_BLOCK) != 0 ||
         (obj->state_flags & FLAGS_B_BLOCK) != 0) {
         return RESULT_REJECTED;
     }
