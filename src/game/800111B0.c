@@ -283,7 +283,8 @@ s32 main(void) {
 }
 
 #ifdef NON_MATCHING
-#define POWER_BUTTON_MASK 0x800
+/* CrashEdit's ControllerButtons: Start */
+#define BUTTON_START 0x800
 #define SCRATCH_ENTRY_BASE 0x1F800280
 #define SAVE_MAGIC 0x6396347F
 #define SAVE_FLAGS_MASK 0x20000001
@@ -354,7 +355,7 @@ void Sys_MainLoop(s32 arg0) {
     Nsf_OpenLevel(&D_80067588, arg0);
     Sys_InitLevel();
     do {
-        if (((D_80069944 & POWER_BUTTON_MASK) || ((g_Paused == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
+        if (((D_80069944 & BUTTON_START) || ((g_Paused == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
             g_Paused = g_Paused == 0;
             if (g_Paused != 0) {
                 if (CD14(-0x174) == 0) {
