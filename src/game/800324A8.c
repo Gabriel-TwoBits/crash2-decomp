@@ -218,7 +218,8 @@ typedef struct {
     s32 pad4;
     s16 x;
     s16 y;
-    u8 pad[0x28];
+    /* func_800521A8 fills 0x40 bytes, up to offset 0x3E */
+    u8 pad[0x34];
 } Out;
 extern u8 D_8005FC9D;
 extern void func_800521A8(Out *);
