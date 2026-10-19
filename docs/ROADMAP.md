@@ -572,7 +572,22 @@ Steps, in order:
   only as "mode", nor a string describes them: they keep their addresses. `tools/progress.py`: 171 of 564 game functions
   and 49 of 1,112 data symbols named. Next: the objects' and the GOOL interpreter's remaining functions, the rendering's
   (the draw lists, the models' and scenery's page-in workers), wherever a string, an SDK call or a format constant names
-  them.
+  them. A fifth batch: 24 game functions, 7 data symbols and 8 of `GoolObject`'s fields, from CrashEdit's GOOL tables.
+  Its comments on the MISC opcode's kinds and subkinds name what `Gool_OpMisc` calls for each: the distances (exact,
+  approximate, horizontal), the entity's perm flag (`Ent_SetPermFlag`, `Ent_ClearPermFlag`), the zone at a point, the
+  kill of the objects outside the current zone, the continue point's save and load (`Sys_SaveCheckpoint`,
+  `Sys_LoadCheckpoint`), the MIDI fade and playback, the game info's reset, the nearest object and the memory card's
+  commands (`Save_RunCommand`); CHNK's kinds 4 and 5 the page counts. Its `ObjectFields` (word indexes from 0x40) agree
+  with every field named before (`frame_time`, `state_time`, `entity`, `path_length`, `state_flags`, the hooks), and
+  give eight more their names where the code shows the same use (`rot`, passed with `scale` to the model's drawer;
+  `vel`; `target_rot`, set from ratan2; `status_a`, `status_b`; `misc`, CHNK's and the memory card's results;
+  `event_received`; `voice`, `Snd_PlaySound`'s handle), the compiler finding each access through `GoolObject` alone; its
+  `ControllerButtons` make 0x800 Start. Besides: the texture pages' binding to models and scenery
+  (`Gfx_BindTexturePage`, which `Nsf_PageIn` calls once a texture page is in VRAM), the demo playback's start
+  (`Input_LoadDemo`, `Input_StartPlayback`, the records from 0x1090 of `g_DemoBlock`), the game's and the level's init,
+  `g_LevelRequest` (the "dead" state), `g_Paused` and `g_Quit`. `tools/progress.py`: 195 of 564 game functions and 56 of
+  1,112 data symbols named. Next: the same tables' remaining uses, and the drawing (the handwritten renderers' C
+  callers).
 - **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
