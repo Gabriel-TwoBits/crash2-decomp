@@ -3,7 +3,7 @@
 equivalent track's, the same pad presses at the same frames for both, and compares what each displays frame by frame.
 
     python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                             [--baseline EXE] [--schedule {new-game,turtle-woods,demo}]
+                             [--baseline EXE] [--schedule {new-game,turtle-woods,memory-card,demo}]
                              [--real-time]
 
 By default frames are game frames, on the game clock (tools/run_game.lua): the game's time is pinned to its frames, each
@@ -11,15 +11,17 @@ lasting two vsyncs for the game whatever the code's speed, so faster or slower e
 schedule boots the disc, starts a new game from the title's menu, skips the intro, waits out Cortex's speech, walks into
 Turtle Woods from the first warp room and runs, jumps and spins there: 3,450 game frames, about a minute and a half to
 run on the emulator's interpreter, both runs at once. `--schedule turtle-woods` runs on into Turtle Woods blindly,
-jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames. `--schedule demo` presses
-nothing instead: left at the title's menu, the game plays its attract demo, Turtle Woods then a river level, 4,800 game
-frames. `--real-time` keeps the game's own clock and counts vsyncs instead: 8,000 of them (2 minutes 13 of the game),
-about 15 seconds on the emulator's recompiler, where a difference may be only timing. The equivalent executable
-(build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a copy of the image first (tools/patch_disc.py).
-`--against retail` runs the retail image twice instead: the emulator is deterministic when both runs agree on every
-frame. `--baseline EXE` runs that executable in place of retail: the same equivalent build with and without a change,
-when the change can't be tested alone (docs/WORKFLOW.md); on the game clock its ELF must sit beside it (EXE with the
-suffix .elf), for the clock's symbols.
+jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames. `--schedule memory-card`
+picks Load Game from the title's menu and presses through the memory card's screens blindly, which save a game on the
+empty card, 3,500 game frames, the card's screens paced (each game frame lasting 10 vsyncs) since the card answers in
+real time. `--schedule demo` presses nothing instead: left at the title's menu, the game plays its attract demo, Turtle
+Woods then a river level, 4,800 game frames. `--real-time` keeps the game's own clock and counts vsyncs instead: 8,000
+of them (2 minutes 13 of the game), about 15 seconds on the emulator's recompiler, where a difference may be only
+timing. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a copy of the image
+first (tools/patch_disc.py). `--against retail` runs the retail image twice instead: the emulator is deterministic when
+both runs agree on every frame. `--baseline EXE` runs that executable in place of retail: the same equivalent build with
+and without a change, when the change can't be tested alone (docs/WORKFLOW.md); on the game clock its ELF must sit
+beside it (EXE with the suffix .elf), for the clock's symbols.
 
 Each run is checked for health: it reaches the last frame (a run without a new vsync for 20 seconds is stopped: the game
 crashed or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls,
@@ -63,9 +65,18 @@ STOP_SECONDS = 10
 GAME_FRAME_TICKS = 34
 GAME_CLOCK_SYMBOLS = ("Gfx_EndFrame", "Sys_TimerHandler", "g_TimerTicks")
 GAME_TAP_FRAMES = 3
+# The SDK's VSync: with a count n above 1 it waits until n vsyncs have passed since its last return
+PACE_SYMBOL = "VSync"
 # A schedule on the game clock: presses (first game frame, game frames held, button), checkpoints (game frame, name),
-# the last game frame, and the vsync by which a run still short of it counts as stuck (about 1.4 times retail's)
-GameSchedule = namedtuple("GameSchedule", "presses checkpoints last vsync_limit")
+# the last game frame, the vsync by which a run still short of it counts as stuck (about 1.4 times retail's), and a
+# Pace or None. Paced, both executables' game frames last as long wherever neither needs longer, so hardware that runs
+# in real time (the memory card) answers at the same game frame
+GameSchedule = namedtuple("GameSchedule", "presses checkpoints last vsync_limit pace")
+# From game frame first to game frame last, each lasts at least vsyncs
+Pace = namedtuple("Pace", "first last vsyncs")
+# The emulator's vsync event listener leaks Lua stack slots at every call and overflows LuaJIT's stack past about
+# 32,700 vsyncs (an empty listener too): a run must end before
+VSYNC_EVENT_LIMIT = 32000
 # The way into the first level, shared by the schedules that play one: New Game, the intro, Turtle Woods' portal
 INTO_TURTLE_WOODS = [
     (1050, GAME_TAP_FRAMES, "START"),  # New Game, from the title's menu
@@ -80,6 +91,17 @@ JUMP_EVERY = 40
 JUMP_OFFSET = 20
 SPIN_EVERY = 80
 SPIN_OFFSET = 40
+# The memory card's screens pressed through blindly: one button of the cycle every 30 game frames, each held 6, from
+# Load Game's screen on; on the empty card it goes through Load/Save, Save Game and Enter Name, and saves
+MENU_START = 1500
+MENU_END = 3000
+MENU_EVERY = 30
+MENU_HOLD_FRAMES = 6
+MENU_CYCLE = ("RIGHT", "DOWN", "LEFT", "UP", "CROSS", "TRIANGLE", "DOWN", "DOWN", "CROSS")
+# The card's directory is read in real time: the game frames it takes depend on the code's speed unless paced. Its
+# screens' game frames last 1 to 6 vsyncs in both executables (more in one of the equivalent's), but those loading from
+# the disc; paced from Load Game's press to the last of the cycle's
+MENU_PACE = Pace(first=1100, last=MENU_END, vsyncs=10)
 GAME_SCHEDULES = {
     # Retail reaches game frame 3,450 by vsync 8,695
     "new-game": GameSchedule(
@@ -102,6 +124,7 @@ GAME_SCHEDULES = {
         ],
         last=3450,
         vsync_limit=12000,
+        pace=None,
     ),
     # Retail reaches game frame 6,000 by vsync 14,068: deaths, respawns at the checkpoints, the level started again
     "turtle-woods": GameSchedule(
@@ -122,6 +145,28 @@ GAME_SCHEDULES = {
         ],
         last=6000,
         vsync_limit=20000,
+        pace=None,
+    ),
+    # Retail reaches game frame 3,500 by vsync 25,203, paced
+    "memory-card": GameSchedule(
+        presses=[
+            (1050, GAME_TAP_FRAMES, "DOWN"),  # Load Game, on the title's menu
+            (1100, GAME_TAP_FRAMES, "CROSS"),
+        ] + [(frame, MENU_HOLD_FRAMES, MENU_CYCLE[index % len(MENU_CYCLE)])
+             for index, frame in enumerate(range(MENU_START, MENU_END, MENU_EVERY))],
+        checkpoints=[
+            (1400, "card_directory"),
+            (1600, "load_game"),
+            (1700, "load_save"),
+            (2300, "save_game"),
+            (2500, "enter_name"),
+            (2900, "saved"),
+            (3100, "warp_room_after_save"),
+            (3490, "card_last"),
+        ],
+        last=3500,
+        vsync_limit=31000,
+        pace=MENU_PACE,
     ),
     # Nothing pressed: the title's menu left alone plays the attract demo, Turtle Woods then a river level; retail
     # reaches game frame 4,800 by vsync 14,100
@@ -139,6 +184,7 @@ GAME_SCHEDULES = {
         ],
         last=4800,
         vsync_limit=20000,
+        pace=None,
     ),
 }
 # The executables' symbols, for the game clock: the default build's ELF holds retail's bytes
@@ -207,8 +253,8 @@ PAIR_GAP = 8
 PERCENT = 100
 
 
-def clock_symbols(elf):
-    """The game clock's symbols' addresses in an executable's ELF, in GAME_CLOCK_SYMBOLS' order"""
+def symbol_addresses(elf, names):
+    """The addresses of the symbols names in an executable's ELF, in names' order"""
     if not elf.exists():
         sys.exit(f"{elf} is missing: the game clock reads its symbols from it (or run with --real-time)")
     listing = subprocess.run([NM, str(elf)], capture_output=True, text=True, check=True).stdout
@@ -220,10 +266,10 @@ def clock_symbols(elf):
         else:
             # An undefined symbol, listed without an address
             continue
-    missing = [name for name in GAME_CLOCK_SYMBOLS if name not in found]
+    missing = [name for name in names if name not in found]
     if missing:
         sys.exit(f"{elf} has no {', '.join(missing)}")
-    return [found[name] for name in GAME_CLOCK_SYMBOLS]
+    return [found[name] for name in names]
 
 
 def schedule_text(elf, schedule):
@@ -233,9 +279,17 @@ def schedule_text(elf, schedule):
         lines = [f"press {first} {first + frames - 1} {button}" for first, frames, button in PRESSES]
         lines += [f"shot {frame}" for frame, _ in CHECKPOINTS]
         lines.append(f"end {LAST_FRAME}")
+    elif schedule.vsync_limit > VSYNC_EVENT_LIMIT:
+        sys.exit(f"a vsync limit of {schedule.vsync_limit} passes the {VSYNC_EVENT_LIMIT} vsyncs a run can last")
     else:
-        addresses = " ".join(f"{address:x}" for address in clock_symbols(elf))
+        addresses = " ".join(f"{address:x}" for address in symbol_addresses(elf, GAME_CLOCK_SYMBOLS))
         lines = [f"clock game {addresses} {GAME_FRAME_TICKS}", f"limit {schedule.vsync_limit}"]
+        if schedule.pace is not None:
+            (vsync,) = symbol_addresses(elf, (PACE_SYMBOL,))
+            lines.append(f"pace {vsync:x} {schedule.pace.first} {schedule.pace.last} {schedule.pace.vsyncs}")
+        else:
+            # Each game frame as long as the code takes
+            pass
         lines += [f"press {first} {first + frames - 1} {button}" for first, frames, button in schedule.presses]
         lines += [f"shot {frame}" for frame, _ in schedule.checkpoints]
         lines.append(f"end {schedule.last}")
@@ -458,7 +512,7 @@ def main():
         patch(args.image, args.baseline.read_bytes(), BASELINE_OUT)
     for _, _, path in (first, other):
         if path is not None:
-            clock_symbols(path)
+            symbol_addresses(path, GAME_CLOCK_SYMBOLS + (PACE_SYMBOL,))
         else:
             # In real time: no symbols needed
             continue

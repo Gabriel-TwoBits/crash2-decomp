@@ -6,6 +6,11 @@
 --                             END_FRAME, HANDLER and TIMER are the addresses of Gfx_EndFrame, Sys_TimerHandler and
 --                             g_TimerTicks in the executable run, in hexadecimal
 --   limit VSYNCS              with the game clock, quit at this vsync whatever the game frame
+--   pace VSYNC FIRST LAST COUNT
+--                             with the game clock, make game frames FIRST to LAST last at least COUNT vsyncs each:
+--                             VSYNC is the address of the SDK's VSync, in hexadecimal, whose first call with 0
+--                             after Gfx_EndFrame's entry is given COUNT instead (wait until COUNT vsyncs have passed
+--                             since its last return)
 --   press FIRST LAST BUTTON   hold BUTTON (PCSX.CONSTS.PAD.BUTTON's name) from frame FIRST to frame LAST
 --   shot FRAME                save the displayed image at FRAME
 --   end FRAME                 quit at FRAME
@@ -50,6 +55,7 @@ local shots = {}
 local lastFrame = nil
 local clock = nil
 local vsyncLimit = nil
+local pace = nil
 for line in io.lines(schedulePath) do
     local words = {}
     for word in line:gmatch('%S+') do words[#words + 1] = word end
@@ -69,6 +75,12 @@ for line in io.lines(schedulePath) do
         end
     elseif words[1] == 'limit' then
         vsyncLimit = tonumber(words[2])
+    elseif words[1] == 'pace' then
+        pace = { vsync = tonumber(words[2], HEXADECIMAL), first = tonumber(words[3]), last = tonumber(words[4]),
+                 count = tonumber(words[5]) }
+        if pace.vsync == nil or pace.first == nil or pace.last == nil or pace.count == nil then
+            error('a pace line needs an address, two game frames and a vsync count')
+        end
     elseif words[1] == nil then
         -- An empty line
     else
@@ -77,6 +89,7 @@ for line in io.lines(schedulePath) do
 end
 if lastFrame == nil then error('the schedule has no end') end
 if clock ~= nil and vsyncLimit == nil then error('a schedule on the game clock needs a vsync limit') end
+if pace ~= nil and clock == nil then error('pacing needs the game clock') end
 
 -- The audio sink is the emulator's clock; unbounded, it lets the emulation run as fast as the host can
 PCSX.settings.spu.Speed = UNBOUNDED_SPEED
@@ -89,6 +102,8 @@ local gameFrames = nil
 local pad = PCSX.SIO0.slots[1].pads[1]
 local vsync = 0
 local gameFrame = 0
+-- Set on entering Gfx_EndFrame, cleared by the VSync call it paces
+local pacePending = false
 
 -- FNV-1a over the image's 32-bit words: enough to tell two images apart
 local function hashImage(slice)
@@ -145,12 +160,28 @@ if clock ~= nil then
         end
         gameFrame = gameFrame + 1
         timer[0] = gameFrame * clock.ticks
+        pacePending = pace ~= nil and gameFrame >= pace.first and gameFrame <= pace.last
         applyPresses(gameFrame + 1)
         if gameFrame > lastFrame then
             finish()
         end
         return true
     end)
+
+    if pace ~= nil then
+        Crash2RunGamePace = PCSX.addBreakpoint(pace.vsync, 'Exec', BREAKPOINT_WIDTH, 'run_game pace', function()
+            local registers = PCSX.getRegisters()
+            if pacePending and registers.GPR.n.a0 == 0 then
+                registers.GPR.n.a0 = pace.count
+                pacePending = false
+            else
+                -- Another call: a count other than 0, or the frame already paced
+            end
+            return true
+        end)
+    else
+        -- Each game frame as long as the code takes
+    end
 end
 
 Crash2RunGameListener = PCSX.Events.createEventListener('GPU::Vsync', function()
