@@ -4,11 +4,9 @@
 
 #ifdef NON_MATCHING
 #define FIELD(base, type, off) (*(type *)((u8 *)(base) + (off)))
+#define OBJ(p) ((GoolObject *)(p))
 
-#define STATE_OFF 0x108
-#define STATE_TIME_OFF 0x10C
 #define FLAGS_A8_OFF 0xA8
-#define FLAGS_AC_OFF 0xAC
 #define FLAGS_100_OFF 0x100
 #define ANIM_OFF 0xE8
 #define SUB_OFF 0x20
@@ -67,52 +65,52 @@ s32 func_8001BFDC(void *arg0) {
     s16 v;
     u32 elapsed;
 
-    switch (FIELD(arg0, s32, STATE_OFF)) {
+    switch (OBJ(arg0)->unk_108) {
     case STATE_SKIP:
         break;
     case STATE_SPIN:
         spin(s);
         break;
     case STATE_WAIT_1C4:
-        elapsed = D_8006CB64 - FIELD(arg0, u32, STATE_TIME_OFF);
+        elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_1C4) {
-            FIELD(arg0, s32, STATE_OFF) = STATE_IDLE;
+            OBJ(arg0)->unk_108 = STATE_IDLE;
         } else {
             /* state stays 3: the later state checks cannot fire */
         }
         spin(s);
         break;
     case STATE_WAIT_3D:
-        elapsed = D_8006CB64 - FIELD(arg0, u32, STATE_TIME_OFF);
+        elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_3D) {
-            FIELD(arg0, s32, STATE_OFF) = STATE_IDLE;
+            OBJ(arg0)->unk_108 = STATE_IDLE;
         } else {
             /* keep waiting */
         }
         break;
     case STATE_WAIT_25B:
-        elapsed = D_8006CB64 - FIELD(arg0, u32, STATE_TIME_OFF);
-        if (elapsed >= LIMIT_25B || (FIELD(arg0, s32, FLAGS_100_OFF) & FLAG_100_ABORT)) {
-            FIELD(arg0, s32, STATE_OFF) = STATE_IDLE;
+        elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
+        if (elapsed >= LIMIT_25B || (OBJ(arg0)->state_flags & FLAG_100_ABORT)) {
+            OBJ(arg0)->unk_108 = STATE_IDLE;
         } else {
             /* keep waiting */
         }
         spin(s);
         break;
     case STATE_FINISH_A:
-        elapsed = D_8006CB64 - FIELD(arg0, u32, STATE_TIME_OFF);
+        elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_FINISH) {
-            FIELD(arg0, s32, STATE_OFF) = STATE_IDLE;
-            FIELD(arg0, s32, FLAGS_AC_OFF) |= FLAG_AC_DONE;
+            OBJ(arg0)->unk_108 = STATE_IDLE;
+            OBJ(arg0)->status_b |= FLAG_AC_DONE;
         } else {
             /* keep waiting */
         }
         break;
     case STATE_FINISH_B:
-        elapsed = D_8006CB64 - FIELD(arg0, u32, STATE_TIME_OFF);
-        if (elapsed >= LIMIT_FINISH || (FIELD(arg0, s32, FLAGS_A8_OFF) & FLAG_A8_ABORT)) {
-            FIELD(arg0, s32, STATE_OFF) = STATE_IDLE;
-            FIELD(arg0, s32, FLAGS_AC_OFF) |= FLAG_AC_DONE;
+        elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
+        if (elapsed >= LIMIT_FINISH || (OBJ(arg0)->status_a & FLAG_A8_ABORT)) {
+            OBJ(arg0)->unk_108 = STATE_IDLE;
+            OBJ(arg0)->status_b |= FLAG_AC_DONE;
         } else {
             /* keep waiting */
         }
@@ -122,7 +120,7 @@ s32 func_8001BFDC(void *arg0) {
         break;
     }
 
-    anim = FIELD(arg0, u8 *, ANIM_OFF);
+    anim = OBJ(arg0)->anim;
     if (anim == 0) {
         return RETURN_VALUE;
     } else if (*anim == ANIM_END_TYPE) {
@@ -208,15 +206,15 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     s32 i;
     s32 *sp;
 
-    prev_d0 = FIELD(s32, 0xD0);
-    if (arg1 == ENTRY_INDEX_NONE || (FIELD(s32, 0xAC) & FLAG_BLOCKED)) {
+    prev_d0 = OBJ(arg0)->unk_D0;
+    if (arg1 == ENTRY_INDEX_NONE || (OBJ(arg0)->status_b & FLAG_BLOCKED)) {
         return RESULT_BAD_ENTRY;
     }
-    FIELD(s32, 0x1C) = arg1;
+    OBJ(arg0)->state = arg1;
     entry = (Unk8001C340Entry *)(*(char **)(*(char **)((char *)arg0 + 0xC) + 0x20) + arg1 * ENTRY_STRIDE);
-    FIELD(s32, 0xB0) = entry->unk_4;
+    OBJ(arg0)->block_flags = entry->unk_4;
     own = Nsf_OpenEntry(*(char **)(*(char **)((char *)arg0 + 0x10) + 0x18) + entry->unk_8 * 4, 1, 0);
-    FIELD(void *, 0x14) = own;
+    OBJ(arg0)->state_exe = own;
 
     word = entry->unk_E;
     if ((word & 0xFFFF) != OFFSET_NONE) {
@@ -229,7 +227,7 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     } else {
         r = 0;
     }
-    FIELD(s32, 0xC0) = r;
+    OBJ(arg0)->pc = r;
 
     word = entry->unk_A;
     if ((word & 0xFFFF) != OFFSET_NONE) {
@@ -242,7 +240,7 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     } else {
         r = 0;
     }
-    FIELD(s32, 0xCC) = r;
+    OBJ(arg0)->event_pc = r;
 
     word = entry->unk_C;
     if ((word & 0xFFFF) != OFFSET_NONE) {
@@ -255,36 +253,36 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     } else {
         r = 0;
     }
-    FIELD(s32, 0xC8) = r;
+    OBJ(arg0)->trans_pc = r;
 
-    FIELD(s32, 0xD0) = 0;
+    OBJ(arg0)->unk_D0 = 0;
     FIELD(char *, 0xC4) = (char *)arg0 + STACK_BASE_OFFSET;
     FIELD(char *, 0xBC) = (char *)arg0 + STACK_BASE_OFFSET + (*(s32 *)(*(char **)(*(char **)((char *)arg0 + 0xC) + 0x10) + 0xC)) * 4;
-    FIELD(s32, 0xA8) |= FLAGS_STARTED;
-    FIELD(s32, 0x100) = entry->unk_0;
+    OBJ(arg0)->status_a |= FLAGS_STARTED;
+    OBJ(arg0)->state_flags = entry->unk_0;
     for (i = 0; i < arg2; i++) {
-        sp = FIELD(s32 *, 0xBC);
-        FIELD(s32 *, 0xBC) = sp + 1;
+        sp = OBJ(arg0)->sp;
+        OBJ(arg0)->sp = sp + 1;
         *sp = *arg3++;
     }
     Gool_PushFrame(arg0, arg2, ARG_MASK);
     if (prev_d0 != 0) {
         Gool_PushFrame(arg0, 0, ARG_MASK);
-        FIELD(s32, 0xC0) = prev_d0;
+        OBJ(arg0)->pc = prev_d0;
         i = Gool_Interpret(arg0, CMD_RESUME, 0);
         if (i >= RESULT_MIN_OK) {
             return i;
         }
     } else {
-        sp = FIELD(s32 *, 0xBC);
-        FIELD(s32 *, 0xBC) = sp + 1;
+        sp = OBJ(arg0)->sp;
+        OBJ(arg0)->sp = sp + 1;
         *sp = 0;
     }
-    FIELD(u32, 0xE0) = D_8006CB64;
-    if (FIELD(s32, 0xC8) != 0) {
+    OBJ(arg0)->state_time = D_8006CB64;
+    if (OBJ(arg0)->trans_pc != 0) {
         if ((s32)arg0 == D_8006CB60) {
             Gool_PushFrame(arg0, 0, ARG_MASK);
-            FIELD(s32, 0xC0) = FIELD(s32, 0xC8);
+            OBJ(arg0)->pc = OBJ(arg0)->trans_pc;
             i = Gool_Interpret(arg0, CMD_START, 0);
             if (i >= RESULT_MIN_OK) {
                 return i;
@@ -362,7 +360,6 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_PopFrame);
 #define SHIFT_HIGH8 24
 #define ARG_FULL_RANGE 0xFFFF
 
-#define OFF_KIND 0x04
 #define OFF_MODEL 0x0C
 #define OFF_MODEL_INFO 0x10
 #define OFF_VEC_A 0x60
@@ -370,14 +367,8 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_PopFrame);
 #define OFF_FLAGS_A8 0xA8
 #define OFF_FLAGS_AC 0xAC
 #define OFF_STACK_TOP 0xBC
-#define OFF_SEL_C0 0xC0
-#define OFF_SEL_C8 0xC8
-#define OFF_TIME_DC 0xDC
-#define OFF_COUNT_E4 0xE4
 #define OFF_FIELD_E8 0xE8
 #define OFF_FLAGS_100 0x100
-#define OFF_FIELD_108 0x108
-#define OFF_BYTE_120 0x120
 
 #define AC_BIT_COUNTDOWN 0x10000000
 #define AC_BIT_COPY_VEC 0x10
@@ -410,7 +401,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
     s32 r;
     u32 top;
 
-    if (FIELD(obj, OFF_KIND, s32) != OBJ_STATE_ACTIVE) {
+    if (OBJ(obj)->unk_4 != OBJ_STATE_ACTIVE) {
         return RESULT_NOT_ACTIVE;
     }
     if (obj == (u8 *)g_Player) {
@@ -444,28 +435,28 @@ s32 Obj_Update(u8 *obj, s32 flag) {
     } else {
     }
     if (flag != 0 && hit != 0) {
-        if ((FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_COUNTDOWN) && FIELD(obj, OFF_COUNT_E4, s32) != 0) {
-            s32 n = FIELD(obj, OFF_COUNT_E4, s32) - 1;
-            FIELD(obj, OFF_COUNT_E4, s32) = n;
+        if ((FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_COUNTDOWN) && OBJ(obj)->unk_E4 != 0) {
+            s32 n = OBJ(obj)->unk_E4 - 1;
+            OBJ(obj)->unk_E4 = n;
             if (n == 0) {
                 FIELD(obj, OFF_FLAGS_AC, u32) &= ~AC_BIT_COUNTDOWN;
             } else {
             }
             func_8001AA80((GoolObject *)obj, out);
         } else {
-            FIELD(obj, OFF_TIME_DC, u32) = D_8006CB64;
+            OBJ(obj)->frame_time = D_8006CB64;
             if (FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_COPY_VEC) {
-                vec[0] = FIELD(obj, OFF_VEC_A, s32);
+                vec[0] = OBJ(obj)->pos[0];
                 vec[1] = FIELD(obj, OFF_VEC_A + 4, s32);
                 vec[2] = FIELD(obj, OFF_VEC_A + 8, s32);
-                vec[3] = FIELD(obj, OFF_VEC_B, s32);
+                vec[3] = OBJ(obj)->rot[0];
                 vec[4] = FIELD(obj, OFF_VEC_B + 4, s32);
                 vec[5] = FIELD(obj, OFF_VEC_B + 8, s32);
             } else {
             }
-            if (FIELD(obj, OFF_SEL_C8, s32) != 0) {
+            if (OBJ(obj)->trans_pc != 0) {
                 Gool_PushFrame((GoolObject *)obj, 0, ARG_FULL_RANGE);
-                FIELD(obj, OFF_SEL_C0, s32) = FIELD(obj, OFF_SEL_C8, s32);
+                OBJ(obj)->pc = OBJ(obj)->trans_pc;
                 r = Gool_Interpret(obj, 3, 0);
                 if (r >= RESULT_ERROR_LIMIT) {
                     return r;
@@ -491,7 +482,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
     } else {
         func_8001AA80((GoolObject *)obj, out);
     }
-    if (FIELD(obj, OFF_FIELD_E8, s32) != 0 && FIELD(obj, OFF_BYTE_120, u8) != 1
+    if (FIELD(obj, OFF_FIELD_E8, s32) != 0 && OBJ(obj)->unk_120 != 1
         && !(FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_SKIP) && (D_8006CB94 & PAD_FIRE)) {
         pad = D_8006CB94;
         if (((FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_ALT) || (FIELD(obj, OFF_FLAGS_100, u32) & F100_BIT_ALT))
@@ -503,7 +494,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
             switch (sel) {
             case 0x100:
                 if (D_8006CB94 & PAD_MODE_A) {
-                    if ((D_80060944 & 1) || g_Paused != 0 || FIELD(obj, OFF_FIELD_108, s32) != 4) {
+                    if ((D_80060944 & 1) || g_Paused != 0 || OBJ(obj)->unk_108 != 4) {
                         hit = 1;
                     } else {
                     }
