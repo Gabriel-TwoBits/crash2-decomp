@@ -8247,7 +8247,7 @@
     ]
   },
   "func_80022F58": {
-    "outcome": "matched, not landed",
+    "outcome": "landed",
     "time": "2026-10-19 13:00",
     "summary": "0 of 75 words differ",
     "best": "a3.c",
@@ -8335,8 +8335,7 @@
       }
     ],
     "mode": "again",
-    "scored": "in place",
-    "reason": "FAILED: [code=1] build/src/game/8002648C.o \nsrc/game/8002648C.c:108: conflicting types for `func_800267C4'"
+    "scored": "in place"
   },
   "func_8003756C": {
     "outcome": "equivalent",

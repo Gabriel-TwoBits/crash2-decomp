@@ -1238,18 +1238,16 @@ void func_80022E74(s32 *arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022E74);
 #endif
 
-#ifdef NON_MATCHING
 #define STATUS_DONE 5
 #define SEARCH_FOUND 1
 
-typedef struct {
-    s32 unk_0;
-    s32 unk_4;
-    s32 unk_8;
-    s32 unk_C;
-} Unk80022F58;
+/* The search's arguments: zone words A, B, C and D */
+#define SEARCH_ARGS 4
+#define SEARCH_OUT_WORDS 24
 
-s32 func_800267C4(s32 *, Unk80022F58 *, s32, s32);
+s32 func_800267C4(void *out, s32 argAddr);
+extern s8 g_CameraMode;
+extern s32 g_CurrentZone[];
 
 /* Word indices into g_CurrentZone. */
 #define IDX_A 0
@@ -1264,30 +1262,27 @@ s32 func_800267C4(s32 *, Unk80022F58 *, s32, s32);
 #define SHIFT_8 8
 
 void func_80022F58(s32 *arg0) {
-    s32 out[3];
-    Unk80022F58 in;
+    s32 out[SEARCH_OUT_WORDS];
+    s32 in[SEARCH_ARGS];
 
     do {
-        in.unk_0 = g_CurrentZone[IDX_A];
-        in.unk_4 = g_CurrentZone[IDX_B];
-        in.unk_8 = g_CurrentZone[IDX_C];
-        in.unk_C = g_CurrentZone[IDX_D];
-        if (func_800267C4(out, &in, g_CurrentZone[IDX_C], g_CurrentZone[IDX_D]) == SEARCH_FOUND) {
+        in[0] = g_CurrentZone[IDX_A];
+        in[1] = g_CurrentZone[IDX_B];
+        in[2] = g_CurrentZone[IDX_C];
+        in[3] = g_CurrentZone[IDX_D];
+        if (func_800267C4(out, (s32)in) == SEARCH_FOUND) {
             Cam_MoveAlongPath(out[0], out[1], out[2], 0);
             if (Ent_GetPropertyValue(out[1], ARG_41, 0, 0, 0, ARG_FLAG, 0) != g_CurrentZone[IDX_EXPECTED]) {
                 g_CameraMode = STATUS_DONE;
             }
         } else {
             Cam_MoveAlongPath(g_CurrentZone[IDX_A], g_CurrentZone[IDX_B],
-                          (Ent_GetPropertyRowLength(g_CurrentZone[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
+                              (Ent_GetPropertyRowLength(g_CurrentZone[IDX_B], ARG_75, 0, ARG_FLAG) - 1) << SHIFT_8, 0);
             g_CameraMode = STATUS_DONE;
         }
         func_800231B0(arg0);
     } while (g_CameraMode != STATUS_DONE);
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022F58);
-#endif
 
 extern s32 g_Player;
 
