@@ -686,30 +686,29 @@ void func_8001E8E4(s32 *arg0, s32 *arg1, s32 *arg2, s32 arg3, s32 *arg4) {
     arg4[2] = out[2] + arg1[2];
 }
 
-#ifdef NON_MATCHING
-#define FIXED_SHIFT 4
-#define POS_OFFSET 0x60
-#define MATRIX_OFFSET 8
-
 void func_8001E9EC(void *arg0, void *arg1, void *arg2) {
-    s32 *in = (s32 *)arg1;
-    s32 *out = (s32 *)arg2;
-    s32 *base = (s32 *)((u8 *)arg0 + POS_OFFSET);
-    s16 *matrix = *(s16 **)((u8 *)arg0 + MATRIX_OFFSET);
-    s32 vec[3];
-    s32 res[3];
+    s32 out[3];
+    s32 pad;
+    s32 in[3];
+    s32 *p = arg0;
+    s32 *a = arg1;
+    s32 *d = arg2;
+    s32 t = a[0];
+    s16 *v = (s16 *)p[2];
 
-    vec[0] = in[0] / (1 << FIXED_SHIFT);
-    vec[1] = in[1] / (1 << FIXED_SHIFT);
-    vec[2] = in[2] / (1 << FIXED_SHIFT);
-    func_80018194(vec, matrix, res);
-    out[0] = (res[0] << FIXED_SHIFT) + base[0];
-    out[1] = (res[1] << FIXED_SHIFT) + base[1];
-    out[2] = (res[2] << FIXED_SHIFT) + base[2];
+    in[0] = t / 16;
+    in[1] = a[1] / 16;
+    in[2] = a[2] / 16;
+    func_80018194(in, v, out);
+    out[0] *= 16;
+    out[1] *= 16;
+    arg0 = (u8 *)arg0 + 1;
+    arg2 = (u8 *)arg2 + 1;
+    out[2] *= 16;
+    d[0] = out[0] + p[0x60 / 4];
+    d[1] = out[1] + p[0x64 / 4];
+    d[2] = out[2] + p[0x68 / 4];
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001E9EC);
-#endif
 
 #ifdef NON_MATCHING
 #define MATRIX_ONE 0x1000

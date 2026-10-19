@@ -1,0 +1,27 @@
+#include "common.h"
+#include "sdk.h"
+#include "game.h"
+
+void func_8001E9EC(void *arg0, void *arg1, void *arg2) {
+    s32 out[3];
+    s32 pad;
+    s32 in[3];
+    s32 *p = arg0;
+    s32 *a = arg1;
+    s32 *d = arg2;
+    s32 t = a[0];
+    s16 *v = (s16 *)p[2];
+
+    in[0] = t / 16;
+    in[1] = a[1] / 16;
+    in[2] = a[2] / 16;
+    func_80018194(in, v, out);
+    out[0] *= 16;
+    out[1] *= 16;
+    arg0 = (u8 *)arg0 + 1;
+    arg2 = (u8 *)arg2 + 1;
+    out[2] *= 16;
+    d[0] = out[0] + p[0x60 / 4];
+    d[1] = out[1] + p[0x64 / 4];
+    d[2] = out[2] + p[0x68 / 4];
+}
