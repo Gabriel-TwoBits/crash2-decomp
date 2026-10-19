@@ -16,7 +16,10 @@
 
 - [Crash Bandicoot 1's decomp](https://github.com/khasinski/crash-bandicoot-decomp) (SCUS-94900): the same engine a year
   earlier, with its compiler findings (gcc 2.5.7 and 2.6.3, `-O2 -G8`, maspsx `--aspsx-version=2.34`). No licence is stated,
-  so its code isn't copied here; its findings and method are facts to verify for this game.
+  so its code isn't copied here; its findings and method are facts to verify for this game. Its docs/names.md catalogues
+  Crash 1's functions with their evidence, the handwritten routines among them.
+- [c1](https://github.com/wurlyfox/c1): Crash 1's engine rewritten in C by hand (no licence stated), the source of most of
+  that catalogue's names and of its subsystems' layout.
 
 ## Tools and method
 

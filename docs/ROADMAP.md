@@ -211,7 +211,7 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
+1. **Readable C, R5 and R6**: the other subsystems' types and names, and the handwritten code's (section 5).
 
 ## 4. The engine in C
 
@@ -588,7 +588,17 @@ Steps, in order:
   `g_LevelRequest` (the "dead" state), `g_Paused` and `g_Quit`. `tools/progress.py`: 195 of 564 game functions and 56 of
   1,112 data symbols named. Next: the same tables' remaining uses, and the drawing (the handwritten renderers' C
   callers).
-- **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
+- **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
+  docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
+  same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy
+  (`Sys_Memcpy`, src, dst, bytes) and the ordering table's forward link (`Gfx_ResetOt`), each with the five tails for 0
+  to 4 words left just before it, as in Crash 1; and the squared magnitudes after the tick handler
+  (`Math_SqrMagnitude2`, 22 words, `Math_SqrMagnitude3`, 34, the sizes and order of Crash 1's RSqrMagnitude2 and
+  RSqrMagnitude3). The integer square root (func_80041A78) is plain in the code but has no reference. Its renderers (the
+  WGEO shaders, the SVTX transform) are reached through tables of labels rather than symbols here (0x8005B650,
+  0x8005B690, 0x8005B708, 0x8005B75C), which splat and `tools/rename.py` don't name. `tools/progress.py`: 209 of 564
+  game functions named.
+- **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
 writes: docs/COMPILER.md, "Small data"), rewriting equivalent C for readability, the GOOL opcodes' names, the GTE
