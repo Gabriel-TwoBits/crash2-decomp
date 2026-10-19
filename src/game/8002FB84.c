@@ -54,12 +54,12 @@ s32 func_8002FC78(void *arg0, s32 arg1, s32 arg2) {
 extern s32 D_8005F3D8;
 extern s32 D_8006CD14;
 
-void func_8002FCD0(void) {
+void Input_ResetPlayback(void) {
     D_8005F3D8 = 0;
     D_8006CD14 = 0;
 }
 
-void func_8002FCE8(void) {
+void Input_ClosePlayback(void) {
 }
 
 void func_8002FCF0(void) {

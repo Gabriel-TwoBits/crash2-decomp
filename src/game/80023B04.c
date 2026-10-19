@@ -275,8 +275,8 @@ void func_80023E60(s32 *path, s32 arg1, s32 *out, s32 arg3) {
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023E60);
 #endif
 
-s32 func_80024188(void) {
-    func_800241A8();
+s32 Cam_OpenLevel(void) {
+    Cam_Reset();
     return -0xFF;
 }
 
@@ -305,7 +305,7 @@ extern s32 D_800608F8;
 extern s32 D_80060918;
 extern s32 D_8006CD98;
 
-void func_800241A8(void) {
+void Cam_Reset(void) {
     g_CameraMode = 5;
     D_80060918 = 0x1001;
     D_8005B9AC = 0x1001;

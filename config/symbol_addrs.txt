@@ -1091,3 +1091,42 @@ Save_ReadFileHeader = 0x80034BB8; // type:func
 
 // calls _card_info and acts on the card's software events, clearing a new card with _card_clear
 Save_CheckCard = 0x800346E8; // type:func
+
+// the level-open handler of the "NONE" record (type 0) of the entry-type table at 0x8005B1D8, which Nsf_OpenLevel calls first: Heap_Alloc of a shared buffer and of each frame buffer's own (0x800654E8's entries), exit on a failed allocation
+Gfx_AllocFrameBuffers = 0x800161F8; // type:func
+
+// the level-close handler of the "NONE" record (type 0): DrawSync, then Heap_Free of the buffers Gfx_AllocFrameBuffers allocates
+Gfx_FreeFrameBuffers = 0x800162FC; // type:func
+
+// the page-in handler of the "TGEO" record (type 2, CrashEdit's models) of the entry-type table at 0x8005B1D8: calls func_800171E8 on the entry with the null EID 0x6396347F ("NONE!" in Nsf_EidToName's alphabet)
+Gfx_ModelPageIn = 0x80017358; // type:func
+
+// the page-in handler of the "WGEO" record (type 3, CrashEdit's scenery) of the entry-type table at 0x8005B1D8: calls func_80016F44 on the entry with the null EID 0x6396347F
+Gfx_SceneryPageIn = 0x80017198; // type:func
+
+// the level-open handler of the "SLST" record (type 4, CrashEdit's sort lists) of the entry-type table at 0x8005B1D8: Heap_Alloc of two 0xBE4-byte buffers, at 0x8005F390 (and 0x8005F3D0) and 0x8005F398
+Gfx_AllocSortLists = 0x80029768; // type:func
+
+// the level-close handler of the "SLST" record (type 4): Heap_Free of the two buffers Gfx_AllocSortLists allocates
+Gfx_FreeSortLists = 0x800297C8; // type:func
+
+// the level-open handler of the "CPAT" record (type 8) of the entry-type table at 0x8005B1D8: calls Cam_Reset
+Cam_OpenLevel = 0x80024188; // type:func
+
+// sets the camera mode (g_CameraMode) and path kind (g_CameraPathKind) to 5, empties the queue Cam_ProcessMessages reads and zeroes the camera state around it; Cam_OpenLevel calls it
+Cam_Reset = 0x800241A8; // type:func
+
+// the level-close handler of the "ADIO" record (type 12) of the entry-type table at 0x8005B1D8, whose level-open handler is Snd_Init: while Snd_Init's flag 0x8005F248 is set, calls the SDK's func_800501A8 and func_8004FE38(0), then clears it
+Snd_Shutdown = 0x80032588; // type:func
+
+// the level-open handler of the "PBAK" record (type 19, the demos' pad playback) of the entry-type table at 0x8005B1D8: clears the playback stream (0x8005F3D8) and state (0x8006CD14) func_800158E0 reads the pad from
+Input_ResetPlayback = 0x8002FCD0; // type:func
+
+// the level-close handler of the "PBAK" record (type 19); does nothing
+Input_ClosePlayback = 0x8002FCE8; // type:func
+
+// the level-open handler of the "VIDO" record (type 21) of the entry-type table at 0x8005B1D8: in two of the modes at 0x8005F3EC, Heap_Alloc of a slot table and of an aligned buffer split into the regions at 0x80069334 to 0x80069358
+Gfx_OpenVideo = 0x80027A38; // type:func
+
+// the level-close handler of the "VIDO" record (type 21): Heap_Free of the buffers Gfx_OpenVideo allocates
+Gfx_CloseVideo = 0x80027B9C; // type:func

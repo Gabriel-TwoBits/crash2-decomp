@@ -656,7 +656,7 @@ extern s32 D_8006934C;
 extern s32 D_80069350;
 extern s32 D_80069354;
 
-s32 func_80027A38(void) {
+s32 Gfx_OpenVideo(void) {
     s32 *p;
     s32 i;
     s32 size;
@@ -712,14 +712,14 @@ s32 func_80027A38(void) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027A38);
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", Gfx_OpenVideo);
 #endif
 
 extern s32 D_80069334;
 extern s32 D_80069338;
 extern s32 D_8006933C;
 
-s32 func_80027B9C(void) {
+s32 Gfx_CloseVideo(void) {
     D_80069334 = 0;
     if (D_8006933C != 0) {
         Heap_Free(D_8006933C);
@@ -1608,7 +1608,7 @@ extern s32 D_8005F390;
 extern s32 D_8005F398;
 extern s32 D_8005F3D0;
 
-s32 func_80029768(void) {
+s32 Gfx_AllocSortLists(void) {
     s16 *p;
 
     p = (s16 *)Heap_Alloc(0xBE4);
@@ -1629,7 +1629,7 @@ s32 func_80029768(void) {
 extern s32 D_8005F398;
 extern s32 D_8005F3D0;
 
-s32 func_800297C8(void) {
+s32 Gfx_FreeSortLists(void) {
     Heap_Free(D_8005F3D0);
     Heap_Free(D_8005F398);
     return -0xFF;

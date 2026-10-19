@@ -442,7 +442,7 @@ extern void exit(s32);
 extern s32 D_8005F3EC;
 extern u8 *g_DrawBuffer;
 
-s32 func_800161F8(void) {
+s32 Gfx_AllocFrameBuffers(void) {
     s32 i;
     s32 shared;
     s32 buf;
@@ -477,7 +477,7 @@ s32 func_800161F8(void) {
     return RETURN_VALUE;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800161F8);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_AllocFrameBuffers);
 #endif
 
 #ifdef NON_MATCHING
@@ -487,7 +487,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800161F8);
 extern s32 D_800654E8;
 extern s32 DrawSync(s32);
 
-s32 func_800162FC(void) {
+s32 Gfx_FreeFrameBuffers(void) {
     s32 i;
 
     i = 0;
@@ -506,7 +506,7 @@ s32 func_800162FC(void) {
     return RESULT_DONE;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800162FC);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_FreeFrameBuffers);
 #endif
 
 void func_800163B4(void *arg0) {
@@ -1021,7 +1021,7 @@ s32 func_800170B4(s32 arg0, s32 arg1) {
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800170B4);
 #endif
 
-void func_80017198(s32 arg0) {
+void Gfx_SceneryPageIn(s32 arg0) {
     func_80016F44((NsfEntry *)arg0, 1, 0x6396347F);
 }
 
@@ -1077,7 +1077,7 @@ found:
     return -0xFF;
 }
 
-void func_80017358(s32 a0) {
+void Gfx_ModelPageIn(s32 a0) {
     func_800171E8((NsfEntry *)a0, 1, 0x6396347F);
 }
 

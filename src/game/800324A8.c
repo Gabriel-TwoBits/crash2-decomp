@@ -69,7 +69,7 @@ typedef struct {
 extern void func_8004FE38(s32);
 extern void func_800501A8(Unk80032588 *);
 
-void func_80032588(void) {
+void Snd_Shutdown(void) {
     Unk80032588 s;
 
     if (D_8005F248 != 0) {

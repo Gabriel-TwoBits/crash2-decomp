@@ -1864,7 +1864,7 @@ s32 Nsf_CloseLevel(NsfLevel *p) {
         i = 0;
         Snd_ShutdownSequencer();
         off = 0;
-        func_80032588();
+        Snd_Shutdown();
         do {
             void (*f)() = *(void (**)())((char *)D_8005B1F0 + off);
             if (f != 0) f();

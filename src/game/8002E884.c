@@ -704,7 +704,7 @@ void func_8002F6C8(u8 *arg0) {
     g_CurrentZone = 0;
     g_CameraPath = 0;
     SetGeomScreen(D_80060884);
-    func_800241A8();
+    Cam_Reset();
     for (i = 0; i < FLAG_TABLE_WORDS; i++) {
         g_EntityFlags[i] = *(s32 *)(arg0 + SPECIAL_ARG_FIELD_BASE + i * 4);
     }
