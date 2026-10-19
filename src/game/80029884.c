@@ -88,10 +88,10 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
     if (state > STATE_MAX_SIMPLE) {
         if (state > STATE_RANGE_END) {
             shiftArg[0] = (state - STATE_RANGE_END) << 8;
-            func_80025FDC(0x100, shiftArg);
+            Cam_QueueMessage(0x100, shiftArg);
         } else {
             shiftArg[0] = 0x100 << ((state - STATE_RANGE_BASE) & SHIFT_COUNT_MASK);
-            func_80025FDC(0, shiftArg);
+            Cam_QueueMessage(0, shiftArg);
         }
         return;
     }

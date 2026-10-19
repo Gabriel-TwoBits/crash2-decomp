@@ -20,7 +20,7 @@ char D_8005F288[] = "EMPTY";
 extern s32 D_8006CC5C;
 extern s32 D_8006CC64;
 
-void func_800345C8(void) {
+void Save_Update(void) {
     s32 v;
     s32 *new_var;
 
@@ -28,25 +28,25 @@ void func_800345C8(void) {
         D_8005F26C = func_80036150();
         func_80035A6C();
     }
-    if (D_8005F270 != func_8003613C()) {
-        D_8005F270 = func_8003613C();
+    if (D_8005F270 != Save_GetState()) {
+        D_8005F270 = Save_GetState();
         func_80035A74();
     }
-    v = func_8003613C();
+    v = Save_GetState();
     switch (v) {
     case 0:
-        func_800346E8();
+        Save_CheckCard();
         break;
     case 1:
-        func_80034898();
+        Save_LoadDirectory();
         break;
     case 5:
-        func_80034BB8();
+        Save_ReadFileHeader();
         break;
     case 6:
     case 7:
     case 8:
-        func_80035444(func_8003613C());
+        func_80035444(Save_GetState());
         break;
     case 3:
         Save_FormatCard();
@@ -66,7 +66,7 @@ void func_800345C8(void) {
 
 extern void _card_clear(long);
 
-void func_800346E8(void) {
+void Save_CheckCard(void) {
     if (D_8005F264[6] != 0) {
         D_8005F264[6] = 0;
         _card_info(0);
@@ -122,7 +122,7 @@ typedef struct { char b[0x28]; } Unk80035D48;
 extern char D_8005F274[];
 s32 _card_load(s32);
 
-void func_80034898(void) {
+void Save_LoadDirectory(void) {
     s32 r;
     s32 a0;
 
@@ -284,7 +284,7 @@ typedef struct {
 #define W_ENTRY_COUNT 8
 #define W_ENTRY_INDEX 9
 
-void func_80034BB8(void) {
+void Save_ReadFileHeader(void) {
     char path[0x40];
     u8 blocks[SAVE_BLOCK_COUNT_MAX * SAVE_BLOCK_SIZE];
     u8 header[SAVE_BLOCK_SIZE];
@@ -319,7 +319,7 @@ void func_80034BB8(void) {
     }
     sprintf(path, D_8005F27C, D_8005F274, entryName);
     s = (Unk80034BB8 *)D_8005F264 + slot;
-    if (entry == D_8005F264[W_ENTRY_COUNT] - 1 && func_80035F00(entryName) != 0) {
+    if (entry == D_8005F264[W_ENTRY_COUNT] - 1 && Save_IsGameFile(entryName) != 0) {
         s->unk_28 = 1;
     } else {
         s->unk_28 = 0;
@@ -457,7 +457,7 @@ void func_80034BB8(void) {
     D_8005F264[W_NEXT_SLOT] = D_8005F264[W_NEXT_SLOT] + span;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80034BB8);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_ReadFileHeader);
 #endif
 
 #ifdef NON_MATCHING
@@ -720,7 +720,7 @@ void func_80035444(s32 arg0) {
         serial = 0;
         if (n >= 0) {
             name = SAVE_BASE + n * NAME_SIZE + NAME_BASE;
-            if (func_80035F00(name) != 0) {
+            if (Save_IsGameFile(name) != 0) {
                 serial = (((u8)name[0xC] - ASCII_ZERO) * DECIMAL_BASE + (u8)name[0xD]) - (ASCII_ZERO - 1);
             } else {
                 /* serial stays 0 */
@@ -1025,9 +1025,9 @@ void func_80035D48(Unk80035D48 *arg0, s32 arg1) {
 
     for (i = 0; i < arg1; i++) {
         a = arg0[i].b;
-        first = func_80035F00(a);
+        first = Save_IsGameFile(a);
         for (j = i + 1; j < arg1; j++) {
-            r = func_80035F00(arg0[j].b);
+            r = Save_IsGameFile(arg0[j].b);
             if (first != 0 && (r == 0 || strcmp(a, arg0[j].b) > 0)) {
                 func_8003B940(&arg0[i], &tmp, 0x14);
                 func_8003B940(&arg0[j], &arg0[i], 0x14);
@@ -1046,7 +1046,7 @@ void func_80035E7C(void) {
     if (D_8005F264[2] >= 15) {
         n = D_8005F264[8];
         for (i = 0; i < n; i++) {
-            if (func_80035F00((char *)D_8005F264 + 0x49C + i * 0x28) != 0) {
+            if (Save_IsGameFile((char *)D_8005F264 + 0x49C + i * 0x28) != 0) {
                 return;
             }
         }
@@ -1056,7 +1056,7 @@ void func_80035E7C(void) {
 
 extern char D_8001069C[];
 
-s32 func_80035F00(char *arg0) {
+s32 Save_IsGameFile(char *arg0) {
     return strncmp(D_8001069C, arg0, 12) == 0;
 }
 
@@ -1154,7 +1154,7 @@ s32 func_800360CC(s32 arg0) {
     return 0;
 }
 
-s32 func_8003613C(void) {
+s32 Save_GetState(void) {
     return D_8005F264[0];
 }
 
@@ -1326,7 +1326,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800365E4);
 #endif
 
 s32 func_80036628(void) {
-    if (func_8003613C() != 0) {
+    if (Save_GetState() != 0) {
         func_80036084(2);
         return 1;
     }

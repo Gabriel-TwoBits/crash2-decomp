@@ -34,7 +34,7 @@ s32 Cam_Update(void) {
 
     if ((D_80062AD8 & 0x400) && (D_80069948 & 0xE0)) {
         sp18 = 0x8000;
-        func_80025FDC(0, &sp18);
+        Cam_QueueMessage(0, &sp18);
         Gool_BroadcastEvent(0, 0x4300, 0, 0, 0);
     }
     if (g_Player == 0) {
@@ -53,7 +53,7 @@ s32 Cam_Update(void) {
     }
     func_80025D18(s0, p);
     func_800237F8();
-    func_8002609C();
+    Cam_ProcessMessages();
     D_8006CBB4 = ((D_80062AD8 & 0x400) == 0) << 8;
     if (g_CameraMode != 5) {
         switch (g_CameraMode) {

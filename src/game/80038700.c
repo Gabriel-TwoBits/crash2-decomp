@@ -231,5 +231,5 @@ void func_80038E14(GoolObject *obj, u32 arg1) {
     s32 *b;
     a = operand_address(obj, (arg1 >> 12) & 0xFFF);
     b = operand_address(obj, arg1 & 0xFFF);
-    func_80025FDC(*b, a);
+    Cam_QueueMessage(*b, a);
 }

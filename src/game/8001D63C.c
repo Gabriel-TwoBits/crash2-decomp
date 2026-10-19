@@ -615,7 +615,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001E640);
 extern void MulMatrix(s16 *, s16 *);
 extern void ScaleMatrix(s16 *, s32);
 
-void func_8001E780(s16 *arg0, s32 *arg1, s32 arg2) {
+void Math_MatrixFromAngles(s16 *arg0, s32 *arg1, s32 arg2) {
     s16 sp[16];
     s16 c;
     s32 s;
@@ -662,7 +662,7 @@ void func_8001E780(s16 *arg0, s32 *arg1, s32 arg2) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001E780);
+INCLUDE_ASM("asm/nonmatchings/game/8001D63C", Math_MatrixFromAngles);
 #endif
 
 #ifdef NON_MATCHING
@@ -675,7 +675,7 @@ void func_8001E8E4(s32 *arg0, s32 *arg1, s32 *arg2, s32 arg3, s32 *arg4) {
     s32 vec[3];
     s32 rotated[3];
 
-    func_8001E780(matrix, arg2, arg3);
+    Math_MatrixFromAngles(matrix, arg2, arg3);
     vec[0] = arg0[0] / (1 << FIXED_SHIFT);
     vec[1] = arg0[1] / (1 << FIXED_SHIFT);
     vec[2] = arg0[2] / (1 << FIXED_SHIFT);
@@ -768,7 +768,7 @@ extern s32 D_8006083C;
 extern s32 D_80060840;
 extern s32 D_80060844;
 
-s32 func_8001EC2C(s32 *arg0, s32 *arg1, s32 arg2) {
+s32 Gfx_WorldToView(s32 *arg0, s32 *arg1, s32 arg2) {
     s16 sv[3];
     s32 wv[3];
     s32 out[2];
@@ -808,7 +808,7 @@ s32 func_8001EC2C(s32 *arg0, s32 *arg1, s32 arg2) {
     return -0xFF;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001EC2C);
+INCLUDE_ASM("asm/nonmatchings/game/8001D63C", Gfx_WorldToView);
 #endif
 
 #ifdef NON_MATCHING
@@ -821,7 +821,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001EC2C);
 extern s32 ReadSZfifo3(s32 *, s32 *, s32 *);
 extern s32 RotTransPers(s16 *, s32 *, s32 *, s32 *);
 
-s32 func_8001ED60(s32 *arg0, s32 *arg1) {
+s32 Gfx_WorldToScreen(s32 *arg0, s32 *arg1) {
     /* One struct pins the stack slots the callees see. */
     struct {
         s16 vec[3];
@@ -849,7 +849,7 @@ s32 func_8001ED60(s32 *arg0, s32 *arg1) {
     return RESULT_CONST;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001ED60);
+INCLUDE_ASM("asm/nonmatchings/game/8001D63C", Gfx_WorldToScreen);
 #endif
 
 #ifdef NON_MATCHING

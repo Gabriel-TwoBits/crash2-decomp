@@ -143,7 +143,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         PUSH(v);
         return;
     case 5:
-        v = func_80031264((s32 *)(obj + OBJ_POS), (s32 *)(SLOT(obj, arg1) + OBJ_POS)) - (FIELD(obj, OBJ_ANGLE, s32) & ANGLE_MASK);
+        v = Math_AngleToXZ((s32 *)(obj + OBJ_POS), (s32 *)(SLOT(obj, arg1) + OBJ_POS)) - (FIELD(obj, OBJ_ANGLE, s32) & ANGLE_MASK);
         i = v;
         if (i < 0) {
             i = -i;
@@ -155,7 +155,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         return;
     case 2:
         if ((u32)(FIELD(obj, OBJ_KIND, u8) - OBJ_KIND_FIRST) >= OBJ_KIND_COUNT) {
-            v = func_80031264((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
+            v = Math_AngleToXZ((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
         } else {
             v = Math_AngleTo((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
         }
@@ -533,7 +533,7 @@ void func_8003817C(GoolObject *obj, u32 arg1) {
         return;
     case OP_NORMALIZE:
         reg2 = REG(o, (arg1 >> 15) & 7);
-        func_8001ED60(dst, reg2);
+        Gfx_WorldToScreen(dst, reg2);
         if (src[0] != 0) {
             div = reg2[2] >> FIXED_SHIFT;
             if (div != 0) {
@@ -544,7 +544,7 @@ void func_8003817C(GoolObject *obj, u32 arg1) {
         }
         return;
     case OP_CLEAR:
-        func_8001EC2C(dst, REG(o, (arg1 >> 15) & 7), 0);
+        Gfx_WorldToView(dst, REG(o, (arg1 >> 15) & 7), 0);
         return;
     default:
         return;

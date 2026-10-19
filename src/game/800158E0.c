@@ -637,13 +637,13 @@ int Gfx_EndFrame(void) {
             if (D_8006CD18 < 0) {
                 D_8006CD18 = 0;
             }
-            func_80016B08(D_8006CD18);
+            Gfx_DrawFade(D_8006CD18);
         } else if (fade >= FADE_STEP_MIN) {
-            func_80016B08(FADE_BASE);
+            Gfx_DrawFade(FADE_BASE);
             D_8006CD18 = FADE_DONE_IN;
         } else {
             D_8006CD18 = fade + D_8006CD1C;
-            func_80016B08(D_8006CD18 + FADE_BASE);
+            Gfx_DrawFade(D_8006CD18 + FADE_BASE);
             if (D_8006CD18 == 0) {
                 if (!(D_8006CB94 & FLAG_NO_CLEAR_FADE)) {
                     D_8006CD18 = FADE_DONE_OUT;
@@ -726,7 +726,7 @@ int Gfx_EndFrame(void) {
             ExitCriticalSection();
         }
         D_8005F1D8 = 1;
-        func_800345C8();
+        Save_Update();
         g_TimerTicks += FRAME_TIME_PENALTY;
     } else {
         if (D_8005F1D8 != 0) {
@@ -798,7 +798,7 @@ void SetDrawMode(void *, s32, s32, s32, s32 *);
 void SetPolyF4(void *);
 void SetSemiTrans(void *, s32);
 
-void func_80016B08(u32 arg0) {
+void Gfx_DrawFade(u32 arg0) {
     u8 *p;
     u8 *q;
     u8 *t;
@@ -833,7 +833,7 @@ void func_80016B08(u32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016B08);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_DrawFade);
 #endif
 
 #ifdef NON_MATCHING
@@ -1307,7 +1307,7 @@ extern Unk80060884 D_80060884;
 extern s16 D_8006088E, D_80060890, D_80060892, D_80060894, D_80060896, D_80060898, D_8006089A, D_8006089C;
 extern s32 D_8006CC20, D_8006CC24;
 
-void func_8001798C(void) {
+void Gfx_ResetView(void) {
     D_8006014C = 0;
     D_80060148 = 0;
     D_80060144 = 0;

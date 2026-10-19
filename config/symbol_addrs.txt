@@ -1040,3 +1040,54 @@ g_CameraPathKind = 0x800608F0;
 
 // 5 while the camera follows its path, else 6, 7 or 9, each with its handler in Cam_Update; func_8002648C sets 7 for a prepared cut as Crash2Recomp's notes say; 6 functions use it
 g_CameraMode = 0x8005B994;
+
+// its default case prints "ERROR CamProcessMessage():  Unknown opcode (%d)\n" (0x80010400) with the message's opcode
+Cam_ProcessMessage = 0x800260F4; // type:func
+
+// prints "WARNING:  CamPullForwardBothDirs() has an impossible deltaErr.\n" (0x80010380) when func_80024B6C fails both with the direction word at +0xC set to 2 and to 1
+Cam_PullForwardBothDirs = 0x80024A48; // type:func
+
+// prints "WARNING:  CamPushBackBothDirs() has an impossible deltaErr.\n" (0x800103C0) when func_800254D4 fails both with the direction word at +0xC set to 2 and to 1
+Cam_PushBackBothDirs = 0x800253B0; // type:func
+
+// calls Cam_ProcessMessage on each of the 16-byte messages queued at 0x8005BA58 (their count at 0x8005B9E0) and empties the queue; Cam_Update calls it
+Cam_ProcessMessages = 0x8002609C; // type:func
+
+// appends an opcode and its one to three words (by opcode, 0x500 to 0x900) to the queue Cam_ProcessMessages empties, 8 at most
+Cam_QueueMessage = 0x80025FDC; // type:func
+
+// links a screen-wide (512 by 240) semi-transparent flat quad (SetPolyF4, SetSemiTrans, AddPrim) and its draw mode (SetDrawMode, GetTPage) at a grey level taken from a fade value; Gfx_EndFrame passes its fade counter (0x8006CD18)
+Gfx_DrawFade = 0x80016B08; // type:func
+
+// sets the GTE's projection distance (SetGeomScreen(0x120)), offset (SetGeomOffset(0, 0)), far colour and colour matrix (SetFarColor, SetColorMatrix), and the camera's position and angles to their defaults
+Gfx_ResetView = 0x8001798C; // type:func
+
+// loads the view's rotation and translation (SetRotMatrix, SetTransMatrix) and transforms a world position less the camera's, >> 8, with RotTrans, returning it << 8
+Gfx_WorldToView = 0x8001EC2C; // type:func
+
+// loads the view (SetRotMatrix, SetTransMatrix) and projects a world position less the camera's with RotTransPers: the screen position from its centre, << 8, and the depth from ReadSZfifo3
+Gfx_WorldToScreen = 0x8001ED60; // type:func
+
+// ratan2 of the difference between two points' words 0 and 2, masked to a 12-bit angle, as Math_AngleTo does with words 0 and 1
+Math_AngleToXZ = 0x80031264; // type:func
+
+// builds a rotation matrix from three 12-bit angles with Math_Sin, Math_Cos and two MulMatrix, then ScaleMatrix when a scale is given
+Math_MatrixFromAngles = 0x8001E780; // type:func
+
+// strncmp of a file name's first 12 characters with "BASCUS-94154" (0x8001069C), the game's product code
+Save_IsGameFile = 0x80035F00; // type:func
+
+// switches on the memory card state (0x8005F264's first word): _card_info's check (0), _card_load and the directory (1), format (3), the files' headers by open and read (5), the files' open, write and erase (6 to 8); Gfx_EndFrame calls it each frame the root counter is stopped
+Save_Update = 0x800345C8; // type:func
+
+// returns the memory card state Save_Update switches on (0x8005F264's first word)
+Save_GetState = 0x8003613C; // type:func
+
+// calls _card_load, then Save_ListFiles into the card state's name table once the software event fires
+Save_LoadDirectory = 0x80034898; // type:func
+
+// formats a directory entry's path with sprintf, opens it and reads its first 128-byte block (open, read, 3 tries each), and copies the save's title from offset 4, or "Damaged slot" (0x8001067C) when the header's icon byte is out of range
+Save_ReadFileHeader = 0x80034BB8; // type:func
+
+// calls _card_info and acts on the card's software events, clearing a new card with _card_clear
+Save_CheckCard = 0x800346E8; // type:func

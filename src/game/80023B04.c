@@ -534,9 +534,9 @@ s32 func_80024658(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) 
     }
     if (f.slot == FIRST_SLOT) {
         if (f.a3 != 0) {
-            score = func_800253B0(entry, (s32)arg1, (s32 *)f.a2, hi, lo, f.type, &f.out);
+            score = Cam_PushBackBothDirs(entry, (s32)arg1, (s32 *)f.a2, hi, lo, f.type, &f.out);
         } else {
-            score = func_80024A48(entry, (s32)arg1, (s32 *)f.a2, hi, (void *)lo, f.type, &f.out);
+            score = Cam_PullForwardBothDirs(entry, (s32)arg1, (s32 *)f.a2, hi, (void *)lo, f.type, &f.out);
         }
     } else if (f.a3 != 0) {
         score = func_800254D4(entry, (s32)arg1, (s32 *)f.a2, hi, lo, f.type, &f.out);
@@ -607,7 +607,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80024658);
 #ifdef NON_MATCHING
 extern char D_80010380[];
 
-s32 func_80024A48(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg5, s32 *arg6) {
+s32 Cam_PullForwardBothDirs(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg5, s32 *arg6) {
     s32 sp20;
     s32 sp24;
     s32 temp_v0;
@@ -636,7 +636,7 @@ s32 func_80024A48(void *arg0, s32 arg1, s32 *arg2, s32 arg3, void *arg4, s32 arg
     return var_s0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80024A48);
+INCLUDE_ASM("asm/nonmatchings/game/80023B04", Cam_PullForwardBothDirs);
 #endif
 
 #ifdef NON_MATCHING
@@ -872,7 +872,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80024B6C);
 #ifdef NON_MATCHING
 extern char D_800103C0[];
 
-s32 func_800253B0(void *arg0, s32 arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5, s32 *arg6) {
+s32 Cam_PushBackBothDirs(void *arg0, s32 arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5, s32 *arg6) {
     s32 sp20;
     s32 sp24;
     s32 temp_v0;
@@ -900,7 +900,7 @@ s32 func_800253B0(void *arg0, s32 arg1, s32 *arg2, s32 arg3, s32 arg4, s32 arg5,
     return var_s0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800253B0);
+INCLUDE_ASM("asm/nonmatchings/game/80023B04", Cam_PushBackBothDirs);
 #endif
 
 #ifdef NON_MATCHING
@@ -1140,7 +1140,7 @@ void func_80025D18(Unk80025D18Pos *arg0) {
             dy = arg0->y - g_CameraY;
             if (dy < (xMin << FIXED_SHIFT) || (xMax << FIXED_SHIFT) < dy) {
                 sp28 = yRange->value << FIXED_SHIFT;
-                func_80025FDC(0, &sp28);
+                Cam_QueueMessage(0, &sp28);
             }
         }
     }
@@ -1170,11 +1170,11 @@ void func_80025D18(Unk80025D18Pos *arg0) {
         rotZ = (((dx >> FIXED_SHIFT) * cos) >> TRIG_SHIFT) - (((dz >> FIXED_SHIFT) * sin) >> TRIG_SHIFT);
         if (xRange != 0 && (rotX < (xMin << FIXED_SHIFT) || (xMax << FIXED_SHIFT) < rotX)) {
             sp28 = xRange->value << FIXED_SHIFT;
-            func_80025FDC(0, &sp28);
+            Cam_QueueMessage(0, &sp28);
         }
         if (zRange != 0 && (rotZ < (zMin << FIXED_SHIFT) || (zMax << FIXED_SHIFT) < rotZ)) {
             sp28 = zRange->value << FIXED_SHIFT;
-            func_80025FDC(0, &sp28);
+            Cam_QueueMessage(0, &sp28);
         }
     }
 }
@@ -1182,7 +1182,7 @@ void func_80025D18(Unk80025D18Pos *arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80025D18);
 #endif
 
-void func_80025FDC(s32 arg0, s32 *arg1) {
+void Cam_QueueMessage(s32 arg0, s32 *arg1) {
     s32 *dst;
     s32 n;
     s32 *e;
@@ -1220,17 +1220,17 @@ typedef struct Unk8005BA58 {
     u8 pad[0x10];
 } Unk8005BA58;
 
-void func_800260F4(Unk8005BA58 *);
+void Cam_ProcessMessage(Unk8005BA58 *);
 extern Unk8005BA58 D_8005BA58[];
 
-void func_8002609C(void) {
+void Cam_ProcessMessages(void) {
     Unk8005BA58 *p;
     s32 n;
 
     n = D_8005B9E0.count;
     p = D_8005BA58;
     while (n > 0) {
-        func_800260F4(p);
+        Cam_ProcessMessage(p);
         n--;
         p++;
     }
@@ -1259,7 +1259,7 @@ extern s32 D_8005BA00;
 extern s32 D_8005BA04;
 extern s32 D_800608FC;
 
-void func_800260F4(Unk8005BA58 *arg0) {
+void Cam_ProcessMessage(Unk8005BA58 *arg0) {
     s32 *cmd;
     s32 *p;
     s32 *q;
@@ -1320,7 +1320,7 @@ void func_800260F4(Unk8005BA58 *arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_800260F4);
+INCLUDE_ASM("asm/nonmatchings/game/80023B04", Cam_ProcessMessage);
 #endif
 
 typedef struct Unk80026334 {

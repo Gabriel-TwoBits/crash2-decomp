@@ -417,7 +417,7 @@ s32 func_80032B7C(GoolObject *arg0, s32 arg1, s32 arg2) {
         ENT_W(e, 0x30) = arg0->pos[0];
         ENT_W(e, 0x34) = arg0->pos[1];
         ENT_W(e, 0x38) = arg0->pos[2];
-        func_8001EC2C(arg0->pos, pos, 1);
+        Gfx_WorldToView(arg0->pos, pos, 1);
         ENT_W(e, 0x24) = pos[0];
         ENT_W(e, 0x28) = pos[1];
         ENT_W(e, 0x2C) = pos[2];
@@ -615,7 +615,7 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
                 tmp[0] = arg2[0];
                 tmp[1] = arg2[1];
                 tmp[2] = arg2[2];
-                func_8001EC2C(tmp, arg2, 1);
+                Gfx_WorldToView(tmp, arg2, 1);
                 /* fall through */
             case 3:
                 /* The vector is read even when it is not stored. */
@@ -1025,7 +1025,7 @@ after:
             e->prev[0] = ((s32 *)e->obj)[OBJ_POS_OFF / 4];
             e->prev[1] = ((s32 *)e->obj)[OBJ_POS_OFF / 4 + 1];
             e->prev[2] = ((s32 *)e->obj)[OBJ_POS_OFF / 4 + 2];
-            func_8001EC2C(&((s32 *)e->obj)[OBJ_POS_OFF / 4], vec, 1);
+            Gfx_WorldToView(&((s32 *)e->obj)[OBJ_POS_OFF / 4], vec, 1);
             e->vec[0] = vec[0];
             e->vec[1] = vec[1];
             e->vec[2] = vec[2];

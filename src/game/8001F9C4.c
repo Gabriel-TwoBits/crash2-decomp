@@ -165,7 +165,7 @@ s32 func_8001F9C4(void) {
     }
     memset(g_EntityFlags, 0, CLEAR_BYTES);
     func_8001F858(FIELD(D_8006759C, 8));
-    func_8001798C();
+    Gfx_ResetView();
     if (D_8005F1F4 == 1) {
         off = slot * ENTRY_STRIDE;
         FIELD(D_8006759C + off, ENTRY_BASE_OFFSET) = D_8006097C;
