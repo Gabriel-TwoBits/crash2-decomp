@@ -779,6 +779,19 @@ def prototype_of(declaration):
     return None if signature is None else signature + ";"
 
 
+def signatures_elsewhere(callee, source, original):
+    """The signatures the game's C files give callee in their prototypes and definitions, source read as original"""
+    found = set()
+    for path in sources():
+        text = original if path == source else path.read_text()
+        for match in [*PROTOTYPE.finditer(text), *DEFINITION.finditer(text)]:
+            if match.group("name") == callee:
+                found.add(signature_of(match.group("declaration")))
+            else:
+                continue
+    return found
+
+
 def game_prototypes(text):
     """The one-line prototypes of the game's functions in C text"""
     return [match for match in PROTOTYPE.finditer(text) if kind_of(match.group("name")) == GAME_FUNCTION]
@@ -940,12 +953,16 @@ def placement(name, text, equivalent):
             text = text.replace(prototype.group(0), "")
         elif UNCHECKED_PARAMETERS.search(prototype.group("declaration")):
             raise NotLanded(f"`{prototype.group('declaration')}` has no parameter list")
-        elif basic(prototype_of(prototype.group("declaration")), callee):
-            added.append(prototype_of(prototype.group("declaration")))
-            text = text.replace(prototype.group(0), "")
-        else:
+        elif not basic(prototype_of(prototype.group("declaration")), callee):
             # A structure of its file in the prototype: it stays in the file
             continue
+        elif signatures_elsewhere(callee, source, original) - {signature_of(prototype.group("declaration"))}:
+            # A file declares or defines it with other types (a structure of its own): include/game.h's would conflict
+            # there, so it stays in the file
+            continue
+        else:
+            added.append(prototype_of(prototype.group("declaration")))
+            text = text.replace(prototype.group(0), "")
     # The definition is the truth about the function's signature: prototypes of it its callers' landings wrote give way to
     # the definition's, in include/game.h, when its types are basic
     own = next((match for match in DEFINITION.finditer(text) if match.group("name") == name), None)
