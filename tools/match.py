@@ -981,8 +981,12 @@ def placement(name, text, equivalent):
         # A structure in its signature, or none parsed: its prototypes stay, and the build says whether they agree
         pass
     updated_header = with_prototypes(listed, added) if added else header
-    # Its #include lines are the file's already; a declaration the file has above it isn't repeated
-    present = set(above.splitlines())
+    # Its #include lines are the file's already; a declaration the file has above it isn't repeated, unless only another
+    # function's equivalent block has it, which the default build doesn't see
+    visible = above
+    for block in EQUIVALENT.finditer(above):
+        visible = visible.replace(block.group(0), "", 1)
+    present = set(visible.splitlines())
     # A top-level line ending in `;` is a declaration
     kept = [line for line in text.splitlines()
             if not line.startswith("#include") and not (line == line.lstrip() and line.endswith(";") and line in present)]
