@@ -291,13 +291,22 @@ def wait(process, folder):
             pass
 
 
+def complete_lines(path):
+    """The file's lines, without a last one cut short: a stalled emulator is stopped in the middle of a write"""
+    text = path.read_text()
+    if text.endswith("\n"):
+        return text.splitlines()
+    else:
+        return text.splitlines()[:-1]
+
+
 def read_trace(folder):
     """[(hash, program counter, exception code)] by frame from 1"""
     path = folder / "trace.txt"
     if not path.exists():
         return []
     frames = []
-    for line in path.read_text().splitlines():
+    for line in complete_lines(path):
         words = line.split()
         if len(words) != len(TRACE_FIELDS) or int(words[0]) != len(frames) + 1:
             sys.exit(f"{path}: unexpected line {line!r}")
@@ -311,7 +320,7 @@ def read_game_frames(folder):
     if not path.exists():
         return []
     frames = []
-    for line in path.read_text().splitlines():
+    for line in complete_lines(path):
         words = line.split()
         if len(words) != len(GAME_FRAME_FIELDS) or int(words[0]) != len(frames):
             sys.exit(f"{path}: unexpected line {line!r}")
