@@ -561,8 +561,18 @@ Steps, in order:
   steps by `_card_info`, `_card_load`, open and read, and "BASCUS-94154"), and the sound's play, voice allocation and
   parameters (GOOL's SNDP and SNDA) and per-frame update. Left without the evidence: BINF's and OPAT's handlers, the
   TGEO and WGEO page-in workers, the save writer (func_80035444) and slot commands (func_8003670C), the VRAM transfers
-  (func_800176DC). `tools/progress.py`: 160 of 564 game functions named. Next: the collision, the camera's handlers by
-  path kind and by mode, the memory card's writer.
+  (func_800176DC). `tools/progress.py`: 160 of 564 game functions named. A fourth batch: 11 game functions, 11 data
+  symbols and two types. The memory card's writer (`Save_WriteFile`: "%s%s%02d%06d", "BASCUS-94154", the "SC" header
+  titled "Crash Bandicoot 2", open, write, erase) and its helpers, among them `Save_TitleToShiftJis` (the header's
+  full-width Shift-JIS title) and `Save_UnformatCard` (0xFF, 0xFF where `Save_IsCardFormatted` reads "MC"); the pads'
+  update and records (`Input_Update`, `g_Pads`: the receive buffers Input_Init gives InitPAD); the sound's panning, its
+  volumes (`Snd_SetSfxVolume`, `Snd_SetMusicVolume` over the SEPs SsSepOpen opened), voices and sequence; the memory
+  card's state and strings; `CamMessage` and `SndVoice` for the local structures. The camera's handlers by path kind and
+  by mode and the collision's (COLL's five modes) each have one caller, and neither CrashEdit, which knows property 0x29
+  only as "mode", nor a string describes them: they keep their addresses. `tools/progress.py`: 171 of 564 game functions
+  and 49 of 1,112 data symbols named. Next: the objects' and the GOOL interpreter's remaining functions, the rendering's
+  (the draw lists, the models' and scenery's page-in workers), wherever a string, an SDK call or a format constant names
+  them.
 - **R6**: the handwritten code's names. **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
