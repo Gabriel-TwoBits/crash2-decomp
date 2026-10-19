@@ -115,10 +115,12 @@ How C spells an address moves GCC 2.7.2's code even where the value is the same:
 
 ## Loading zero
 
-ASPSX 2.34 assembles `li $r,0` as `ori $r,$zero,0`; maspsx (at the pinned commit and upstream's) writes it as
-`ori $r,0`, which GNU as reads as `ori $r,$r,0`, leaving `$r` as it was. Proven by maspsx's own fixture of the real
-assemblers (`aspsx/fixtures/expand_li.yaml`: `0x34020000` for 1.07 to 2.34) and by GCC 2.7.2's code for a 64-bit sum
-with a constant whose upper word is 0 (`(u64)a * b + 0x8000` loads that word with `li $3,0`): through maspsx it added
-`$3`'s old value. `tools/psx_cc.py` rewrites maspsx's line as ASPSX assembles it. Neither executable changed with the
-fix: no C of either build had hit it before `include/gte.h`'s division. Reported upstream:
-[mkst/maspsx#154](https://github.com/mkst/maspsx/issues/154).
+ASPSX 2.34 assembles `li $r,0` as `ori $r,$zero,0`; maspsx up to e85ecb3 wrote it as `ori $r,0`, which GNU as reads as
+`ori $r,$r,0`, leaving `$r` as it was. Proven by maspsx's own fixture of the real assemblers
+(`aspsx/fixtures/expand_li.yaml`: `0x34020000` for 1.07 to 2.34) and by GCC 2.7.2's code for a 64-bit sum with a
+constant whose upper word is 0 (`(u64)a * b + 0x8000` loads that word with `li $3,0`): through maspsx it added `$3`'s
+old value. Reported upstream ([mkst/maspsx#154](https://github.com/mkst/maspsx/issues/154)) and fixed in d4661df
+(mkst/maspsx#156), which writes `ori $r,$zero,0` below ASPSX 2.50 and `addiu $r,$zero,0` from it; the pinned maspsx is
+that commit. `tools/psx_cc.py` rewrote maspsx's line until then; without the rewrite, the new maspsx gives the same two
+executables, both built from scratch (the retail SHA-1 and the equivalent build's `ddf5927`), and the sum above
+assembles to `0x34030000`.

@@ -390,18 +390,18 @@ inline-assembly macros. `include/gte.h` models RTPS and RTPT from psx-spx, its r
 `tools/gte.py` models the same for equiv.py, which now runs the GTE's instructions on it from a code hook, its registers
 random on entry (in half the trials a projection the game would use) and compared after. Writing the model found a
 maspsx bug: it writes ASPSX's `li $r,0` as an `ori` GNU as reads as `ori $r,$r,0` (docs/COMPILER.md, "Loading zero"),
-which the 64-bit sum of the GTE's division hit; no C before had. `func_8001856C` and `func_800186D8` (a box's textured
-quad and a glyph's shaded one, sorted into the ordering table by depth) agree on 2 seeds of 2,000 trials, about 30% of
-them projecting and drawing. In the game they can't run alone: with the model they outgrow the retail code by 1,996
-bytes, so they need equivalents that shrink beside them. Such a group, with and without the two routines, displays the
-same on all 8,000 frames (`run_game.py --baseline`, added for it), and the same group with them drawing nothing differs
-in 41 frames of the title's menu, so the game reaches them there. The group itself diverges from retail from frame
-3,435, as it does without them: its ten files together, `func_80027CD0` (the decompressor shown above to change timing
-only) left out or not, while each of its parts with the six files the others need agrees on all 8,000, and the scenes
-are the same a step out of phase, as timing that adds up gives. Another group's divergence from frame 4,035 narrowed to
-`func_80027CD0` alone. The whole equivalent build diverges from frame 2,515 (2,867 before; 1,626 with the
-model's code in and the routines not), the frame moving with the layout. 201 equivalent functions, 2 left; the
-equivalent build has 208 bytes of the retail code's room left.
+which the 64-bit sum of the GTE's division hit; no C before had. Fixed upstream since (mkst/maspsx#156). `func_8001856C`
+and `func_800186D8` (a box's textured quad and a glyph's shaded one, sorted into the ordering table by depth) agree on 2
+seeds of 2,000 trials, about 30% of them projecting and drawing. In the game they can't run alone: with the model they
+outgrow the retail code by 1,996 bytes, so they need equivalents that shrink beside them. Such a group, with and without
+the two routines, displays the same on all 8,000 frames (`run_game.py --baseline`, added for it), and the same group
+with them drawing nothing differs in 41 frames of the title's menu, so the game reaches them there. The group itself
+diverges from retail from frame 3,435, as it does without them: its ten files together, `func_80027CD0` (the
+decompressor shown above to change timing only) left out or not, while each of its parts with the six files the others
+need agrees on all 8,000, and the scenes are the same a step out of phase, as timing that adds up gives. Another group's
+divergence from frame 4,035 narrowed to `func_80027CD0` alone. The whole equivalent build diverges from frame 2,515
+(2,867 before; 1,626 with the model's code in and the routines not), the frame moving with the layout. 201 equivalent
+functions, 2 left; the equivalent build has 208 bytes of the retail code's room left.
 
 `func_8002FFFC`'s C agreed but compared too few trials: it reads its six words of vertex indices from `.data`, and
 equiv.py kept each data word's retail value at even odds, so one trial in 64 had the whole table. One trial in four now
