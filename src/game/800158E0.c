@@ -80,8 +80,8 @@ typedef struct Unk80069920 {
 #define FLAGS_80_CLEAR 0xFFFF6FF5
 #define DEFAULT_D18 (-0x100)
 
-extern Unk80069920 D_80069920[];
-extern s32 D_8006991C;
+extern Unk80069920 g_Pads[];
+extern s32 g_PadCount;
 extern s32 D_8006CDD0[6];
 extern s32 D_8005B440[][3];
 extern s32 D_8005F180;
@@ -110,7 +110,7 @@ static s32 clamp_stick(s32 v) {
     }
 }
 
-void func_800158E0(void) {
+void Input_Update(void) {
     s32 i;
     Unk80069920 *p;
     s32 dx;
@@ -125,8 +125,8 @@ void func_800158E0(void) {
     s32 sel;
     s32 stream_flag;
 
-    for (i = 0; i < D_8006991C; i++) {
-        p = &D_80069920[i];
+    for (i = 0; i < g_PadCount; i++) {
+        p = &g_Pads[i];
         p->unk_44 = 0;
         p->unk_34 = p->unk_2C;
         p->unk_2C = p->unk_28;
@@ -312,7 +312,7 @@ void func_800158E0(void) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800158E0);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Input_Update);
 #endif
 
 void SetDefDrawEnv(void *env, s32 x, s32 y, s32 w, s32 h);

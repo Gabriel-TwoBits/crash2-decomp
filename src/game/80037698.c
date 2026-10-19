@@ -69,7 +69,7 @@ extern u32 D_8005F3F0;
 extern s32 g_CurrentZone;
 extern s32 D_800608D0;
 extern u8 D_80060958[];
-extern s8 D_80069920;
+extern s8 g_Pads;
 extern s8 D_80069921;
 extern u8 D_80069926;
 extern u8 D_80069927;
@@ -338,7 +338,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             return;
         case 20:
             v = 0;
-            if (D_80069920 == 0) {
+            if (g_Pads == 0) {
                 v = D_80069921;
                 if ((v == CHAR_UPPER_S || v == CHAR_LOWER_S) && dst != 0) {
                     dst[0] = D_80069926;

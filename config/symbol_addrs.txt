@@ -1181,3 +1181,15 @@ Save_UnformatCard = 0x800366B4; // type:func
 
 // reorders the directory's 0x14-byte entries: other files first, then the game's (Save_IsGameFile) in strcmp order; Save_LoadDirectory calls it
 Save_SortDirectory = 0x80035D48; // type:func
+
+// turns each pad's receive buffer (the ones Input_Init passes InitPAD, at the start of g_Pads' records) into its button word, and an analog stick into its angle (ratan2) and magnitude; while a demo plays (0x8006CD14 = 2) the first pad's buttons come from the playback stream instead
+Input_Update = 0x800158E0; // type:func
+
+// splits a volume into left and right by the angle of a view-space position (ratan2, Math_Cos), attenuated with distance and each clamped to 0x3FFF, both alike while 0x8006CBF4 is set; Snd_PlaySound, Snd_SetSoundParam and Snd_Update call it
+Snd_PanVolume = 0x8003264C; // type:func
+
+// the pads' 0x4C-byte records: Input_Init passes InitPAD the receive buffers at their start (0x80069920, 0x8006996C), Input_Update turns them into each record's button word and stick
+g_Pads = 0x80069920;
+
+// the number of pads, which Input_Init stores (2 from Sys_Init) and Input_Update loops over
+g_PadCount = 0x8006991C;

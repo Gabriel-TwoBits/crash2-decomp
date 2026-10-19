@@ -414,7 +414,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
         return RESULT_NOT_ACTIVE;
     }
     if (obj == (u8 *)g_Player) {
-        func_800158E0();
+        Input_Update();
     } else {
     }
     D_8006CB60 = (s32)obj;

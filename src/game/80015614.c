@@ -115,7 +115,7 @@ s32 Sys_Shutdown(void) {
 
 #ifdef NON_MATCHING
 typedef struct { s32 w[19]; } Slot;
-extern Slot D_8006991C;
+extern Slot g_PadCount;
 extern char D_80069944[];
 extern int InitPAD(void *, int, void *, int);
 extern void StartPAD(void);
@@ -128,9 +128,9 @@ void Input_Init(s32 arg0) {
     s32 off;
 
     i = 0;
-    D_8006991C.w[0] = arg0;
+    g_PadCount.w[0] = arg0;
     if (arg0 > 0) {
-        p = &D_8006991C;
+        p = &g_PadCount;
         base = (char *)p;
         off = 0;
         do {

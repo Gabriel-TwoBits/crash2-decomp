@@ -113,7 +113,7 @@ s16 D_8005F2E4;
 s16 D_8005F2E6;
 extern s32 D_8006CBF4;
 
-s16 *func_8003264C(s32 *arg0, s32 arg1) {
+s16 *Snd_PanVolume(s32 *arg0, s32 arg1) {
     s32 x;
     s32 y;
     s32 d;
@@ -168,7 +168,7 @@ set6:
     return &D_8005F2E4;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_8003264C);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_PanVolume);
 #endif
 
 typedef struct {
@@ -439,7 +439,7 @@ s32 Snd_PlaySound(GoolObject *arg0, s32 arg1, s32 arg2) {
         ((s16 *)cmd)[4] = vol;
         e->flags &= ~FLAG_PITCH_CLAMP;
     } else {
-        u8 *p = (u8 *)func_8003264C((s32 *)((u8 *)e + 0x24), ENT_H(e, 0x1E));
+        u8 *p = (u8 *)Snd_PanVolume((s32 *)((u8 *)e + 0x24), ENT_H(e, 0x1E));
         /* the table entry may be unaligned: read it bytewise */
         ((s16 *)cmd)[5] = p[2] | (p[3] << 8);
         ((s16 *)cmd)[4] = p[0] | (p[1] << 8);
@@ -592,7 +592,7 @@ s32 Snd_SetSoundParam(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
                     st->unk_1A = arg2[0];
                     if (arg0 != 0) {
                         upd.dirty |= DIRTY_VEC;
-                        rawp = (volatile Unk80032F18Raw4 *)func_8003264C(st->vec, st->unk_1A);
+                        rawp = (volatile Unk80032F18Raw4 *)Snd_PanVolume(st->vec, st->unk_1A);
                         upd.data = rawp->w;
                     }
                 }
@@ -628,7 +628,7 @@ s32 Snd_SetSoundParam(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
                     st->vec[2] = arg2[2];
                     if (arg0 != 0) {
                         upd.dirty = DIRTY_VEC;
-                        rawp = (volatile Unk80032F18Raw4 *)func_8003264C(st->vec, st->unk_1A);
+                        rawp = (volatile Unk80032F18Raw4 *)Snd_PanVolume(st->vec, st->unk_1A);
                         upd.data = rawp->w;
                     }
                 }
@@ -1005,7 +1005,7 @@ after:
                 ((s16 *)cmd)[CMD_VOL_R] = vol;
                 ((s16 *)cmd)[CMD_VOL_L] = vol;
             } else {
-                p = (u8 *)func_8003264C((s32 *)e->vec, (s16)e->vol);
+                p = (u8 *)Snd_PanVolume((s32 *)e->vec, (s16)e->vol);
                 ((s16 *)cmd)[CMD_VOL_R] = p[2] | (p[3] << 8);
                 ((s16 *)cmd)[CMD_VOL_L] = p[0] | (p[1] << 8);
             }
@@ -1030,7 +1030,7 @@ after:
             e->vec[1] = vec[1];
             e->vec[2] = vec[2];
             mask = mask | CMD_M_VOL;
-            p = (u8 *)func_8003264C((s32 *)e->vec, (s16)e->vol);
+            p = (u8 *)Snd_PanVolume((s32 *)e->vec, (s16)e->vol);
             ((s16 *)cmd)[CMD_VOL_R] = p[2] | (p[3] << 8);
             ((s16 *)cmd)[CMD_VOL_L] = p[0] | (p[1] << 8);
         }

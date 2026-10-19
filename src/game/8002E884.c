@@ -284,7 +284,7 @@ extern s32 D_8006CBA8;
 extern s32 D_8006CBE4;
 
 void func_8002EE48(void) {
-    func_800158E0();
+    Input_Update();
     D_8006CBA0 = 0;
     switch (D_8005F3EC) {
     case 0x28:
