@@ -259,7 +259,6 @@ s32 Zone_PageOut(char *arg0) {
     return -0xFF;
 }
 
-#ifdef NON_MATCHING
 s32 Zone_IsLinked(s32 arg0, s32 *arg1) {
     s32 key;
     s32 count;
@@ -280,24 +279,19 @@ s32 Zone_IsLinked(s32 arg0, s32 *arg1) {
         do {
             v = *(s32 *)(slot + 0x194);
             if (v & 1) {
-                if (v != key) {
-                    i++;
-                    goto next;
-                }
-                return 1;
+                if (v == key) return 1;
+                i++;
             } else {
                 i++;
-                if (((s32 *)v)[1] == key) return 1;
+                if (((s32 *)v)[1] == key) {
+                    do { return 1; } while (0);
+                }
             }
-next:
             slot += 4;
         } while (i < n);
     }
     return 0;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/game/8001F9C4", Zone_IsLinked);
-#endif
 
 extern s32 D_8006CDF0;
 extern s32 D_8006CDF4;
