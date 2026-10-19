@@ -2136,6 +2136,7 @@ void *Obj_HasId(GoolObject *arg0, s32 arg1) {
 
 #ifdef NON_MATCHING
 #define F(p, T, off) (*(T *)((u8 *)(p) + (off)))
+#define OBJ(p) ((GoolObject *)(p))
 
 
 s32 Obj_CheckNearest(void *arg0, void *arg1) {
@@ -2166,29 +2167,29 @@ s32 Obj_CheckNearest(void *arg0, void *arg1) {
             s0 = *(u16 *)(F(tbl, u8 *, 0x1C) + (t >> 8) * 2);
             if (s0 == 0xFF) {
                 if (t == 0x300) {
-                    st = F(arg0, s32, 0x108);
-                    new_var = F(arg0, s32, 0xB0);
+                    st = OBJ(arg0)->display_mode;
+                    new_var = OBJ(arg0)->block_flags;
                     if ((u32)(st - 3) >= 2 && st != 2 && !(new_var & 2)) {
                         s0 = 0xFE;
                         goto cmp;
                     }
                 }
-                if (F(arg1, s32, 0x10) == 0xA00 && !(F(arg0, s32, 0x100) & 0x800)) {
+                if (F(arg1, s32, 0x10) == 0xA00 && !(OBJ(arg0)->state_flags & 0x800)) {
                     s0 = 0xFE;
                     goto cmp;
                 }
                 if (F(arg1, s32, 0x10) != 0x1D00) {
                     return 0;
                 }
-                if (F(arg0, s32, 0x100) & 0x02000000) {
+                if (OBJ(arg0)->state_flags & 0x02000000) {
                     return 0;
                 }
                 s0 = 0xFE;
                 goto cmp;
             }
             if (!(s0 & 0x8000)) {
-                m = F(arg0, s32, 0xB0);
-                st = F(arg0, s32, 0x108);
+                m = OBJ(arg0)->block_flags;
+                st = OBJ(arg0)->display_mode;
                 t = *(s32 *)(F(tbl, u8 *, 0x20) + s0 * 16);
                 if ((u32)(st - 3) < 2 || st == 2) {
                     m |= 0x1002;
