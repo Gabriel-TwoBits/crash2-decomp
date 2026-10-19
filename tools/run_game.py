@@ -3,20 +3,23 @@
 equivalent track's, the same pad presses at the same frames for both, and compares what each displays frame by frame.
 
     python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                             [--baseline EXE] [--schedule {new-game,demo}] [--real-time]
+                             [--baseline EXE] [--schedule {new-game,turtle-woods,demo}]
+                             [--real-time]
 
 By default frames are game frames, on the game clock (tools/run_game.lua): the game's time is pinned to its frames, each
 lasting two vsyncs for the game whatever the code's speed, so faster or slower equivalent C plays the same game. The
 schedule boots the disc, starts a new game from the title's menu, skips the intro, waits out Cortex's speech, walks into
 Turtle Woods from the first warp room and runs, jumps and spins there: 3,450 game frames, about a minute and a half to
-run on the emulator's interpreter, both runs at once. `--schedule demo` presses nothing instead: left at the title's
-menu, the game plays its attract demo, Turtle Woods then a river level, 4,800 game frames. `--real-time` keeps the
-game's own clock and counts vsyncs instead: 8,000 of them (2 minutes 13 of the game), about 15 seconds on the emulator's
-recompiler, where a difference may be only timing. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja
-nonmatching`) goes into a copy of the image first (tools/patch_disc.py). `--against retail` runs the retail image twice
-instead: the emulator is deterministic when both runs agree on every frame. `--baseline EXE` runs that executable in
-place of retail: the same equivalent build with and without a change, when the change can't be tested alone
-(docs/WORKFLOW.md); on the game clock its ELF must sit beside it (EXE with the suffix .elf), for the clock's symbols.
+run on the emulator's interpreter, both runs at once. `--schedule turtle-woods` runs on into Turtle Woods blindly,
+jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames. `--schedule demo` presses
+nothing instead: left at the title's menu, the game plays its attract demo, Turtle Woods then a river level, 4,800 game
+frames. `--real-time` keeps the game's own clock and counts vsyncs instead: 8,000 of them (2 minutes 13 of the game),
+about 15 seconds on the emulator's recompiler, where a difference may be only timing. The equivalent executable
+(build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a copy of the image first (tools/patch_disc.py).
+`--against retail` runs the retail image twice instead: the emulator is deterministic when both runs agree on every
+frame. `--baseline EXE` runs that executable in place of retail: the same equivalent build with and without a change,
+when the change can't be tested alone (docs/WORKFLOW.md); on the game clock its ELF must sit beside it (EXE with the
+suffix .elf), for the clock's symbols.
 
 Each run is checked for health: it reaches the last frame (a run without a new vsync for 20 seconds is stopped: the game
 crashed or hung), its program counter stays in RAM or the BIOS, it takes no exception but interrupts and system calls,
@@ -63,13 +66,24 @@ GAME_TAP_FRAMES = 3
 # A schedule on the game clock: presses (first game frame, game frames held, button), checkpoints (game frame, name),
 # the last game frame, and the vsync by which a run still short of it counts as stuck (about 1.4 times retail's)
 GameSchedule = namedtuple("GameSchedule", "presses checkpoints last vsync_limit")
+# The way into the first level, shared by the schedules that play one: New Game, the intro, Turtle Woods' portal
+INTO_TURTLE_WOODS = [
+    (1050, GAME_TAP_FRAMES, "START"),  # New Game, from the title's menu
+    (1350, GAME_TAP_FRAMES, "CROSS"),  # during the intro
+    (2750, 100, "UP"),  # into Turtle Woods' portal, once Cortex's speech is over
+]
+# Turtle Woods run through blindly: forward from game frame 2,950, jumping every 40 game frames and spinning every 80,
+# into crates, enemies and pits, until every life is lost
+RUN_START = 2950
+RUN_FRAMES = 3000
+JUMP_EVERY = 40
+JUMP_OFFSET = 20
+SPIN_EVERY = 80
+SPIN_OFFSET = 40
 GAME_SCHEDULES = {
     # Retail reaches game frame 3,450 by vsync 8,695
     "new-game": GameSchedule(
-        presses=[
-            (1050, GAME_TAP_FRAMES, "START"),  # New Game, from the title's menu
-            (1350, GAME_TAP_FRAMES, "CROSS"),  # during the intro
-            (2750, 100, "UP"),  # into Turtle Woods' portal, once Cortex's speech is over
+        presses=INTO_TURTLE_WOODS + [
             (2950, 150, "UP"),
             (3000, GAME_TAP_FRAMES, "CROSS"),
             (3050, GAME_TAP_FRAMES, "SQUARE"),
@@ -88,6 +102,26 @@ GAME_SCHEDULES = {
         ],
         last=3450,
         vsync_limit=12000,
+    ),
+    # Retail reaches game frame 6,000 by vsync 14,068: deaths, respawns at the checkpoints, the level started again
+    "turtle-woods": GameSchedule(
+        presses=INTO_TURTLE_WOODS + [(RUN_START, RUN_FRAMES, "UP")]
+        + [(frame, GAME_TAP_FRAMES, "CROSS")
+           for frame in range(RUN_START + JUMP_OFFSET, RUN_START + RUN_FRAMES, JUMP_EVERY)]
+        + [(frame, GAME_TAP_FRAMES, "SQUARE")
+           for frame in range(RUN_START + SPIN_OFFSET, RUN_START + RUN_FRAMES, SPIN_EVERY)],
+        checkpoints=[
+            (3000, "level_start"),
+            (3450, "first_crates"),
+            (3600, "first_death"),
+            (4050, "after_respawn"),
+            (4500, "level_entry_again"),
+            (5100, "second_try"),
+            (5550, "further_on"),
+            (5990, "last"),
+        ],
+        last=6000,
+        vsync_limit=20000,
     ),
     # Nothing pressed: the title's menu left alone plays the attract demo, Turtle Woods then a river level; retail
     # reaches game frame 4,800 by vsync 14,100
