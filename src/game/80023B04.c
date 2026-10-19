@@ -1216,15 +1216,17 @@ void Cam_QueueMessage(s32 arg0, s32 *arg1) {
     }
 }
 
-typedef struct Unk8005BA58 {
-    u8 pad[0x10];
-} Unk8005BA58;
+/* A queued camera message: Cam_QueueMessage writes the opcode and up to three words, Cam_ProcessMessage acts on them */
+typedef struct CamMessage {
+    /* 0x0 */ s32 opcode;
+    /* 0x4 */ s32 args[3];
+} CamMessage;
 
-void Cam_ProcessMessage(Unk8005BA58 *);
-extern Unk8005BA58 D_8005BA58[];
+void Cam_ProcessMessage(CamMessage *);
+extern CamMessage D_8005BA58[];
 
 void Cam_ProcessMessages(void) {
-    Unk8005BA58 *p;
+    CamMessage *p;
     s32 n;
 
     n = D_8005B9E0.count;
@@ -1259,7 +1261,7 @@ extern s32 D_8005BA00;
 extern s32 D_8005BA04;
 extern s32 D_800608FC;
 
-void Cam_ProcessMessage(Unk8005BA58 *arg0) {
+void Cam_ProcessMessage(CamMessage *arg0) {
     s32 *cmd;
     s32 *p;
     s32 *q;

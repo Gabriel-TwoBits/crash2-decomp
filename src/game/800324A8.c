@@ -179,15 +179,15 @@ typedef struct {
     u8 pad10[0xD];
     u8 b;
     u8 pad1E[0x32];
-} Ent;
+} SndVoice;
 
 s32 D_8005F304;
-extern Ent g_SndVoices[];
+extern SndVoice g_SndVoices[];
 
 void func_80032808(GoolObject *arg0) {
     s32 sp10;
     s32 i;
-    Ent *p;
+    SndVoice *p;
 
     if (arg0 != 0) {
         i = D_8005F304;
@@ -226,7 +226,7 @@ extern void func_800521A8(Out *);
 
 s32 Snd_AllocVoice(void) {
     Out o;
-    Ent *p;
+    SndVoice *p;
     s32 i;
     s32 j;
     s32 ret;
@@ -364,7 +364,7 @@ void func_800518B8(s32 *);
 s32 Snd_PlaySound(GoolObject *arg0, s32 arg1, s32 arg2) {
     s32 cmd[0x14];
     s32 pos[3];
-    Ent *e;
+    SndVoice *e;
     s32 *src;
     s32 *dst;
     s32 voice;
@@ -542,7 +542,7 @@ s32 Snd_SetSoundParam(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
     Unk80032F18Update upd;
     s32 slot;
     u32 op;
-    Ent *ent;
+    SndVoice *ent;
     Unk80032F18State *st;
     s32 tmp[3];
     volatile s32 peek[3];
