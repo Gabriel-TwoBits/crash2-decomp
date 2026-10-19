@@ -65,7 +65,7 @@ s32 func_8001BFDC(void *arg0) {
     s16 v;
     u32 elapsed;
 
-    switch (OBJ(arg0)->unk_108) {
+    switch (OBJ(arg0)->display_mode) {
     case STATE_SKIP:
         break;
     case STATE_SPIN:
@@ -74,7 +74,7 @@ s32 func_8001BFDC(void *arg0) {
     case STATE_WAIT_1C4:
         elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_1C4) {
-            OBJ(arg0)->unk_108 = STATE_IDLE;
+            OBJ(arg0)->display_mode = STATE_IDLE;
         } else {
             /* state stays 3: the later state checks cannot fire */
         }
@@ -83,7 +83,7 @@ s32 func_8001BFDC(void *arg0) {
     case STATE_WAIT_3D:
         elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_3D) {
-            OBJ(arg0)->unk_108 = STATE_IDLE;
+            OBJ(arg0)->display_mode = STATE_IDLE;
         } else {
             /* keep waiting */
         }
@@ -91,7 +91,7 @@ s32 func_8001BFDC(void *arg0) {
     case STATE_WAIT_25B:
         elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_25B || (OBJ(arg0)->state_flags & FLAG_100_ABORT)) {
-            OBJ(arg0)->unk_108 = STATE_IDLE;
+            OBJ(arg0)->display_mode = STATE_IDLE;
         } else {
             /* keep waiting */
         }
@@ -100,7 +100,7 @@ s32 func_8001BFDC(void *arg0) {
     case STATE_FINISH_A:
         elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_FINISH) {
-            OBJ(arg0)->unk_108 = STATE_IDLE;
+            OBJ(arg0)->display_mode = STATE_IDLE;
             OBJ(arg0)->status_b |= FLAG_AC_DONE;
         } else {
             /* keep waiting */
@@ -109,7 +109,7 @@ s32 func_8001BFDC(void *arg0) {
     case STATE_FINISH_B:
         elapsed = D_8006CB64 - OBJ(arg0)->unk_10C;
         if (elapsed >= LIMIT_FINISH || (OBJ(arg0)->status_a & FLAG_A8_ABORT)) {
-            OBJ(arg0)->unk_108 = STATE_IDLE;
+            OBJ(arg0)->display_mode = STATE_IDLE;
             OBJ(arg0)->status_b |= FLAG_AC_DONE;
         } else {
             /* keep waiting */
@@ -494,7 +494,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
             switch (sel) {
             case 0x100:
                 if (D_8006CB94 & PAD_MODE_A) {
-                    if ((D_80060944 & 1) || g_Paused != 0 || OBJ(obj)->unk_108 != 4) {
+                    if ((D_80060944 & 1) || g_Paused != 0 || OBJ(obj)->display_mode != 4) {
                         hit = 1;
                     } else {
                     }
@@ -628,7 +628,7 @@ s32 Gool_SendEvent(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
         mask = BANK_FLAGS(obj)[s3 * 4];
         st = fl & mask;
         if ((s32)obj == cur) {
-            if ((u32)(obj->unk_108 - 3) < 2U || obj->unk_108 == STATE_FIRST) {
+            if ((u32)(obj->display_mode - 3) < 2U || obj->display_mode == STATE_FIRST) {
                 st = fl;
                 st = (st | FLAG_FORCE) & mask;
             }

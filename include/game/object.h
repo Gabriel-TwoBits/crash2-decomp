@@ -76,8 +76,8 @@ typedef struct GoolObject {
     /* 0xFC */ s32 unk_FC;
     /* 0x100 */ s32 state_flags; /* the state's flags (Gool_ChangeState) */
     /* 0x104 */ s32 unk_104;
-    /* 0x108 */ s32 unk_108;
-    /* 0x10C */ u32 unk_10C;
+    /* 0x108 */ s32 display_mode; /* CrashEdit's displaymode: the mode func_8001BFDC switches on (spin, timed waits) */
+    /* 0x10C */ u32 unk_10C; /* the tick the display mode started, which func_8001BFDC times its waits from */
     /* 0x110 */ s32 unk_110;
     /* 0x114 */ s32 unk_114;
     /* 0x118 */ s32 unk_118;

@@ -960,7 +960,7 @@ void func_8001BD84(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
             }
             arg1++;
         }
-        off = (u32)arg0->unk_108 >> 8;
+        off = (u32)arg0->display_mode >> 8;
         if (off == 0) {
             off = *(s32 *)(base + 8);
         }

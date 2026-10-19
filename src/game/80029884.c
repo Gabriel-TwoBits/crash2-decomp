@@ -461,7 +461,7 @@ s32 func_8002A554(GoolObject *arg0, s32 *arg1, s32 *arg2, u8 *arg3) {
                             (obj->status_b & 0x200) ? (s32)obj->unk_9C : 0);
         if (res != NO_HIT) {
             if ((obj->status_b & 0x20000) &&
-                ((((!(arg0->state_flags & 0x10) && arg0->unk_108 != 5) ||
+                ((((!(arg0->state_flags & 0x10) && arg0->display_mode != 5) ||
                     ((KIND(obj) != 0x300 || (obj->block_flags & 0x1012)) && !(obj->state_flags & 0x20))) &&
                    !(arg0->state_flags & 0x10000)) ||
                   (obj->state_flags & 0x10000))) {
@@ -1233,7 +1233,7 @@ s32 func_8002BF58(GoolObject *arg0, void *arg1) {
         if (*(s32 *)((s8 *)arg1 + 4) < ((*(s32 *)((s8 *)temp_s2 + 4) << 8) - *(s32 *)((s8 *)arg0->unk_8 + 0x34))) {
             var_a0 = 1;
             new_var = (s8 *)arg1;
-            if ((*(s32 *)((s8 *)*(void **)((s8 *)temp_a1 + 0x10) + 0x29C) & 2) && (arg0->unk_108 != 2)) {
+            if ((*(s32 *)((s8 *)*(void **)((s8 *)temp_a1 + 0x10) + 0x29C) & 2) && (arg0->display_mode != 2)) {
                 temp_v1 = *(u32 *)((s8 *)D_8006759C + 8);
                 sp18 = 0x6400;
                 var_a2 = 0x900;
@@ -2314,7 +2314,7 @@ void func_8002DE08(s32 *arg0, s32 *arg1, GoolObject *arg2, void *arg3) {
                 *p = 0;
                 p--;
             }
-            mode = arg2->unk_108;
+            mode = arg2->display_mode;
             flags = arg2->block_flags;
             if ((u32)(mode - OBJ_MODE_MIN) < OBJ_MODE_SPAN) {
                 flags = OBJ_ALT_VALUE;

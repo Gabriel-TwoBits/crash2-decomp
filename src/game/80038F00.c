@@ -81,7 +81,7 @@ s32 Gool_OpGoToState(GoolObject *arg0, u32 arg1, s32 arg2) {
         } while (i >= 0);
     }
     mask = arg0->block_flags;
-    state = arg0->unk_108;
+    state = arg0->display_mode;
     flags = *(s32 *)(arg0->exe->items[4] + (arg1 & 0x3FF) * 16);
     if ((u32)(state - 3) >= 2U) {
         hit = mask & flags;
