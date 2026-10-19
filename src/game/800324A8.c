@@ -3,7 +3,7 @@
 #include "game.h"
 
 s32 D_8005F244 = 0x1E;
-s32 D_8005F248 = 0;
+s32 g_SndOpen = 0;
 s32 D_8005F24C = 0;
 s16 D_8005F250 = 0;
 s32 D_8005F254 = 0;
@@ -24,7 +24,7 @@ s32 D_8005F308;
 extern u8 D_8005F30C[];
 extern s32 D_8005F4F0[];
 extern u8 D_8005FCF8[];
-extern s32 D_8006CBF8;
+extern s32 g_SfxVolume;
 
 void Snd_Init(void) {
     Unk800324A8 cfg;
@@ -33,7 +33,7 @@ void Snd_Init(void) {
     s32 mask;
     s16 vol;
 
-    D_8005F248 = 1;
+    g_SndOpen = 1;
     i = 0;
     mask = ~8;
     for (p = D_8005F4F0; i < 24; i++) {
@@ -50,7 +50,7 @@ void Snd_Init(void) {
     func_800513D8(&cfg);
     func_800512F8(0);
     func_800323AC();
-    func_800325D0((D_8006CBF8 * 0x3FFF00) >> 16);
+    Snd_SetSfxVolume((g_SfxVolume * 0x3FFF00) >> 16);
     D_8005F2FC = vol;
     D_8005F300 = 0;
     SsSetMVol(0x7F, 0x7F);
@@ -72,20 +72,20 @@ extern void func_800501A8(Unk80032588 *);
 void Snd_Shutdown(void) {
     Unk80032588 s;
 
-    if (D_8005F248 != 0) {
+    if (g_SndOpen != 0) {
         s.a = 7;
         s.b = 0;
         s.c = 0;
         s.d = 0;
         func_800501A8(&s);
         func_8004FE38(0);
-        D_8005F248 = 0;
+        g_SndOpen = 0;
     }
 }
 
 s16 D_8005F2E8;
 
-void func_800325D0(s32 arg0) {
+void Snd_SetSfxVolume(s32 arg0) {
     D_8005F2E8 = arg0;
 }
 
@@ -182,7 +182,7 @@ typedef struct {
 } Ent;
 
 s32 D_8005F304;
-extern Ent D_8005F4EC[];
+extern Ent g_SndVoices[];
 
 void func_80032808(GoolObject *arg0) {
     s32 sp10;
@@ -191,7 +191,7 @@ void func_80032808(GoolObject *arg0) {
 
     if (arg0 != 0) {
         i = D_8005F304;
-        p = &D_8005F4EC[i];
+        p = &g_SndVoices[i];
         for (; i < 0x18; i++, p++) {
             if ((p->flags & 8) && p->key == arg0) {
                 if (i) {
@@ -238,7 +238,7 @@ s32 Snd_AllocVoice(void) {
     i = D_8005F304;
     dist = 0x3FFF;
     min = 0xFF;
-    p = &D_8005F4EC[i];
+    p = &g_SndVoices[i];
     for (; i < 0x18; i++, p++) {
         if (p->b < min) {
             min = p->b;
@@ -250,7 +250,7 @@ s32 Snd_AllocVoice(void) {
     ret = -1;
     if (D_8005FC9D >= min) {
         j = D_8005F304;
-        p = &D_8005F4EC[j];
+        p = &g_SndVoices[j];
         for (; j < 0x18; j++, p++) {
             if (p->b == min) {
                 o.mask = 1 << j;
@@ -373,7 +373,7 @@ s32 Snd_PlaySound(GoolObject *arg0, s32 arg1, s32 arg2) {
     s16 vol;
     s32 i;
 
-    if (D_8006CBF8 == 0) {
+    if (g_SfxVolume == 0) {
         return 0;
     }
     if (!(D_8006CB94 & CTRL_REQUIRED) && !(arg0->state_flags & OBJ_FLAGS_REQUIRED)) {
@@ -383,7 +383,7 @@ s32 Snd_PlaySound(GoolObject *arg0, s32 arg1, s32 arg2) {
     if (voice <= 0) {
         return -1;
     }
-    e = &D_8005F4EC[voice];
+    e = &g_SndVoices[voice];
     if (arg1 & 1) {
         res = arg1 & ~1;
     } else {
@@ -552,7 +552,7 @@ s32 Snd_SetSoundParam(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
         return 0;
     }
     slot = D_8005F304;
-    ent = &D_8005F4EC[slot];
+    ent = &g_SndVoices[slot];
     op = arg1 & OP_MASK;
     for (; slot < LOOP_ENTRIES; slot++, ent++) {
         if (arg0 != 0 && (u32)(arg0 + 2) >= 2 && ent->a != arg0) {
@@ -811,7 +811,7 @@ extern u8 D_8005FC6C[];
 extern void *g_CurrentZone;
 extern s32 D_80067FB0;
 extern s32 D_8005F304;
-extern s32 D_8006CBFC;
+extern s32 g_MusicVolume;
 extern s32 D_8005F25C;
 extern s32 D_8005F258;
 extern s16 D_8005F2F8;
@@ -839,13 +839,13 @@ void Snd_Update(void) {
     void *q;
 
     busy = 0;
-    if (D_8006CBF8 != D_8005F25C) {
-        D_8005F25C = D_8006CBF8;
-        func_800325D0((D_8006CBF8 * MIX_SCALE_MUL) >> MIX_SCALE_SHIFT);
+    if (g_SfxVolume != D_8005F25C) {
+        D_8005F25C = g_SfxVolume;
+        Snd_SetSfxVolume((g_SfxVolume * MIX_SCALE_MUL) >> MIX_SCALE_SHIFT);
     }
-    if (D_8006CBFC != D_8005F258) {
-        D_8005F258 = D_8006CBFC;
-        func_80033C84((D_8006CBFC * MIX_SCALE_MUL) >> MIX_SCALE_SHIFT);
+    if (g_MusicVolume != D_8005F258) {
+        D_8005F258 = g_MusicVolume;
+        Snd_SetMusicVolume((g_MusicVolume * MIX_SCALE_MUL) >> MIX_SCALE_SHIFT);
     }
     if (g_CurrentZone != 0) {
         func_80034254(*(s32 *)((u8 *)g_CurrentZone + 0x10) + 0x2A4);
@@ -880,7 +880,7 @@ void Snd_Update(void) {
     if (i >= MIX_VOICES) {
         return;
     }
-    e = (Unk800334A0 *)&D_8005F4EC[i];
+    e = (Unk800334A0 *)&g_SndVoices[i];
     status = &D_8005FC6C[i];
     for (; i < MIX_VOICES; i++, e++, status++) {
         if (!(e->flags & EF_ACTIVE)) {
@@ -1053,7 +1053,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_Update);
 extern u16 D_8005F2EC;
 extern s16 D_8005F2F8;
 extern s32 D_8005F39C;
-extern s16 D_8005F3E4;
+extern s16 g_SndSepAccess;
 extern Unk80033DE0 D_8005FCD0[];
 
 void func_80056760(s16, s16, s16, s16);
@@ -1061,7 +1061,7 @@ void func_80056760(s16, s16, s16, s16);
 #define SEQ_MODE_ACTIVE 3
 #define VOLUME_SHIFT 7
 
-void func_80033C84(s32 arg0) {
+void Snd_SetMusicVolume(s32 arg0) {
     s32 i;
     s32 vol;
 
@@ -1069,30 +1069,30 @@ void func_80033C84(s32 arg0) {
     if (D_8005F39C == SEQ_MODE_ACTIVE) {
         vol = ((s16)arg0) >> VOLUME_SHIFT;
         for (i = 0; i < D_8005F2F8; i++) {
-            func_80056760(D_8005F3E4, D_8005FCD0[i].seq, vol, vol);
+            func_80056760(g_SndSepAccess, D_8005FCD0[i].seq, vol, vol);
         }
     } else {
         /* other modes: only the store above */
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80033C84);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_SetMusicVolume);
 #endif
 
-extern s32 D_8006CBFC;
+extern s32 g_MusicVolume;
 extern s32 D_8005F3EC;
 s32 D_8005F2F4;
 s32 D_8005F39C;
-s16 D_8005F3E4;
+s16 g_SndSepAccess;
 s16 D_8005F3E0;
 
 void Snd_InitSequencer(void) {
     D_8005F24C = 1;
     SsSetTickMode(1);
-    func_80033C84((D_8006CBFC * 0x3FFF) << 8 >> 16);
+    Snd_SetMusicVolume((g_MusicVolume * 0x3FFF) << 8 >> 16);
     D_8005F2F4 = 0x6396347F;
     D_8005F39C = 0;
-    D_8005F3E4 = -1;
+    g_SndSepAccess = -1;
     D_8005F3E0 = -1;
     switch (D_8005F3EC) {
     case 2: case 5: case 6: case 7: case 8: case 9:
@@ -1125,7 +1125,7 @@ void func_80056304(s16, s16);
 void func_80056760(s16, s16, s16, s16);
 extern Unk80033DE0 D_8005FCD0[];
 extern s16 D_8005FCE4;
-extern s32 D_8006CBFC;
+extern s32 g_MusicVolume;
 s16 D_8005F2F8;
 
 void func_80033DE0(s32 arg0) {
@@ -1141,7 +1141,7 @@ void func_80033DE0(s32 arg0) {
                 Snd_ControlSequence(p - 1, 3, 0);
                 D_8005F308 = 0;
             } else {
-                if (D_8006CBFC != 0 || D_8006CBF8 != 0) {
+                if (g_MusicVolume != 0 || g_SfxVolume != 0) {
                     D_8005F308 = 0x3FFF;
                 } else {
                     D_8005F308 = 0;
@@ -1150,7 +1150,7 @@ void func_80033DE0(s32 arg0) {
                 Snd_ControlSequence(p, 2, 0);
                 Snd_ControlSequence(p + 1, 0, 1);
             }
-            func_80056760(D_8005F3E4, D_8005FCE4, D_8005F308, D_8005F308);
+            func_80056760(g_SndSepAccess, D_8005FCE4, D_8005F308, D_8005F308);
         }
     }
 }
@@ -1207,7 +1207,7 @@ s32 Snd_LoadSequence(s32 addr) {
         }
         D_8005F260 = 0;
         if (D_8005F2F4 != NONE) {
-            SsSepClose(D_8005F3E4);
+            SsSepClose(g_SndSepAccess);
             tmp = D_8005F2F4;
             Nsf_CloseEntry(&tmp, 1);
         }
@@ -1254,8 +1254,8 @@ s32 Snd_LoadSequence(s32 addr) {
         }
         SsStart();
     }
-    D_8005F3E4 = SsSepOpen(hdr->unk18, D_8005F3E0, D_8005F2F8);
-    if (D_8005F3E4 == -1) {
+    g_SndSepAccess = SsSepOpen(hdr->unk18, D_8005F3E0, D_8005F2F8);
+    if (g_SndSepAccess == -1) {
         exit(-1);
     }
     for (i = 0; i < D_8005F2F8; i++) {
@@ -1265,7 +1265,7 @@ s32 Snd_LoadSequence(s32 addr) {
         } else {
             func_800343CC((Unk800343CC *)&D_8005FCD0[i], 0, i);
             v = (s16)D_8005F2EC >> 7;
-            func_800528C4(D_8005F3E4, D_8005FCD0[i].seq, v, 0x1E);
+            func_800528C4(g_SndSepAccess, D_8005FCD0[i].seq, v, 0x1E);
         }
     }
     Snd_ControlSequence(D_8005FCD0, 0, 0);
@@ -1300,7 +1300,7 @@ extern s32 D_8005F254;
 extern s32 D_8005F308;
 extern s32 D_8005F2F4;
 extern s32 D_8005F39C;
-extern s16 D_8005F3E4;
+extern s16 g_SndSepAccess;
 extern s16 D_8005F3E0;
 
 void func_80034254(s32 arg0) {
@@ -1332,7 +1332,7 @@ void func_80034254(s32 arg0) {
             key = *(s32 *)(word + 4);
         }
         if (D_8005F2F4 != key && D_8005F308 == 0 && D_8005F3E0 != NO_ENTRY && D_8005F254 == 0) {
-            func_80052B4C(D_8005F3E4, D_8005FCD0->seq,
+            func_80052B4C(g_SndSepAccess, D_8005FCD0->seq,
                           (s32)(D_8005F2EC << U16_TO_S32_SHIFT) >> FIELD_SHIFT, WAIT_FRAMES);
             D_8005F250 = WAIT_FRAMES;
             D_8005F254 = arg0;
@@ -1354,7 +1354,7 @@ void Snd_CloseSequence(s16 a, s32 b);
 
 void Snd_ShutdownSequencer(void) {
     if (D_8005F24C != 0) {
-        Snd_CloseSequence(D_8005F3E4, 1);
+        Snd_CloseSequence(g_SndSepAccess, 1);
         SsEnd();
         D_8005F24C = 0;
     }
@@ -1369,7 +1369,7 @@ void Snd_ShutdownSequencer(void) {
 
 extern s16 D_8005F2F8;
 extern s32 D_8005F308;
-extern s16 D_8005F3E4;
+extern s16 g_SndSepAccess;
 
 void func_800343CC(Unk800343CC *arg0, s32 arg1, s32 arg2) {
     if (D_8005F2F8 >= SOUND_REVERB_THRESHOLD && arg2 == SEQ_FORCE_FLAT_VOLUME) {
@@ -1381,7 +1381,7 @@ void func_800343CC(Unk800343CC *arg0, s32 arg1, s32 arg2) {
     }
     arg0->unk_0 = arg2;
     arg0->unk_4 = SEQ_NO_NEXT;
-    func_80056760(D_8005F3E4, arg2, arg0->unk_10, arg0->unk_12);
+    func_80056760(g_SndSepAccess, arg2, arg0->unk_10, arg0->unk_12);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800343CC);
@@ -1408,19 +1408,19 @@ s32 Snd_ControlSequence(Unk80033DE0 *obj, s32 cmd, s32 vol) {
         switch (cmd) {
         case 0:
             obj->state = 1;
-            SsSepPlay(D_8005F3E4, obj->seq, 1, (s16)vol);
+            SsSepPlay(g_SndSepAccess, obj->seq, 1, (s16)vol);
             break;
         case 1:
             obj->state = 2;
-            func_80056304(D_8005F3E4, obj->seq);
+            func_80056304(g_SndSepAccess, obj->seq);
             break;
         case 2:
             obj->state = 0;
-            SsSepPause(D_8005F3E4, obj->seq);
+            SsSepPause(g_SndSepAccess, obj->seq);
             break;
         case 3:
             obj->state = 1;
-            SsSepReplay(D_8005F3E4, obj->seq);
+            SsSepReplay(g_SndSepAccess, obj->seq);
             break;
         case 4:
             i = 0;
@@ -1429,7 +1429,7 @@ s32 Snd_ControlSequence(Unk80033DE0 *obj, s32 cmd, s32 vol) {
             if (D_8005F2F8 > 0) {
                 do {
                     i++;
-                    func_80056760(D_8005F3E4, obj->seq, obj->volL, obj->volR);
+                    func_80056760(g_SndSepAccess, obj->seq, obj->volL, obj->volR);
                 } while (i < D_8005F2F8);
             }
             break;

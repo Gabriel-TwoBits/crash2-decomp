@@ -386,9 +386,11 @@ D_800103C0 = 0x800103C0; // force_not_migration:True
 D_80010400 = 0x80010400; // force_not_migration:True
 D_8001067C = 0x8001067C; // force_not_migration:True
 D_8001068C = 0x8001068C; // force_not_migration:True
-D_8001069C = 0x8001069C; // force_not_migration:True
+// "BASCUS-94154", the product code the game's save names start with (Save_IsGameFile, Save_WriteFile)
+g_SaveProductCode = 0x8001069C; // force_not_migration:True
 D_800106AC = 0x800106AC; // force_not_migration:True
-D_800106C4 = 0x800106C4; // force_not_migration:True
+// "Crash Bandicoot 2", the title Save_WriteFile writes into a save's header
+g_SaveTitle = 0x800106C4; // force_not_migration:True
 D_80010750 = 0x80010750; // force_not_migration:True
 D_80010804 = 0x80010804; // force_not_migration:True
 
@@ -1193,3 +1195,30 @@ g_Pads = 0x80069920;
 
 // the number of pads, which Input_Init stores (2 from Sys_Init) and Input_Update loops over
 g_PadCount = 0x8006991C;
+
+// stores the scale Snd_PlaySound multiplies each sound's volume by (0x8005F2E8); Snd_Init and Snd_Update call it from g_SfxVolume
+Snd_SetSfxVolume = 0x800325D0; // type:func
+
+// stores a volume and, while the sequence plays, applies it to each of the SEPs Snd_LoadSequence opened with SsSepOpen (the SDK's func_80056760 with the access number and each index); Snd_Update calls it from g_MusicVolume
+Snd_SetMusicVolume = 0x80033C84; // type:func
+
+// the sound effects' volume: Snd_Update passes it to Snd_SetSfxVolume when it changes, and Snd_PlaySound plays nothing while it is 0
+g_SfxVolume = 0x8006CBF8;
+
+// the music's volume: Snd_Update passes it to Snd_SetMusicVolume when it changes
+g_MusicVolume = 0x8006CBFC;
+
+// the 24 voices' 0x50-byte records Snd_AllocVoice picks from and Snd_PlaySound fills (flag 8 in use)
+g_SndVoices = 0x8005F4EC;
+
+// set by Snd_Init, cleared by Snd_Shutdown, which does nothing while it is clear
+g_SndOpen = 0x8005F248;
+
+// the access number SsSepOpen returns in Snd_LoadSequence, which SsSepClose takes back
+g_SndSepAccess = 0x8005F3E4;
+
+// the memory card state block: Save_GetState returns its first word, the state Save_Update switches on; its name table and file records follow
+g_SaveState = 0x8005F264;
+
+// "bu00:", the memory card device each save path starts with (sprintf in Save_ReadFileHeader and Save_WriteFile, Save_ListFiles)
+g_SaveDevice = 0x8005F274;

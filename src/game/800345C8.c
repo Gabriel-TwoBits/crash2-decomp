@@ -4,15 +4,15 @@
 
 INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_8001067C);
 INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_8001068C);
-INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_8001069C);
+INCLUDE_RODATA("asm/nonmatchings/game/800345C8", g_SaveProductCode);
 INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_800106AC);
-INCLUDE_RODATA("asm/nonmatchings/game/800345C8", D_800106C4);
+INCLUDE_RODATA("asm/nonmatchings/game/800345C8", g_SaveTitle);
 
-s32 *D_8005F264 = 0;
+s32 *g_SaveState = 0;
 s32 D_8005F268 = 1;
 s32 D_8005F26C = -1;
 s32 D_8005F270 = -1;
-char D_8005F274[] = "bu00:";
+char g_SaveDevice[] = "bu00:";
 char D_8005F27C[] = "%s%s";
 char D_8005F284[] = "*";
 char D_8005F288[] = "EMPTY";
@@ -60,15 +60,15 @@ void Save_Update(void) {
 
     v = func_80036150();
     D_8006CC5C = v;
-    new_var = &D_8005F264[2];
+    new_var = &g_SaveState[2];
     D_8006CC64 = *new_var;
 }
 
 extern void _card_clear(long);
 
 void Save_CheckCard(void) {
-    if (D_8005F264[6] != 0) {
-        D_8005F264[6] = 0;
+    if (g_SaveState[6] != 0) {
+        g_SaveState[6] = 0;
         _card_info(0);
     }
     switch (Save_TestSwEvents()) {
@@ -101,7 +101,7 @@ void Save_CheckCard(void) {
 }
 
 s32 func_80034810(void) {
-    D_8005F264[6] = 0;
+    g_SaveState[6] = 0;
     if (Save_IsCardFormatted(0) == 1) {
         func_800360AC(0xA);
         func_800360CC(0);
@@ -119,25 +119,25 @@ s32 func_80034810(void) {
 }
 
 typedef struct { char b[0x28]; } Unk80035D48;
-extern char D_8005F274[];
+extern char g_SaveDevice[];
 s32 _card_load(s32);
 
 void Save_LoadDirectory(void) {
     s32 r;
     s32 a0;
 
-    if (D_8005F264[6] != 0) {
-        D_8005F264[6] = 0;
+    if (g_SaveState[6] != 0) {
+        g_SaveState[6] = 0;
         Save_ClearSwEvents();
         _card_load(0);
     }
     switch (Save_TestSwEvents()) {
     case 0:
-        r = Save_ListFiles(D_8005F274, (char *)D_8005F264 + 0x49C);
-        Save_SortDirectory((Unk80035D48 *)((char *)D_8005F264 + 0x49C), r);
+        r = Save_ListFiles(g_SaveDevice, (char *)g_SaveState + 0x49C);
+        Save_SortDirectory((Unk80035D48 *)((char *)g_SaveState + 0x49C), r);
         if (r <= 0) {
-            D_8005F264[7]++;
-            if (D_8005F264[7] < 11) {
+            g_SaveState[7]++;
+            if (g_SaveState[7] < 11) {
                 func_800360CC(1);
                 return;
             }
@@ -147,9 +147,9 @@ void Save_LoadDirectory(void) {
         func_80036850();
         func_800360CC(5);
         func_80035A7C(0x20);
-        D_8005F264[2] = 0;
-        D_8005F264[8] = r;
-        D_8005F264[9] = 0;
+        g_SaveState[2] = 0;
+        g_SaveState[8] = r;
+        g_SaveState[9] = 0;
         break;
     case 2:
         if (func_80035A94() != 0) {
@@ -192,10 +192,10 @@ void Save_AbortRead(s32 *arg0) {
     Unk80034A2C *p;
 
     if (func_80035A94() != 0) {
-        D_8005F264[2] = 0;
+        g_SaveState[2] = 0;
         func_80036084(2);
         func_800360CC(0);
-        p = (Unk80034A2C *)D_8005F264;
+        p = (Unk80034A2C *)g_SaveState;
         p += arg0[1];
         if (p->f28 != 0) {
             func_80036084(0x80);
@@ -277,7 +277,7 @@ typedef struct {
 #define NAME_TOO_LONG 0x80
 #define ERR_FULL 2
 
-/* Words of the D_8005F264 block. */
+/* Words of the g_SaveState block. */
 #define W_NEXT_SLOT 2
 #define W_LIMIT_LO 4
 #define W_LIMIT_HI 5
@@ -303,23 +303,23 @@ void Save_ReadFileHeader(void) {
     char *entryName;
     Unk80034BB8 *s;
 
-    slot = D_8005F264[W_NEXT_SLOT];
+    slot = g_SaveState[W_NEXT_SLOT];
     ctx[0] = &fd;
     ctx[1] = (s32 *)slot;
-    entry = D_8005F264[W_ENTRY_INDEX];
+    entry = g_SaveState[W_ENTRY_INDEX];
     failed = 0;
     fd = -1;
-    if (entry >= D_8005F264[W_ENTRY_COUNT]) {
+    if (entry >= g_SaveState[W_ENTRY_COUNT]) {
         func_800360AC(ERR_FULL);
         func_80035E7C();
         func_800360CC(0);
         return;
     } else {
-        entryName = (char *)D_8005F264 + entry * NAME_ENTRY_STRIDE + NAME_TABLE_OFFSET;
+        entryName = (char *)g_SaveState + entry * NAME_ENTRY_STRIDE + NAME_TABLE_OFFSET;
     }
-    sprintf(path, D_8005F27C, D_8005F274, entryName);
-    s = (Unk80034BB8 *)D_8005F264 + slot;
-    if (entry == D_8005F264[W_ENTRY_COUNT] - 1 && Save_IsGameFile(entryName) != 0) {
+    sprintf(path, D_8005F27C, g_SaveDevice, entryName);
+    s = (Unk80034BB8 *)g_SaveState + slot;
+    if (entry == g_SaveState[W_ENTRY_COUNT] - 1 && Save_IsGameFile(entryName) != 0) {
         s->unk_28 = 1;
     } else {
         s->unk_28 = 0;
@@ -349,12 +349,12 @@ void Save_ReadFileHeader(void) {
         return;
     } else {
     }
-    s = (Unk80034BB8 *)D_8005F264 + slot;
+    s = (Unk80034BB8 *)g_SaveState + slot;
     s->unk_2C = header[HEADER_KIND] - HEADER_KIND_BASE;
     if ((u32)(header[HEADER_KIND] - HEADER_KIND_BASE - 1) >= HEADER_KIND_COUNT) {
         failed = 1;
         s->unk_2C = 1;
-        if (s->unk_28 != 0 && D_8005F264[W_LIMIT_HI] < D_8005F264[W_LIMIT_LO]) {
+        if (s->unk_28 != 0 && g_SaveState[W_LIMIT_HI] < g_SaveState[W_LIMIT_LO]) {
             Save_AbortRead((s32 *)ctx);
             return;
         } else {
@@ -366,7 +366,7 @@ void Save_ReadFileHeader(void) {
         span = header[HEADER_SPAN];
     } else {
     }
-    s = (Unk80034BB8 *)D_8005F264 + slot;
+    s = (Unk80034BB8 *)g_SaveState + slot;
     s->unk_30 = entry;
     if (failed == 0) {
         s->unk_34[0] = 0;
@@ -375,13 +375,13 @@ void Save_ReadFileHeader(void) {
         } else {
         }
         header[HEADER_NAME_END] = 0;
-        strcpy(((Unk80034BB8 *)D_8005F264 + slot)->unk_34, (char *)header + HEADER_NAME);
+        strcpy(((Unk80034BB8 *)g_SaveState + slot)->unk_34, (char *)header + HEADER_NAME);
     } else {
         for (i = 0; i < DEFAULT_NAME_SIZE; i++) {
             s->unk_34[i] = D_8001067C[i];
         }
     }
-    s = (Unk80034BB8 *)D_8005F264 + slot;
+    s = (Unk80034BB8 *)g_SaveState + slot;
     func_80035F9C((u8 *)s->unk_34);
     if (s->unk_28 != 0) {
         if (failed == 0 && failed < s->unk_2C) {
@@ -400,11 +400,11 @@ void Save_ReadFileHeader(void) {
                 } else {
                 }
                 i++;
-            } while (i < ((Unk80034BB8 *)D_8005F264 + slot)->unk_2C);
+            } while (i < ((Unk80034BB8 *)g_SaveState + slot)->unk_2C);
         } else {
         }
-        if (((Unk80034BB8 *)D_8005F264 + slot)->unk_28 != 0 && failed == 0) {
-            extra = (u8 *)D_8005F264 + EXTRA_BLOCKS_OFFSET;
+        if (((Unk80034BB8 *)g_SaveState + slot)->unk_28 != 0 && failed == 0) {
+            extra = (u8 *)g_SaveState + EXTRA_BLOCKS_OFFSET;
             i = 0;
             do {
                 tries = 0;
@@ -424,7 +424,7 @@ void Save_ReadFileHeader(void) {
             } while ((u32)i < EXTRA_BLOCK_COUNT);
             if (func_800369F4() != 0) {
                 failed = 1;
-                if (D_8005F264[W_LIMIT_HI] < D_8005F264[W_LIMIT_LO]) {
+                if (g_SaveState[W_LIMIT_HI] < g_SaveState[W_LIMIT_LO]) {
                     Save_AbortRead((s32 *)ctx);
                     return;
                 } else {
@@ -438,7 +438,7 @@ void Save_ReadFileHeader(void) {
     }
     Save_CloseFile(&fd);
     if (failed != 0) {
-        if (((Unk80034BB8 *)D_8005F264 + slot)->unk_28 != 0) {
+        if (((Unk80034BB8 *)g_SaveState + slot)->unk_28 != 0) {
             func_80036084(UNK_STATE_80);
             func_800368C0();
             func_80036850();
@@ -446,15 +446,15 @@ void Save_ReadFileHeader(void) {
         }
     } else {
         for (j = 1; j < span; j++) {
-            src = (s32 *)((Unk80034BB8 *)D_8005F264 + slot)->unk_00 + SLOT_COPY_FIRST_WORD;
-            dst = (s32 *)((Unk80034BB8 *)D_8005F264 + slot + j)->unk_00 + SLOT_COPY_FIRST_WORD;
+            src = (s32 *)((Unk80034BB8 *)g_SaveState + slot)->unk_00 + SLOT_COPY_FIRST_WORD;
+            dst = (s32 *)((Unk80034BB8 *)g_SaveState + slot + j)->unk_00 + SLOT_COPY_FIRST_WORD;
             for (i = 0; i < SLOT_COPY_WORDS; i++) {
                 dst[i] = src[i];
             }
         }
     }
-    D_8005F264[W_ENTRY_INDEX] = D_8005F264[W_ENTRY_INDEX] + 1;
-    D_8005F264[W_NEXT_SLOT] = D_8005F264[W_NEXT_SLOT] + span;
+    g_SaveState[W_ENTRY_INDEX] = g_SaveState[W_ENTRY_INDEX] + 1;
+    g_SaveState[W_NEXT_SLOT] = g_SaveState[W_NEXT_SLOT] + span;
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_ReadFileHeader);
@@ -633,15 +633,15 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_TitleToShiftJis);
 #define HEADER_ICON_OFFSET 0x60
 #define ASCII_ZERO 0x30
 #define DECIMAL_BASE 10
-#define SAVE_BASE ((char *)D_8005F264)
+#define SAVE_BASE ((char *)g_SaveState)
 
 s32 open(char *, s32);
 s32 printf(const char *, ...);
 s32 write(s32, char *, s32);
 extern char D_8001068C[];
-extern char D_8001069C[];
+extern char g_SaveProductCode[];
 extern char D_800106AC[];
-extern char D_800106C4[];
+extern char g_SaveTitle[];
 extern s32 D_8005F314;
 extern s32 D_8005F318;
 extern s32 D_8005F31C;
@@ -684,7 +684,7 @@ void Save_WriteFile(s32 arg0) {
 
     if (entry != 0 && *(s32 *)entry == 0) {
         name = SAVE_BASE + *(s32 *)(entry + 8) * NAME_SIZE + NAME_BASE;
-        sprintf(path, D_8005F27C, D_8005F274, name);
+        sprintf(path, D_8005F27C, g_SaveDevice, name);
         if (mode == MODE_ERASE) {
             VSync(VSYNC_SETTLE);
             tries = 0;
@@ -714,7 +714,7 @@ void Save_WriteFile(s32 arg0) {
     noEntry = entry == 0 || *(s32 *)entry == 0;
     if (!noEntry) {
         name = SAVE_BASE + *(s32 *)(entry + 8) * NAME_SIZE + NAME_BASE;
-        sprintf(path, D_8005F27C, D_8005F274, name);
+        sprintf(path, D_8005F27C, g_SaveDevice, name);
     } else {
         n = *(s32 *)(SAVE_BASE + NAME_COUNT_OFFSET) - 1;
         serial = 0;
@@ -733,7 +733,7 @@ void Save_WriteFile(s32 arg0) {
         } else {
             /* in range */
         }
-        sprintf(path, D_8001068C, D_8005F274, D_8001069C, serial, D_8005F31C);
+        sprintf(path, D_8001068C, g_SaveDevice, g_SaveProductCode, serial, D_8005F31C);
     }
 
     if (noEntry && mode == MODE_CREATE) {
@@ -786,7 +786,7 @@ void Save_WriteFile(s32 arg0) {
     header[1] = 0x43;
     header[2] = 0x13;
     header[3] = 1;
-    sprintf(header + 4, D_800106C4);
+    sprintf(header + 4, g_SaveTitle);
     Save_TitleToShiftJis((s8 *)header + 4, HEADER_TITLE_BYTES);
     func_800176DC(2, D_8006CCB4, 0, (u8 *)header + HEADER_ICON_OFFSET, (u8 *)icons[0], 0);
     func_800176DC(2, D_8006CCB4, 0, 0, (u8 *)icons[1], 0);
@@ -855,13 +855,13 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_WriteFile);
 #endif
 
 extern volatile u32 g_TimerTicks;
-extern char D_8005F274[];
+extern char g_SaveDevice[];
 s32 format(char *);
 
 void Save_FormatCard(void) {
     s32 r;
     g_TimerTicks;
-    r = format(D_8005F274);
+    r = format(g_SaveDevice);
     g_TimerTicks;
     if (r == 1) {
         func_800360AC(2);
@@ -883,13 +883,13 @@ void func_80035A74(void) {
 }
 
 s32 func_80035A7C(s32 arg0) {
-    D_8005F264[5] = 0;
-    D_8005F264[4] = arg0;
+    g_SaveState[5] = 0;
+    g_SaveState[4] = arg0;
     return 0;
 }
 
 s32 func_80035A94(void) {
-    s32 *p = D_8005F264;
+    s32 *p = g_SaveState;
     s32 n = p[5];
     p[5] = n + 1;
     return n >= p[4];
@@ -1043,10 +1043,10 @@ void func_80035E7C(void) {
     s32 i;
     s32 n;
 
-    if (D_8005F264[2] >= 15) {
-        n = D_8005F264[8];
+    if (g_SaveState[2] >= 15) {
+        n = g_SaveState[8];
         for (i = 0; i < n; i++) {
-            if (Save_IsGameFile((char *)D_8005F264 + 0x49C + i * 0x28) != 0) {
+            if (Save_IsGameFile((char *)g_SaveState + 0x49C + i * 0x28) != 0) {
                 return;
             }
         }
@@ -1054,10 +1054,10 @@ void func_80035E7C(void) {
     }
 }
 
-extern char D_8001069C[];
+extern char g_SaveProductCode[];
 
 s32 Save_IsGameFile(char *arg0) {
-    return strncmp(D_8001069C, arg0, 12) == 0;
+    return strncmp(g_SaveProductCode, arg0, 12) == 0;
 }
 
 void Save_CloseFile(s32 *arg0) {
@@ -1094,14 +1094,14 @@ s32 func_80035FD8(void) {
         func_800368C0();
         func_800360CC(1);
         func_80035A7C(0x40);
-        D_8005F264[7] = 0;
+        g_SaveState[7] = 0;
         return 0;
     }
     return 1;
 }
 
 s32 func_80036028(s32 arg0) {
-    s32 *p = D_8005F264;
+    s32 *p = g_SaveState;
 
     p[2] = 0;
     p[5] = 0;
@@ -1114,8 +1114,8 @@ void func_80036050(void) {
     s32 i;
 
     for (i = 0; i < 0xF; i++) {
-        if (D_8005F264 != 0) {
-            p = ((i * 0x4C) + ((s8 *)D_8005F264)) + 0x34;
+        if (g_SaveState != 0) {
+            p = ((i * 0x4C) + ((s8 *)g_SaveState)) + 0x34;
             *p = 0;
         }
     }
@@ -1124,7 +1124,7 @@ void func_80036050(void) {
 extern s32 D_8006CC5C;
 
 s32 func_80036084(s32 a0) {
-    s32 *p = D_8005F264;
+    s32 *p = g_SaveState;
     s32 v = p[1] | a0;
     p[1] = v;
     D_8006CC5C = v;
@@ -1132,18 +1132,18 @@ s32 func_80036084(s32 a0) {
 }
 
 s32 func_800360AC(s32 arg0) {
-    D_8005F264[1] &= ~arg0;
+    g_SaveState[1] &= ~arg0;
     return 0;
 }
 
 s32 func_800360CC(s32 arg0) {
-    s32 *p = D_8005F264;
+    s32 *p = g_SaveState;
     *p = arg0;
     if (arg0 >= 0) {
         if (arg0 < 2 || arg0 == 4) {
             p[6] = 1;
         }
-        if (*D_8005F264 == 0) {
+        if (*g_SaveState == 0) {
             func_800360AC(1);
         } else {
             func_80036084(1);
@@ -1155,11 +1155,11 @@ s32 func_800360CC(s32 arg0) {
 }
 
 s32 Save_GetState(void) {
-    return D_8005F264[0];
+    return g_SaveState[0];
 }
 
 s32 func_80036150(void) {
-    return D_8005F264[1];
+    return g_SaveState[1];
 }
 
 void EnableEvent(s32);
@@ -1214,7 +1214,7 @@ s32 func_80036368(void) {
     s32 *p;
 
     p = Heap_AllocZeroed(1, 0x11F4);
-    D_8005F264 = p;
+    g_SaveState = p;
     D_8006CCE8 = p + 0x1BD;
     if (D_8005F268 != 0) {
         func_80036084(0x10);
@@ -1229,11 +1229,11 @@ s32 func_80036368(void) {
 s32 func_800363D0(void) {
     u32 v = func_80036150();
     int has_ptr;
-    do { } while (0); has_ptr = D_8005F264 != 0;
+    do { } while (0); has_ptr = g_SaveState != 0;
     D_8005F268 = (v >> 4) & 1;
     if (has_ptr) {
-        Heap_Free((s32)D_8005F264);
-        D_8005F264 = 0;
+        Heap_Free((s32)g_SaveState);
+        g_SaveState = 0;
     }
     return 0;
 }
@@ -1271,7 +1271,7 @@ s32 func_8003649C(s32 arg0) {
         return 1;
     }
     i = 0;
-    p = D_8005F264;
+    p = g_SaveState;
 loop:
     if (*(s32 *)((s8 *)p - -(i * 0x4C) + 0x28) == 0) {
         i++;
@@ -1282,13 +1282,13 @@ loop:
     }
     func_800360CC(6);
     func_80035A7C(0x20);
-    D_8005F264[3] = i;
+    g_SaveState[3] = i;
     return 0;
 }
 
 s32 func_8003653C(void) {
     s32 v;
-    if (D_8005F264 != 0) {
+    if (g_SaveState != 0) {
         v = func_80036150() & 0x10;
     } else {
         v = D_8005F268;
@@ -1306,7 +1306,7 @@ extern char D_8005C500[];
 
 
 s32 func_80036598(s32 arg0) {
-    return strcmp(D_8005C500, (char *)(arg0 * 0x2A4 + (int)D_8005F264) + 0x700) == 0;
+    return strcmp(D_8005C500, (char *)(arg0 * 0x2A4 + (int)g_SaveState) + 0x700) == 0;
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036598);
@@ -1337,7 +1337,7 @@ s32 func_80036628(void) {
 
 s32 func_80036674(void) {
     s32 ret;
-    if (D_8005F264 != 0) {
+    if (g_SaveState != 0) {
         func_80036324((func_80036150() & 0x10) | 4);
         ret = 0;
     } else {
@@ -1380,8 +1380,8 @@ s32 func_8003670C(u32 arg0, s32 arg1) {
     case 14:
         return func_80036C40(arg1);
     case 15:
-        if (D_8005F264 != 0) {
-            func_8003690C((char *)D_8005F264 + (arg1 * 0x2A4 + 0x6F4));
+        if (g_SaveState != 0) {
+            func_8003690C((char *)g_SaveState + (arg1 * 0x2A4 + 0x6F4));
             func_80036850();
             return 0;
         }
@@ -1405,7 +1405,7 @@ void func_80036850(void) {
     char *p;
 
     for (i = 0; i < 4; i++) {
-        p = (char *)D_8005F264 + (i * 0x2A4 + 0x6F4) + 0xC;
+        p = (char *)g_SaveState + (i * 0x2A4 + 0x6F4) + 0xC;
         func_800175D8(D_8006CCB0, i << 8, p, 0x28, 1);
     }
 }
@@ -1418,7 +1418,7 @@ void func_800368C0(void) {
     offset = 0x6F4;
     do {
         i++;
-        func_8003690C((s8 *)D_8005F264 + offset);
+        func_8003690C((s8 *)g_SaveState + offset);
         offset += 0x2A4;
     } while (i < 4);
 }
@@ -1470,13 +1470,13 @@ void func_8003690C(void *p)
 #define POOL_BUFFER_SIZE 0xF423F
 #define POOL_FLAG_ENABLED 1
 
-extern s32 *D_8005F264;
+extern s32 *g_SaveState;
 
 
 typedef void (*Unk80036A84Fn)(s32 *, s32, s32, s32);
 
 void func_80036978(void) {
-    s32 *pool = D_8005F264;
+    s32 *pool = g_SaveState;
     s32 *slots;
     s32 buffer;
 
@@ -1507,7 +1507,7 @@ typedef void (*Func80036A84)(s32 *, s32, s32, s32);
 
 
 s32 func_800369F4(void) {
-    s32 *base = D_8005F264;
+    s32 *base = g_SaveState;
     s32 *state = base + OFF_STATE / 4;
     s32 saved;
     s32 ret;
@@ -1560,10 +1560,10 @@ s32 func_80036AC8(s32 arg0) {
     s32 a3;
     char *base;
 
-    if (D_8005F264 == 0) {
+    if (g_SaveState == 0) {
         return 1;
     }
-    base = (char *)D_8005F264 + (arg0 * 0x2A4 + 0x6F4);
+    base = (char *)g_SaveState + (arg0 * 0x2A4 + 0x6F4);
     *(s32 *)(base + 4) = 0;
     a1 = (s32 *)(base + 0x60);
     a3 = 0;
@@ -1588,8 +1588,8 @@ extern char *D_8006CBCC;
 s32 func_80036B68(s32 arg0) {
     s32 ret;
     char *src;
-    if (D_8005F264 != 0) {
-        src = (char *)(arg0 * 0x2A4 + (s32)D_8005F264 + 0x700);
+    if (g_SaveState != 0) {
+        src = (char *)(arg0 * 0x2A4 + (s32)g_SaveState + 0x700);
         strcpy(D_8005C500, src);
         D_8006CBCC = D_8005C500;
         ret = 0;
@@ -1602,8 +1602,8 @@ s32 func_80036B68(s32 arg0) {
 s32 func_80036BD8(s32 arg0) {
     s32 ret;
 
-    if (D_8005F264 != 0) {
-        strcpy((char *)(arg0 * 0x2A4 + (s32)D_8005F264 + 0x700), D_8005C500);
+    if (g_SaveState != 0) {
+        strcpy((char *)(arg0 * 0x2A4 + (s32)g_SaveState + 0x700), D_8005C500);
         func_80036850();
         ret = 0;
     } else {
@@ -1620,10 +1620,10 @@ s32 func_80036C40(s32 arg0) {
     s32 j;
     char *base;
 
-    if (D_8005F264 == 0) {
+    if (g_SaveState == 0) {
         return 1;
     }
-    base = (char *)D_8005F264 + (arg0 * 0x2A4 + 0x6F4);
+    base = (char *)g_SaveState + (arg0 * 0x2A4 + 0x6F4);
     src = (s32 *)(base + 0x60);
     i = 0;
     row = D_80069718;
