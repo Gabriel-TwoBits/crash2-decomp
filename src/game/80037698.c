@@ -6,12 +6,6 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 
 #ifdef NON_MATCHING
 #define OBJ_SLOTS 0x40
-#define OBJ_POS 0x60
-#define OBJ_ANGLE 0x70
-#define OBJ_VEC 0x78
-#define OBJ_STACK 0xBC
-#define OBJ_RESULT 0xD4
-#define OBJ_TARGET 0xF0
 #define OBJ_KIND 0x120
 #define OBJ_KIND_FIRST 6
 #define OBJ_KIND_COUNT 2
@@ -60,6 +54,7 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 #define QUERY_VALUE 4
 
 #define FIELD(p, off, type) (*(type *)((u8 *)(p) + (off)))
+#define OBJ(p) ((GoolObject *)(p))
 #define SLOT(obj, arg1) FIELD(obj, (((arg1) >> SLOT_SHIFT) & SLOT_MASK) + OBJ_SLOTS, u8 *)
 #define PROP(dst) g_EntityFlags[(u32)*(dst) >> VALUE_SHIFT]
 
@@ -81,7 +76,7 @@ extern u8 Obj_HasId[];
 
 /* Appends to the object's value stack; a macro so no extra call is emitted. */
 #define PUSH(value) \
-    (pushValue = (value), pushSlot = FIELD(obj, OBJ_STACK, s32 *), FIELD(obj, OBJ_STACK, s32 *) = pushSlot + 1, *pushSlot = pushValue)
+    (pushValue = (value), pushSlot = OBJ(obj)->sp, OBJ(obj)->sp = pushSlot + 1, *pushSlot = pushValue)
 
 void Gool_OpMisc(u8 *obj, u32 arg1) {
     s32 *dst;
@@ -106,8 +101,8 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
 
     if ((arg1 & REG_SPACE_MASK) == REG_SPACE_MASK) {
         if ((arg1 & REG_ID_MASK) == REG_STACK_POP) {
-            dst = FIELD(obj, OBJ_STACK, s32 *) - 1;
-            FIELD(obj, OBJ_STACK, s32 *) = dst;
+            dst = OBJ(obj)->sp - 1;
+            OBJ(obj)->sp = dst;
         } else {
             dst = (s32 *)(obj + (arg1 & REG_INDEX_MASK) * WORD_BYTES + OBJ_SLOTS);
         }
@@ -120,11 +115,11 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
     switch (op) {
     case 1:
     case 6:
-        a = (s32 *)(obj + OBJ_POS);
+        a = OBJ(obj)->pos;
         if (op == 6) {
             a = dst;
         }
-        b = (s32 *)(SLOT(obj, arg1) + OBJ_POS);
+        b = OBJ(SLOT(obj, arg1))->pos;
         if (sub & 2) {
             vec[0][0] = a[0];
             vec[0][1] = 0;
@@ -143,7 +138,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         PUSH(v);
         return;
     case 5:
-        v = Math_AngleToXZ((s32 *)(obj + OBJ_POS), (s32 *)(SLOT(obj, arg1) + OBJ_POS)) - (FIELD(obj, OBJ_ANGLE, s32) & ANGLE_MASK);
+        v = Math_AngleToXZ(OBJ(obj)->pos, OBJ(SLOT(obj, arg1))->pos) - (OBJ(obj)->rot[1] & ANGLE_MASK);
         i = v;
         if (i < 0) {
             i = -i;
@@ -154,10 +149,10 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         PUSH(v);
         return;
     case 2:
-        if ((u32)(FIELD(obj, OBJ_KIND, u8) - OBJ_KIND_FIRST) >= OBJ_KIND_COUNT) {
-            v = Math_AngleToXZ((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
+        if ((u32)(OBJ(obj)->unk_120 - OBJ_KIND_FIRST) >= OBJ_KIND_COUNT) {
+            v = Math_AngleToXZ(OBJ(SLOT(obj, arg1))->pos, dst);
         } else {
-            v = Math_AngleTo((s32 *)(SLOT(obj, arg1) + OBJ_POS), dst);
+            v = Math_AngleTo(OBJ(SLOT(obj, arg1))->pos, dst);
         }
         PUSH(v);
         return;
@@ -165,8 +160,8 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         PUSH(FIELD(SLOT(obj, arg1), ((u32)*dst >> VALUE_SHIFT) * WORD_BYTES + OBJ_SLOTS, s32));
         return;
     case 4:
-        sp = FIELD(obj, OBJ_STACK, s32 *);
-        FIELD(obj, OBJ_STACK, s32 *) = sp - 1;
+        sp = OBJ(obj)->sp;
+        OBJ(obj)->sp = sp - 1;
         FIELD(SLOT(obj, arg1), ((u32)*dst >> VALUE_SHIFT) * WORD_BYTES + OBJ_SLOTS, s32) = sp[-1];
         return;
     case 7:
@@ -232,19 +227,19 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         case 1:
             PUSH(0);
             if (dst != 0) {
-                FIELD(obj, OBJ_STACK, s32 *)[-1] = ((PROP(dst) >> 1) ^ 1) & 1;
+                OBJ(obj)->sp[-1] = ((PROP(dst) >> 1) ^ 1) & 1;
             }
             return;
         case 2:
             PUSH(0);
             if (dst != 0) {
-                FIELD(obj, OBJ_STACK, s32 *)[-1] = PROP(dst) & PROP_B;
+                OBJ(obj)->sp[-1] = PROP(dst) & PROP_B;
             }
             return;
         case 3:
             PUSH(0);
             if (dst != 0) {
-                FIELD(obj, OBJ_STACK, s32 *)[-1] = PROP(dst) & PROP_C;
+                OBJ(obj)->sp[-1] = PROP(dst) & PROP_C;
             }
             return;
         default:
@@ -288,7 +283,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             return;
         case 8:
             slot = SLOT(obj, arg1);
-            PUSH(ratan2(FIELD(slot, 0x64, s32) - dst[1], Math_DistanceXZ((s32 *)(slot + OBJ_POS), dst)));
+            PUSH(ratan2(OBJ(slot)->pos[1] - dst[1], Math_DistanceXZ(OBJ(slot)->pos, dst)));
             return;
         case 9:
             g_LevelRequest = (u32)*dst >> VALUE_SHIFT;
@@ -319,7 +314,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             return;
         case 18:
             sp4C = 1;
-            list = (s16 *)Ent_GetProperty(FIELD(obj, OBJ_TARGET, s32), SPAWN_MSG, 0, 0, &sp48, SPAWN_COUNT_MAX, 0, 0, 0);
+            list = (s16 *)Ent_GetProperty((s32)OBJ(obj)->entity, SPAWN_MSG, 0, 0, &sp48, SPAWN_COUNT_MAX, 0, 0, 0);
             if (list == 0) {
                 return;
             }
@@ -348,7 +343,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             PUSH(v);
             return;
         case 21:
-            func_8001A4A4((void *)obj, (s32 *)(obj + OBJ_VEC));
+            func_8001A4A4((void *)obj, OBJ(obj)->scale);
             func_8001AA80((GoolObject *)obj, sp50);
             return;
         default:
@@ -377,12 +372,12 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             PUSH(0);
             return;
         }
-        sp = FIELD(obj, OBJ_STACK, s32 *);
+        sp = OBJ(obj)->sp;
         PUSH(func_80030D98((void *)dst, (void *)(rec + REC_OFFSET_WORDS)));
         func_8002CA1C(sp);
         return;
     case 15:
-        FIELD(obj, OBJ_RESULT, s32) = Save_RunCommand((arg1 >> ARG_SHIFT) & ARG_MASK, *dst);
+        OBJ(obj)->misc = Save_RunCommand((arg1 >> ARG_SHIFT) & ARG_MASK, *dst);
         return;
     default:
         return;
