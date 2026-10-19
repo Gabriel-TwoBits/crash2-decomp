@@ -1305,7 +1305,7 @@ void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
                 bestd = d;
             }
         }
-        if (best != 0 && (res == 0 || !(bestd > arg[1]))) {
+        if (best != 0 && (res == 0 || !(bestd < arg[1]))) {
             arg[1] = bestd;
             res = best;
             hit = 1;
