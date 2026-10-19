@@ -1461,37 +1461,22 @@ void func_8003690C(void *p)
   o->f5C = 0xFF;
 }
 
-#ifdef NON_MATCHING
-#define POOL_SLOT_BASE 0x6F4
-#define POOL_SLOT_SIZE 0x2A4
-#define POOL_COUNT_INIT 8
-#define POOL_BUFFER_PTR 0x954
-#define POOL_SLOT_HANDLE 0x718
-#define POOL_BUFFER_SIZE 0xF423F
-#define POOL_FLAG_ENABLED 1
-
-extern s32 *g_SaveState;
-
-
 typedef void (*Unk80036A84Fn)(s32 *, s32, s32, s32);
 
 void func_80036978(void) {
-    s32 *pool = g_SaveState;
-    s32 *slots;
-    s32 buffer;
+    s32 *p = g_SaveState;
+    s32 n;
 
-    *(s32 *)((char *)pool + POOL_SLOT_BASE) = POOL_COUNT_INIT;
-    buffer = Rand_Below(POOL_BUFFER_SIZE);
-    slots = (s32 *)((char *)pool + POOL_SLOT_BASE);
-    *(s32 *)((char *)pool + POOL_BUFFER_PTR) = buffer;
-    *(s32 *)((char *)pool + POOL_SLOT_HANDLE) = 0;
-    *(s32 *)((char *)pool + POOL_SLOT_HANDLE) = func_80036A8C(slots, POOL_SLOT_SIZE);
-    /* The file declares func_80036A84 as void(void); the assembly passes four arguments. */
-    ((Unk80036A84Fn)func_80036A84)(slots, POOL_SLOT_SIZE, buffer, POOL_FLAG_ENABLED);
+    p[0x6F4 / 4] = 8;
+    p++;
+    p--;
+    n = Rand_Below(0xF423F);
+    p[0x954 / 4] = n;
+    p[0x718 / 4] = 0;
+    p[0x718 / 4] = func_80036A8C(p + 0x6F4 / 4, 0x2A4);
+    /* game.h declares func_80036A84 as void(void); the assembly passes four arguments. */
+    ((Unk80036A84Fn)func_80036A84)(p + 0x6F4 / 4, 0x2A4, n, 1);
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036978);
-#endif
 
 #ifdef NON_MATCHING
 #define OFF_STATE 0x6F4
