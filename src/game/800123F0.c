@@ -201,7 +201,7 @@ s32 Nsf_PageIn(s32 arg0) {
         entry->state = STATE_QUEUED;
         entry->ref_count = 0;
         D_80067FC4[entry->unk_14 >> 1] = (s32)slot;
-        func_800170B4(entry->page->unk_4, 1);
+        Gfx_BindTexturePage(entry->page->unk_4, 1);
         return id * 2;
     case 3:
     case 4:
@@ -904,7 +904,7 @@ s32 func_80013888(void) {
     for (i = SLOT_COUNT - 1; i >= 0; i--) {
         if ((u32)((u16)D_80062D70[i].state - STATE_RANGE_FIRST) < STATE_RANGE_COUNT) {
             if (((s8 *)&D_80062D70[i])[FLAG_BYTE_OFFSET] == 0) {
-                func_80013968(i);
+                Nsf_ReleaseTextureSlot(i);
                 return i;
             }
         }
@@ -932,7 +932,7 @@ extern Unk80062D80 D_80062D84[];
 extern Unk80062D8C D_80062D8C[];
 extern s32 *D_80067FC4;
 
-s32 func_80013968(s32 arg0) {
+s32 Nsf_ReleaseTextureSlot(s32 arg0) {
     s16 st = D_80062D70[arg0].state;
 
     if (st != 0x14) {
@@ -941,7 +941,7 @@ s32 func_80013968(s32 arg0) {
         }
         goto tail;
     }
-    func_800170B4(D_80062D84[arg0].v, 0);
+    Gfx_BindTexturePage(D_80062D84[arg0].v, 0);
     *D_80062D8C[arg0].v = D_80062D80[arg0].v;
     D_80067FC4[D_80062D80[arg0].v >> 1] = -0x12;
 tail:
@@ -952,7 +952,7 @@ tail:
 
 void func_80013A54(s32 arg0, s32 arg1) {
     if (arg1 != 0) {
-        func_80013968(arg0);
+        Nsf_ReleaseTextureSlot(arg0);
         D_80062D70[arg0].state = 0x1E;
     } else if (D_80062D70[arg0].state == 0x1E) {
         D_80062D70[arg0].state = 1;

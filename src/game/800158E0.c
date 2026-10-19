@@ -938,7 +938,7 @@ L22:
     return arg0;
 }
 
-s32 func_80016F44(NsfEntry *arg0, s32 arg1, s32 arg2) {
+s32 Gfx_BindSceneryTextures(NsfEntry *arg0, s32 arg1, s32 arg2) {
     u8 *s3;
     u8 *s2;
     s32 n;
@@ -990,7 +990,7 @@ found:
 extern NsfLevel D_80067588;
 extern Nsd *D_800675A0;
 
-s32 func_800170B4(s32 arg0, s32 arg1) {
+s32 Gfx_BindTexturePage(s32 arg0, s32 arg1) {
     s32 pad[2];
     s32 i;
     NsfEntry *o;
@@ -1006,10 +1006,10 @@ s32 func_800170B4(s32 arg0, s32 arg1) {
             if (!((s32)o & NSD_REF_TAG_MASK)) {
                 if (o->type != 2) {
                     if (o->type == 3) {
-                        func_80016F44(o, arg1, arg0);
+                        Gfx_BindSceneryTextures(o, arg1, arg0);
                     }
                 } else {
-                    func_800171E8(o, arg1, arg0);
+                    Gfx_BindModelTextures(o, arg1, arg0);
                 }
             }
             i++;
@@ -1018,18 +1018,18 @@ s32 func_800170B4(s32 arg0, s32 arg1) {
     return -0xFF;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800170B4);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_BindTexturePage);
 #endif
 
 void Gfx_SceneryPageIn(s32 arg0) {
-    func_80016F44((NsfEntry *)arg0, 1, 0x6396347F);
+    Gfx_BindSceneryTextures((NsfEntry *)arg0, 1, 0x6396347F);
 }
 
 void func_800171C0(int a0) {
-    func_80016F44((NsfEntry *)a0, 0, 0x6396347F);
+    Gfx_BindSceneryTextures((NsfEntry *)a0, 0, 0x6396347F);
 }
 
-s32 func_800171E8(NsfEntry *arg0, s32 arg1, s32 arg2) {
+s32 Gfx_BindModelTextures(NsfEntry *arg0, s32 arg1, s32 arg2) {
     u8 *s3;
     u8 *s2;
     s32 n;
@@ -1078,7 +1078,7 @@ found:
 }
 
 void Gfx_ModelPageIn(s32 a0) {
-    func_800171E8((NsfEntry *)a0, 1, 0x6396347F);
+    Gfx_BindModelTextures((NsfEntry *)a0, 1, 0x6396347F);
 }
 
 #ifdef NON_MATCHING

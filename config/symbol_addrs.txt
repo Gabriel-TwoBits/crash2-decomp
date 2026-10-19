@@ -1273,3 +1273,15 @@ Nsf_CountFreePages = 0x8001456C; // type:func
 
 // counts the distinct pages the given entries need read or held (looking up their EIDs with Nsf_LookupEid); Gool_OpChunk's kind 5, CrashEdit's CHNK "push page amount for files"
 Nsf_CountPagesFor = 0x80014918; // type:func
+
+// for every loaded entry of the NSD, calls Gfx_BindModelTextures on the TGEO ones (type 2) and Gfx_BindSceneryTextures on the WGEO ones (type 3) for a texture page's EID; Nsf_PageIn calls it with 1 when a texture page reaches VRAM (LoadImage), Nsf_ReleaseTextureSlot with 0
+Gfx_BindTexturePage = 0x800170B4; // type:func
+
+// finds a texture page's EID among those a TGEO entry's header lists (at 0xC, the count at 0x40), or takes all for the null EID 0x6396347F, then binds each of the polygons of item 3 using it (func_80018474) or clears their bound bit 0x200
+Gfx_BindModelTextures = 0x800171E8; // type:func
+
+// the same as Gfx_BindModelTextures for a WGEO entry: the texture page EIDs at 0x2C of its header (the count at 0x28), the polygons of item 4
+Gfx_BindSceneryTextures = 0x80016F44; // type:func
+
+// for a texture slot in state 0x14: unbinds its page's polygons (Gfx_BindTexturePage with 0), points its NSD record back at the page reference and marks the page unread (-0x12); then sets the slot free (state 1)
+Nsf_ReleaseTextureSlot = 0x80013968; // type:func
