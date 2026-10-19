@@ -6,7 +6,7 @@ s32 D_8005F210 = 0xA;
 s32 D_8005F214 = 0x7F;
 
 #ifdef NON_MATCHING
-extern s32 D_8005F180;
+extern s32 g_Paused;
 extern s32 D_8005F4AC[16];
 
 void func_8002FB84(s32 i) {
@@ -21,7 +21,7 @@ void func_8002FB84(s32 i) {
         } while (i < 16);
         return;
     }
-    if (D_8005F180 == 0) {
+    if (g_Paused == 0) {
         do {
             D_8005F4AC[i] += D_8005F210;
             if (D_8005F214 < D_8005F4AC[i]) {

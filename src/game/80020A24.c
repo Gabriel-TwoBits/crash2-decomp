@@ -37,7 +37,7 @@ extern u8 D_80044980[];
 extern u8 D_80044A70[];
 extern u8 D_8004599C[];
 extern u8 D_80045C18[];
-extern s32 D_8005F180;
+extern s32 g_Paused;
 extern s32 g_Player;
 extern s32 g_CameraX;
 extern s32 g_CameraY;
@@ -231,7 +231,7 @@ void func_80020A24(void) {
     if (D_80062AD8 & SCENE_FLAG_10) {
         p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x1B5, g_CameraProgress, 0, 0, 3, &frame[2], 0, 0);
         if (p16 != 0) {
-            if (D_8005F180 == 0) {
+            if (g_Paused == 0) {
                 D_80062A6C = D_80062A74[0];
                 D_80062A6E = D_80062A74[1];
                 D_80062A70 = D_80062A78;

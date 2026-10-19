@@ -3,7 +3,7 @@
 #include "game.h"
 
 s32 D_8005F17C = 0;
-s32 D_8005F180 = 0;
+s32 g_Paused = 0;
 s32 D_8005F184 = 0x1000;
 s32 D_8005F188 = 0x200000;
 s32 D_8005F18C = 0;
@@ -303,10 +303,10 @@ s32 main(void) {
 #define CD14(off) (*(s32 *)(g_PlaybackState + (off)))
 
 extern s32 g_TimerTicks;
-extern s32 D_8005F180;
+extern s32 g_Paused;
 extern s32 D_8005F18C;
 extern char D_8005F190[];
-extern s32 D_8005F1D0;
+extern s32 g_Quit;
 extern s32 D_8005F1F4;
 extern s32 D_8005F2C4;
 extern s32 D_8005F2C8;
@@ -354,13 +354,13 @@ void Sys_MainLoop(s32 arg0) {
     Nsf_OpenLevel(&D_80067588, arg0);
     Sys_InitLevel();
     do {
-        if (((D_80069944 & POWER_BUTTON_MASK) || ((D_8005F180 == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
-            D_8005F180 = D_8005F180 == 0;
-            if (D_8005F180 != 0) {
+        if (((D_80069944 & POWER_BUTTON_MASK) || ((g_Paused == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
+            g_Paused = g_Paused == 0;
+            if (g_Paused != 0) {
                 if (CD14(-0x174) == 0) {
                     CD14(-0x174) = Obj_Spawn(g_PlaybackState - 0x1C4, 4, 4, 0, 0, 0);
                     if (CD14(-0x174) >= -0xFE) {
-                        D_8005F180 = 0;
+                        g_Paused = 0;
                         CD14(-0x174) = 0;
                         D_8005F18C = 0;
                     } else {
@@ -374,7 +374,7 @@ void Sys_MainLoop(s32 arg0) {
             } else if (CD14(-0x174) != 0) {
                 spC0 = 0;
                 Gool_SendEvent(0, CD14(-0x174), PAUSE_BUF_ID, 1, &spC0);
-                D_8005F180 = 1;
+                g_Paused = 1;
             } else {
                 D_8005F18C = -1;
                 g_TimerTicks = D_8005F2C4;
@@ -411,7 +411,7 @@ void Sys_MainLoop(s32 arg0) {
             }
             D_80067588.unk_24 = 2;
             Nsf_CloseLevel(&D_80067588);
-            D_8005F180 = 0;
+            g_Paused = 0;
             g_EntityQueueCount = 0;
             if ((state == 2) || ((u32)(state - STATE_DEAD) < 2U)) {
                 D_8006CB98 = D_8006CBB4;
@@ -431,7 +431,7 @@ void Sys_MainLoop(s32 arg0) {
             /* no pending state */
         }
         Nsf_UpdatePaging(-1);
-        if (D_8005F180 == 0) {
+        if (g_Paused == 0) {
             Cam_Update();
         } else {
             /* paused */
@@ -480,12 +480,12 @@ void Sys_MainLoop(s32 arg0) {
         } else {
             /* skipped */
         }
-        Obj_UpdateAll((void *)(D_8005F180 == 0));
+        Obj_UpdateAll((void *)(g_Paused == 0));
         func_80011E88();
         func_8003DB94(*(s32 *)((char *)g_BuildBuffer + BUF_FIELD_2088), g_BuildBuffer, D_80062A18);
         Gfx_EndFrame();
         func_80011E90();
-    } while (D_8005F1D0 == 0);
+    } while (g_Quit == 0);
     D_8006CB94 = 0;
     Gfx_EndFrame();
     Gfx_EndFrame();

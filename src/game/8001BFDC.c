@@ -398,7 +398,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_PopFrame);
 #define MODEL_KIND(o) FIELD(FIELD(FIELD(o, OFF_MODEL, u8 *), OFF_MODEL_INFO, u8 *), 4, u32)
 
 extern u32 D_8006CB94;
-extern s32 D_8005F180;
+extern s32 g_Paused;
 
 s32 Obj_Update(u8 *obj, s32 flag) {
     s32 out[2];
@@ -503,7 +503,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
             switch (sel) {
             case 0x100:
                 if (D_8006CB94 & PAD_MODE_A) {
-                    if ((D_80060944 & 1) || D_8005F180 != 0 || FIELD(obj, OFF_FIELD_108, s32) != 4) {
+                    if ((D_80060944 & 1) || g_Paused != 0 || FIELD(obj, OFF_FIELD_108, s32) != 4) {
                         hit = 1;
                     } else {
                     }

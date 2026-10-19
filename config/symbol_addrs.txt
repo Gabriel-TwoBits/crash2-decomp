@@ -1309,3 +1309,9 @@ g_PlaybackState = 0x8006CD14;
 
 // the level Sys_MainLoop closes the current one for and opens (Nsf_CloseLevel, Nsf_OpenLevel) when set; it sets the death state with "dead\n" (0x8005F190)
 g_LevelRequest = 0x8005F3F0;
+
+// Sys_MainLoop toggles it on the first pad's button 0x800, spawning an object (Obj_Spawn) and keeping g_TimerTicks when it turns on, putting the timer back when it turns off; while set Cam_Update is skipped, Obj_UpdateAll runs with 0 and Gfx_EndFrame stops the counter at 0x80060944
+g_Paused = 0x8005F180;
+
+// Sys_MainLoop runs its frames until it is set, then ends the frame twice and closes the level (Nsf_CloseLevel)
+g_Quit = 0x8005F1D0;

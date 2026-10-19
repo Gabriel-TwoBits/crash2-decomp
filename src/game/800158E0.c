@@ -84,7 +84,7 @@ extern Unk80069920 g_Pads[];
 extern s32 g_PadCount;
 extern s32 D_8006CDD0[6];
 extern s32 D_8005B440[][3];
-extern s32 D_8005F180;
+extern s32 g_Paused;
 extern s32 *D_8005F374;
 extern u8 *g_DemoBlock;
 extern s32 *g_CurrentZone;
@@ -263,7 +263,7 @@ void Input_Update(void) {
             /* second pad is the only one captured */
         }
 
-        if ((!(D_8006CB94 & PAD_FLAG_ENABLE) && D_8005F180 == 0)
+        if ((!(D_8006CB94 & PAD_FLAG_ENABLE) && g_Paused == 0)
             || (p->unk_00 != 0 && g_PlaybackState == 0)) {
             p->unk_3C = 0;
             p->unk_40 = DIR_NEUTRAL;
@@ -598,7 +598,7 @@ typedef struct {
 
 extern s32 g_CameraAngleX;
 extern Unk80060884 D_80060884;
-extern s32 D_8005F180;
+extern s32 g_Paused;
 extern s32 *D_8005F374;
 extern s32 *g_CurrentZone;
 extern s32 D_800608D8;
@@ -627,7 +627,7 @@ int Gfx_EndFrame(void) {
     s32 fade;
 
     g_FrameCount += 1;
-    if ((D_8005F180 == 0) && (D_8006CB94 & FLAG_COUNT_FRAMES)) {
+    if ((g_Paused == 0) && (D_8006CB94 & FLAG_COUNT_FRAMES)) {
         D_80060944 += 1;
     }
     fade = D_8006CD18;
@@ -1398,7 +1398,7 @@ void func_80017AF8(Unk80017AF8 *dst, Unk80017AF8 *src) {
 
 extern void MulMatrix(Unk80017AF8 *, s16 *);
 extern void TransMatrix(Unk80017AF8 *, s32 *);
-extern s32 D_8005F180;
+extern s32 g_Paused;
 extern s32 D_80060794;
 extern Unk80017AF8 D_800607B4;
 extern s32 g_CameraX;
@@ -1514,7 +1514,7 @@ void Gfx_UpdateView(void) {
         }
     }
     SetGeomOffset(D_8006CC20 + GEOM_OFFSET_X, D_8006CC24 + (D_8006CB78 >> FIXED_SHIFT) + GEOM_OFFSET_Y);
-    if (D_8005F180 == 0) {
+    if (g_Paused == 0) {
         t = D_8006CB78 >> FIXED_SHIFT;
         if (t == 0) {
             D_8006CB78 = 0;

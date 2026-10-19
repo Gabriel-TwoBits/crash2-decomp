@@ -12,7 +12,7 @@ RECT D_8005F1B0 = { 0, 0, 0x100, 0x80 };
 char D_8005F1B8[] = "de ls\n";
 char D_8005F1C0[] = "de l\n";
 char D_8005F1C8[] = "!mem\n";
-s32 D_8005F1D0 = 0;
+s32 g_Quit = 0;
 
 #ifdef NON_MATCHING
 extern char D_8005F1A8[];
