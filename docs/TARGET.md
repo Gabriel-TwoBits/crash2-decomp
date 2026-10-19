@@ -178,3 +178,30 @@ structure.
 
 The equivalent build writes the 23 offsets as numbers and lets its data follow its code (docs/WORKFLOW.md, "The
 equivalent track").
+
+## Code addresses read as data
+
+One handwritten renderer reads bytes of code addresses, so what it draws depends on where the code sits. The renderer
+entry `func_80042818` (one of `func_80042420`'s, which `func_80011E24` stores) picks a polygon's texture level by its
+depth: `(SZ1 + SZ2 + SZ3) >> 11` indexes a byte table at scratchpad 0xD0, and the byte is a shift (`srlv`, its low 5
+bits) that selects 2 bits of a texture word, which pick the 12-byte entry the polygon is drawn with. `func_80041E5C`
+copies the table there, 32 bytes from `D_8005C724` (shifts 29 down to 15), but the index can reach 95 with three far
+vertices. Past 0xEF the scratchpad holds what `Gool_InitScratchpad` copied from 0x60 on, `g_GoolOpcodeHandlers`, the
+handwritten GOOL operations' addresses: index 36 reads 0xF4, the low byte of entry 37, `D_8003A704`, a shift of 4 in
+retail.
+
+Evidence (`tools/run_game.py --schedule turtle-woods`, PCSX-Redux on the game clock):
+
+- The equivalent build differs from retail from game frame 3,524, first in the heap at 0x8007A770, a polygon of the rain
+  `func_80042818` writes from `0x800428F8`, the entry's second word 0x0211207F in retail, 0x0213207F there.
+- The equivalent build's C at the retail data addresses and its handwritten code 0x14 bytes earlier differs at the same
+  frame; `.data` moved alone doesn't, nor the code moved by 0x20 bytes (the low 5 bits of the byte kept), while 0x8,
+  0x10 and 0x14 do.
+- In frame 3,523, the writes to scratchpad 0xD0 to 0xF7 before the renderer's 301 reads come from `func_80041E5C`'s
+  copy, 0xD0 to 0xEF only. At the end of frame 3,524, 47 of the scratchpad's words from 0x60 to 0x13C differ between
+  the two runs, each a code address 0x14 apart, most of them the opcode table's entries.
+- Restoring retail's word at 0xF4 around the read alone (`D_8003A704`, set before the `lbu` at the shifted address and
+  put back after it), the shifted build displays retail's image at every one of the 6,001 game frames.
+
+A build that moves the handwritten GOOL operations draws far polygons with other texture bits; an equivalent rewrite of
+`func_80042818` reproduces retail only by reading the same bytes past the table.

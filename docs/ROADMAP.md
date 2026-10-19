@@ -472,7 +472,16 @@ nothing pressed, the attract demo through Turtle Woods and a river level, 4,800 
 vsync 14,130) shows the equivalent build displaying retail's image at all 4,801 game frames, 88 vsyncs behind at the
 end; the new-game schedule still agrees at all 3,451. Retail agrees with itself on both.
 
-Next: each batch checked in the game too, on both schedules (by groups that each agree, docs/WORKFLOW.md).
+A third schedule, `--schedule turtle-woods`, runs on into Turtle Woods blindly through deaths and respawns, 6,000 game
+frames, retail reaching the last by vsync 14,068. The equivalent build differs there from game frame 3,524, and the C is
+not the cause: a handwritten renderer, `func_80042818`, reads its depth's texture shift past a 32-byte table into the
+scratchpad's copy of the GOOL opcode table, the bytes of the handwritten code's addresses, which the equivalent build
+places 0x14 bytes earlier (docs/TARGET.md, "Code addresses read as data"). With retail's word put back around that one
+read, the shifted build displays retail's image at all 6,001 game frames. So the equivalent build agrees with retail on
+this schedule only once the handwritten GOOL operations keep their retail addresses (or their low bytes), or once a C
+rewrite of the renderer reads the bytes retail does.
+
+Next: each batch checked in the game too, on the three schedules (by groups that each agree, docs/WORKFLOW.md).
 
 ## 5. Readable C (in progress)
 
