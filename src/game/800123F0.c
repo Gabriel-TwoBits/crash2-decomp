@@ -1386,7 +1386,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014420);
 #endif
 
 #ifdef NON_MATCHING
-s32 func_8001456C(void) {
+s32 Nsf_CountFreePages(void) {
     s32 i;
     s32 live;
     NsfPageSlot *p;
@@ -1407,7 +1407,7 @@ s32 func_8001456C(void) {
     return live;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_8001456C);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_CountFreePages);
 #endif
 
 extern Unk80013BD8Table D_800675B0;
@@ -1468,7 +1468,7 @@ void func_80014790(u32 *arg0) {
 }
 
 #ifdef NON_MATCHING
-s32 func_80014918(u32 **arg0, s32 arg1) {
+s32 Nsf_CountPagesFor(u32 **arg0, s32 arg1) {
     s32 sp10[42];
     NsfPageSlot *e;
     s32 *out;
@@ -1537,7 +1537,7 @@ s32 func_80014918(u32 **arg0, s32 arg1) {
     return cnt;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014918);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_CountPagesFor);
 #endif
 
 extern NsdRecord **D_80067590;

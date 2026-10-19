@@ -37,12 +37,12 @@ void Gool_OpChunk(GoolObject *arg0, u32 arg1) {
         *arg0->sp++ = v;
         break;
     case OP_CALL_D:
-        v = func_8001456C();
+        v = Nsf_CountFreePages();
         *arg0->sp++ = v;
         break;
     case OP_CALL_E:
         n = *src;
-        v = func_80014918((u32 **)((u8 *)arg0->sp - n * 4), n);
+        v = Nsf_CountPagesFor((u32 **)((u8 *)arg0->sp - n * 4), n);
         sp = (u8 *)arg0->sp - n * 4;
         arg0->sp = (s32 *)(sp + 4);
         *(s32 *)sp = v;

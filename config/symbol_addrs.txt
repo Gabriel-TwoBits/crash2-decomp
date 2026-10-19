@@ -1267,3 +1267,9 @@ Save_RunCommand = 0x8003670C; // type:func
 
 // the 16-bit list of entity IDs with their level's number that Ent_SetPermFlag and Ent_ClearPermFlag keep; Sys_ResetGameInfo clears it
 g_PermFlags = 0x8006935C;
+
+// the level's page slots less those in use (state other than 1 with references) in both slot tables; Gool_OpChunk's kind 4, CrashEdit's CHNK "push available page amount"
+Nsf_CountFreePages = 0x8001456C; // type:func
+
+// counts the distinct pages the given entries need read or held (looking up their EIDs with Nsf_LookupEid); Gool_OpChunk's kind 5, CrashEdit's CHNK "push page amount for files"
+Nsf_CountPagesFor = 0x80014918; // type:func
