@@ -1131,6 +1131,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002B57C);
 
 #ifdef NON_MATCHING
 #define F(p, off) (*(s32 *)((s8 *)(p) + (off)))
+#define OBJ(p) ((GoolObject *)(p))
 #define SUB(p) (*(void **)((s8 *)(p) + 8))
 
 void func_8002BC38(void *arg0, s32 *arg1, s32 *arg2, void *arg3) {
@@ -1397,16 +1398,16 @@ s32 *func_8002C324(void *arg0, s32 arg1, s32 arg2) {
     box[0] = kind;
 
     if (slot == 0) {
-        a = F(obj, 0x78);
+        a = OBJ(obj)->scale[0];
         if (a < 0) a = -a;
-        box[2] = F(obj, 0x60) - ((a * SCALE_NUM) >> SCALE_SHIFT);
-        a = F(obj, 0x78);
+        box[2] = OBJ(obj)->pos[0] - ((a * SCALE_NUM) >> SCALE_SHIFT);
+        a = OBJ(obj)->scale[0];
         if (a < 0) a = -a;
-        box[5] = F(obj, 0x60) + ((a * SCALE_NUM) >> SCALE_SHIFT);
-        box[3] = F(obj, 0x64) - ((F(obj, 0x7C) * SCALE_NUM) >> SCALE_SHIFT);
-        box[6] = F(obj, 0x64) + ((F(obj, 0x7C) * SCALE_NUM) >> SCALE_SHIFT);
-        box[4] = F(obj, 0x68) - ((F(obj, 0x80) * SCALE_NUM) >> SCALE_SHIFT);
-        box[7] = F(obj, 0x68) + ((F(obj, 0x80) * SCALE_NUM) >> SCALE_SHIFT);
+        box[5] = OBJ(obj)->pos[0] + ((a * SCALE_NUM) >> SCALE_SHIFT);
+        box[3] = OBJ(obj)->pos[1] - ((OBJ(obj)->scale[1] * SCALE_NUM) >> SCALE_SHIFT);
+        box[6] = OBJ(obj)->pos[1] + ((OBJ(obj)->scale[1] * SCALE_NUM) >> SCALE_SHIFT);
+        box[4] = OBJ(obj)->pos[2] - ((OBJ(obj)->scale[2] * SCALE_NUM) >> SCALE_SHIFT);
+        box[7] = OBJ(obj)->pos[2] + ((OBJ(obj)->scale[2] * SCALE_NUM) >> SCALE_SHIFT);
         return box;
     }
     if (kind != 0) {
@@ -1418,32 +1419,32 @@ s32 *func_8002C324(void *arg0, s32 arg1, s32 arg2) {
             box[5] = F(src, 0x34);
             box[6] = F(src, 0x38);
             box[7] = F(src, 0x3C);
-            box[8] = F(obj, 0x60);
-            box[9] = F(obj, 0x64);
-            box[10] = F(obj, 0x68);
+            box[8] = OBJ(obj)->pos[0];
+            box[9] = OBJ(obj)->pos[1];
+            box[10] = OBJ(obj)->pos[2];
             func_800309A8(box + 11, box + 2, (s16 *)F(obj, 8), box + 8);
             return box;
         }
         return box;
     }
-    v = F(obj, 0x70);
+    v = OBJ(obj)->rot[1];
     ang = v & ANGLE_MASK;
-    if (ang == 0 && v == 0 && F(obj, 0x6C) == 0 && F(obj, 0x78) == IDENTITY_SCALE) {
-        pos[0] = F(obj, 0x60) + F(entry, 4);
-        pos[1] = F(obj, 0x64) + F(entry, 8);
-        pos[2] = F(obj, 0x68) + F(entry, 0xC);
+    if (ang == 0 && v == 0 && OBJ(obj)->rot[0] == 0 && OBJ(obj)->scale[0] == IDENTITY_SCALE) {
+        pos[0] = OBJ(obj)->pos[0] + F(entry, 4);
+        pos[1] = OBJ(obj)->pos[1] + F(entry, 8);
+        pos[2] = OBJ(obj)->pos[2] + F(entry, 0xC);
     } else {
         in[0] = F(entry, 4);
         in[1] = F(entry, 8);
         in[2] = F(entry, 0xC);
         func_8001E8E4(in, (s32 *)(obj + 0x60), (s32 *)(obj + 0x6C), (s32)(obj + 0x78), pos);
     }
-    a = F(obj, 0x78);
+    a = OBJ(obj)->scale[0];
     if (a < 0) a = -a;
     ext[6] = a;
-    b = F(obj, 0x7C);
+    b = OBJ(obj)->scale[1];
     ext[7] = b;
-    c = F(obj, 0x80);
+    c = OBJ(obj)->scale[2];
     ext[8] = c;
     d = (F(entry, 0x10) >> 8) * a >> SCALE_SHIFT;
     ext[0] = d;
@@ -2208,13 +2209,13 @@ void func_8002D6E4(s32 *arg0, s32 *arg1, void *arg2, void *arg3, s32 arg4) {
             fp = entry + 0x2C / 4;
         }
         if (((s32)obj != selfObj || arg4 == 0 || wide[1] < fp[4]) && func_80030EC0(wide, fp) != 0) {
-            if (checkSelf != 0 && (FIELD(obj, s32, 0xAC) & FLAG_B)
+            if (checkSelf != 0 && (OBJ(obj)->status_b & FLAG_B)
                 && ((((!(FIELD(arg2, s32, 0x100) & FLAG_A) && FIELD(arg2, s32, 0x108) != KIND_5)
-                      || ((SHAPE(obj)[1] != KIND_300 || (FIELD(obj, s32, 0xB0) & MASK_1012))
-                          && !(FIELD(obj, s32, 0x100) & FLAG_C)))
+                      || ((SHAPE(obj)[1] != KIND_300 || (OBJ(obj)->block_flags & MASK_1012))
+                          && !(OBJ(obj)->state_flags & FLAG_C)))
                      && !(FIELD(arg2, s32, 0x100) & FLAG_B))
-                    || (FIELD(obj, s32, 0x100) & FLAG_B))
-                && !(FIELD(obj, s32, 0xA8) & FLAG_4000)
+                    || (OBJ(obj)->state_flags & FLAG_B))
+                && !(OBJ(obj)->status_a & FLAG_4000)
                 && (SHAPE(obj)[0] != KIND_E || wide[1] < fp[1])) {
                 D_8005F3C4[row] &= ~bit;
                 if (kind == 0) {
