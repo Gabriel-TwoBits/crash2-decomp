@@ -212,8 +212,6 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 In order; each is a session's worth of work, and its result goes back here:
 
 1. **Readable C, R5**: the other subsystems' types and names (section 5; R4's equivalent pass is done).
-2. **The attract demo** (section 4, "Next"): a second `tools/run_game.py` schedule through it, and the two equivalents
-   it shows wrong, `func_80028C48` and `func_800328D4`.
 
 ## 4. The engine in C
 
@@ -455,14 +453,26 @@ then by block, on the game clock:
 
 - The difference is `func_80028C48`'s equivalent (`src/game/80026CA0.c`), a search through the zone's entries and the
   objects' boxes around a point, alone of its file's 13 blocks.
-- The stop is `func_800328D4`'s (`src/game/800324A8.c`), which picks an SPU voice. It passes `SpuGetVoiceAttr`
-  (`func_800521A8`) a structure whose word at offset 4, the attribute mask, neither it nor the retail code sets: what
-  the SDK reads there is what the stack held, which may differ between the builds (not checked yet).
+- The stop is `func_800328D4`'s (`src/game/800324A8.c`), which picks an SPU voice.
 
-The schedule shows no difference from either.
+The schedule shows no difference from either. Both were C that differs from the assembly where `tools/equiv.py`'s
+trials rarely or never look:
 
-Next: the attract demo as a second schedule, and `func_80028C48`'s and `func_800328D4`'s equivalents fixed against it;
-each batch checked in the game too (by groups that each agree, docs/WORKFLOW.md).
+- `func_80028C48` keeps its best object's height when it is at least the zone's result (`!(bestd < arg[1])`, the
+  retail `slt`); its C had the comparison the other way (`!(bestd > arg[1])`), a path random trials seldom reach (an
+  object list, a best candidate, a zone result and two unequal heights at once).
+- `func_800328D4` passes the SDK code's `func_800521A8`, which reads a voice's attributes, a structure on its stack that
+  the callee fills up to offset 0x3E: 0x40 bytes, the retail frame's room for it. Its C declared 0x34, so the call wrote
+  12 bytes past it into the equivalent function's frame. equiv.py answers calls instead of running them, so it never saw
+  the write. (The structure's word at offset 4, which neither side sets, is not the cause: `func_800521A8` never reads
+  it.)
+
+Both fixed, each agrees on 2 seeds of 2,000 trials, and `tools/run_game.py --schedule demo` (the second schedule:
+nothing pressed, the attract demo through Turtle Woods and a river level, 4,800 game frames, retail reaching the last by
+vsync 14,130) shows the equivalent build displaying retail's image at all 4,801 game frames, 88 vsyncs behind at the
+end; the new-game schedule still agrees at all 3,451. Retail agrees with itself on both.
+
+Next: each batch checked in the game too, on both schedules (by groups that each agree, docs/WORKFLOW.md).
 
 ## 5. Readable C (in progress)
 
