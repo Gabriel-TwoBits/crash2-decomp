@@ -124,7 +124,7 @@ s16 *Snd_PanVolume(s32 *arg0, s32 arg1) {
 
     x = arg0[0] / 32;
     y = (arg0[2] - 0x4B000) / 32;
-    d = func_8003BEA8(x, y);
+    d = Math_SqrMagnitude2(x, y);
     if (d <= 0x7FFF) {
         D_8005F2E4 = arg1;
         goto set6;

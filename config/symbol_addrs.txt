@@ -1351,3 +1351,9 @@ Gfx_ResetOt3 = 0x8003BC14; // type:func
 
 // Gfx_ResetOt's tail for 4 entries left, which it jumps into; the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RGpuResetOT_4
 Gfx_ResetOt4 = 0x8003BC34; // type:func
+
+// the 64-bit sum of two values' squares >> 13 (mult); Snd_PanVolume measures a sound's distance with it; the Crash 1 decomp's catalog (docs/names.md) has RSqrMagnitude2, 22 words right after the root counter's tick handler, as this one is after Sys_TimerHandler
+Math_SqrMagnitude2 = 0x8003BEA8; // type:func
+
+// the 64-bit sum of three values' squares >> 20 (mult); the Crash 1 decomp's catalog has RSqrMagnitude3, 34 words right after RSqrMagnitude2, as this one is after Math_SqrMagnitude2
+Math_SqrMagnitude3 = 0x8003BF04; // type:func
