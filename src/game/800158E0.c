@@ -701,7 +701,7 @@ int Gfx_EndFrame(void) {
             break;
         }
     }
-    func_800334A0();
+    Snd_Update();
     FRAME_FIELD(g_DrawBuffer, FRAME_END_TIME_OFFSET, s32) = g_TimerTicks;
     DrawSync(0);
     if (D_8006CD14 == 0) {

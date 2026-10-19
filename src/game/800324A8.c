@@ -197,13 +197,13 @@ void func_80032808(GoolObject *arg0) {
                 if (i) {
                     D_8005F244 = 0x3C;
                     sp10 = 0;
-                    func_80032F18(p->a, 0x40000000, &sp10, p->key);
+                    Snd_SetSoundParam(p->a, 0x40000000, &sp10, p->key);
                     p->key = 0;
                     p->b = 0;
                 } else {
                     D_8005F244 = 0x3C;
                     sp10 = 0;
-                    func_80032F18(p->a, 0x40000000, &sp10, p->key);
+                    Snd_SetSoundParam(p->a, 0x40000000, &sp10, p->key);
                     p->key = 0;
                     p->b = 0;
                 }
@@ -224,7 +224,7 @@ typedef struct {
 extern u8 D_8005FC9D;
 extern void func_800521A8(Out *);
 
-s32 func_800328D4(void) {
+s32 Snd_AllocVoice(void) {
     Out o;
     Ent *p;
     s32 i;
@@ -286,7 +286,7 @@ s32 func_800328D4(void) {
     return ret;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800328D4);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_AllocVoice);
 #endif
 
 u32 func_80032A98(s32 *arg0, s32 *arg1) {
@@ -361,7 +361,7 @@ void func_800518B8(s32 *);
 #define ENT_W(e, off) (*(s32 *)((u8 *)(e) + (off)))
 #define ENT_H(e, off) (*(s16 *)((u8 *)(e) + (off)))
 
-s32 func_80032B7C(GoolObject *arg0, s32 arg1, s32 arg2) {
+s32 Snd_PlaySound(GoolObject *arg0, s32 arg1, s32 arg2) {
     s32 cmd[0x14];
     s32 pos[3];
     Ent *e;
@@ -379,7 +379,7 @@ s32 func_80032B7C(GoolObject *arg0, s32 arg1, s32 arg2) {
     if (!(D_8006CB94 & CTRL_REQUIRED) && !(arg0->state_flags & OBJ_FLAGS_REQUIRED)) {
         return 0;
     }
-    voice = func_800328D4();
+    voice = Snd_AllocVoice();
     if (voice <= 0) {
         return -1;
     }
@@ -466,7 +466,7 @@ s32 func_80032B7C(GoolObject *arg0, s32 arg1, s32 arg2) {
     return e->a;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80032B7C);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_PlaySound);
 #endif
 
 #ifdef NON_MATCHING
@@ -538,7 +538,7 @@ typedef struct Unk80032F18State {
 } Unk80032F18State;
 
 /* arg0: entry id, 0 = shared state, -1 = entry owned by arg3, -2 = all entries. */
-s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
+s32 Snd_SetSoundParam(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
     Unk80032F18Update upd;
     s32 slot;
     u32 op;
@@ -690,7 +690,7 @@ s32 func_80032F18(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
     return ~arg0 >> SIGN_SHIFT;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80032F18);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_SetSoundParam);
 #endif
 
 void Nsf_DropPageRef(void *arg0);
@@ -821,7 +821,7 @@ extern s32 D_8005F308;
 extern s32 D_8005F39C;
 extern s16 D_8005FCE4;
 
-void func_800334A0(void) {
+void Snd_Update(void) {
     s32 cmd[CMD_WORDS + 8];
     s32 cmd2[CMD_WORDS + 8];
     s32 vec[3];
@@ -1046,7 +1046,7 @@ tail:
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800334A0);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_Update);
 #endif
 
 #ifdef NON_MATCHING
@@ -1113,7 +1113,7 @@ void Snd_InitSequencer(void) {
     SsSetReservedVoice((u8)D_8005F304);
 }
 
-/* Added to the master volume (D_8005F2FC, at most 0x3FFF) on each update of func_800334A0, until it reaches 0 */
+/* Added to the master volume (D_8005F2FC, at most 0x3FFF) on each update of Snd_Update, until it reaches 0 */
 #define VOLUME_FADE_OUT_STEP -0x2AA
 
 void func_80033DD0(void) {

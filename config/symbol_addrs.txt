@@ -1148,3 +1148,15 @@ Nsf_UpdatePaging = 0x80012BC4; // type:func
 
 // finds the run of consecutive page slots of the requested length cheapest to free (a free slot costs nothing, a releasable one 1 plus its word at 0x28), pages each out with Nsf_PageOut and returns the first; prints "!mem\n" (0x8005F1C8) when none fits and asked to
 Nsf_EvictPageSlots = 0x800136C8; // type:func
+
+// Gool_OpPlaySound (CrashEdit's SNDP, play sound at a volume) calls it with its operands: takes a voice from Snd_AllocVoice, copies the sound's attributes, places it from the object's position with Gfx_WorldToView, sets its reverb (SpuSetReverbVoice) and returns a new handle
+Snd_PlaySound = 0x80032B7C; // type:func
+
+// returns the first of the 24 voices (0x50-byte records at 0x8005F4EC) without flag 8, else the quietest of the lowest priority by the SDK's voice attributes (func_800521A8), or -1; Snd_PlaySound calls it
+Snd_AllocVoice = 0x800328D4; // type:func
+
+// Gool_OpSetAudio (CrashEdit's SNDA, set an audio parameter) calls it: picks the playing sounds by handle, or by object (-1), or the next sound's template (0), and sets the parameter its operation selects, ramped when flagged
+Snd_SetSoundParam = 0x80032F18; // type:func
+
+// Gfx_EndFrame calls it once a frame: follows the music and effect volumes at 0x8006CBF8 and 0x8006CBFC, the zone's audio, the master volume's fade (SsSetMVol) and each playing voice
+Snd_Update = 0x800334A0; // type:func

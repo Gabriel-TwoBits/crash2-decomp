@@ -183,7 +183,7 @@ static inline s32 *operand_address(GoolObject *obj, s32 idx) {
     }
 }
 
-s32 func_80032B7C(GoolObject *, s32 *, s32);
+s32 Snd_PlaySound(GoolObject *, s32 *, s32);
 
 void Gool_OpPlaySound(GoolObject *obj, u32 arg1) {
     s32 *a;
@@ -191,7 +191,7 @@ void Gool_OpPlaySound(GoolObject *obj, u32 arg1) {
 
     a = operand_address(obj, (arg1 >> 12) & 0xFFF);
     b = operand_address(obj, arg1 & 0xFFF);
-    obj->unk_12C = func_80032B7C(obj, b, *(s16 *)a);
+    obj->unk_12C = Snd_PlaySound(obj, b, *(s16 *)a);
 }
 
 void Gool_OpSetAudio(GoolObject *obj, u32 op) {
@@ -223,7 +223,7 @@ void Gool_OpSetAudio(GoolObject *obj, u32 op) {
     if (op & 0x80000) {
         flags |= 0x20000000;
     }
-    obj->unk_D4 = func_80032F18(val, flags, dst, obj);
+    obj->unk_D4 = Snd_SetSoundParam(val, flags, dst, obj);
 }
 
 void func_80038E14(GoolObject *obj, u32 arg1) {
