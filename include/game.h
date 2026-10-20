@@ -333,7 +333,8 @@ void Sys_TimerHandler(void);
 s32 Math_SqrMagnitude2(s32, s32);
 s32 func_8003BF90(s32 *, s32 *, void *, s32);
 void func_8003C88C(void *, void *, s32, s32, s32, s32, s32, s32);
-void func_8003CBE4(void);
+/* Takes x and y: func_8002CB1C calls it with none, passing its own arguments on in registers it leaves alone */
+void func_8003CBE4();
 s32 func_8003D040(void *, void *, void *, s32 *, s32, s32, s32, s32, s32);
 s32 Math_Sin(s32);
 s32 Math_Cos(s32);
