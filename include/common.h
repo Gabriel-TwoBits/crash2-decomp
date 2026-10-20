@@ -10,6 +10,20 @@ typedef unsigned int u32;
 typedef signed long long s64;
 typedef unsigned long long u64;
 
+/* An equivalent function's contract with its callers, for tools/equiv.py: argument ARGUMENT (0 for $a0) is between LOW
+ * and HIGH, signed, in every call the game makes. Nothing in the build; its evidence goes on the line above it */
+#define EQUIV_RANGE(function, argument, low, high)
+/* Pointer argument ARGUMENT is never NULL in a call the game makes */
+#define EQUIV_NONNULL(function, argument)
+/* The buffers at pointer arguments FIRST and SECOND, argument COUNT's value times UNIT bytes each, never overlap */
+#define EQUIV_DISJOINT(function, first, second, count, unit)
+/* The BYTES from ADDRESS are the function's own scratch, a save area every other user writes before reading: what it
+ * leaves there doesn't count */
+#define EQUIV_SCRATCH(function, address, bytes)
+/* The retail code runs into these handwritten routines as its own (a branch, not a call), which other callers keep in
+ * the build */
+#define EQUIV_RUNS(function, routines...)
+
 /* The split's functions (asm/nonmatchings/) use macro.inc's labels */
 #define INCLUDE_ASM_USE_MACRO_INC 1
 #include "include_asm.h"

@@ -14,6 +14,13 @@ that word replaced and starts over (MAX_REPAIRS), before the candidate runs from
 after each trial: how it ended, the return value, the callee-saved registers, each call's target and arguments, and
 every byte either side changed outside its own stack frame.
 
+The C file may state the function's contract with its callers (include/common.h): EQUIV_RANGE(function, argument, low,
+high), EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_SCRATCH(function,
+address, bytes) and EQUIV_RUNS(function, routine, ...). The trials then keep to it, and the verdict says so; each line
+goes in by hand with the evidence that every call keeps to it (docs/WORKFLOW.md, "A function's contract").
+HANDWRITTEN_PARTS(function, part, ...) and EQUIV_RUNS make the retail code the function runs as its own reach to those
+routines (tools/handwritten.py).
+
 Exit status: 0 when every trial agrees, 1 on a disagreement or an error, 2 when the code needs what the emulator lacks
 (a GTE command the model doesn't have). Needs the build (build/SCUS_941.54.elf) and orig/USA/SCUS_941.54.
 """
@@ -35,6 +42,7 @@ from unicorn import UC_MODE_LITTLE_ENDIAN, UC_MODE_MIPS32, UC_PROT_ALL, UC_PROT_
 from unicorn import mips_const as mips
 
 import gte
+import handwritten
 from psx_cc import DEFAULT_ASPSX, DEFAULT_CFLAGS, DEFAULT_GCC, HERE, compile_c, compiler, cpp_command
 
 RETAIL_ELF = HERE / "build" / "SCUS_941.54.elf"
@@ -296,6 +304,22 @@ ACCESS_PREFIXES = (UNMAPPED, STORE_TO_CODE)
 NAME_BEFORE_PARENTHESIS = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
 VARIADIC = "..."
 LONG_RETURN = r"\b(?:long\s+long|s64|u64)\s+"
+# A function's contract with its callers in its C file (include/common.h): EQUIV_RANGE(function, argument, low, high),
+# its bounds numbers or names the file #defines as numbers, EQUIV_NONNULL(function, argument),
+# EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_SCRATCH(function, address, bytes) and
+# EQUIV_RUNS(function, routine, ...)
+NUMBER = r"-?(?:0x[0-9A-Fa-f]+|\d+)"
+BOUND = rf"{NUMBER}|[A-Za-z_]\w*"
+CONTRACT_LINE = re.compile(r"^EQUIV_\w*\(.*$", re.MULTILINE)
+ARGUMENT_RANGE = re.compile(rf"^EQUIV_RANGE\((\w+),\s*(\d+),\s*({BOUND}),\s*({BOUND})\)$")
+ARGUMENT_NONNULL = re.compile(r"^EQUIV_NONNULL\((\w+),\s*(\d+)\)$")
+ARGUMENTS_DISJOINT = re.compile(r"^EQUIV_DISJOINT\((\w+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)$")
+SCRATCH_AREA = re.compile(rf"^EQUIV_SCRATCH\((\w+),\s*({BOUND}),\s*({BOUND})\)$")
+RUNS_INTO = re.compile(r"^EQUIV_RUNS\((\w+)((?:,\s*\w+)+)\)$")
+NUMERIC_DEFINE = re.compile(rf"^#define\s+(\w+)\s+\(?({NUMBER})\)?\s*$", re.MULTILINE)
+CONTRACT = "the C's contract:"
+SIGNED_MIN = -(1 << (WORD_BITS - 1))
+SIGNED_MAX = (1 << (WORD_BITS - 1)) - 1
 
 
 @dataclass
@@ -377,6 +401,14 @@ def physical(address):
         return address & PHYSICAL_MASK
     else:
         return address
+
+
+def shown(address):
+    """A physical address as the C writes it: the scratchpad's as it is, RAM's in kseg0"""
+    if address >= SCRATCHPAD_BASE:
+        return address
+    else:
+        return virtual(address)
 
 
 def virtual(address):
@@ -647,6 +679,14 @@ class Declarations:
     pointer_parameters: tuple
     # Each parameter's narrow integer type, (bits, signed), or None (narrow_type)
     narrow_parameters: tuple
+    # The C's contract with its callers (contract): {argument's index: (low, high)}, the pointer arguments never NULL,
+    # (first, second, count, unit) of the buffers that never overlap, the physical ranges of its own scratch, and the
+    # handwritten routines its retail code runs into
+    argument_ranges: dict
+    nonnull_arguments: frozenset
+    disjoint_arguments: tuple
+    scratch: tuple
+    runs_into: frozenset
 
 
 # A parameter's integer types narrower than a word, by the words that name them: (bits, signed). Plain char is left out,
@@ -716,8 +756,130 @@ def declarations(source, function, retail):
     counts.update(variadic)
     returns_void = re.search(rf"\bvoid\s+{function}\s*\(", text) is not None
     returns_long = re.search(rf"{LONG_RETURN}{function}\s*\(", text) is not None
+    ranges, nonnull, disjoint, scratch, runs = contract(source, function)
+    pointers = pointer_parameters or ()
+    named_pointers = nonnull.union(*((first, second) for first, second, _, _ in disjoint))
+    not_pointers = sorted(index for index in named_pointers if index >= len(pointers) or not pointers[index])
+    if not_pointers:
+        sys.exit(f"{source}: the contract of {function} takes its argument {not_pointers[0]} for a pointer, which its C "
+                 "doesn't declare one")
     return Declarations({retail.addresses[name]: count for name, count in counts.items()}, not returns_void, returns_long,
-                        pointer_parameters or (), narrow_parameters)
+                        pointers, narrow_parameters, ranges, nonnull, disjoint, scratch, runs)
+
+
+def contract(source, function):
+    """({argument's index: (low, high)}, the arguments never NULL, the buffers never overlapping, its own scratch's
+    physical ranges, the routines it runs into) of the function's EQUIV_RANGE, EQUIV_NONNULL, EQUIV_DISJOINT,
+    EQUIV_SCRATCH and EQUIV_RUNS lines in its C file"""
+    text = source.read_text()
+    defines = {name: int(value, 0) for name, value in NUMERIC_DEFINE.findall(text)}
+
+    def bound(token):
+        if re.fullmatch(NUMBER, token):
+            return int(token, 0)
+        elif token in defines:
+            return defines[token]
+        else:
+            sys.exit(f"{source}: the contract's bound {token} is neither a number nor a #define of one in the file")
+
+    ranges = {}
+    nonnull = set()
+    disjoint = []
+    scratch = []
+    runs = set()
+    for found in CONTRACT_LINE.finditer(text):
+        written = found.group(0).strip()
+        in_range = ARGUMENT_RANGE.fullmatch(written)
+        never_null = ARGUMENT_NONNULL.fullmatch(written)
+        apart = ARGUMENTS_DISJOINT.fullmatch(written)
+        own = SCRATCH_AREA.fullmatch(written)
+        into = RUNS_INTO.fullmatch(written)
+        line = in_range or never_null or apart or own or into
+        if line is None:
+            sys.exit(f"{source}: `{written}` is none of EQUIV_RANGE(function, argument, low, high), "
+                     "EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), "
+                     "EQUIV_SCRATCH(function, address, bytes) and EQUIV_RUNS(function, routine, ...)")
+        elif line.group(1) != function:
+            continue
+        elif into is not None:
+            # group(2) starts with the comma after the function
+            runs.update(routine.strip() for routine in into.group(2).split(",")[1:])
+            continue
+        elif own is not None:
+            address, length = bound(own.group(2)) & WORD_MASK, bound(own.group(3))
+            if address % WORD or length <= 0 or length % WORD:
+                sys.exit(f"{source}: `{written}` needs a word-aligned address and a positive count of whole words")
+            else:
+                scratch.append(range(physical(address), physical(address) + length))
+                continue
+        index = int(line.group(2))
+        if apart is not None:
+            first, second, count, unit = (int(apart.group(number)) for number in range(2, 6))
+            if max(first, second, count) >= len(ARGUMENT_REGISTERS) or len({first, second, count}) != 3 or unit == 0:
+                sys.exit(f"{source}: `{written}` needs three different argument registers and a unit of 1 or more")
+            else:
+                disjoint.append((first, second, count, unit))
+                continue
+        elif index >= ARGUMENT_WORDS:
+            sys.exit(f"{source}: `{written}` names an argument past the {ARGUMENT_WORDS} drawn")
+        elif never_null is not None:
+            nonnull.add(index)
+            continue
+        low, high = bound(in_range.group(3)), bound(in_range.group(4))
+        if index in ranges:
+            sys.exit(f"{source}: two EQUIV_RANGE lines for {function}'s argument {index}")
+        elif not SIGNED_MIN <= low <= high <= SIGNED_MAX:
+            sys.exit(f"{source}: EQUIV_RANGE of {function}'s argument {index}: [{low}, {high}] isn't a range of words")
+        else:
+            ranges[index] = (low, high)
+    return ranges, frozenset(nonnull), tuple(disjoint), tuple(scratch), frozenset(runs)
+
+
+def retail_extent(retail, source, function, entry, size, runs_into):
+    """(start, size) of the retail code the function runs as its own: its code, and the handwritten routines its C file
+    names its parts (HANDWRITTEN_PARTS, tools/handwritten.py), such as the tails its dispatch jumps into, or says it
+    runs into (EQUIV_RUNS), which have to sit next to it with no other handwritten function between"""
+    parts = handwritten.parts(source.read_text()).get(function, set()) | runs_into
+    if not parts:
+        return entry, size
+    spans = [(entry, entry + size)]
+    for part in sorted(parts):
+        address, length = retail.function(part)
+        spans.append((address, address + length))
+    start, end = min(low for low, _ in spans), max(high for _, high in spans)
+    between = sorted(name for name in handwritten.functions() - parts - {function}
+                     if name in retail.addresses and start <= retail.addresses[name] < end)
+    if between:
+        sys.exit(f"{source}: {function}'s parts span {', '.join(between)} too")
+    else:
+        return start, end - start
+
+
+def argument_name(index):
+    """An argument's register, or its place among the stack's"""
+    if index < len(ARGUMENT_REGISTERS):
+        return f"$a{index}"
+    else:
+        return f"argument {index}"
+
+
+def apart(first, second, length):
+    """The second buffer's address, moved right after the first buffer when the two, length bytes each, overlap; its
+    offset in a word kept, which picks the copy's path"""
+    if first + length <= second or second + length <= first:
+        return second
+    else:
+        return (align(first + length, WORD) + second % WORD) & WORD_MASK
+
+
+def ranged(value, limits):
+    """A word in a signed range: as it is when it falls in it, else moved into it by its remainder"""
+    low, high = limits
+    signed = value - (1 << WORD_BITS) if value > SIGNED_MAX else value
+    if low <= signed <= high:
+        return value
+    else:
+        return (low + value % (high - low + 1)) & WORD_MASK
 
 
 ROOT_MEMORY, ROOT_ARGUMENT, ROOT_CALL = "memory", "argument", "call"
@@ -745,11 +907,15 @@ class Root:
 class Fuzz:
     """A trial's random values, each drawn from a generator seeded by the trial and what it is for"""
 
-    def __init__(self, seed, trial, constants, pointer_parameters, narrow_parameters=()):
+    def __init__(self, seed, trial, constants, pointer_parameters, narrow_parameters=(), argument_ranges=None,
+                 nonnull_arguments=frozenset(), disjoint_arguments=()):
         self.key = f"{seed}:{trial}"
         self.constants = constants
         self.pointer_parameters = pointer_parameters
         self.narrow_parameters = narrow_parameters
+        self.argument_ranges = argument_ranges or {}
+        self.nonnull_arguments = nonnull_arguments
+        self.disjoint_arguments = disjoint_arguments
         # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
         self.repairs = {}
         # The registers set at random on entry, the arguments aside, inverted bit by bit (entry_registers)
@@ -775,7 +941,8 @@ class Fuzz:
         values = []
         for index, word in enumerate(self.words(generator, ARGUMENT_WORDS)):
             if index < len(self.pointer_parameters) and self.pointer_parameters[index]:
-                null = generator.randrange(NULL_POINTER_ODDS) == 0
+                # Drawn whether or not the contract keeps it from NULL: the other draws stay the same
+                null = generator.randrange(NULL_POINTER_ODDS) == 0 and index not in self.nonnull_arguments
                 values.append(0 if null else ARENA_BASE + generator.randrange(ARENA_SIZE // WORD) * WORD)
             else:
                 values.append(word)
@@ -786,6 +953,11 @@ class Fuzz:
         # what the function does with the upper bits
         for index, narrow in enumerate(self.narrow_parameters[:len(values)]):
             values[index] = narrowed(values[index], narrow)
+        # The C's contract with its callers, repaired values included: what no call passes isn't tried
+        for index, limits in self.argument_ranges.items():
+            values[index] = ranged(values[index], limits)
+        for first, second, count, unit in self.disjoint_arguments:
+            values[second] = apart(values[first], values[second], values[count] * unit)
         return values
 
     def gte_words(self):
@@ -1087,10 +1259,11 @@ class Tracer:
     it a count; an addition keeps the origin of the operand not in memory already, an offset (unless a count) when the
     other operand is in memory; any other write drops it"""
 
-    def __init__(self, memory, decoded, entry, repaired, buffers):
+    def __init__(self, memory, decoded, start, repaired, buffers):
         self.memory = memory
         self.decoded = decoded
-        self.entry = entry
+        # Where the decoded code starts: the function's entry, or the first of its parts before it
+        self.start = start
         # The roots repaired already
         self.repaired = repaired
         # RAM's and the scratchpad's words on entry, and as the run goes (the tracing machine's buffers)
@@ -1115,7 +1288,7 @@ class Tracer:
         self.steps += 1
         if self.steps > TRACE_LIMIT:
             return False
-        effect, access, source, other, destination, immediate = self.decoded[(address - self.entry) // WORD]
+        effect, access, source, other, destination, immediate = self.decoded[(address - self.start) // WORD]
         origins = self.origins
         self.access = origins.get(access)
         if effect == EFFECT_NONE:
@@ -1174,7 +1347,7 @@ def repaired_run(fuzz, base, machine, tracing, decoded):
     for _ in range(MAX_REPAIRS):
         if not access_fault(expected.status):
             break
-        tracer = Tracer(memory, decoded, machine.entry, set(fuzz.repairs), tracing.buffers)
+        tracer = Tracer(memory, decoded, machine.start, set(fuzz.repairs), tracing.buffers)
         traced = tracing.run(memory, fuzz, tracer)
         if traced.status != expected.status or tracer.access is None:
             # Faulting past TRACE_LIMIT, or through no input word
@@ -1527,7 +1700,10 @@ def compare(memory, retail, declared, expected, actual, restored=()):
             continue
 
     frame = range(physical(ENTRY_SP - STACK_RESERVE), physical(ENTRY_SP + ARGUMENT_HOME_SIZE))
-    for word in sorted(word for word in changed(memory, expected) | changed(memory, actual) if word not in frame):
+    # Its stack frame and its own scratch (EQUIV_SCRATCH) aside
+    kept = [frame, *declared.scratch]
+    for word in sorted(word for word in changed(memory, expected) | changed(memory, actual)
+                       if not any(word in area for area in kept)):
         want, have = (next(read_word(content, word - start) for start, content in outcome.regions.items()
                            if start <= word < start + len(content)) for outcome in (expected, actual))
         if want != have:
@@ -1581,7 +1757,22 @@ def main():
     retail_entry, retail_size = retail.function(arguments.function)
     candidate = compile_candidate(source, arguments.function, retail)
     declared = declarations(source, arguments.function, retail)
-    retail_code = retail.kept[retail_entry - retail.kept_start:retail_entry - retail.kept_start + retail_size]
+    retail_start, retail_size = retail_extent(retail, source, arguments.function, retail_entry, retail_size,
+                                              declared.runs_into)
+    retail_code = retail.kept[retail_start - retail.kept_start:retail_start - retail.kept_start + retail_size]
+    if (declared.argument_ranges or declared.nonnull_arguments or declared.disjoint_arguments or declared.scratch
+            or declared.runs_into):
+        limits = [f"{argument_name(index)} in [{low:#x}, {high:#x}]"
+                  for index, (low, high) in sorted(declared.argument_ranges.items())]
+        limits += [f"{argument_name(index)} not NULL" for index in sorted(declared.nonnull_arguments)]
+        limits += [f"{argument_name(first)} and {argument_name(second)} apart by {argument_name(count)} * {unit} bytes"
+                   for first, second, count, unit in declared.disjoint_arguments]
+        limits += [f"{shown(area.start):#010x} to {shown(area.stop):#010x} its own scratch" for area in declared.scratch]
+        limits += [f"runs {routine} as its own" for routine in sorted(declared.runs_into)]
+        print(f"{CONTRACT} {', '.join(limits)}")
+    else:
+        # Every argument drawn from the whole of its type
+        pass
 
     agreeing = 0
     repaired = 0
@@ -1597,12 +1788,14 @@ def main():
     pool = fuzz_pool(arguments.seed, constants)
     machines = None
     for trial in range(arguments.trials):
-        fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters, declared.narrow_parameters)
+        fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters, declared.narrow_parameters,
+                    declared.argument_ranges, declared.nonnull_arguments, declared.disjoint_arguments)
         base = Memory(fuzz, pool, retail, candidate)
         if machines is None:
             # The retail code's, the tracing one's, the candidate's
-            machines = (Machine(base, retail, retail_entry, retail_size, declared.callee_arguments),
-                        Machine(base, retail, retail_entry, retail_size, declared.callee_arguments, traced=True),
+            machines = (Machine(base, retail, retail_entry, retail_size, declared.callee_arguments, start=retail_start),
+                        Machine(base, retail, retail_entry, retail_size, declared.callee_arguments, traced=True,
+                                start=retail_start),
                         Machine(base, retail, candidate.entry, candidate.size, declared.callee_arguments,
                                 start=candidate.start))
         memory, expected = repaired_run(fuzz, base, machines[0], machines[1], decoded)
@@ -1619,7 +1812,8 @@ def main():
         differences = compare(memory, retail, declared, expected, actual)
         if differences:
             if again_machine is None:
-                again_machine = Machine(base, retail, retail_entry, retail_size, declared.callee_arguments)
+                again_machine = Machine(base, retail, retail_entry, retail_size, declared.callee_arguments,
+                                        start=retail_start)
             other = fuzz.with_other_registers()
             again = again_machine.run(memory, other)
             depends = depends_on_unset(memory, retail, declared, (expected, entry_registers(fuzz)),

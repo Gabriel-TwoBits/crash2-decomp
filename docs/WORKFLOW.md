@@ -159,6 +159,26 @@ Its limits, which a passing run doesn't lift:
   after both runs. `mfc2`'s and `cfc2`'s load delay isn't modelled. The model is psx-spx's account of the GTE, not the
   hardware's: C and retail agreeing on it means they agree with each other on what psx-spx describes.
 
+### A function's contract
+
+Random trials pass what no caller does, and some retail code then does what no C can say: `Sys_Memcpy` jumps into
+code for a negative count, and stores a block's words high to low, which a NULL or an overlapping buffer shows. The
+equivalent C may state the function's contract with its callers, lines of nothing in the build (`include/common.h`):
+
+    EQUIV_RANGE(Sys_Memcpy, 2, 0, MEMCPY_MAX_HALFWORDS)   /* $a2 between 0 and 0xFFFF, signed */
+    EQUIV_NONNULL(Sys_Memcpy, 0)                         /* $a0 never NULL */
+    EQUIV_DISJOINT(Sys_Memcpy, 0, 1, 2, 2)               /* $a0's and $a1's buffers, $a2 * 2 bytes, apart */
+    EQUIV_SCRATCH(func_8003DA00, SAVE_AREA, SAVE_AREA_BYTES) /* what it leaves there doesn't count */
+    EQUIV_RUNS(func_8003CBE4, func_8003CBF0)             /* the retail code branches into it as its own */
+
+equiv.py then keeps its trials to it (a value outside the range moved into it by its remainder, a NULL drawn for that
+pointer left out, the second buffer moved past the first, the scratch left out of the memory compared, the routine run
+as part of the retail function, which still has other callers in the build), and prints it with the verdict, which
+`tools/match.py` records. The scratch is the handwritten code's save area, the scratchpad's first 16 words: every
+function that uses it writes it before reading it, and no compiled code touches it. A bound is a number or a `#define` of one in the file; a line it can't read stops it. A contract goes in by
+hand, with its evidence in the comment above it: every caller, compiled and handwritten, and what each passes.
+`tools/match.py` refuses C holding one from a run: the loop's agent never narrows its own trials.
+
 ### The GTE in C
 
 The game's routines written with GTE instructions get equivalent C through `include/gte.h`, a model of the GTE in C
@@ -177,8 +197,10 @@ The handwritten code (`asm/game/80039D2C.s`, docs/TARGET.md) can't match from C 
 default build assembles it whole. Its equivalent C is `src/game/80039D2C.c`, which only `ninja nonmatching` compiles:
 `configure.py` leaves each function the file defines (its `static` ones aside) out of the equivalent build's copy of the
 handwritten code, from its `nonmatching` line to the next one, and links the file right after that copy, so the code
-before a replaced function stays where it was. `configure.py` (through `tools/handwritten.py`) stops on a function the
-handwritten code doesn't have.
+before a replaced function stays where it was. Routines only one function reaches, such as the tails its dispatch jumps
+into, go with it: `HANDWRITTEN_PARTS(Sys_Memcpy, Sys_Memcpy1, ...)` in the file names them, and equiv.py runs them as
+part of the retail function. `configure.py` (through `tools/handwritten.py`) stops on a function the handwritten code
+doesn't have.
 
 About 28 of its 98 functions are called from compiled code with the usual convention; the other 70 or so take values
 in registers the convention leaves alone (`$s3`, `$t5`, `$v1`) and call one another, through tables too. A function

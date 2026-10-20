@@ -37,7 +37,8 @@ import sys
 import time
 from pathlib import Path
 
-from equiv import DEFAULT_TRIALS, EXIT_DISAGREE, EXIT_UNSUPPORTED, GTE_OPCODES, NONMATCHING_MACRO, OPCODE_SHIFT
+from equiv import (CONTRACT, CONTRACT_LINE, DEFAULT_TRIALS, EXIT_DISAGREE, EXIT_UNSUPPORTED, GTE_OPCODES,
+                   NONMATCHING_MACRO, OPCODE_SHIFT)
 from probe_compiler import retail_assembly, retail_words
 from progress import EQUIVALENT
 from psx_cc import AS, ASFLAGS, DEFAULT_ASPSX, DEFAULT_CFLAGS, DEFAULT_GCC, HERE, compile_c, compiler
@@ -640,6 +641,9 @@ def unfit(text):
         return "inline assembly"
     elif INCLUDED.search(text):
         return "an INCLUDE_ASM line"
+    elif CONTRACT_LINE.search(text):
+        # It narrows what equiv.py tries: written by hand, with the callers' evidence, never by a run
+        return "a contract with its callers (EQUIV_ lines)"
     else:
         return None
 
@@ -659,7 +663,9 @@ def equivalence(source, name, trials, seed):
         return False, 0, "\n".join(lines[-ERROR_LINES:]) or f"equiv.py exited with status {result.returncode}"
     elif result.returncode == 0 and agreeing.group(1) == agreeing.group(2):
         compared = int(agreeing.group(2)) - sum(int(count) for count in UNCOMPARED.findall(result.stdout))
-        return True, compared, f"{agreeing.group(0)}, {compared} compared"
+        # The verdict holds within the C's contract with its callers, when it has one
+        contract = next((f" ({line})" for line in lines if line.startswith(CONTRACT)), "")
+        return True, compared, f"{agreeing.group(0)}, {compared} compared{contract}"
     else:
         # The first disagreement, then the count
         start = next((index for index, line in enumerate(lines) if DISAGREEMENT.match(line)), None)
