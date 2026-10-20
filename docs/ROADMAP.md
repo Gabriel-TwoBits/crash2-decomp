@@ -548,8 +548,23 @@ the heap stayed as it was). A longer build leaves the heap, from the end of `.bs
 `configure.py` stops past 64 KB over (`MAX_GROWTH`), a limit to raise once a build that long has played every
 schedule.
 
-The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly; the
-first to grow the executable past the retail file is the one to run every schedule on with the heap that much smaller.
+Three more, with what they needed. The collision lists `func_80029538` builds start each zone's part with a header
+`func_8003BF90` writes first, so a box never comes before one; equiv.py now also runs a disagreeing trial's retail code
+with the registers it didn't set zeroed (flipped ones gave the same box), which leaves `func_8003D040`'s headerless
+trials uncompared, and it agrees on 2,000 of 2,000 on 2 seeds. `func_8003C88C`, which marks the boxes' edges in the
+scratchpad's grid, went in with `func_8003CBF0`, its routine and `func_8003CBE4`'s, now C both share. `func_8003D3CC`
+sets the GTE up to draw an object (its translation, culled by depth, and a rotation from its angles times its scale)
+through `mvmva`, which `tools/gte.py` and `include/gte.h` gained (`tools/gte.py` `nclip`, `dpcs` and `dpct` too, the
+handwritten code's other commands); its retail code puts a `ctc2` in a delay slot, which equiv.py now runs. A draft
+with its camera correction off by one disagrees on 110 trials: the path is tried. The handwritten file's `.rodata` (an
+initialiser's zeros, the GTE model's constants) had moved all the code after it by up to 0x34 bytes, the GOOL
+operations among them, and turtle-woods differed from game frame 3,526; linked after the file's code instead, nothing
+before it moves, and `ninja nonmatching` says when the handwritten code isn't at its retail address. The executable is
+then 64 bytes past the retail file: written after the disc image's last sector, with the heap that much smaller, it
+displays retail's image on all four schedules at every frame. `tools/progress.py`: 17 of 98 handwritten functions
+equivalent.
+
+The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
 the handwritten code's renderers by caller, with what each relies on of its callees' registers checked, and the GOOL

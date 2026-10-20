@@ -124,9 +124,10 @@ is `void`), the callee-saved registers, the calls in order, and every word eithe
 frame. A trial where the retail run reaches the limit (500,000 instructions or 1,000 calls) agrees whatever the
 candidate does, as one where both take the same exception (reported, not compared; after an exception only the calls
 are compared); a candidate reaching the limit where the retail code returned disagrees. A disagreeing trial's retail code runs again with
-every bit flipped in the registers that aren't arguments: when its result changes, it depends on registers its caller
-left (a path reading one it never set, which C can't name: `func_80017380` uses the caller's `$s0` for an entry type it
-doesn't handle), and the trial agrees, reported and not compared. Two runs stopped by the same address error compare
+every bit flipped in the registers that aren't arguments, then with them zeroed: when its result changes, it depends on
+registers its caller left (a path reading one it never set, which C can't name: `func_80017380` uses the caller's `$s0`
+for an entry type it doesn't handle; `func_8003D040` a box's sizes before its list's first header, two huge values and
+their flips covering the box alike), and the trial agrees, reported and not compared. Two runs stopped by the same address error compare
 where it stopped and their registers there. The first disagreement is printed with its trial's arguments and
 repairs; the last line is `N of M trials agree`, and the exit status 0 only when all do. A 500-trial run takes 1 to 2
 seconds, 5 to 25 for a function whose trials often reach the limit or fault after thousands of instructions (a repair
@@ -189,16 +190,25 @@ included under `NON_MATCHING` only (its functions are `static`, which equiv.py r
 part of it) and runs a command as a call (`Gte_Rtpt()`), which reads what the command needs into a `GteRegs`, computes it
 in C, and writes back what it changed. On the PlayStation the registers stay in the GTE, so the C runs among code that
 uses the real one; a native port keeps the commands' C and replaces the moves. It agrees with `tools/gte.py` on 6,000
-random register files and commands (checked while writing it); a command it lacks is added to both, from psx-spx. Its
-cost is code room: about 1,800 bytes of the equivalent build's, which has 208 left.
+random register files and commands (checked while writing it); a command it lacks is added to both, from psx-spx.
+`tools/gte.py` also runs `mvmva` (the rotation, light and light colour matrices, the translation or background colour
+added or none), `nclip`, `dpcs` and `dpct`, the handwritten code's other commands; it refuses the garbage matrix and the
+far colour's wrongly added sum, which no code uses. The C has `Gte_MultiplyMatrix` (`mvmva` as the game encodes it:
+sf 1, nothing added), for a file that defines `GTE_MVMVA` before including the header, since GCC 2.7.2 emits every
+static function. Its cost is code room: about 1,800 bytes for each file including it. The handwritten code also puts
+a GTE instruction in a branch's delay slot (`func_8003D3CC`'s `ctc2`), where equiv.py's hook can't stop: it runs the
+instruction on the model as the branch starts, with the slot a `nop` meanwhile, when it moves no CPU register and the
+branch doesn't link into what it reads.
 
 ### The handwritten code
 
 The handwritten code (`asm/game/80039D2C.s`, docs/TARGET.md) can't match from C and has no `INCLUDE_ASM` lines: the
 default build assembles it whole. Its equivalent C is `src/game/80039D2C.c`, which only `ninja nonmatching` compiles:
 `configure.py` leaves each function the file defines (its `static` ones aside) out of the equivalent build's copy of the
-handwritten code, from its `nonmatching` line to the next one, and links the file right after that copy, so the code
-before a replaced function stays where it was. Routines only one function reaches, such as the tails its dispatch jumps
+handwritten code, from its `nonmatching` line to the next one, and links the file's code and read-only data right
+after that copy, so the code before a replaced function stays where it was: the handwritten GOOL operations, whose
+addresses a renderer reads as bytes (docs/TARGET.md, "Code addresses read as data"), keep retail's unless C before them
+changed size, and `ninja nonmatching` says when they don't. Routines only one function reaches, such as the tails its dispatch jumps
 into, go with it: `HANDWRITTEN_PARTS(Sys_Memcpy, Sys_Memcpy1, ...)` in the file names them, and equiv.py runs them as
 part of the retail function. `configure.py` (through `tools/handwritten.py`) stops on a function the handwritten code
 doesn't have.
