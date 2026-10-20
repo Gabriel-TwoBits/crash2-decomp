@@ -101,8 +101,8 @@ NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: N
 # The equivalent build's data follows its code wherever that ends; past the retail file's size, tools/patch_disc.py
 # writes the executable after the image's last sector. Where the linker's image ends in the file, the header included
 IMAGE_FILE_END = "main_ROM_END"
-# TRADEOFF: growth past the retail file is capped at what the game has been run with; the heap, from the end of .bss to
-# the stack, shrinks by as much, so a higher cap needs the schedules run again on a build that size
+# TRADEOFF: growth past the retail file is capped; the heap, from the end of .bss to the stack, shrinks by as much, so a
+# higher cap needs every schedule played by a build that long
 MAX_GROWTH = 0x10000
 LAYOUT_CHECK = "check-layout"
 NONMATCHING_LAYOUT_STAMP = NONMATCHING_BUILD / "layout.stamp"
@@ -225,7 +225,7 @@ def check_layout(elf):
     over = symbols[IMAGE_FILE_END] - EXE_SIZE
     if over > MAX_GROWTH:
         sys.exit(f"the equivalent executable is {over} bytes longer than the retail file's {EXE_SIZE}, past the "
-                 f"{MAX_GROWTH} tried in the game: the heap, from the end of .bss, would be as much smaller")
+                 f"{MAX_GROWTH} allowed (MAX_GROWTH): the heap, from the end of .bss, would be as much smaller")
     elif over > 0:
         print(f"{elf}: {over} bytes longer than the retail file (tools/patch_disc.py puts it after the image's last "
               "sector); the heap that much smaller")
