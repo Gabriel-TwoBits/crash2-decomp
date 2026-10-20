@@ -684,3 +684,124 @@ s32 func_8003D3CC(void *object, void *camera, s32 on_screen, s32 scale_shift, vo
     GTE_WRITE_CONTROL(GTE_RT33, 0);
     return 1;
 }
+
+/* func_8003CD0C's words in the scratchpad: its arguments (the value for none, the callback, the output, the object), the
+ * second sum, and 13 words it holds across each call (what its registers hold then, as its code saves them) */
+#define CALLED_KEPT 0x1F8000E0
+#define CALLED_SUM 0x1F8000F0
+#define CALLED_SAVED 0x1F800070
+/* The box kinds below this (2 * kind), with no subkind or one past 0x2F, go uncalled */
+#define CALLED_KIND_LIMIT 4
+#define CALLED_SUBKIND_MASK 0x3F0
+#define CALLED_SUBKIND_LIMIT 0x300
+
+typedef s32 (*BoxCallback)(void *object, s32 kind);
+
+EQUIV_SCRATCH(func_8003CD0C, SAVE_AREA, SAVE_AREA_BYTES)
+/* Its one caller passes func_8002A1B8, of two arguments, which writes neither $t8 nor $t9 in either build: the retail
+ * code keeps two of a header's halvings in them across the call */
+EQUIV_CALLBACK(func_8003CD0C, 7, 2, t8, t9)
+
+/* Over the boxes of a collision list overlapping a box, those whose top is at most base: the average top of kind 0's
+ * into out[1] and of the others' into out[2] (none when there are none). A box of kind 2 or more, or with a subkind under
+ * 0x30, first goes to callback with the object and its kind word, and counts only when that returns 0 */
+void func_8003CD0C(void *object, void *records, void *origin, s32 *box, s32 base, s32 *out, s32 none,
+                   BoxCallback callback) {
+    u32 *record = records;
+    s32 *at = origin;
+    u32 *kept = (u32 *)CALLED_KEPT;
+    u32 *saved = (u32 *)CALLED_SAVED;
+    u32 size[AXES];
+    s32 halvings[AXES];
+    s32 least[AXES], most[AXES];
+    s32 count_a = 0, sum_a = 0, count_b = 0, sum_b = 0;
+    s32 word, kind, level, axis, shift;
+    u32 first, second;
+
+    kept[0] = none;
+    kept[1] = (u32)callback;
+    kept[2] = (u32)out;
+    kept[3] = (u32)object;
+    for (axis = 0; axis < AXES; axis++) {
+        size[axis] = 0;
+        halvings[axis] = 0;
+    }
+    for (;; record += RECORD_WORDS) {
+        first = record[0];
+        second = record[1];
+        if ((first & RECORD_HALF_MASK) == RECORD_END) {
+            break;
+        } else if ((first & RECORD_HALF_MASK) == RECORD_HEADER) {
+            size[0] = (first >> RECORD_HALF_BITS) << RECORD_SIZE_SHIFT;
+            size[1] = (second & RECORD_HALF_MASK) << RECORD_SIZE_SHIFT;
+            size[2] = (second >> RECORD_HALF_BITS) << RECORD_SIZE_SHIFT;
+            halvings[0] = record[2] >> RECORD_HALF_BITS;
+            halvings[1] = record[3] & RECORD_HALF_MASK;
+            halvings[2] = record[3] >> RECORD_HALF_BITS;
+            /* With the loop's step, a header's 16 bytes */
+            record += HEADER_WORDS - RECORD_WORDS;
+            continue;
+        } else {
+            /* A box */
+        }
+        word = (((first & ~RECORD_LEVEL_MASK) & RECORD_HALF_MASK) >> RECORD_KIND_SHIFT) | 1;
+        kind = word & RECORD_KIND_MASK;
+        level = first & RECORD_LEVEL_MASK;
+        least[0] = at[0] + ((s16)(first >> RECORD_HALF_BITS) << RECORD_OFFSET_SHIFT);
+        least[1] = at[1] + ((s16)second << RECORD_OFFSET_SHIFT);
+        least[2] = at[2] + ((s16)(second >> RECORD_HALF_BITS) << RECORD_OFFSET_SHIFT);
+        if (box[3] < least[0] || box[4] < least[1] || box[5] < least[2]) {
+            continue;
+        }
+        for (axis = 0; axis < AXES; axis++) {
+            if (halvings[axis] < level) {
+                shift = halvings[axis];
+            } else {
+                shift = level;
+            }
+            most[axis] = least[axis] + (size[axis] >> shift);
+        }
+        if (most[0] < box[0] || most[1] < box[1] || most[2] < box[2]) {
+            continue;
+        }
+        if (kind >= CALLED_KIND_LIMIT
+            || ((word & CALLED_SUBKIND_MASK) != 0 && (word & CALLED_SUBKIND_MASK) < CALLED_SUBKIND_LIMIT)) {
+            ((s32 *)CALLED_SUM)[0] = sum_b;
+            saved[0] = base;
+            saved[1] = word;
+            saved[2] = count_a;
+            saved[3] = sum_a;
+            saved[4] = kind;
+            saved[5] = count_b;
+            saved[6] = (u32)record;
+            saved[7] = most[0];
+            saved[8] = most[1];
+            saved[9] = most[2];
+            saved[10] = box[0];
+            saved[11] = box[1];
+            saved[12] = at[2];
+            if (callback(object, word) != 0) {
+                continue;
+            }
+        } else {
+            /* Counted without asking */
+        }
+        if (base < most[1]) {
+            continue;
+        } else if (kind == 0) {
+            count_a++;
+            sum_a += most[1];
+        } else {
+            count_b++;
+            sum_b += most[1];
+        }
+    }
+    out[1] = none;
+    if (count_a != 0) {
+        out[1] = sum_a / count_a;
+    }
+    out[2] = none;
+    if (count_b != 0) {
+        out[2] = sum_b / count_b;
+    }
+}
