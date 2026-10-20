@@ -328,7 +328,7 @@ s32 Gool_Interpret(void *, s32, s32);
 void func_8003AE54(void *, s32, u16 *);
 void func_8003B24C(void *, s32, u16 *);
 void Sys_Memcpy(void *, void *, s32);
-s32 Gfx_ResetOt(u8 *, s32);
+void Gfx_ResetOt(u8 *, s32);
 void Sys_TimerHandler(void);
 s32 Math_SqrMagnitude2(s32, s32);
 s32 func_8003BF90(s32 *, s32 *, void *, s32);
