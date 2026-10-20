@@ -503,18 +503,47 @@ and cosine, the two sums of squares, the integer square root and an empty functi
 and memory-card schedules agree with retail at every frame, and turtle-woods with the equivalent build without them at
 every frame. Two were tried and set aside:
 
-- `Sys_Memcpy`: its retail code jumps into code for a negative count, which random trials pass. equiv.py disagrees on
-  60% of the trials (the first one shown has a count of 0x80103778); trials limited to the counts callers pass would
-  change equiv.py's protocol, a decision left open.
+- `Sys_Memcpy`: its retail code jumps into code for a negative count, which random trials pass (60% of them disagreed).
+  It went in later, under a contract (below).
 - `Gfx_ResetOt`: it agrees on every trial, but leaves `$v0` alone, which its handwritten caller returns (docs/TARGET.md,
   "What a caller keeps"). Its prototype is now `void`.
 
 Trying them showed the names of `Sys_Memcpy`'s tails the wrong way round (docs/TARGET.md, "Tails after their
 function"), now corrected. `tools/progress.py` counts the handwritten functions apart: 6 of 98 equivalent.
 
-Next: each batch checked in the game too, on the four schedules (by groups that each agree, docs/WORKFLOW.md); the
-handwritten code's functions by caller, the GOOL interpreter's entries then the renderers, with what each relies on of
-its callees' registers checked.
+equiv.py then took a function's contract with its callers (docs/WORKFLOW.md, "A function's contract"): lines of
+nothing in the build that keep the trials to what the game passes, each with its evidence beside it, printed with the
+verdict and refused by `tools/match.py` in a run's C: `EQUIV_RANGE`, `EQUIV_NONNULL`, `EQUIV_DISJOINT`, `EQUIV_SCRATCH`
+(the handwritten code's save area, the scratchpad's first 16 words, which every user writes before reading) and
+`EQUIV_RUNS` (a routine the retail code branches into, still in the build for its other callers), and
+`HANDWRITTEN_PARTS` for the tails only one function reaches, which go with it. Without a contract equiv.py draws as
+before. Three more went in with them: `Sys_Memcpy` (counts 0 to 0xFFFF, buffers never NULL nor overlapping: 2,000 of
+2,000 trials on 2 seeds, all compared), `func_8003DA00`, which descends an octree to the leaf holding a point (its save
+area), and `func_8003CBE4`, which marks a cell of a scratchpad grid and ORs a shape into its rows (it runs
+`func_8003CBF0`, which `func_8003C88C` still calls). `func_8003CBE4`'s prototype is now `void func_8003CBE4();`: the
+matched `func_8002CB1C` calls it with no arguments, passing its own on in `$a0` and `$a1`. The new-game, demo and
+memory-card schedules agree with retail at every frame with all nine. `tools/progress.py`: 13 of 98 handwritten
+functions equivalent, `Sys_Memcpy`'s four tails counted.
+
+Looked at and left in assembly: `func_8003D040` (a box query over records whose sizes come from headers; a box before
+any header uses sizes left in `$s4`-`$t9` by its caller, 1 trial in 2,000, so it waits for the records' producer, likely
+`func_8003BF90`); `func_8003DB94` and `func_80041D14` (a driver calling renderers with `$v1`, `$fp` and `$gp` set, and a
+callback stored for one); `func_8003EAD4` (a second entry, `D_8003EBC4`, in its middle, which `func_8003FD14` and the
+renderers' table at 0x8005B6EC reach). The GOOL interpreter (`Gool_Interpret` and 10 routines, 0x1128 bytes) holds its
+opcode handlers as labels the data's opcode table points to, the table `func_80042818` also reads as bytes.
+
+The turtle-woods schedule can't judge this work yet: the equivalent build without handwritten C differs from retail
+from game frame 3,666, and every build with it from game frame 4,429, whether or not the handwritten code keeps its
+retail addresses (a diagnostic build with each replaced function's bytes left as space); the cause isn't found.
+
+Next, and what it needs: the remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than
+their assembly, and the equivalent executable has 1,936 bytes of the retail file's room left (`tools/patch_disc.py`
+writes it into the retail file's sectors). Growing past it means relocating the file on the disc image, a change to
+the build to decide first.
+
+Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
+the turtle-woods difference explained; the code room decided, then the handwritten code's renderers by caller, with
+what each relies on of its callees' registers checked, and the GOOL interpreter with its opcode table.
 
 ## 5. Readable C (in progress)
 
