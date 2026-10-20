@@ -13,6 +13,7 @@
 --                             since its last return)
 --   press FIRST LAST BUTTON   hold BUTTON (PCSX.CONSTS.PAD.BUTTON's name) from frame FIRST to frame LAST
 --   shot FRAME                save the displayed image at FRAME
+--   dump FRAME                with the game clock, save main RAM as game frame FRAME is displayed (ram_FRAME.bin)
 --   end FRAME                 quit at FRAME
 -- RUN_GAME_OUT names the directory written: trace.txt (one line a vsync: its number, a hash of the displayed image,
 -- the program counter, the last exception's code), shot_FRAME_WIDTHxHEIGHT_BPP.raw for each shot, the displayed image
@@ -42,6 +43,7 @@ local HOST_INPUT_NONE = 'Keyboard'
 local PAD_PORTS = 2
 -- Main RAM's size: an address's offset into it, whatever its segment (KUSEG, KSEG0, KSEG1)
 local RAM_MASK = 0x1fffff
+local RAM_SIZE = RAM_MASK + 1
 local BREAKPOINT_WIDTH = 4
 
 local schedulePath = os.getenv('RUN_GAME_SCHEDULE')
@@ -52,6 +54,7 @@ end
 
 local presses = {}
 local shots = {}
+local dumps = {}
 local lastFrame = nil
 local clock = nil
 local vsyncLimit = nil
@@ -65,6 +68,8 @@ for line in io.lines(schedulePath) do
         presses[#presses + 1] = { first = tonumber(words[2]), last = tonumber(words[3]), button = button }
     elseif words[1] == 'shot' then
         shots[tonumber(words[2])] = true
+    elseif words[1] == 'dump' then
+        dumps[tonumber(words[2])] = true
     elseif words[1] == 'end' then
         lastFrame = tonumber(words[2])
     elseif words[1] == 'clock' and words[2] == 'game' then
@@ -90,6 +95,7 @@ end
 if lastFrame == nil then error('the schedule has no end') end
 if clock ~= nil and vsyncLimit == nil then error('a schedule on the game clock needs a vsync limit') end
 if pace ~= nil and clock == nil then error('pacing needs the game clock') end
+if next(dumps) ~= nil and clock == nil then error('dumps count game frames: they need the game clock') end
 
 -- The audio sink is the emulator's clock; unbounded, it lets the emulation run as fast as the host can
 PCSX.settings.spu.Speed = UNBOUNDED_SPEED
@@ -157,6 +163,11 @@ if clock ~= nil then
         gameFrames:write(string.format('%d %d %s\n', gameFrame, vsync, bit.tohex(hashImage(shot.data), 16)))
         if shots[gameFrame] then
             saveShot(gameFrame, shot)
+        end
+        if dumps[gameFrame] then
+            local file = io.open(string.format('%s/ram_%d.bin', outDir, gameFrame), 'wb')
+            file:write(ffi.string(memory, RAM_SIZE))
+            file:close()
         end
         gameFrame = gameFrame + 1
         timer[0] = gameFrame * clock.ticks

@@ -86,7 +86,7 @@ in the first warp room. The equivalent build's copy writes those 23 offsets as t
 `configure.py` stops unless it finds all 23 and leaves no `%gp_rel`. `ninja nonmatching` prints the room left in the
 retail file's 327,680 bytes, or how far past them the executable runs: `tools/patch_disc.py` then writes it after the
 image's last sector, and the heap, which runs from the end of `.bss` to the stack, is that much smaller. It stops past
-64 KB over (`MAX_GROWTH`), the most the game has been run with.
+64 KB over (`MAX_GROWTH`), a limit to raise once a build that long has played every schedule.
 
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
 every trial.
@@ -259,7 +259,7 @@ notes and C go to `config/match/notes/FUNCTION.equivalent.md` and `.c`, beside t
 
     .venv/bin/python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
                                        [--baseline EXE] [--schedule {new-game,turtle-woods,memory-card,demo}]
-                                       [--real-time]
+                                       [--real-time] [--dump FRAME ...]
 
 equiv.py judges one function at a time; this plays the equivalent executable as a whole, in the game. It needs the
 `ninja nonmatching` build and the player's disc image (a MODE2/2352 `.cue` and `.bin`, never copied into the repository),
@@ -280,9 +280,11 @@ and writes into `build/` only:
    game frames (`Gfx_EndFrame`'s calls from power-on), and a game frame's image is the one on the display when the next
    call starts: New Game from the title's menu, the intro, Cortex's speech, into Turtle Woods from the first warp room,
    run, jump, spin; 3,450 game frames, about a minute. `--schedule turtle-woods` runs on into Turtle Woods blindly,
-   jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames: there the equivalent
-   build differs from game frame 3,524, where a renderer reads code addresses' bytes (docs/TARGET.md, "Code addresses
-   read as data"). `--schedule memory-card` picks Load Game from the title's menu and presses through the memory card's
+   jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames. A renderer there reads
+   code addresses' bytes (docs/TARGET.md, "Code addresses read as data"), so a build whose handwritten GOOL operations
+   moved differs from game frame 3,524; and the level's sound and disc reads go on in real time, so a build of another
+   speed played otherwise from game frame 3,666 until the schedule paced game frames 2,900 to 6,000 (5 vsyncs each,
+   as below). `--schedule memory-card` picks Load Game from the title's menu and presses through the memory card's
    screens blindly, one button of a cycle every 30 game frames: on the empty card it goes through Load/Save, Save Game
    and Enter Name, saves, and comes back to the warp room, 3,500 game frames. The card answers in real time, so slower
    code reaches its screens in fewer game frames (`func_800186D8`'s equivalent, which draws the menu, takes 4 vsyncs a
@@ -295,7 +297,9 @@ and writes into `build/` only:
    ELF (the default build's for retail); the breakpoints need the emulator's interpreter and debugger. At every vsync
    the script also records a hash of the displayed image, the program counter and the last exception's code, for the
    run's health. `--real-time` keeps the game's own clock instead and counts vsyncs: presses at fixed vsyncs, 8,000 of
-   them, about 15 seconds on the emulator's recompiler.
+   them, about 15 seconds on the emulator's recompiler. `--dump FRAME` writes each run's main RAM as that game frame is
+   displayed (`ram_FRAME.bin` in its folder under `build/run_game/`), to find what the two runs hold differently before
+   their images part.
 3. A run is healthy when it reaches its last frame (one without a new vsync for 20 seconds is stopped: the game crashed
    or hung; on the game clock, one short of its last game frame at its schedule's vsync limit too), its program counter
    stays in RAM or the BIOS, it takes no exception but interrupts and system calls, and its display isn't frozen over
