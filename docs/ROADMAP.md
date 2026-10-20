@@ -532,18 +532,28 @@ callback stored for one); `func_8003EAD4` (a second entry, `D_8003EBC4`, in its 
 renderers' table at 0x8005B6EC reach). The GOOL interpreter (`Gool_Interpret` and 10 routines, 0x1128 bytes) holds its
 opcode handlers as labels the data's opcode table points to, the table `func_80042818` also reads as bytes.
 
-The turtle-woods schedule can't judge this work yet: the equivalent build without handwritten C differs from retail
-from game frame 3,666, and every build with it from game frame 4,429, whether or not the handwritten code keeps its
-retail addresses (a diagnostic build with each replaced function's bytes left as space); the cause isn't found.
+The turtle-woods schedule then differed from game frame 3,666 in the equivalent build without handwritten C, and from
+4,429 with it, whether or not the handwritten code kept its retail addresses. Bisected by file with the handwritten
+code and the data pinned at their retail addresses, every half of the equivalent files gave the same 3,666 and the
+same 2,335 differing frames, and the build with them all as assembly agreed: no one function. `tools/run_game.py
+--dump` (RAM at chosen game frames) showed the runs apart by game frame 3,400 in counters of vsyncs and in a block at
+`D_8005CC18` + 0xE94 that looks like the sound's: the level's sound and disc reads go on in real time, so a build of
+another speed plays otherwise, as the memory card did. Paced from game frame 2,900 to 6,000 (5 vsyncs each), retail
+agrees with itself, and the equivalent build with retail at all 6,001 game frames, without handwritten C and with it.
 
-Next, and what it needs: the remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than
-their assembly, and the equivalent executable has 1,936 bytes of the retail file's room left (`tools/patch_disc.py`
-writes it into the retail file's sectors). Growing past it means relocating the file on the disc image, a change to
-the build to decide first.
+The executable may now outgrow the retail file: `tools/patch_disc.py` writes it after the disc image's last sector and
+points the directory record and the volume's size to it (the BIOS finds it by name, no other file moves), checked by a
+copy 64 KB longer, which plays the new-game schedule as the build does (its header still loads the build's size, so
+the heap stayed as it was). A longer build leaves the heap, from the end of `.bss` to the stack, as much smaller:
+`configure.py` stops past 64 KB over (`MAX_GROWTH`), a limit to raise once a build that long has played every
+schedule.
+
+The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly; the
+first to grow the executable past the retail file is the one to run every schedule on with the heap that much smaller.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
-the turtle-woods difference explained; the code room decided, then the handwritten code's renderers by caller, with
-what each relies on of its callees' registers checked, and the GOOL interpreter with its opcode table.
+the handwritten code's renderers by caller, with what each relies on of its callees' registers checked, and the GOOL
+interpreter with its opcode table.
 
 ## 5. Readable C (in progress)
 
