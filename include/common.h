@@ -23,6 +23,9 @@ typedef unsigned long long u64;
 /* The retail code runs into these handwritten routines as its own (a branch, not a call), which other callers keep in
  * the build */
 #define EQUIV_RUNS(function, routines...)
+/* Argument ARGUMENT is a function every caller passes that takes COUNT arguments: a call through it compares those, and
+ * leaves the registers named after COUNT as they were (the callback never writes them) */
+#define EQUIV_CALLBACK(function, argument, count, kept...)
 
 /* The split's functions (asm/nonmatchings/) use macro.inc's labels */
 #define INCLUDE_ASM_USE_MACRO_INC 1

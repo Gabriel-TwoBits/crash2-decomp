@@ -16,8 +16,9 @@ every byte either side changed outside its own stack frame.
 
 The C file may state the function's contract with its callers (include/common.h): EQUIV_RANGE(function, argument, low,
 high), EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_SCRATCH(function,
-address, bytes) and EQUIV_RUNS(function, routine, ...). The trials then keep to it, and the verdict says so; each line
-goes in by hand with the evidence that every call keeps to it (docs/WORKFLOW.md, "A function's contract").
+address, bytes), EQUIV_RUNS(function, routine, ...) and EQUIV_CALLBACK(function, argument, count, register...). The
+trials then keep to it, and the verdict says so; each line goes in by hand with the evidence that every call keeps to
+it (docs/WORKFLOW.md, "A function's contract").
 HANDWRITTEN_PARTS(function, part, ...) and EQUIV_RUNS make the retail code the function runs as its own reach to those
 routines (tools/handwritten.py).
 
@@ -241,6 +242,8 @@ FUNCT_NO_DESTINATION = {0x08, 0x0C, 0x0D}
 RA_NUMBER = 31
 # SPECIAL's jalr, which links into rd ($ra as the game writes it)
 FUNCT_JALR = 0x09
+# An address's low bit, which a jump through a register takes for the MIPS16 mode
+MIPS16_BIT = 1
 # What an instruction does to the registers' origins (Tracer): nothing, drop its destination's, copy its source's, load
 # a word (the word's own if as it was on entry), add, shift, multiply, move from or to $hi/$lo
 (EFFECT_NONE, EFFECT_DROP, EFFECT_MOVE, EFFECT_LW, EFFECT_SUM, EFFECT_SCALE, EFFECT_MULTIPLY, EFFECT_FROM_MULTIPLY,
@@ -308,8 +311,8 @@ VARIADIC = "..."
 LONG_RETURN = r"\b(?:long\s+long|s64|u64)\s+"
 # A function's contract with its callers in its C file (include/common.h): EQUIV_RANGE(function, argument, low, high),
 # its bounds numbers or names the file #defines as numbers, EQUIV_NONNULL(function, argument),
-# EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_SCRATCH(function, address, bytes) and
-# EQUIV_RUNS(function, routine, ...)
+# EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_SCRATCH(function, address, bytes),
+# EQUIV_RUNS(function, routine, ...) and EQUIV_CALLBACK(function, argument, count)
 NUMBER = r"-?(?:0x[0-9A-Fa-f]+|\d+)"
 BOUND = rf"{NUMBER}|[A-Za-z_]\w*"
 CONTRACT_LINE = re.compile(r"^EQUIV_\w*\(.*$", re.MULTILINE)
@@ -318,6 +321,7 @@ ARGUMENT_NONNULL = re.compile(r"^EQUIV_NONNULL\((\w+),\s*(\d+)\)$")
 ARGUMENTS_DISJOINT = re.compile(r"^EQUIV_DISJOINT\((\w+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)$")
 SCRATCH_AREA = re.compile(rf"^EQUIV_SCRATCH\((\w+),\s*({BOUND}),\s*({BOUND})\)$")
 RUNS_INTO = re.compile(r"^EQUIV_RUNS\((\w+)((?:,\s*\w+)+)\)$")
+CALLBACK_ARGUMENT = re.compile(r"^EQUIV_CALLBACK\((\w+),\s*(\d+),\s*(\d+)((?:,\s*\w+)*)\)$")
 NUMERIC_DEFINE = re.compile(rf"^#define\s+(\w+)\s+\(?({NUMBER})\)?\s*$", re.MULTILINE)
 CONTRACT = "the C's contract:"
 SIGNED_MIN = -(1 << (WORD_BITS - 1))
@@ -683,12 +687,14 @@ class Declarations:
     narrow_parameters: tuple
     # The C's contract with its callers (contract): {argument's index: (low, high)}, the pointer arguments never NULL,
     # (first, second, count, unit) of the buffers that never overlap, the physical ranges of its own scratch, and the
-    # handwritten routines its retail code runs into
+    # handwritten routines its retail code runs into, {argument's index: (the arguments a callback it holds takes, the
+    # registers a call to it leaves)}
     argument_ranges: dict
     nonnull_arguments: frozenset
     disjoint_arguments: tuple
     scratch: tuple
     runs_into: frozenset
+    callbacks: dict
 
 
 # A parameter's integer types narrower than a word, by the words that name them: (bits, signed). Plain char is left out,
@@ -758,7 +764,7 @@ def declarations(source, function, retail):
     counts.update(variadic)
     returns_void = re.search(rf"\bvoid\s+{function}\s*\(", text) is not None
     returns_long = re.search(rf"{LONG_RETURN}{function}\s*\(", text) is not None
-    ranges, nonnull, disjoint, scratch, runs = contract(source, function)
+    ranges, nonnull, disjoint, scratch, runs, callbacks = contract(source, function)
     pointers = pointer_parameters or ()
     named_pointers = nonnull.union(*((first, second) for first, second, _, _ in disjoint))
     not_pointers = sorted(index for index in named_pointers if index >= len(pointers) or not pointers[index])
@@ -766,13 +772,13 @@ def declarations(source, function, retail):
         sys.exit(f"{source}: the contract of {function} takes its argument {not_pointers[0]} for a pointer, which its C "
                  "doesn't declare one")
     return Declarations({retail.addresses[name]: count for name, count in counts.items()}, not returns_void, returns_long,
-                        pointers, narrow_parameters, ranges, nonnull, disjoint, scratch, runs)
+                        pointers, narrow_parameters, ranges, nonnull, disjoint, scratch, runs, callbacks)
 
 
 def contract(source, function):
     """({argument's index: (low, high)}, the arguments never NULL, the buffers never overlapping, its own scratch's
-    physical ranges, the routines it runs into) of the function's EQUIV_RANGE, EQUIV_NONNULL, EQUIV_DISJOINT,
-    EQUIV_SCRATCH and EQUIV_RUNS lines in its C file"""
+    physical ranges, the routines it runs into, the callbacks' argument counts) of the function's EQUIV_RANGE,
+    EQUIV_NONNULL, EQUIV_DISJOINT, EQUIV_SCRATCH, EQUIV_RUNS and EQUIV_CALLBACK lines in its C file"""
     text = source.read_text()
     defines = {name: int(value, 0) for name, value in NUMERIC_DEFINE.findall(text)}
 
@@ -789,6 +795,7 @@ def contract(source, function):
     disjoint = []
     scratch = []
     runs = set()
+    callbacks = {}
     for found in CONTRACT_LINE.finditer(text):
         written = found.group(0).strip()
         in_range = ARGUMENT_RANGE.fullmatch(written)
@@ -796,13 +803,27 @@ def contract(source, function):
         apart = ARGUMENTS_DISJOINT.fullmatch(written)
         own = SCRATCH_AREA.fullmatch(written)
         into = RUNS_INTO.fullmatch(written)
-        line = in_range or never_null or apart or own or into
+        called = CALLBACK_ARGUMENT.fullmatch(written)
+        line = in_range or never_null or apart or own or into or called
         if line is None:
             sys.exit(f"{source}: `{written}` is none of EQUIV_RANGE(function, argument, low, high), "
                      "EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), "
-                     "EQUIV_SCRATCH(function, address, bytes) and EQUIV_RUNS(function, routine, ...)")
+                     "EQUIV_SCRATCH(function, address, bytes), EQUIV_RUNS(function, routine, ...) and "
+                     "EQUIV_CALLBACK(function, argument, count)")
         elif line.group(1) != function:
             continue
+        elif called is not None:
+            index, count = int(called.group(2)), int(called.group(3))
+            # group(4) starts with the comma before the first register
+            kept = tuple(name.strip() for name in called.group(4).split(",")[1:])
+            if index >= ARGUMENT_WORDS or count > len(ARGUMENT_REGISTERS):
+                sys.exit(f"{source}: `{written}` names an argument past the {ARGUMENT_WORDS} drawn, or a callback of "
+                         f"more than {len(ARGUMENT_REGISTERS)} arguments")
+            elif any(name not in CLOBBERED_BY_CALLS for name in kept):
+                sys.exit(f"{source}: `{written}` keeps a register a call may not change anyway, or none of the CPU's")
+            else:
+                callbacks[index] = (count, frozenset(kept))
+                continue
         elif into is not None:
             # group(2) starts with the comma after the function
             runs.update(routine.strip() for routine in into.group(2).split(",")[1:])
@@ -834,7 +855,7 @@ def contract(source, function):
             sys.exit(f"{source}: EQUIV_RANGE of {function}'s argument {index}: [{low}, {high}] isn't a range of words")
         else:
             ranges[index] = (low, high)
-    return ranges, frozenset(nonnull), tuple(disjoint), tuple(scratch), frozenset(runs)
+    return ranges, frozenset(nonnull), tuple(disjoint), tuple(scratch), frozenset(runs), callbacks
 
 
 def retail_extent(retail, source, function, entry, size, runs_into):
@@ -910,7 +931,7 @@ class Fuzz:
     """A trial's random values, each drawn from a generator seeded by the trial and what it is for"""
 
     def __init__(self, seed, trial, constants, pointer_parameters, narrow_parameters=(), argument_ranges=None,
-                 nonnull_arguments=frozenset(), disjoint_arguments=()):
+                 nonnull_arguments=frozenset(), disjoint_arguments=(), callbacks=None):
         self.key = f"{seed}:{trial}"
         self.constants = constants
         self.pointer_parameters = pointer_parameters
@@ -918,6 +939,8 @@ class Fuzz:
         self.argument_ranges = argument_ranges or {}
         self.nonnull_arguments = nonnull_arguments
         self.disjoint_arguments = disjoint_arguments
+        # {argument's index: (the arguments of the callback it holds, the registers a call to it leaves)} (EQUIV_CALLBACK)
+        self.callbacks = callbacks or {}
         # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
         self.repairs = {}
         # The registers set at random on entry, the arguments aside, inverted bit by bit or zeroed (entry_registers)
@@ -1410,6 +1433,10 @@ class Machine:
         self.fuzz = None
         self.tracer = None
         self.returned = None
+        # {callee address: the arguments compared} for the run in progress, its callbacks' among them, and the registers
+        # its callbacks leave
+        self.run_arguments = arguments
+        self.run_kept = {}
         self.emulator, self.fresh = self.make_emulator()
 
     def make_emulator(self):
@@ -1446,6 +1473,20 @@ class Machine:
         emulator.context_restore(self.fresh)
         for start, content in memory.regions.items():
             self.views[start][:] = content
+        # A callback's calls compare the arguments it takes, wherever the trial points it: a register's value, or the
+        # stack's word as the trial's memory holds it, repairs included
+        self.run_arguments = dict(self.arguments)
+        self.run_kept = {}
+        registers = entry_registers(fuzz)
+        for index, (count, kept) in fuzz.callbacks.items():
+            if index < len(ARGUMENT_REGISTERS):
+                target = registers[ARGUMENT_REGISTERS[index]]
+            else:
+                target = read_word(emulator.mem_read(physical(ENTRY_SP + ARGUMENT_HOME_SIZE)
+                                                     + (index - len(ARGUMENT_REGISTERS)) * WORD, WORD), 0)
+            # A jump to an odd address lands on the even one below (the MIPS16 bit, which Unicorn clears)
+            self.run_arguments[target & ~MIPS16_BIT] = count
+            self.run_kept[target & ~MIPS16_BIT] = kept
         # A GTE instruction in a delay slot runs as its branch starts (delayed_coprocessor), the slot a nop meanwhile
         self.patch_delay_slots(0)
         for register, value in entry_registers(fuzz).items():
@@ -1504,7 +1545,7 @@ class Machine:
             return
         # TRADEOFF: the callee isn't run, so its side effects (memory it writes, what it returns for real) are missing;
         # both sides get the same made-up return value, and C relying on what the callee does to memory isn't checked
-        count = self.arguments.get(address, len(ARGUMENT_REGISTERS))
+        count = self.run_arguments.get(address, len(ARGUMENT_REGISTERS))
         sp = uc.reg_read(REGISTERS["sp"])
 
         def argument(value):
@@ -1512,7 +1553,8 @@ class Machine:
             # and a local passed by reference is compared by its value
             # TRADEOFF: FRAME_WORDS words whatever the local's size; past a smaller local they may be other locals,
             # which a frame laid out otherwise holds elsewhere. Unset words read zero alike (Memory)
-            if sp <= value < ENTRY_SP:
+            # Only while $sp is the stack's: handwritten code holds other values in it (func_8003CD0C an origin's x)
+            if ENTRY_SP - STACK_RESERVE <= sp <= value < ENTRY_SP:
                 start = value - value % WORD
                 end = min(start + FRAME_WORDS * WORD, ENTRY_SP)
                 return FrameWords(tuple(read_word(uc.mem_read(physical(start), end - start), offset)
@@ -1527,7 +1569,11 @@ class Machine:
         call = len(outcome.calls) - 1
         values = self.fuzz.words(self.returned, len(CLOBBERED_BY_CALLS))
         bounds = self.return_ranges.get(address)
+        kept = self.run_kept.get(address, frozenset())
         for name, value in zip(CLOBBERED_BY_CALLS, values):
+            if name in kept:
+                # A callback that never writes it (EQUIV_CALLBACK)
+                continue
             value = self.fuzz.repairs.get(Root(ROOT_CALL, (call, name)), value)
             if name == "v0" and bounds is not None:
                 low, high = bounds
@@ -1833,7 +1879,7 @@ def main():
                                               declared.runs_into)
     retail_code = retail.kept[retail_start - retail.kept_start:retail_start - retail.kept_start + retail_size]
     if (declared.argument_ranges or declared.nonnull_arguments or declared.disjoint_arguments or declared.scratch
-            or declared.runs_into):
+            or declared.runs_into or declared.callbacks):
         limits = [f"{argument_name(index)} in [{low:#x}, {high:#x}]"
                   for index, (low, high) in sorted(declared.argument_ranges.items())]
         limits += [f"{argument_name(index)} not NULL" for index in sorted(declared.nonnull_arguments)]
@@ -1841,6 +1887,9 @@ def main():
                    for first, second, count, unit in declared.disjoint_arguments]
         limits += [f"{shown(area.start):#010x} to {shown(area.stop):#010x} its own scratch" for area in declared.scratch]
         limits += [f"runs {routine} as its own" for routine in sorted(declared.runs_into)]
+        limits += [f"{argument_name(index)} a callback of {count} arguments"
+                   + (f" leaving {', '.join(f'${name}' for name in sorted(kept))}" if kept else "")
+                   for index, (count, kept) in sorted(declared.callbacks.items())]
         print(f"{CONTRACT} {', '.join(limits)}")
     else:
         # Every argument drawn from the whole of its type
@@ -1861,7 +1910,8 @@ def main():
     machines = None
     for trial in range(arguments.trials):
         fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters, declared.narrow_parameters,
-                    declared.argument_ranges, declared.nonnull_arguments, declared.disjoint_arguments)
+                    declared.argument_ranges, declared.nonnull_arguments, declared.disjoint_arguments,
+                    declared.callbacks)
         base = Memory(fuzz, pool, retail, candidate)
         if machines is None:
             # The retail code's, the tracing one's, the candidate's
