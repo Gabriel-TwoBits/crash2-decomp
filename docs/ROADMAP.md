@@ -490,7 +490,31 @@ displays retail's image at all 3,501 game frames, as retail does against itself,
 still agree at every frame. The two saves differ by 12 bytes, a random number the game draws while waiting for the card
 and puts in the save's name; retail's two runs save the same bytes.
 
-Next: each batch checked in the game too, on the four schedules (by groups that each agree, docs/WORKFLOW.md).
+Later, with the matches landed since, the equivalent build's handwritten GOOL operations sit at their retail addresses
+again (the 12 opcode table entries that renderer reads are the same in both executables), and the turtle-woods
+schedule differs from game frame 3,666 instead, 142 game frames later; that difference has another cause, not looked
+into yet.
+
+The handwritten code gets equivalent C too (docs/WORKFLOW.md, "The handwritten code"): `src/game/80039D2C.c`, compiled
+by the equivalent build only, whose functions `configure.py` leaves out of that build's copy of the handwritten code.
+The first six are the ones compiled code calls with the usual convention and nothing handwritten relies on: the sine
+and cosine, the two sums of squares, the integer square root and an empty function the renderers' table at
+0x8005B75C points to (its C compiles to the same `jr $ra`). Each agrees on 2 seeds of 2,000 trials; the new-game, demo
+and memory-card schedules agree with retail at every frame, and turtle-woods with the equivalent build without them at
+every frame. Two were tried and set aside:
+
+- `Sys_Memcpy`: its retail code jumps into code for a negative count, which random trials pass. equiv.py disagrees on
+  60% of the trials (the first one shown has a count of 0x80103778); trials limited to the counts callers pass would
+  change equiv.py's protocol, a decision left open.
+- `Gfx_ResetOt`: it agrees on every trial, but leaves `$v0` alone, which its handwritten caller returns (docs/TARGET.md,
+  "What a caller keeps"). Its prototype is now `void`.
+
+Trying them showed the names of `Sys_Memcpy`'s tails the wrong way round (docs/TARGET.md, "Tails after their
+function"), now corrected. `tools/progress.py` counts the handwritten functions apart: 6 of 98 equivalent.
+
+Next: each batch checked in the game too, on the four schedules (by groups that each agree, docs/WORKFLOW.md); the
+handwritten code's functions by caller, the GOOL interpreter's entries then the renderers, with what each relies on of
+its callees' registers checked.
 
 ## 5. Readable C (in progress)
 

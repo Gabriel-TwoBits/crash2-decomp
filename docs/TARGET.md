@@ -51,14 +51,24 @@ Found by the matching runs (each run's notes are in `config/match/notes/<functio
   - Its unconditional branches are all `b` (`bgez $zero`): 49 of its 97 functions have one and none has a `j`, while
     before it 242 of 466 functions have a `j` and none a `b`. No GCC from 2.5.7 to 2.8.1 writes `b` for one (their
     `jump` pattern is `j` only), at any of the flags tried (docs/COMPILER.md).
-  - `func_8003D2EC`, a sine lookup with the shape of PsyQ libgte's `rsin` (a quarter-wave table of 0x401 `s16` at
-    `D_8005BCB0`), looks compiled but is part of it: besides its `b`s, it keeps a branch to the very next instruction,
+  - `Math_Sin` (`0x8003D2EC`), a sine lookup with the shape of PsyQ libgte's `rsin` (a quarter-wave table of 0x401 `s16`
+    at `g_SinTable`), looks compiled but is part of it: besides its `b`s, it keeps a branch to the very next instruction,
     which GCC removes at `-O1` and up, and `-O0` code looks nothing like it.
 
   splat marks 57 of its 97 functions handwritten, and none of the other 40 shows the compiler that built the rest. The
   build assembles it as it is (`asm/game/80039D2C.s`). splat marks two functions before it handwritten too
   (`func_8001856C`, `func_800186D8`). None of these can match from C: the matching decomp keeps them as assembly, and a
   native port rewrites them in C that does the same work.
+- **Tails after their function.** `Sys_Memcpy` copies `a2` halfwords (the card directory's 0x28-byte entries go with
+  0x14) and ends on a dispatch to `D_8003BB94 + a2 * 32` for its last 1 to 4, into the four 32-byte tails right after it
+  (`Sys_Memcpy1` to `Sys_Memcpy4`, which use its `$a0`, `$a1` and `$at`); a count below 0 jumps backwards into code. The
+  five tails before it use `$s1`, `$s2` and `$t6`, and are `func_8003B24C`'s: it ends on the same dispatch, from
+  `D_8003B87C`. The Crash 1 decomp's catalog puts the tails before their functions, which first named these the other
+  way round. A halfword loop at `0x8003BC34`, after the tails, is reached by no dispatch (`a2` is at most 4 there).
+  `Gfx_ResetOt` has no tails: 64 entries a pass, the terminator stored last.
+- **What a caller keeps.** `func_80041E5C` never sets `$v0` and returns what its last call left, which
+  `800111B0.c` stores in `D_8006CCB8`; on its path through `Gfx_ResetOt`, which leaves `$v0` alone, that is
+  `func_8002FB84`'s result. A handwritten caller can rely on any register its callee's retail code doesn't write.
 
 ## The game's source files
 
