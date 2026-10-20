@@ -123,7 +123,8 @@ Compared after each trial: how the run ended (returned, an exception, the instru
 is `void`), the callee-saved registers, the calls in order, and every word either side changed outside its own stack
 frame. A trial where the retail run reaches the limit (500,000 instructions or 1,000 calls) agrees whatever the
 candidate does, as one where both take the same exception (reported, not compared; after an exception only the calls
-are compared); a candidate reaching the limit where the retail code returned disagrees. A disagreeing trial's retail code runs again with
+are compared); a candidate reaching its limit, four times the retail code's (C may copy by halfwords where the retail
+code moves words: `func_8003B24C`), where the retail code returned disagrees. A disagreeing trial's retail code runs again with
 every bit flipped in the registers that aren't arguments, then with them zeroed: when its result changes, it depends on
 registers its caller left (a path reading one it never set, which C can't name: `func_80017380` uses the caller's `$s0`
 for an entry type it doesn't handle; `func_8003D040` a box's sizes before its list's first header, two huge values and
@@ -170,18 +171,28 @@ equivalent C may state the function's contract with its callers, lines of nothin
     EQUIV_RANGE(Sys_Memcpy, 2, 0, MEMCPY_MAX_HALFWORDS)   /* $a2 between 0 and 0xFFFF, signed */
     EQUIV_NONNULL(Sys_Memcpy, 0)                         /* $a0 never NULL */
     EQUIV_DISJOINT(Sys_Memcpy, 0, 1, 2, 2)               /* $a0's and $a1's buffers, $a2 * 2 bytes, apart */
+    EQUIV_BUFFER(func_8003AE54, 2, SORT_LIST_BYTES)      /* $a2 a buffer of its own, apart from the others declared */
+    EQUIV_HALF(func_8003AE54, 1, 0, 0, SORT_LIST_ENTRIES) /* the halfword at $a1 between 0 and 0x5F0 */
     EQUIV_SCRATCH(func_8003DA00, SAVE_AREA, SAVE_AREA_BYTES) /* what it leaves there doesn't count */
     EQUIV_RUNS(func_8003CBE4, func_8003CBF0)             /* the retail code branches into it as its own */
     EQUIV_CALLBACK(func_8003CD0C, 7, 2, t8, t9)          /* argument 7 a function of 2 arguments, writing neither */
 
 equiv.py then keeps its trials to it (a value outside the range moved into it by its remainder, a NULL drawn for that
-pointer left out, the second buffer moved past the first, the scratch left out of the memory compared, the routine run
-as part of the retail function, which still has other callers in the build, a call through the callback compared on
+pointer left out, the second buffer moved past the first, a buffer of its own that overlaps one declared before it moved
+past them all, the halfword moved into its range by its remainder wherever the argument points, the scratch left out
+of the memory compared, the routine run as part of the retail function, which still has other callers in the build, a call through the callback compared on
 its arguments only and leaving the registers named, which a call otherwise sets at random), and prints it with the verdict, which
 `tools/match.py` records. The scratch is the handwritten code's save area, the scratchpad's first 16 words: every
 function that uses it writes it before reading it, and no compiled code touches it. A bound is a number or a `#define` of one in the file; a line it can't read stops it. A contract goes in by
 hand, with its evidence in the comment above it: every caller, compiled and handwritten, and what each passes.
 `tools/match.py` refuses C holding one from a run: the loop's agent never narrows its own trials.
+
+A condition on the data a function reads, which no argument names, goes in its body: `EQUIV_ASSUME(based);`, nothing in
+the build. equiv.py compiles the candidate with `EQUIV_TRIAL` defined, where a failing condition calls `Equiv_Reject`,
+which ends the trial: it agrees, not compared, and is counted apart. `func_8003AE54` assumes a near swap follows a short
+or long one, as every one of the disc's 62,033 does (docs/TARGET.md): otherwise the retail code's base is whatever a
+register holds, the caller's, a jump target its copy left, or a flipped entry's address. Its evidence is the data
+itself, read whole from the disc and counted, and it goes beside the line.
 
 ### The GTE in C
 

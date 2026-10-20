@@ -572,6 +572,20 @@ retail code keeps its state in around the call, 0x1F800070 to 0x1F8000A3 among t
 on 2,000 of 2,000 trials on 2 seeds; every equivalent function (209) still agrees on 500 trials of seed 1, and the four
 schedules at every frame, the executable 240 bytes past the retail file. 18 of 98 handwritten functions equivalent.
 
+The sort lists' deltas (docs/TARGET.md, "The rest of the disc"): `func_8003AE54` applies one forward, its two streams'
+runs removed and inserted into the other buffer, then its swaps; `func_8003B24C` backward, its swaps undone last first,
+then the streams' roles exchanged. One C merge serves both, the tails `func_8003B89C` to `func_8003B91C` (the copy's
+unrolled ends) going in with them. Random trials needed what the disc shows: lists that fit `Gfx_AllocSortLists`'s
+0xBE4-byte buffers, deltas that fit their page, and the three buffers apart (`EQUIV_BUFFER`, `EQUIV_HALF`), else the
+copy runs over the delta it reads and the two sides read it at different times. A near swap's base where no short or
+long swap comes before is a register's leftover (the caller's, the copy's jump target, a flipped entry's address),
+which no delta on the disc reaches: `EQUIV_ASSUME`, a condition in the C's body that ends a trial uncompared. The
+backward copy by halfwords runs past the retail code's instruction limit where its unrolled word copy doesn't: the
+candidate's limit is now four times the retail code's. Both agree on 2,000 of 2,000 trials on 2 seeds, about 45%
+compared (the rest of random deltas loop to the limit); every equivalent function (211) still agrees on 500 trials
+of seed 1, and the four schedules at every frame, the executable within the retail file again. 25 of 98 handwritten
+functions equivalent.
+
 The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);

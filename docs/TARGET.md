@@ -152,6 +152,14 @@ models, textures, sounds, and the GOOL bytecode that drives the objects) with th
 engine: the GOOL interpreter, rendering, collision, the paging of NSF entries from the disc, and the SDK. CrashEdit documents
 the formats (docs/REFERENCES.md).
 
+The sort lists (SLST entries, type 4) give a zone's drawing order, one per camera position: an item whose second
+halfword has bit 0 clear is a whole list (`func_80029800` copies it), else a delta the handwritten `func_8003AE54`
+applies forward and `func_8003B24C` backward, into one of `Gfx_AllocSortLists`'s two 0xBE4-byte buffers. Read from
+the disc's NSF pages (every one uncompressed, magic 0x1234): 3,980 whole lists, the largest of 1,026 entries; 61,960
+deltas, the largest 0x638 bytes, no header end past 794. Of their swaps, 1,315,110 flip bits, 313,226 are short,
+52,141 long and 62,033 near, a near one always after a short or long one (47,227 and 14,806), never first or after a
+flip: the retail code takes a near swap's base from the swap before it, where a flip leaves an address instead.
+
 ## Addresses from the disc
 
 No address of the executable turned up in the disc's data, and none holds `.data` in place. What breaks the game when
