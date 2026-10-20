@@ -4,9 +4,10 @@ emulator (tools/run_game.py): by default the equivalent track's, build/nonmatchi
 
     python tools/patch_disc.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--exe EXE] [--out CUE]
 
-The image is the .cue of a raw dump (MODE2/2352). The executable takes the file's sectors, which it may not outgrow, and
-its size goes into the file's directory record. Each sector rewritten gets its EDC and ECC computed again, once the same
-routine has given the original sector's own.
+The image is the .cue of a raw dump (MODE2/2352). The executable takes the file's sectors, or, when it outgrows them,
+new sectors after the image's last (the retail file's left as they were, unreferenced), and its place and size go into
+the file's directory record: the BIOS finds it by name (SYSTEM.CNF), and no other file moves. Each sector written gets
+its EDC and ECC computed again, once the same routine has given the original sector's own.
 """
 import argparse
 import re
@@ -50,9 +51,24 @@ BYTE_MASK = 0xFF
 BITS_PER_BYTE = 8
 BYTE_VALUES = 256
 
-# A directory record keeps its extent's size twice: little-endian at 10, big-endian at 14
+# A directory record keeps its extent's first sector and size twice each: little-endian at 2 and 10, big-endian at 6
+# and 14
+RECORD_EXTENT_LITTLE = 2
+RECORD_EXTENT_BIG = 6
 RECORD_SIZE_LITTLE = 10
 RECORD_SIZE_BIG = 14
+# The primary volume descriptor's sector, and its volume space size (the volume's sectors), little- then big-endian
+PRIMARY_VOLUME_SECTOR = 16
+VOLUME_SPACE_LITTLE = 80
+VOLUME_SPACE_BIG = 84
+# A sector's header holds its absolute address: minutes, seconds and frames in BCD, 2 seconds (the pregap) past its
+# number in the track
+ADDRESS_SIZE = 3
+PREGAP_SECTORS = 150
+SECTORS_PER_SECOND = 75
+SECONDS_PER_MINUTE = 60
+BCD_BASE = 10
+BCD_SHIFT = 4
 
 
 def edc_table():
@@ -140,6 +156,20 @@ def read_form_1(image, number):
     return sector
 
 
+def address(number):
+    """The header's address of a track's sector"""
+    seconds, frames = divmod(number + PREGAP_SECTORS, SECTORS_PER_SECOND)
+    minutes, seconds = divmod(seconds, SECONDS_PER_MINUTE)
+    return bytes(((value // BCD_BASE) << BCD_SHIFT) | (value % BCD_BASE) for value in (minutes, seconds, frames))
+
+
+def single_track(cue):
+    """Whether the .cue's first file holds one track only: sectors appended to it then stay in the data track"""
+    text = cue.read_text(errors="replace")
+    files = re.split(r'^\s*FILE\s', text, flags=re.MULTILINE)
+    return len(files) > 1 and len(re.findall(r"^\s*TRACK\s", files[1], flags=re.MULTILINE)) == 1
+
+
 def write_cue(cue, out_cue, out_bin):
     """out_cue: cue's tracks with its first file replaced by out_bin, any other file by its absolute path"""
     replaced = False
@@ -168,25 +198,56 @@ def patch(cue, exe, out_cue):
         sys.exit(f"the disc has no {EXECUTABLE}: not Crash Bandicoot 2 (USA, SCUS-94154)")
     record = records[EXECUTABLE]
     sectors = (record.size + USER_DATA - 1) // USER_DATA
-    if len(exe) > sectors * USER_DATA:
-        sys.exit(f"the executable's {len(exe)} bytes outgrow {EXECUTABLE}'s {sectors} sectors ({sectors * USER_DATA} "
-                 "bytes) on the disc")
+    needed = (len(exe) + USER_DATA - 1) // USER_DATA
+    if needed > sectors and not single_track(cue):
+        sys.exit(f"the executable's {len(exe)} bytes outgrow {EXECUTABLE}'s {sectors} sectors, and {cue}'s first file "
+                 "holds more than its data track to append sectors to")
 
     out_cue.parent.mkdir(parents=True, exist_ok=True)
     out_bin = out_cue.with_suffix(".bin")
     shutil.copyfile(track, out_bin)
-    padded = exe.ljust(sectors * USER_DATA, b"\x00")
     with open(out_bin, "r+b") as image:
-        for index in range(sectors):
-            sector = read_form_1(image, record.first + index)
+        first_sector = read_form_1(image, record.first)
+        if first_sector[HEADER:HEADER + ADDRESS_SIZE] != address(record.first):
+            sys.exit(f"sector {record.first}'s header holds another address than its place in the image")
+        if needed <= sectors:
+            first, count = record.first, sectors
+        else:
+            image.seek(0, 2)
+            if image.tell() % SECTOR_SIZE:
+                sys.exit(f"{track} isn't whole sectors")
+            first, count = image.tell() // SECTOR_SIZE, needed
+        # The new extent's sectors take the old one's subheaders: a middle sector's, and the last's (end of the file)
+        middle = read_form_1(image, record.first + sectors // 2)
+        last = read_form_1(image, record.first + sectors - 1)
+        padded = exe.ljust(count * USER_DATA, b"\x00")
+        for index in range(count):
+            if first == record.first:
+                sector = read_form_1(image, first + index)
+            elif index == count - 1:
+                sector = bytearray(last)
+            else:
+                sector = bytearray(middle)
+            sector[HEADER:HEADER + ADDRESS_SIZE] = address(first + index)
             sector[DATA:EDC] = padded[index * USER_DATA:(index + 1) * USER_DATA]
-            image.seek((record.first + index) * SECTOR_SIZE)
+            image.seek((first + index) * SECTOR_SIZE)
             image.write(seal(sector))
         sector = read_form_1(image, record.sector)
-        struct.pack_into("<I", sector, DATA + record.offset + RECORD_SIZE_LITTLE, len(exe))
-        struct.pack_into(">I", sector, DATA + record.offset + RECORD_SIZE_BIG, len(exe))
+        for (little, big), value in (((RECORD_EXTENT_LITTLE, RECORD_EXTENT_BIG), first),
+                                     ((RECORD_SIZE_LITTLE, RECORD_SIZE_BIG), len(exe))):
+            struct.pack_into("<I", sector, DATA + record.offset + little, value)
+            struct.pack_into(">I", sector, DATA + record.offset + big, value)
         image.seek(record.sector * SECTOR_SIZE)
         image.write(seal(sector))
+        volume = read_form_1(image, PRIMARY_VOLUME_SECTOR)
+        if struct.unpack_from("<I", volume, DATA + VOLUME_SPACE_LITTLE)[0] < first + count:
+            struct.pack_into("<I", volume, DATA + VOLUME_SPACE_LITTLE, first + count)
+            struct.pack_into(">I", volume, DATA + VOLUME_SPACE_BIG, first + count)
+            image.seek(PRIMARY_VOLUME_SECTOR * SECTOR_SIZE)
+            image.write(seal(volume))
+        else:
+            # The volume already spans the executable's sectors
+            pass
     write_cue(cue, out_cue, out_bin)
 
 

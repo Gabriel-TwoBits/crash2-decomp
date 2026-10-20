@@ -98,9 +98,12 @@ HANDWRITTEN_FUNCTION = re.compile(r"^(?:/\* Handwritten function \*/\n)?nonmatch
                                   r"(?:(?!nonmatching |/\* Handwritten function \*/\n).*\n)*", re.MULTILINE)
 # The equivalent build's own copies of the split's assembly, by the default build's object
 NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: NONMATCHING_HANDWRITTEN}
-# The equivalent build's data follows its code wherever that ends; the executable may only grow to the retail file's
-# size, the sectors tools/patch_disc.py writes it into. Where the linker's image ends in the file, the header included
+# The equivalent build's data follows its code wherever that ends; past the retail file's size, tools/patch_disc.py
+# writes the executable after the image's last sector. Where the linker's image ends in the file, the header included
 IMAGE_FILE_END = "main_ROM_END"
+# TRADEOFF: growth past the retail file is capped at what the game has been run with; the heap, from the end of .bss to
+# the stack, shrinks by as much, so a higher cap needs the schedules run again on a build that size
+MAX_GROWTH = 0x10000
 LAYOUT_CHECK = "check-layout"
 NONMATCHING_LAYOUT_STAMP = NONMATCHING_BUILD / "layout.stamp"
 
@@ -220,9 +223,12 @@ def check_layout(elf):
     if IMAGE_FILE_END not in symbols:
         sys.exit(f"{elf} has no {IMAGE_FILE_END}")
     over = symbols[IMAGE_FILE_END] - EXE_SIZE
-    if over > 0:
-        sys.exit(f"the equivalent executable is {over} bytes longer than the retail file's {EXE_SIZE} on the disc, "
-                 "which tools/patch_disc.py writes it into: the equivalent C must shrink by that much")
+    if over > MAX_GROWTH:
+        sys.exit(f"the equivalent executable is {over} bytes longer than the retail file's {EXE_SIZE}, past the "
+                 f"{MAX_GROWTH} tried in the game: the heap, from the end of .bss, would be as much smaller")
+    elif over > 0:
+        print(f"{elf}: {over} bytes longer than the retail file (tools/patch_disc.py puts it after the image's last "
+              "sector); the heap that much smaller")
     else:
         print(f"{elf}: {-over} bytes of the retail file's room left")
 

@@ -83,9 +83,10 @@ The data follows the code. The handwritten code reads its structures through `$g
 `%gp_rel` of small data, which the linker would move with `.data` (docs/TARGET.md, "Addresses from the disc"): with no
 equivalent function, `.data` moved by 8 bytes so displays otherwise from frame 1,390 of `tools/run_game.py` and crashes
 in the first warp room. The equivalent build's copy writes those 23 offsets as the numbers their instructions hold, and
-`configure.py` stops unless it finds all 23 and leaves no `%gp_rel`. `ninja nonmatching` then stops, with the number of
-bytes over, only when the executable outgrows the retail file's 327,680 bytes, the sectors `tools/patch_disc.py` writes
-it into, and otherwise prints the room left.
+`configure.py` stops unless it finds all 23 and leaves no `%gp_rel`. `ninja nonmatching` prints the room left in the
+retail file's 327,680 bytes, or how far past them the executable runs: `tools/patch_disc.py` then writes it after the
+image's last sector, and the heap, which runs from the end of `.bss` to the stack, is that much smaller. It stops past
+64 KB over (`MAX_GROWTH`), the most the game has been run with.
 
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
 every trial.
@@ -266,8 +267,10 @@ and writes into `build/` only:
 
 1. `tools/patch_disc.py` copies the image to `build/disc/nonmatching.bin` with `build/nonmatching/SCUS_941.54.exe` in
    place of `SCUS_941.54`: the file's sectors rewritten with their EDC and ECC, its directory record given the size. An
-   executable that outgrows the file's 160 sectors (327,680 bytes, the retail size, which `ninja` pads to) is refused.
-   Written with the retail executable, the copy is the original image byte for byte.
+   executable that outgrows the file's 160 sectors (327,680 bytes, the retail size, which `ninja` pads to) goes into
+   new sectors after the image's last, given the address and subheaders a Form 1 file's take, and the directory record
+   and the volume's size point to them; the BIOS finds the file by name, and no other file moves. Written with the
+   retail executable, the copy is the original image byte for byte.
 2. PCSX-Redux (`tools/setup_toolchain.py` fetches it) boots the retail image and the copy at once, headless,
    unthrottled, on its own BIOS (OpenBIOS, no Sony BIOS needed), and `tools/run_game.lua` plays both on the game clock.
    The game measures each frame with `g_TimerTicks`, which `Sys_TimerHandler` counts up from a root counter's interrupt,
@@ -322,8 +325,7 @@ A run lasts at most about 32,700 vsyncs: the emulator's vsync event listener lea
 empty listener too) and overflows LuaJIT's stack there, a vsync's trace line lost. `tools/run_game.py` refuses a
 schedule whose vsync limit passes 32,000.
 
-A group must fit in the retail file's room on the disc, and functions that grow much (the GTE's routines, by the model,
-1,996 bytes) only fit beside others that shrink, which may themselves diverge in combination. Then the group is compared
+A group may grow the executable past the retail file (by up to `MAX_GROWTH`, above). Then the group is compared
 with itself without the new functions: `--baseline` runs that build in place of retail, and agreeing on every frame
 means the new functions display as the retail code did wherever the game reaches them. Whether it reaches them at all
 shows by sabotage: the same build with them drawing nothing differs (`func_8001856C` and `func_800186D8`, the title's
