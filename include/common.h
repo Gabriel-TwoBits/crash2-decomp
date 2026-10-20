@@ -17,6 +17,23 @@ typedef unsigned long long u64;
 #define EQUIV_NONNULL(function, argument)
 /* The buffers at pointer arguments FIRST and SECOND, argument COUNT's value times UNIT bytes each, never overlap */
 #define EQUIV_DISJOINT(function, first, second, count, unit)
+/* Pointer argument ARGUMENT is a buffer of BYTES of its own: no other argument so declared overlaps it */
+#define EQUIV_BUFFER(function, argument, bytes)
+/* The halfword OFFSET bytes past pointer argument ARGUMENT's address is between LOW and HIGH, unsigned */
+#define EQUIV_HALF(function, argument, offset, low, high)
+/* In an equivalent function's body: CONDITION holds in every call the game makes, its evidence beside it. Nothing in
+ * the build; tools/equiv.py leaves a trial where it fails uncompared */
+#ifdef EQUIV_TRIAL
+void Equiv_Reject(void);
+#define EQUIV_ASSUME(condition) \
+    do { \
+        if (!(condition)) { \
+            Equiv_Reject(); \
+        } \
+    } while (0)
+#else
+#define EQUIV_ASSUME(condition)
+#endif
 /* The BYTES from ADDRESS are the function's own scratch, a save area every other user writes before reading: what it
  * leaves there doesn't count */
 #define EQUIV_SCRATCH(function, address, bytes)

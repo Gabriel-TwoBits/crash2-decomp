@@ -15,10 +15,12 @@ after each trial: how it ended, the return value, the callee-saved registers, ea
 every byte either side changed outside its own stack frame.
 
 The C file may state the function's contract with its callers (include/common.h): EQUIV_RANGE(function, argument, low,
-high), EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_SCRATCH(function,
-address, bytes), EQUIV_RUNS(function, routine, ...) and EQUIV_CALLBACK(function, argument, count, register...). The
-trials then keep to it, and the verdict says so; each line goes in by hand with the evidence that every call keeps to
-it (docs/WORKFLOW.md, "A function's contract").
+high), EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_BUFFER(function,
+argument, bytes), EQUIV_HALF(function, argument, offset, low, high), EQUIV_SCRATCH(function, address, bytes),
+EQUIV_RUNS(function, routine, ...) and EQUIV_CALLBACK(function, argument, count, register...), and its body
+EQUIV_ASSUME(condition) on the data it reads. The trials then keep to it, a trial failing an assumption left uncompared,
+and the verdict says so; each line goes in by hand with the evidence that every call keeps to it (docs/WORKFLOW.md, "A
+function's contract").
 HANDWRITTEN_PARTS(function, part, ...) and EQUIV_RUNS make the retail code the function runs as its own reach to those
 routines (tools/handwritten.py).
 
@@ -49,6 +51,9 @@ from psx_cc import DEFAULT_ASPSX, DEFAULT_CFLAGS, DEFAULT_GCC, HERE, compile_c, 
 RETAIL_ELF = HERE / "build" / "SCUS_941.54.elf"
 RETAIL_EXE = HERE / "orig" / "USA" / "SCUS_941.54"
 NONMATCHING_MACRO = "NON_MATCHING"
+# Defined for the candidate only: EQUIV_ASSUME's failing condition calls REJECT_FUNCTION (include/common.h)
+TRIAL_MACRO = "EQUIV_TRIAL"
+REJECT_FUNCTION = "Equiv_Reject"
 # The wrapper INCLUDE_ASM puts around a function left as assembly (include/include_asm.h)
 INCLUDE_ASM_WRAPPER = "__maspsx_include_asm_hack_"
 DEFAULT_TRIALS = 500
@@ -117,6 +122,8 @@ WORD = 4
 WORD_MASK = 0xFFFFFFFF
 HALF_MASK = 0xFFFF
 HALF_BITS = 16
+HALF_BYTES = 2
+BYTE_BITS = 8
 HALF_SIGN = 0x8000
 # A %hi rounds up when its %lo is negative
 HALF_ROUNDING = 0x8000
@@ -174,6 +181,8 @@ SCRATCH_BASE = 0x80400000
 SECTION_ALIGNMENT = 16
 # $ra on entry: reaching it ends the run
 SENTINEL_RETURN = 0x80FFF000
+# Where the candidate's calls to REJECT_FUNCTION go, in the return sentinel's page
+SENTINEL_REJECT = SENTINEL_RETURN + 4
 ENTRY_SP = 0x801FFE00
 # Below the entry $sp: the function's frame and anything it pushes, left out of the comparison
 STACK_RESERVE = 0x10000
@@ -294,6 +303,7 @@ CALLEE_RETURN_RANGES = {
 
 # How a run ended
 RETURNED = "returned"
+REJECTED = "an assumption failing"
 LIMIT = "the limit"
 # Unicorn's exception numbers (QEMU's), as UC_HOOK_INTR reports them
 EXCEPTIONS = {12: "address error on load", 13: "address error on store", 17: "syscall", 18: "break", 21: "overflow",
@@ -314,7 +324,8 @@ VARIADIC = "..."
 LONG_RETURN = r"\b(?:long\s+long|s64|u64)\s+"
 # A function's contract with its callers in its C file (include/common.h): EQUIV_RANGE(function, argument, low, high),
 # its bounds numbers or names the file #defines as numbers, EQUIV_NONNULL(function, argument),
-# EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_SCRATCH(function, address, bytes),
+# EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_BUFFER(function, argument, bytes),
+# EQUIV_HALF(function, argument, offset, low, high), EQUIV_SCRATCH(function, address, bytes),
 # EQUIV_RUNS(function, routine, ...) and EQUIV_CALLBACK(function, argument, count)
 NUMBER = r"-?(?:0x[0-9A-Fa-f]+|\d+)"
 BOUND = rf"{NUMBER}|[A-Za-z_]\w*"
@@ -322,6 +333,8 @@ CONTRACT_LINE = re.compile(r"^EQUIV_\w*\(.*$", re.MULTILINE)
 ARGUMENT_RANGE = re.compile(rf"^EQUIV_RANGE\((\w+),\s*(\d+),\s*({BOUND}),\s*({BOUND})\)$")
 ARGUMENT_NONNULL = re.compile(r"^EQUIV_NONNULL\((\w+),\s*(\d+)\)$")
 ARGUMENTS_DISJOINT = re.compile(r"^EQUIV_DISJOINT\((\w+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)$")
+ARGUMENT_BUFFER = re.compile(rf"^EQUIV_BUFFER\((\w+),\s*(\d+),\s*({BOUND})\)$")
+BOUNDED_HALF = re.compile(rf"^EQUIV_HALF\((\w+),\s*(\d+),\s*({BOUND}),\s*({BOUND}),\s*({BOUND})\)$")
 SCRATCH_AREA = re.compile(rf"^EQUIV_SCRATCH\((\w+),\s*({BOUND}),\s*({BOUND})\)$")
 RUNS_INTO = re.compile(r"^EQUIV_RUNS\((\w+)((?:,\s*\w+)+)\)$")
 CALLBACK_ARGUMENT = re.compile(r"^EQUIV_CALLBACK\((\w+),\s*(\d+),\s*(\d+)((?:,\s*\w+)*)\)$")
@@ -511,13 +524,16 @@ class Candidate:
     entry: int
     start: int
     size: int
+    # Whether its code calls REJECT_FUNCTION (EQUIV_ASSUME)
+    assumes: bool
 
 
 def compile_candidate(source, function, retail):
     """Compiles source with NON_MATCHING defined and relocates its sections at SCRATCH_BASE"""
     with tempfile.TemporaryDirectory() as folder:
         obj = Path(folder) / "candidate.o"
-        error = compile_c(compiler(DEFAULT_GCC), DEFAULT_ASPSX, source, DEFAULT_CFLAGS, obj, (NONMATCHING_MACRO,))
+        error = compile_c(compiler(DEFAULT_GCC), DEFAULT_ASPSX, source, DEFAULT_CFLAGS, obj,
+                          (NONMATCHING_MACRO, TRIAL_MACRO))
         if error is not None:
             sys.exit(f"{source}: {error}")
         elf = Elf(obj)
@@ -576,6 +592,8 @@ def compile_candidate(source, function, retail):
         if symbol.name == function:
             # A recursive call runs the candidate, as the retail function's runs the retail code
             return bases[entry_symbol.shndx] + entry_symbol.value
+        elif symbol.name == REJECT_FUNCTION and symbol.shndx == SHN_UNDEF:
+            return SENTINEL_REJECT
         elif (symbol.name and symbol.type not in (STT_SECTION, STT_FILE) and symbol.name in retail.addresses
               and not (symbol.bind == STB_LOCAL and symbol.type == STT_NOTYPE)):
             # A name the retail executable knows (an assembler's local label aside): its retail address
@@ -637,7 +655,10 @@ def compile_candidate(source, function, retail):
         if pending_high:
             sys.exit(f"{source}: a HI16 relocation in {elf.sections[target].name} has no LO16")
     base = bases[entry_symbol.shndx]
-    return Candidate(bytes(image), base + entry_symbol.value, base + own_start, own_end - own_start)
+    code_relocations = elf.relocations(entry_symbol.shndx)
+    assumes = any(elf.symbols[symbol_index].name == REJECT_FUNCTION and own_start <= offset < own_end
+                  for offset, _, symbol_index in code_relocations)
+    return Candidate(bytes(image), base + entry_symbol.value, base + own_start, own_end - own_start, assumes)
 
 
 def align(value, alignment):
@@ -689,12 +710,15 @@ class Declarations:
     # Each parameter's narrow integer type, (bits, signed), or None (narrow_type)
     narrow_parameters: tuple
     # The C's contract with its callers (contract): {argument's index: (low, high)}, the pointer arguments never NULL,
-    # (first, second, count, unit) of the buffers that never overlap, the physical ranges of its own scratch, and the
+    # (first, second, count, unit) of the buffers that never overlap, (argument, bytes) of the buffers of their own,
+    # (argument, offset, low, high) of the halfwords in a range, the physical ranges of its own scratch, and the
     # handwritten routines its retail code runs into, {argument's index: (the arguments a callback it holds takes, the
     # registers a call to it leaves)}
     argument_ranges: dict
     nonnull_arguments: frozenset
     disjoint_arguments: tuple
+    buffer_arguments: tuple
+    bounded_halves: tuple
     scratch: tuple
     runs_into: frozenset
     callbacks: dict
@@ -767,21 +791,24 @@ def declarations(source, function, retail):
     counts.update(variadic)
     returns_void = re.search(rf"\bvoid\s+{function}\s*\(", text) is not None
     returns_long = re.search(rf"{LONG_RETURN}{function}\s*\(", text) is not None
-    ranges, nonnull, disjoint, scratch, runs, callbacks = contract(source, function)
+    ranges, nonnull, disjoint, buffers, halves, scratch, runs, callbacks = contract(source, function)
     pointers = pointer_parameters or ()
-    named_pointers = nonnull.union(*((first, second) for first, second, _, _ in disjoint))
+    named_pointers = nonnull.union(*((first, second) for first, second, _, _ in disjoint),
+                                   (index for index, _ in buffers), (index for index, _, _, _ in halves))
     not_pointers = sorted(index for index in named_pointers if index >= len(pointers) or not pointers[index])
     if not_pointers:
         sys.exit(f"{source}: the contract of {function} takes its argument {not_pointers[0]} for a pointer, which its C "
                  "doesn't declare one")
     return Declarations({retail.addresses[name]: count for name, count in counts.items()}, not returns_void, returns_long,
-                        pointers, narrow_parameters, ranges, nonnull, disjoint, scratch, runs, callbacks)
+                        pointers, narrow_parameters, ranges, nonnull, disjoint, buffers, halves, scratch, runs,
+                        callbacks)
 
 
 def contract(source, function):
-    """({argument's index: (low, high)}, the arguments never NULL, the buffers never overlapping, its own scratch's
-    physical ranges, the routines it runs into, the callbacks' argument counts) of the function's EQUIV_RANGE,
-    EQUIV_NONNULL, EQUIV_DISJOINT, EQUIV_SCRATCH, EQUIV_RUNS and EQUIV_CALLBACK lines in its C file"""
+    """({argument's index: (low, high)}, the arguments never NULL, the buffers never overlapping, the buffers of their
+    own, the halfwords in a range, its own scratch's physical ranges, the routines it runs into, the callbacks' argument
+    counts) of the function's EQUIV_RANGE, EQUIV_NONNULL, EQUIV_DISJOINT, EQUIV_BUFFER, EQUIV_HALF, EQUIV_SCRATCH,
+    EQUIV_RUNS and EQUIV_CALLBACK lines in its C file"""
     text = source.read_text()
     defines = {name: int(value, 0) for name, value in NUMERIC_DEFINE.findall(text)}
 
@@ -796,6 +823,8 @@ def contract(source, function):
     ranges = {}
     nonnull = set()
     disjoint = []
+    buffers = []
+    halves = []
     scratch = []
     runs = set()
     callbacks = {}
@@ -804,13 +833,16 @@ def contract(source, function):
         in_range = ARGUMENT_RANGE.fullmatch(written)
         never_null = ARGUMENT_NONNULL.fullmatch(written)
         apart = ARGUMENTS_DISJOINT.fullmatch(written)
+        sized = ARGUMENT_BUFFER.fullmatch(written)
+        half = BOUNDED_HALF.fullmatch(written)
         own = SCRATCH_AREA.fullmatch(written)
         into = RUNS_INTO.fullmatch(written)
         called = CALLBACK_ARGUMENT.fullmatch(written)
-        line = in_range or never_null or apart or own or into or called
+        line = in_range or never_null or apart or sized or half or own or into or called
         if line is None:
             sys.exit(f"{source}: `{written}` is none of EQUIV_RANGE(function, argument, low, high), "
                      "EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), "
+                     "EQUIV_BUFFER(function, argument, bytes), EQUIV_HALF(function, argument, offset, low, high), "
                      "EQUIV_SCRATCH(function, address, bytes), EQUIV_RUNS(function, routine, ...) and "
                      "EQUIV_CALLBACK(function, argument, count)")
         elif line.group(1) != function:
@@ -851,6 +883,20 @@ def contract(source, function):
         elif never_null is not None:
             nonnull.add(index)
             continue
+        elif sized is not None:
+            length = bound(sized.group(3))
+            if length <= 0 or any(index == other for other, _ in buffers):
+                sys.exit(f"{source}: `{written}` needs a positive size, once per argument")
+            else:
+                buffers.append((index, length))
+                continue
+        elif half is not None:
+            offset, low, high = (bound(half.group(number)) for number in range(3, 6))
+            if offset % HALF_BYTES or not 0 <= low <= high <= HALF_MASK:
+                sys.exit(f"{source}: `{written}` needs an even offset and a range of unsigned halfwords")
+            else:
+                halves.append((index, offset, low, high))
+                continue
         low, high = bound(in_range.group(3)), bound(in_range.group(4))
         if index in ranges:
             sys.exit(f"{source}: two EQUIV_RANGE lines for {function}'s argument {index}")
@@ -858,7 +904,8 @@ def contract(source, function):
             sys.exit(f"{source}: EQUIV_RANGE of {function}'s argument {index}: [{low}, {high}] isn't a range of words")
         else:
             ranges[index] = (low, high)
-    return ranges, frozenset(nonnull), tuple(disjoint), tuple(scratch), frozenset(runs), callbacks
+    return (ranges, frozenset(nonnull), tuple(disjoint), tuple(buffers), tuple(halves), tuple(scratch),
+            frozenset(runs), callbacks)
 
 
 def retail_extent(retail, source, function, entry, size, runs_into):
@@ -898,6 +945,51 @@ def apart(first, second, length):
         return (align(first + length, WORD) + second % WORD) & WORD_MASK
 
 
+def placed(values, buffers):
+    """The arguments with each buffer of its own (EQUIV_BUFFER) that overlaps one before it moved past all of them, its
+    offset in a word kept; NULL stays NULL"""
+    values = list(values)
+    ends = []
+    for index, length in buffers:
+        start = values[index]
+        if start == 0:
+            continue
+        elif any(start < end and other < start + length for other, end in ends):
+            start = (align(max(end for _, end in ends), WORD) + start % WORD) & WORD_MASK
+        else:
+            # Apart from those before it already
+            pass
+        values[index] = start
+        ends.append((start, start + length))
+    return values
+
+
+def bounded(memory, fuzz):
+    """The trial's memory with each halfword the contract bounds (EQUIV_HALF) moved into its range by its remainder:
+    where the arguments point, repairs included, unless that is NULL or outside the regions"""
+    if not fuzz.bounded_halves:
+        return memory
+    values = fuzz.arguments()
+    words = {}
+    for index, offset, low, high in fuzz.bounded_halves:
+        if values[index] == 0:
+            continue
+        address = physical(values[index] + offset)
+        aligned = address - address % WORD
+        word = words.get(aligned, memory.word(aligned))
+        if word is None or address % HALF_BYTES:
+            continue
+        shift = (address % WORD) * BYTE_BITS
+        value = (word >> shift) & HALF_MASK
+        if not low <= value <= high:
+            value = low + value % (high - low + 1)
+        else:
+            # In range as drawn
+            pass
+        words[aligned] = (word & ~(HALF_MASK << shift) & WORD_MASK) | (value << shift)
+    return memory.patched(words)
+
+
 def ranged(value, limits):
     """A word in a signed range: as it is when it falls in it, else moved into it by its remainder"""
     low, high = limits
@@ -934,7 +1026,8 @@ class Fuzz:
     """A trial's random values, each drawn from a generator seeded by the trial and what it is for"""
 
     def __init__(self, seed, trial, constants, pointer_parameters, narrow_parameters=(), argument_ranges=None,
-                 nonnull_arguments=frozenset(), disjoint_arguments=(), callbacks=None):
+                 nonnull_arguments=frozenset(), disjoint_arguments=(), callbacks=None, buffer_arguments=(),
+                 bounded_halves=()):
         self.key = f"{seed}:{trial}"
         self.constants = constants
         self.pointer_parameters = pointer_parameters
@@ -942,6 +1035,8 @@ class Fuzz:
         self.argument_ranges = argument_ranges or {}
         self.nonnull_arguments = nonnull_arguments
         self.disjoint_arguments = disjoint_arguments
+        self.buffer_arguments = buffer_arguments
+        self.bounded_halves = bounded_halves
         # {argument's index: (the arguments of the callback it holds, the registers a call to it leaves)} (EQUIV_CALLBACK)
         self.callbacks = callbacks or {}
         # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
@@ -994,7 +1089,7 @@ class Fuzz:
             values[index] = ranged(values[index], limits)
         for first, second, count, unit in self.disjoint_arguments:
             values[second] = apart(values[first], values[second], values[count] * unit)
-        return values
+        return placed(values, self.buffer_arguments)
 
     def gte_words(self):
         """The GTE's 64 registers on entry, data then control (GTE_PLAUSIBLE_ODDS)"""
@@ -1140,6 +1235,15 @@ class Memory:
             else:
                 continue
         return copy
+
+    def word(self, address):
+        """The word at a physical address, or None outside the regions"""
+        for start, content in self.regions.items():
+            if start <= address < start + len(content) - WORD + 1:
+                return read_word(content, address - start)
+            else:
+                continue
+        return None
 
     def repairable(self, address):
         """Whether a word of memory may be repaired: random on entry, in RAM or the scratchpad, outside the retail code
@@ -1380,7 +1484,7 @@ class Tracer:
 def repaired_run(fuzz, base, machine, tracing, decoded):
     """The trial's retail run on machine, its inputs repaired while it ends on an access fault through one of them (the
     tracing machine finds which): the memory both sides run from, and the retail run on it"""
-    memory = base
+    memory = bounded(base, fuzz)
     expected = machine.run(memory, fuzz)
     for _ in range(MAX_REPAIRS):
         if not access_fault(expected.status):
@@ -1398,7 +1502,7 @@ def repaired_run(fuzz, base, machine, tracing, decoded):
         else:
             # A pointer, or a zero, faulting again: its address comes from elsewhere too
             break
-        memory = base.patched(fuzz.memory_repairs())
+        memory = bounded(base.patched(fuzz.memory_repairs()), fuzz)
         expected = machine.run(memory, fuzz)
     return memory, expected
 
@@ -1517,7 +1621,7 @@ class Machine:
                 emulator.ctl_flush_tb()
             else:
                 continue
-        if outcome.status not in (RETURNED, LIMIT):
+        if outcome.status not in (RETURNED, LIMIT, REJECTED):
             # Unicorn 2.1.4 keeps something of a guest exception that its saved CPU state doesn't hold: the next run on
             # the same emulator may crash the process (func_8001AA80, seed 1: trial 346 after trial 345's address error)
             self.emulator, self.fresh = self.make_emulator()
@@ -1541,6 +1645,10 @@ class Machine:
         outcome = self.outcome
         if address == SENTINEL_RETURN:
             outcome.status = RETURNED
+            uc.emu_stop()
+            return
+        elif address == SENTINEL_REJECT:
+            outcome.status = REJECTED
             uc.emu_stop()
             return
         if len(outcome.calls) == MAX_CALLS:
@@ -1882,18 +1990,24 @@ def main():
     retail_start, retail_size = retail_extent(retail, source, arguments.function, retail_entry, retail_size,
                                               declared.runs_into)
     retail_code = retail.kept[retail_start - retail.kept_start:retail_start - retail.kept_start + retail_size]
-    if (declared.argument_ranges or declared.nonnull_arguments or declared.disjoint_arguments or declared.scratch
-            or declared.runs_into or declared.callbacks):
+    if (declared.argument_ranges or declared.nonnull_arguments or declared.disjoint_arguments
+            or declared.buffer_arguments or declared.bounded_halves or declared.scratch or declared.runs_into
+            or declared.callbacks or candidate.assumes):
         limits = [f"{argument_name(index)} in [{low:#x}, {high:#x}]"
                   for index, (low, high) in sorted(declared.argument_ranges.items())]
         limits += [f"{argument_name(index)} not NULL" for index in sorted(declared.nonnull_arguments)]
         limits += [f"{argument_name(first)} and {argument_name(second)} apart by {argument_name(count)} * {unit} bytes"
                    for first, second, count, unit in declared.disjoint_arguments]
+        limits += [f"{argument_name(index)} a buffer of {length:#x} bytes of its own"
+                   for index, length in declared.buffer_arguments]
+        limits += [f"the halfword {offset:#x} past {argument_name(index)} in [{low:#x}, {high:#x}]"
+                   for index, offset, low, high in declared.bounded_halves]
         limits += [f"{shown(area.start):#010x} to {shown(area.stop):#010x} its own scratch" for area in declared.scratch]
         limits += [f"runs {routine} as its own" for routine in sorted(declared.runs_into)]
         limits += [f"{argument_name(index)} a callback of {count} arguments"
                    + (f" leaving {', '.join(f'${name}' for name in sorted(kept))}" if kept else "")
                    for index, (count, kept) in sorted(declared.callbacks.items())]
+        limits += ["assumptions in its code (EQUIV_ASSUME)"] if candidate.assumes else []
         print(f"{CONTRACT} {', '.join(limits)}")
     else:
         # Every argument drawn from the whole of its type
@@ -1903,6 +2017,7 @@ def main():
     repaired = 0
     replaced = 0
     retail_limit = 0
+    rejected = 0
     both_exception = 0
     unset = 0
     # The retail code's, run again with other values in the registers it gets unset (made on the first disagreement)
@@ -1915,7 +2030,7 @@ def main():
     for trial in range(arguments.trials):
         fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters, declared.narrow_parameters,
                     declared.argument_ranges, declared.nonnull_arguments, declared.disjoint_arguments,
-                    declared.callbacks)
+                    declared.callbacks, declared.buffer_arguments, declared.bounded_halves)
         base = Memory(fuzz, pool, retail, candidate)
         if machines is None:
             # The retail code's, the tracing one's, the candidate's
@@ -1935,6 +2050,11 @@ def main():
                 sys.exit(EXIT_UNSUPPORTED)
             else:
                 continue
+        if actual.status == REJECTED:
+            # Inputs no call passes, as the C states with its evidence
+            agreeing += 1
+            rejected += 1
+            continue
         differences = compare(memory, retail, declared, expected, actual)
         if differences:
             if again_machine is None:
@@ -1984,6 +2104,8 @@ def main():
               f"{MAX_CALLS} calls (not compared)")
     if both_exception:
         print(f"{both_exception} trials agree by both taking the same exception (calls compared, not memory)")
+    if rejected:
+        print(f"{rejected} trials agree by the C's assumption failing (EQUIV_ASSUME, not compared)")
     if unset:
         print(f"{unset} trials agree by the retail code depending on registers it didn't set (not compared)")
     print(f"{agreeing} of {arguments.trials} trials agree")

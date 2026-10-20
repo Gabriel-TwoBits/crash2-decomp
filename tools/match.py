@@ -73,6 +73,7 @@ INLINE_ASSEMBLY = re.compile(r"\b(__asm__|asm)\s*\(")
 HANDWRITTEN = "/* Handwritten function */"
 DIFFERING = re.compile(r"^(\d+) of (\d+) words differ$", re.MULTILINE)
 M2C_MACRO = re.compile(r"\bM2C_\w+")
+ASSUMPTION = re.compile(r"\bEQUIV_ASSUME\s*\(")
 # A top-level definition of a variable (not an extern declaration), with its initialiser if it has one: a split data
 # symbol's when the symbol table says so (data_definitions)
 DATA_DEFINITION = re.compile(r"^(?!extern\b)(?!typedef\b)[A-Za-z_][\w \t\*]*\b(\w+)\b[^(;=\n]*(=[^;]*)?;\n?", re.MULTILINE)
@@ -153,7 +154,7 @@ UNTRIED_SHARE = 1.0
 # equiv.py's lines: its last, the trials agreeing without being compared, and the first disagreement
 AGREEING = re.compile(r"^(\d+) of (\d+) trials agree$", re.MULTILINE)
 UNCOMPARED = re.compile(r"^(\d+) trials agree by (?:the retail code reaching the limit|both taking the same exception|"
-                        r"the retail code depending on registers it didn't set)",
+                        r"the retail code depending on registers it didn't set|the C's assumption failing)",
                         re.MULTILINE)
 DISAGREEMENT = re.compile(r"^trial \d+ disagrees: ")
 # A disagreement's lines kept as a reason: the trial with its arguments, then its first difference
@@ -641,9 +642,9 @@ def unfit(text):
         return "inline assembly"
     elif INCLUDED.search(text):
         return "an INCLUDE_ASM line"
-    elif CONTRACT_LINE.search(text):
+    elif CONTRACT_LINE.search(text) or ASSUMPTION.search(text):
         # It narrows what equiv.py tries: written by hand, with the callers' evidence, never by a run
-        return "a contract with its callers (EQUIV_ lines)"
+        return "a contract with its callers (EQUIV_ lines or EQUIV_ASSUME)"
     else:
         return None
 
