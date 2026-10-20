@@ -188,6 +188,9 @@ FRAME_WORDS = 4
 NULL_POINTER_ODDS = 10
 # A run stops at either: a loop waiting on what a callee would change spins until then
 MAX_INSTRUCTIONS = 500_000
+# The candidate's limit, as many times the retail code's: equivalent C may be slower than handwritten code (a copy by
+# halfwords where the retail code moves words), not otherwise
+CANDIDATE_SLOWDOWN = 4
 MAX_CALLS = 1_000
 
 # Repairs. A retail run ending on a memory access fault whose address comes from a word of the trial's inputs (a word
@@ -1408,8 +1411,9 @@ class Machine:
     (the candidate's, in the scratch area) flushes it. A Tracer, if made with one, follows each of the function's
     instructions"""
 
-    def __init__(self, memory, retail, entry, size, arguments, traced=False, start=None):
+    def __init__(self, memory, retail, entry, size, arguments, traced=False, start=None, limit=MAX_INSTRUCTIONS):
         self.retail = retail
+        self.limit = limit
         self.entry = entry
         # The function's own code, where a jump isn't a call out: from its entry unless it has static helpers before it
         self.start = entry if start is None else start
@@ -1495,7 +1499,7 @@ class Machine:
         emulator.reg_write(REGISTERS["sp"], ENTRY_SP)
         emulator.reg_write(REGISTERS["ra"], SENTINEL_RETURN)
         try:
-            emulator.emu_start(self.entry, SENTINEL_RETURN, count=MAX_INSTRUCTIONS)
+            emulator.emu_start(self.entry, SENTINEL_RETURN, count=self.limit)
         except UcError as error:
             if outcome.status is None:
                 outcome.status = f"emulator error: {error}"
@@ -1919,7 +1923,7 @@ def main():
                         Machine(base, retail, retail_entry, retail_size, declared.callee_arguments, traced=True,
                                 start=retail_start),
                         Machine(base, retail, candidate.entry, candidate.size, declared.callee_arguments,
-                                start=candidate.start))
+                                start=candidate.start, limit=MAX_INSTRUCTIONS * CANDIDATE_SLOWDOWN))
         memory, expected = repaired_run(fuzz, base, machines[0], machines[1], decoded)
         actual = machines[2].run(memory, fuzz)
         if fuzz.repairs:
