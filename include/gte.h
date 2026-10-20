@@ -41,6 +41,12 @@
 #define GTE_RT22RT23 2
 #define GTE_RT31RT32 3
 #define GTE_RT33 4
+/* The light matrix's five words, after the rotation matrix's and the translation */
+#define GTE_L11L12 8
+#define GTE_L13L21 9
+#define GTE_L22L23 10
+#define GTE_L31L32 11
+#define GTE_L33 12
 #define GTE_TRX 5
 #define GTE_TRY 6
 #define GTE_TRZ 7
@@ -323,5 +329,93 @@ static void Gte_Project(s32 vectors) {
 /* The rtps and rtpt instructions */
 #define Gte_Rtps() Gte_Project(1)
 #define Gte_Rtpt() Gte_Project(GTE_RTPT_VECTORS)
+
+/* GCC 2.7.2 emits a static function used or not: a file defines GTE_MVMVA before including this to have MVMVA */
+#ifdef GTE_MVMVA
+
+/* MVMVA's matrices and vectors as the game encodes them (sf = 1, nothing added, lm = 0): the rotation or the light
+   matrix, times V0, V1, V2 or IR1-IR3 */
+#define GTE_MATRIX_ROTATION GTE_RT11RT12
+#define GTE_MATRIX_LIGHT GTE_L11L12
+#define GTE_VECTOR_IR 3
+#define GTE_MATRIX_WORDS 5
+
+/* Element (row+1)(column+1) of the matrix whose five words start at control register base */
+static inline s32 Gte_MatrixElement(GteRegs *regs, s32 base, s32 row, s32 column) {
+    s32 index = row * GTE_DIMENSION + column;
+    u32 word = regs->control[base + index / GTE_HALVES_PER_WORD];
+
+    if (index % GTE_HALVES_PER_WORD != 0) {
+        return (s16)(word >> GTE_HALF_BITS);
+    } else {
+        return (s16)word;
+    }
+}
+
+/* MVMVA: the matrix times the vector into MAC1-3 (>> 12) and IR1-3 (saturated) */
+static void Gte_MultiplyMatrix(s32 matrix, s32 vector) {
+    GteRegs regs;
+    s32 values[GTE_DIMENSION];
+    s32 row;
+    s32 column;
+    s64 value;
+    s32 mac;
+    u32 xy;
+
+    GTE_SAVE_DATA(&regs, GTE_VXY0);
+    GTE_SAVE_DATA(&regs, GTE_VZ0);
+    GTE_SAVE_DATA(&regs, GTE_VXY1);
+    GTE_SAVE_DATA(&regs, GTE_VZ1);
+    GTE_SAVE_DATA(&regs, GTE_VXY2);
+    GTE_SAVE_DATA(&regs, GTE_VZ2);
+    GTE_SAVE_DATA(&regs, GTE_IR1);
+    GTE_SAVE_DATA(&regs, GTE_IR2);
+    GTE_SAVE_DATA(&regs, GTE_IR3);
+    for (row = 0; row < GTE_MATRIX_WORDS; row++) {
+        /* A register's number is part of the instruction: the two matrices' words one by one */
+        switch (matrix + row) {
+            case GTE_RT11RT12: GTE_SAVE_CONTROL(&regs, GTE_RT11RT12); break;
+            case GTE_RT13RT21: GTE_SAVE_CONTROL(&regs, GTE_RT13RT21); break;
+            case GTE_RT22RT23: GTE_SAVE_CONTROL(&regs, GTE_RT22RT23); break;
+            case GTE_RT31RT32: GTE_SAVE_CONTROL(&regs, GTE_RT31RT32); break;
+            case GTE_RT33: GTE_SAVE_CONTROL(&regs, GTE_RT33); break;
+            case GTE_L11L12: GTE_SAVE_CONTROL(&regs, GTE_L11L12); break;
+            case GTE_L13L21: GTE_SAVE_CONTROL(&regs, GTE_L13L21); break;
+            case GTE_L22L23: GTE_SAVE_CONTROL(&regs, GTE_L22L23); break;
+            case GTE_L31L32: GTE_SAVE_CONTROL(&regs, GTE_L31L32); break;
+            case GTE_L33: GTE_SAVE_CONTROL(&regs, GTE_L33); break;
+            default: /* Not a matrix word: the loop keeps to the five */ break;
+        }
+    }
+    if (vector == GTE_VECTOR_IR) {
+        values[0] = (s16)regs.data[GTE_IR1];
+        values[1] = (s16)regs.data[GTE_IR2];
+        values[2] = (s16)regs.data[GTE_IR3];
+    } else {
+        xy = regs.data[GTE_VXY0 + vector * GTE_VECTOR_REGISTERS];
+        values[0] = (s16)xy;
+        values[1] = (s16)(xy >> GTE_HALF_BITS);
+        values[2] = (s16)regs.data[GTE_VZ0 + vector * GTE_VECTOR_REGISTERS];
+    }
+    regs.control[GTE_FLAG] = 0;
+    for (row = 0; row < GTE_DIMENSION; row++) {
+        value = 0;
+        for (column = 0; column < GTE_DIMENSION; column++) {
+            value = Gte_MacChecked(&regs, row, value + Gte_MatrixElement(&regs, matrix, row, column) * values[column]);
+        }
+        mac = value >> GTE_FRACTION_BITS;
+        regs.data[GTE_MAC1 + row] = mac;
+        regs.data[GTE_IR1 + row] = Gte_Saturated(&regs, mac, GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
+    }
+    GTE_RESTORE_DATA(&regs, GTE_IR1);
+    GTE_RESTORE_DATA(&regs, GTE_IR2);
+    GTE_RESTORE_DATA(&regs, GTE_IR3);
+    GTE_RESTORE_DATA(&regs, GTE_MAC1);
+    GTE_RESTORE_DATA(&regs, GTE_MAC2);
+    GTE_RESTORE_DATA(&regs, GTE_MAC3);
+    GTE_WRITE_CONTROL(GTE_FLAG, regs.control[GTE_FLAG]);
+}
+
+#endif /* GTE_MVMVA */
 
 #endif
