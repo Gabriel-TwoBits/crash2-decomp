@@ -18,6 +18,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from tools import handwritten
 from tools.symbols import HEXADECIMAL, IMAGE_END, IMAGE_START, functions_by_address
 
 HERE = Path(__file__).resolve().parent
@@ -88,6 +89,13 @@ IMMEDIATE_SIGN = 0x8000
 IMMEDIATE_RANGE = 0x10000
 # The high half of a number loaded with lui, left by the rewrite
 NUMERIC_HIGH_HALF = re.compile(r"\blui +\$\w+, \((0x[0-9A-F]+) >> 16\)")
+# The handwritten code's equivalent C (tools/handwritten.py): the equivalent build compiles it, links it after its copy of
+# the handwritten code and leaves each function it replaces out of that copy (the function's block, its padding after it
+# included)
+HANDWRITTEN_C = handwritten.HANDWRITTEN_C
+HANDWRITTEN_C_OBJECT = NONMATCHING_BUILD / HANDWRITTEN_C.with_suffix(".o")
+HANDWRITTEN_FUNCTION = re.compile(r"^(?:/\* Handwritten function \*/\n)?nonmatching (\w+), 0x[0-9A-F]+\n"
+                                  r"(?:(?!nonmatching |/\* Handwritten function \*/\n).*\n)*", re.MULTILINE)
 # The equivalent build's own copies of the split's assembly, by the default build's object
 NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: NONMATCHING_HANDWRITTEN}
 # The equivalent build's data follows its code wherever that ends; the executable may only grow to the retail file's
@@ -188,6 +196,13 @@ def nonmatching_handwritten():
     if accesses != GP_RELATIVE_ACCESSES or GP_RELATIVE_LEFT in code:
         sys.exit(f"{HANDWRITTEN}: {accesses} accesses through $gp written as {GP_RELATIVE_LEFT}, not "
                  f"{GP_RELATIVE_ACCESSES}, or one in another form")
+    in_c = handwritten.replaced()
+    blocks = {block.group(1): block.group(0) for block in HANDWRITTEN_FUNCTION.finditer(code)}
+    missing = sorted(in_c - set(blocks))
+    if missing:
+        sys.exit(f"{HANDWRITTEN_C} replaces {', '.join(missing)}, which {HANDWRITTEN} doesn't have")
+    for name in sorted(in_c):
+        code = code.replace(blocks[name], "", 1)
     return code
 
 
@@ -229,6 +244,15 @@ def nonmatching_link_files():
         if f"{obj}(" not in script:
             sys.exit(f"{LINKER_SCRIPT} doesn't link {obj}")
         script = script.replace(f"{obj}(", f"{NONMATCHING_BUILD / obj.relative_to(BUILD)}(")
+    if (HERE / HANDWRITTEN_C).exists():
+        copy = re.escape(str(NONMATCHING_BUILD / HANDWRITTEN_OBJECT.relative_to(BUILD)))
+        script, sections = re.subn(rf"^(?P<indent>[ \t]*){copy}\((?P<section>\.\w+)\);$",
+                                   rf"\g<0>\n\g<indent>{HANDWRITTEN_C_OBJECT}(\g<section>);", script, flags=re.MULTILINE)
+        if sections == 0:
+            sys.exit(f"{LINKER_SCRIPT} links no section of {HANDWRITTEN_OBJECT}")
+    else:
+        # No handwritten function in C yet
+        pass
     (HERE / NONMATCHING_HEADER).parent.mkdir(parents=True, exist_ok=True)
     (HERE / NONMATCHING_HEADER).write_text(header)
     (HERE / NONMATCHING_HANDWRITTEN).parent.mkdir(parents=True, exist_ok=True)
@@ -263,6 +287,11 @@ def nonmatching_objects(linked):
             found.append((NONMATCHING_BUILD / obj.relative_to(BUILD), NONMATCHING_ASSEMBLY[obj], True))
         else:
             found.append((obj, source, False))
+        if obj == HANDWRITTEN_OBJECT and (HERE / HANDWRITTEN_C).exists():
+            found.append((HANDWRITTEN_C_OBJECT, HANDWRITTEN_C, True))
+        else:
+            # Another object, or no handwritten function in C yet
+            continue
     return found
 
 

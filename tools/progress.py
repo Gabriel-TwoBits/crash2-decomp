@@ -16,6 +16,7 @@ from pathlib import Path
 
 import yaml
 
+import handwritten
 from symbols import ADDRESS_NAME, DATA, GAME_FUNCTION, table
 
 HERE = Path(__file__).resolve().parents[1]
@@ -50,6 +51,13 @@ def c_units():
             end = following[0] if isinstance(following, list) else following["start"]
             units.append((subsegment[2], end - subsegment[0]))
     return units
+
+
+def handwritten_line():
+    """The line on the handwritten code: its functions, and those the equivalent build takes from C"""
+    functions = handwritten.functions()
+    return (f"handwritten code: {len(handwritten.replaced() & functions)} of {len(functions)} functions equivalent, "
+            "not matched")
 
 
 def readability():
@@ -96,6 +104,7 @@ def main():
         equivalent_total += len(equivalent)
     print(f"game code: {written} of {total} bytes in C ({written * PERCENT / total:.2f}%)")
     print(f"game code: {equivalent_total} functions equivalent, not matched")
+    print(handwritten_line())
     for line in readability():
         print(line)
 

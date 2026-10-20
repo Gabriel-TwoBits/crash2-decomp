@@ -171,6 +171,23 @@ uses the real one; a native port keeps the commands' C and replaces the moves. I
 random register files and commands (checked while writing it); a command it lacks is added to both, from psx-spx. Its
 cost is code room: about 1,800 bytes of the equivalent build's, which has 208 left.
 
+### The handwritten code
+
+The handwritten code (`asm/game/80039D2C.s`, docs/TARGET.md) can't match from C and has no `INCLUDE_ASM` lines: the
+default build assembles it whole. Its equivalent C is `src/game/80039D2C.c`, which only `ninja nonmatching` compiles:
+`configure.py` leaves each function the file defines (its `static` ones aside) out of the equivalent build's copy of the
+handwritten code, from its `nonmatching` line to the next one, and links the file right after that copy, so the code
+before a replaced function stays where it was. `configure.py` (through `tools/handwritten.py`) stops on a function the
+handwritten code doesn't have.
+
+About 28 of its 98 functions are called from compiled code with the usual convention; the other 70 or so take values
+in registers the convention leaves alone (`$s3`, `$t5`, `$v1`) and call one another, through tables too. A function
+goes into C with every routine it alone calls, once nothing handwritten depends on registers its retail code leaves
+untouched (`grep` the handwritten code for its name and its address), `$v0` included: `func_80041E5C` never sets it
+and returns what its last call left, `Gfx_ResetOt`'s caller's value, so `Gfx_ResetOt` waits for it. A routine several
+share stays assembly until its last caller is C. Each function is tested as any equivalent one (equiv.py, 2 seeds of
+2,000 trials, then `tools/run_game.py` on every schedule), and `tools/progress.py` counts them apart.
+
 ### Landing an equivalent function
 
     .venv/bin/python tools/match.py land FUNCTION --equivalent
