@@ -805,3 +805,268 @@ void func_8003CD0C(void *object, void *records, void *origin, s32 *box, s32 base
         out[2] = sum_b / count_b;
     }
 }
+
+/* A sort list's delta (SLST, between two of a zone's sort lists): halfwords, the first four its header (the end of its
+ * swaps, unread, the end of its first stream, the start of its swaps), then from the fifth on its two streams and its
+ * swaps, each end an index from the fifth. A stream's command holds a run's length less one (bits 12 to 15) and its
+ * position (bits 0 to 11), then the run's entries; 0xFFFF, or a command in a stream's last halfword, ends it. A sort list
+ * is its count of entries, a halfword unread, then its entries */
+#define SLST_DATA 4
+#define SLST_STREAM 8
+#define SLST_END_FIRST 2
+#define SLST_START_SWAPS 3
+#define SLST_COUNT 0
+#define SLST_NONE 0xFFFF
+#define SLST_POSITION_MASK 0xFFF
+#define SLST_RUN_SHIFT 12
+/* A stream once ended: past any position */
+#define SLST_PAST (SLST_NONE << 8)
+/* A swap: entry index with the one length + 1 after it. 0x8000: length in bits 11 to 14, index in 0 to 10; 0x4000:
+ * length 16 + bits 0 to 4, index the previous swap's + bits 5 to 13; 0x2000: bits 11 and 12 of entry bits 0 to 10
+ * flipped; none of them: index then length in the next halfword, 12 bits each */
+#define SWAP_SHORT 0x8000
+#define SWAP_SHORT_LENGTH_MASK 0x7800
+#define SWAP_SHORT_LENGTH_SHIFT 11
+#define SWAP_INDEX_MASK 0x7FF
+#define SWAP_NEAR 0x4000
+#define SWAP_NEAR_LENGTH_MASK 0x1F
+#define SWAP_NEAR_LENGTH_BASE 0x10
+#define SWAP_NEAR_OFFSET_MASK 0x3FE0
+#define SWAP_NEAR_OFFSET_SHIFT 5
+#define SWAP_FLIP 0x2000
+#define SWAP_FLIP_BITS 0x1800
+#define SWAP_KINDS 0xE000
+/* A copy shorter than this goes one entry at a time */
+#define SLST_RUN_COPY 2
+/* Gfx_AllocSortLists's two sort list buffers, and the entries one holds past its header ((0xBE4 - 4) / 2); the disc's
+ * largest full sort list has 1026 */
+#define SORT_LIST_BYTES 0xBE4
+#define SORT_LIST_ENTRIES 0x5F0
+/* An SLST item lies within its 64 KB NSF page (NSF_PAGE_SHIFT), its header's ends below ((0x10000 - 4) / 2); the
+ * disc's largest delta is 0x638 bytes, its largest end 794 */
+#define SLST_ITEM_BYTES 0x10000
+#define SLST_ITEM_HALVES 0x7FFE
+
+typedef struct {
+    u16 *next;
+    u16 *end;
+    s32 left;
+    s32 position;
+    u16 entry;
+} SlstStream;
+
+/* Reads a stream's next command, and its run's first entry */
+static void slst_command(SlstStream *stream) {
+    u16 command = *stream->next++;
+
+    stream->left = 0;
+    if (!(stream->next < stream->end) || command == SLST_NONE) {
+        stream->position = SLST_PAST;
+    } else {
+        stream->left = (command >> SLST_RUN_SHIFT) + 1;
+        stream->position = command & SLST_POSITION_MASK;
+    }
+    if (stream->left > 0) {
+        stream->entry = *stream->next++;
+    } else {
+        /* Ended: no entry */
+    }
+}
+
+/* One entry of the run used: the next, or the next command */
+static void slst_used(SlstStream *stream) {
+    stream->left--;
+    if (stream->left > 0) {
+        stream->entry = *stream->next++;
+    } else {
+        slst_command(stream);
+    }
+}
+
+static void slst_swap(u16 *entries, s32 index, s32 length) {
+    s32 other = index + length + 1;
+    u16 first = entries[index];
+    u16 second = entries[other];
+
+    entries[other] = first;
+    entries[index] = second;
+}
+
+/* The two directions' merge: the entries of a list, with the runs of one stream removed and the other's inserted;
+ * forward measures removals and insertions as func_8003AE54 does, else as func_8003B24C does */
+static s32 slst_merge(u16 *delta, u16 *from, u16 *to, s32 forward) {
+    SlstStream first, second;
+    SlstStream *removed, *inserted;
+    u16 *source = from + SLST_DATA / 2;
+    u16 *target = to + SLST_DATA / 2;
+    s32 count = from[SLST_COUNT];
+    s32 index = 0, written = 0, gone = 0, added = 0;
+    s32 run, other, room;
+
+    first.next = delta + SLST_STREAM / 2;
+    first.end = delta + SLST_DATA / 2 + delta[SLST_END_FIRST];
+    second.next = first.end;
+    second.end = delta + SLST_DATA / 2 + delta[SLST_START_SWAPS];
+    if (forward) {
+        removed = &first;
+        inserted = &second;
+    } else {
+        inserted = &first;
+        removed = &second;
+    }
+    slst_command(removed);
+    slst_command(inserted);
+    while (index < count || inserted->left > 0 || removed->left > 0) {
+        if (forward) {
+            run = removed->position - 1 - index;
+            other = inserted->position + gone - index;
+        } else {
+            run = removed->position + gone - index;
+            other = inserted->position + gone - added - 1 - index;
+        }
+        if (index < count && removed->left > 0 && run == 0) {
+            gone++;
+            index++;
+            source++;
+            slst_used(removed);
+        } else if (inserted->left > 0 && other == 0) {
+            *target++ = inserted->entry;
+            written++;
+            added++;
+            slst_used(inserted);
+        } else if (index < count) {
+            if (other < run) {
+                run = other;
+            }
+            room = count - index - 1;
+            if (room < run) {
+                run = room;
+            }
+            if (run < SLST_RUN_COPY) {
+                run = 1;
+            }
+            written += run;
+            index += run;
+            for (; run > 0; run--) {
+                *target++ = *source++;
+            }
+        } else {
+            /* Entries to come from a stream only */
+        }
+    }
+    *to = written;
+    return written;
+}
+
+/* func_80029800 passes an SLST item and the zone's two sort lists, heap buffers (Cam_MoveAlongPath's D_8005F390 and
+ * D_8005F398) */
+EQUIV_SCRATCH(func_8003B24C, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_NONNULL(func_8003B24C, 0)
+EQUIV_NONNULL(func_8003B24C, 1)
+EQUIV_NONNULL(func_8003B24C, 2)
+EQUIV_BUFFER(func_8003B24C, 0, SLST_ITEM_BYTES)
+EQUIV_BUFFER(func_8003B24C, 1, SORT_LIST_BYTES)
+EQUIV_BUFFER(func_8003B24C, 2, SORT_LIST_BYTES)
+EQUIV_HALF(func_8003B24C, 1, 0, 0, SORT_LIST_ENTRIES)
+/* The delta header's end of swaps, end of first stream and start of swaps, at bytes 0, 4 and 6 */
+EQUIV_HALF(func_8003B24C, 0, 0, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(func_8003B24C, 0, 4, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(func_8003B24C, 0, 6, 0, SLST_ITEM_HALVES)
+HANDWRITTEN_PARTS(func_8003B24C, func_8003B89C, func_8003B8BC, func_8003B8DC, func_8003B8FC, func_8003B91C)
+
+/* A sort list from the next one and their delta, backward: the delta's swaps undone on from, last first, then its
+ * first stream's runs inserted and its second's removed, into to */
+void func_8003B24C(void *delta, u16 *from, u16 *to) {
+    u16 *d = delta;
+    u16 *list = from;
+    u16 *entries = list + SLST_DATA / 2;
+    u16 *swap = d + SLST_DATA / 2 + d[SLST_COUNT] - 1;
+    u16 *stop = d + SLST_DATA / 2 + d[SLST_START_SWAPS];
+    u16 command, operand;
+    s32 index, length;
+
+    while (!(swap < stop)) {
+        command = *swap--;
+        if (command == SLST_NONE) {
+            continue;
+        } else if (command & SWAP_SHORT) {
+            length = (command & SWAP_SHORT_LENGTH_MASK) >> SWAP_SHORT_LENGTH_SHIFT;
+            index = command & SWAP_INDEX_MASK;
+        } else if (command & SWAP_NEAR) {
+            /* The base comes from the swap before it, read without being taken */
+            operand = swap[0];
+            if (operand & SWAP_KINDS) {
+                index = operand & SWAP_INDEX_MASK;
+            } else {
+                index = swap[-1] & SLST_POSITION_MASK;
+            }
+            length = (command & SWAP_NEAR_LENGTH_MASK) + SWAP_NEAR_LENGTH_BASE;
+            index += (command & SWAP_NEAR_OFFSET_MASK) >> SWAP_NEAR_OFFSET_SHIFT;
+        } else if (command & SWAP_FLIP) {
+            entries[command & SWAP_INDEX_MASK] ^= command & SWAP_FLIP_BITS;
+            continue;
+        } else {
+            length = command & SLST_POSITION_MASK;
+            index = *swap-- & SLST_POSITION_MASK;
+        }
+        slst_swap(entries, index, length);
+    }
+    slst_merge(d, list, to, 0);
+}
+
+EQUIV_SCRATCH(func_8003AE54, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_NONNULL(func_8003AE54, 0)
+EQUIV_NONNULL(func_8003AE54, 1)
+EQUIV_NONNULL(func_8003AE54, 2)
+EQUIV_BUFFER(func_8003AE54, 0, SLST_ITEM_BYTES)
+EQUIV_BUFFER(func_8003AE54, 1, SORT_LIST_BYTES)
+EQUIV_BUFFER(func_8003AE54, 2, SORT_LIST_BYTES)
+EQUIV_HALF(func_8003AE54, 1, 0, 0, SORT_LIST_ENTRIES)
+/* The delta header's end of swaps, end of first stream and start of swaps, at bytes 0, 4 and 6 */
+EQUIV_HALF(func_8003AE54, 0, 0, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(func_8003AE54, 0, 4, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(func_8003AE54, 0, 6, 0, SLST_ITEM_HALVES)
+EQUIV_RUNS(func_8003AE54, func_8003B24C, func_8003B89C, func_8003B8BC, func_8003B8DC, func_8003B8FC, func_8003B91C)
+
+/* The next sort list from one and their delta, forward: its first stream's runs removed from from and its second's
+ * inserted, into to, then the delta's swaps done on to, up to a 0xFFFF */
+void func_8003AE54(void *delta, u16 *from, u16 *to) {
+    u16 *d = delta;
+    u16 *entries = to + SLST_DATA / 2;
+    u16 *swap;
+    u16 *stop;
+    u16 command;
+    s32 index = 0;
+    s32 length;
+    /* Whether the swap before is a short or long one, whose index a near swap starts from */
+    s32 based = 0;
+
+    slst_merge(d, from, to, 1);
+    /* The swaps' bounds read after the merge, which may have written over the delta */
+    swap = d + SLST_DATA / 2 + d[SLST_START_SWAPS];
+    stop = d + SLST_DATA / 2 + d[SLST_COUNT];
+    while (swap < stop) {
+        command = *swap++;
+        if (command == SLST_NONE) {
+            break;
+        } else if (command & SWAP_SHORT) {
+            length = (command & SWAP_SHORT_LENGTH_MASK) >> SWAP_SHORT_LENGTH_SHIFT;
+            index = command & SWAP_INDEX_MASK;
+        } else if (command & SWAP_NEAR) {
+            /* Every near swap on the disc follows a short or long one (docs/TARGET.md); the retail code's base is
+             * otherwise a register's leftover: the caller's, the copy's jump target, or a flipped entry's address */
+            EQUIV_ASSUME(based);
+            length = (command & SWAP_NEAR_LENGTH_MASK) + SWAP_NEAR_LENGTH_BASE;
+            index += (command & SWAP_NEAR_OFFSET_MASK) >> SWAP_NEAR_OFFSET_SHIFT;
+        } else if (command & SWAP_FLIP) {
+            entries[command & SWAP_INDEX_MASK] ^= command & SWAP_FLIP_BITS;
+            based = 0;
+            continue;
+        } else {
+            index = command & SLST_POSITION_MASK;
+            length = *swap++ & SLST_POSITION_MASK;
+        }
+        based = 1;
+        slst_swap(entries, index, length);
+    }
+}
