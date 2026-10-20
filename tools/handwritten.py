@@ -10,8 +10,9 @@ HANDWRITTEN = Path("asm") / "game" / "80039D2C.s"
 HANDWRITTEN_C = Path("src") / "game" / "80039D2C.c"
 # A function's line in the split's handwritten code (g_TimerTicks, a word among them, has no size)
 FUNCTION_LINE = re.compile(r"^nonmatching (\w+), 0x[0-9A-F]+$", re.MULTILINE)
-# A definition at the top level, its parameters on one line
-C_FUNCTION = re.compile(r"^(static[ \t]+)?[A-Za-z_][\w \t\*]*?\b(\w+)[ \t]*\([^;{\n]*\)\s*\{", re.MULTILINE)
+# A definition at the top level, its parameters on one or more lines, none of them a function pointer: a macro's line
+# (HANDWRITTEN_PARTS, EQUIV_RUNS) closes its parenthesis with no brace after it
+C_FUNCTION = re.compile(r"^(static[ \t]+)?[A-Za-z_][\w \t\*]*?\b(\w+)[ \t]*\([^;{()]*\)\s*\{", re.MULTILINE)
 # Handwritten routines only a function of the file reaches, which go with it: HANDWRITTEN_PARTS(function, part, ...)
 PARTS = re.compile(r"^HANDWRITTEN_PARTS\((\w+)((?:,[ \t]*\w+)+)\)$", re.MULTILINE)
 
