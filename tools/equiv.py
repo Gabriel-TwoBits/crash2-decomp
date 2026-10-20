@@ -239,6 +239,8 @@ FUNCT_TO_MULTIPLY = {0x11, 0x13}
 # SPECIAL instructions writing no general register, $hi or $lo: jr, syscall, break
 FUNCT_NO_DESTINATION = {0x08, 0x0C, 0x0D}
 RA_NUMBER = 31
+# SPECIAL's jalr, which links into rd ($ra as the game writes it)
+FUNCT_JALR = 0x09
 # What an instruction does to the registers' origins (Tracer): nothing, drop its destination's, copy its source's, load
 # a word (the word's own if as it was on entry), add, shift, multiply, move from or to $hi/$lo
 (EFFECT_NONE, EFFECT_DROP, EFFECT_MOVE, EFFECT_LW, EFFECT_SUM, EFFECT_SCALE, EFFECT_MULTIPLY, EFFECT_FROM_MULTIPLY,
@@ -918,14 +920,22 @@ class Fuzz:
         self.disjoint_arguments = disjoint_arguments
         # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
         self.repairs = {}
-        # The registers set at random on entry, the arguments aside, inverted bit by bit (entry_registers)
+        # The registers set at random on entry, the arguments aside, inverted bit by bit or zeroed (entry_registers)
         self.inverted = False
+        self.zeroed = False
 
     def with_other_registers(self):
         """The same trial with every bit flipped in the registers that aren't arguments: a random draw may repeat a
         register's value (zeros and small numbers are frequent), a flipped word never does"""
         other = copy.copy(self)
         other.inverted = True
+        return other
+
+    def with_zeroed_registers(self):
+        """The same trial with the registers that aren't arguments zeroed: a value and its flip can lead the code the same
+        way (two huge sizes both covering a box), where 0 doesn't"""
+        other = copy.copy(self)
+        other.zeroed = True
         return other
 
     def generator(self, *purpose):
@@ -1155,7 +1165,9 @@ def entry_registers(fuzz):
     """{Unicorn register: value} of the registers set at random on entry, the arguments among them"""
     registers = [REGISTERS[name] for name in RANDOM_ON_ENTRY] + list(MULTIPLY_REGISTERS)
     words = fuzz.words(fuzz.generator("registers"), len(registers))
-    if fuzz.inverted:
+    if fuzz.zeroed:
+        words = [0] * len(words)
+    elif fuzz.inverted:
         words = [~word & WORD_MASK for word in words]
     else:
         # The trial's own values
@@ -1382,7 +1394,7 @@ class Machine:
         self.code = memory.code
         # The pages Unicorn keeps read-only (make_emulator), where a store is a store to code
         self.protected = (align(self.code[0], PAGE_SIZE), self.code[1] // PAGE_SIZE * PAGE_SIZE)
-        self.gte_instructions = gte_addresses(memory, self.start, size)
+        self.gte_instructions, self.delay_slots = gte_addresses(memory, self.start, size)
         self.gte = None
         self.traced_hook = traced
         self.buffers = {start: bytearray(len(content)) for start, content in memory.regions.items()}
@@ -1417,6 +1429,8 @@ class Machine:
         emulator.hook_add(UC_HOOK_INTR, self.exception)
         for address in self.gte_instructions:
             emulator.hook_add(UC_HOOK_CODE, self.coprocessor, begin=address, end=address)
+        for address in self.delay_slots:
+            emulator.hook_add(UC_HOOK_CODE, self.delayed_coprocessor, begin=address, end=address)
         return emulator, emulator.context_save()
 
     def run(self, memory, fuzz, tracer=None):
@@ -1432,6 +1446,8 @@ class Machine:
         emulator.context_restore(self.fresh)
         for start, content in memory.regions.items():
             self.views[start][:] = content
+        # A GTE instruction in a delay slot runs as its branch starts (delayed_coprocessor), the slot a nop meanwhile
+        self.patch_delay_slots(0)
         for register, value in entry_registers(fuzz).items():
             emulator.reg_write(register, value)
         emulator.reg_write(REGISTERS["gp"], self.retail.gp)
@@ -1442,6 +1458,8 @@ class Machine:
         except UcError as error:
             if outcome.status is None:
                 outcome.status = f"emulator error: {error}"
+        for slot, word in self.delay_slots.values():
+            self.patch_delay_slots(word, slot)
         if outcome.status is None:
             outcome.status = RETURNED if emulator.reg_read(mips.UC_MIPS_REG_PC) == SENTINEL_RETURN else LIMIT
         outcome.registers = {name: emulator.reg_read(REGISTERS[name]) for name in REGISTER_NAMES}
@@ -1537,10 +1555,41 @@ class Machine:
             outcome.status = f"exception {number}"
         uc.emu_stop()
 
+    def patch_delay_slots(self, word, only=None):
+        """Writes word into the delay slots of GTE instructions (or into the one at only) in the machine's buffers"""
+        for slot, _ in self.delay_slots.values():
+            if only is not None and slot != only:
+                continue
+            address = physical(slot)
+            for start, buffer in self.buffers.items():
+                if start <= address < start + len(buffer):
+                    write_word(buffer, address - start, word)
+                else:
+                    continue
+
+    def delayed_coprocessor(self, uc, address, size, data):
+        """Runs the GTE instruction in this branch's delay slot on the model, before the branch"""
+        slot, word = self.delay_slots[address]
+        self.gte_instruction(uc, slot, word)
+        if self.outcome.status is not None:
+            uc.emu_stop()
+        else:
+            # The branch and its emptied slot run on
+            pass
+
     def coprocessor(self, uc, address, size, data):
         """Runs a GTE instruction on the model and skips it"""
-        outcome = self.outcome
         word = read_word(uc.mem_read(physical(address), WORD), 0)
+        self.gte_instruction(uc, address, word)
+        if self.outcome.status is None:
+            uc.reg_write(mips.UC_MIPS_REG_PC, address + WORD)
+        else:
+            uc.emu_stop()
+
+    def gte_instruction(self, uc, address, word):
+        """A GTE instruction's effect on the model and the CPU's registers or memory; an unsupported one, or a fault,
+        sets the run's ending"""
+        outcome = self.outcome
         opcode = word >> OPCODE_SHIFT
         rs = (word >> RS_SHIFT) & REGISTER_FIELD
         rt = (word >> RT_SHIFT) & REGISTER_FIELD
@@ -1572,10 +1621,6 @@ class Machine:
         else:
             outcome.unsupported = f"coprocessor 2 instruction {word:#010x}, which tools/gte.py doesn't model"
             outcome.status = outcome.unsupported
-        if outcome.status is None:
-            uc.reg_write(mips.UC_MIPS_REG_PC, address + WORD)
-        else:
-            uc.emu_stop()
 
     def gte_access_fault(self, target, store):
         """Sets the run's ending when lwc2 or swc2 at target faults as a load or store there would; whether it does"""
@@ -1595,24 +1640,51 @@ class Machine:
 
 
 def gte_addresses(memory, start, size):
-    """The addresses of the GTE instructions in a function's own code; one in a delay slot ends the program, unsupported"""
+    """(the addresses of the GTE instructions in a function's own code, {branch address: (slot address, word)} of those
+    in a delay slot). One in a delay slot runs on the model as its branch starts (delay_slot_safe), else it ends the
+    program, unsupported"""
     region = next(base for base in memory.regions if base <= physical(start) < base + len(memory.regions[base]))
     code = memory.regions[region][physical(start) - region:physical(start) - region + size]
     found = []
+    slots = {}
     previous = 0
     for offset in range(0, len(code), WORD):
         word = read_word(code, offset)
-        if word >> OPCODE_SHIFT in GTE_OPCODES:
-            if delayed(previous):
-                print(f"unsupported: the GTE instruction at {start + offset:#010x} is in a delay slot, which the model's "
-                      f"hook can't run")
-                sys.exit(EXIT_UNSUPPORTED)
+        if word >> OPCODE_SHIFT in GTE_OPCODES and delayed(previous):
+            if delay_slot_safe(previous, word):
+                slots[start + offset - WORD] = (start + offset, word)
             else:
-                found.append(start + offset)
+                print(f"unsupported: the GTE instruction at {start + offset:#010x} is in a delay slot, where it moves "
+                      f"a register its branch reads or links")
+                sys.exit(EXIT_UNSUPPORTED)
+        elif word >> OPCODE_SHIFT in GTE_OPCODES:
+            found.append(start + offset)
         else:
+            # Not the GTE's
             pass
         previous = word
-    return found
+    return found, slots
+
+
+def delay_slot_safe(branch, word):
+    """Whether a GTE instruction in branch's delay slot can run before the branch: it writes no CPU register (mfc2,
+    cfc2 do), and reads none the branch links into ($ra)"""
+    opcode = word >> OPCODE_SHIFT
+    rs = (word >> RS_SHIFT) & REGISTER_FIELD
+    rt = (word >> RT_SHIFT) & REGISTER_FIELD
+    branch_opcode = branch >> OPCODE_SHIFT
+    links = (branch_opcode == OP_JAL
+             or (branch_opcode == OP_REGIMM and (branch >> RT_SHIFT) & REGISTER_FIELD in REGIMM_LINKS)
+             or (branch_opcode == OP_SPECIAL and branch & FUNCT_MASK == FUNCT_JALR))
+    if opcode == OP_COP2 and word & COP2_COMMAND:
+        return True
+    elif opcode == OP_COP2 and rs in (COP2_MTC2, COP2_CTC2):
+        return not (links and rt == RA_NUMBER)
+    elif opcode in (OP_LWC2, OP_SWC2):
+        return not (links and rs == RA_NUMBER)
+    else:
+        # mfc2 and cfc2 write a CPU register
+        return False
 
 
 def delayed(word):
@@ -1814,10 +1886,16 @@ def main():
             if again_machine is None:
                 again_machine = Machine(base, retail, retail_entry, retail_size, declared.callee_arguments,
                                         start=retail_start)
-            other = fuzz.with_other_registers()
-            again = again_machine.run(memory, other)
-            depends = depends_on_unset(memory, retail, declared, (expected, entry_registers(fuzz)),
-                                       (again, entry_registers(other)))
+            depends = False
+            for other in (fuzz.with_other_registers(), fuzz.with_zeroed_registers()):
+                again = again_machine.run(memory, other)
+                if depends_on_unset(memory, retail, declared, (expected, entry_registers(fuzz)),
+                                    (again, entry_registers(other))):
+                    depends = True
+                    break
+                else:
+                    # This one ends as the trial did: the next tells more
+                    continue
         else:
             depends = False
         if depends:
