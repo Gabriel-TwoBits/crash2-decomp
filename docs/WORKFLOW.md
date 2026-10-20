@@ -172,10 +172,12 @@ equivalent C may state the function's contract with its callers, lines of nothin
     EQUIV_DISJOINT(Sys_Memcpy, 0, 1, 2, 2)               /* $a0's and $a1's buffers, $a2 * 2 bytes, apart */
     EQUIV_SCRATCH(func_8003DA00, SAVE_AREA, SAVE_AREA_BYTES) /* what it leaves there doesn't count */
     EQUIV_RUNS(func_8003CBE4, func_8003CBF0)             /* the retail code branches into it as its own */
+    EQUIV_CALLBACK(func_8003CD0C, 7, 2, t8, t9)          /* argument 7 a function of 2 arguments, writing neither */
 
 equiv.py then keeps its trials to it (a value outside the range moved into it by its remainder, a NULL drawn for that
 pointer left out, the second buffer moved past the first, the scratch left out of the memory compared, the routine run
-as part of the retail function, which still has other callers in the build), and prints it with the verdict, which
+as part of the retail function, which still has other callers in the build, a call through the callback compared on
+its arguments only and leaving the registers named, which a call otherwise sets at random), and prints it with the verdict, which
 `tools/match.py` records. The scratch is the handwritten code's save area, the scratchpad's first 16 words: every
 function that uses it writes it before reading it, and no compiled code touches it. A bound is a number or a `#define` of one in the file; a line it can't read stops it. A contract goes in by
 hand, with its evidence in the comment above it: every caller, compiled and handwritten, and what each passes.

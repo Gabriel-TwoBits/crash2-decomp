@@ -564,6 +564,14 @@ then 64 bytes past the retail file: written after the disc image's last sector, 
 displays retail's image on all four schedules at every frame. `tools/progress.py`: 17 of 98 handwritten functions
 equivalent.
 
+`func_8003CD0C`, which averages the tops of a collision list's boxes under a height, asking a callback about some,
+needed two more things of equiv.py: `EQUIV_CALLBACK` (its one callback, `func_8002A1B8`, takes two arguments and writes
+neither `$t8` nor `$t9`, which the retail code keeps a header's halvings in across the call), and a frame address told
+only while `$sp` is the stack's (the retail code keeps the origin's x in it). Its C writes the scratchpad words the
+retail code keeps its state in around the call, 0x1F800070 to 0x1F8000A3 among them, the opcode table's copy. It agrees
+on 2,000 of 2,000 trials on 2 seeds; every equivalent function (209) still agrees on 500 trials of seed 1, and the four
+schedules at every frame, the executable 240 bytes past the retail file. 18 of 98 handwritten functions equivalent.
+
 The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
