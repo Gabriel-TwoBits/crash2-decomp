@@ -11,9 +11,11 @@ REGISTERS = 32
 
 # Data registers
 VXY0, VZ0 = 0, 1
+RGBC = 6
 IR0, IR1, IR2, IR3 = 8, 9, 10, 11
 SXY0, SXY1, SXY2, SXYP = 12, 13, 14, 15
 SZ0, SZ1, SZ2, SZ3 = 16, 17, 18, 19
+RGB0, RGB1, RGB2 = 20, 21, 22
 MAC0, MAC1, MAC2, MAC3 = 24, 25, 26, 27
 IRGB, ORGB, LZCS, LZCR = 28, 29, 30, 31
 # Held as 16 bits, read back sign-extended (the vectors' Z, IR0-IR3) or zero-extended (OTZ, SZ0-SZ3)
@@ -23,6 +25,11 @@ UNSIGNED_DATA = {7, 16, 17, 18, 19}
 # Control registers: the rotation matrix's nine halves in five words (RT11 | RT12 << 16, ..., RT33), the translation
 RT = 0
 TRX, TRY, TRZ = 5, 6, 7
+# The light and light colour matrices, the background and far colours
+LLM = 8
+RBK, GBK, BBK = 13, 14, 15
+LCM = 16
+RFC, GFC, BFC = 21, 22, 23
 OFX, OFY, H, DQA, DQB = 24, 25, 26, 27, 28
 FLAG = 31
 # Held as 16 bits, read back sign-extended: RT33, L33, LB3, H (used unsigned), DQA, ZSF3, ZSF4
@@ -33,6 +40,8 @@ SIGNED_CONTROL = {4, 12, 20, 26, 27, 29, 30}
 FLAG_MAC_POSITIVE = (1 << 30, 1 << 29, 1 << 28)
 FLAG_MAC_NEGATIVE = (1 << 27, 1 << 26, 1 << 25)
 FLAG_IR = (1 << 24, 1 << 23, 1 << 22)
+# The colour FIFO's components saturated at 0..0xFF
+FLAG_COLOUR = (1 << 21, 1 << 20, 1 << 19)
 FLAG_SZ3 = 1 << 18
 FLAG_DIVIDE = 1 << 17
 FLAG_MAC0_POSITIVE = 1 << 16
@@ -50,8 +59,21 @@ FUNCTION_MASK = 0x3F
 SF_SHIFT = 19
 LM_SHIFT = 10
 RTPS = 0x01
+NCLIP = 0x06
+DPCS = 0x10
+MVMVA = 0x12
+DPCT = 0x2A
 RTPT = 0x30
-COMMANDS = {RTPS: "rtps", RTPT: "rtpt"}
+COMMANDS = {RTPS: "rtps", NCLIP: "nclip", DPCS: "dpcs", MVMVA: "mvmva", DPCT: "dpct", RTPT: "rtpt"}
+# MVMVA's fields: the matrix (rotation, light, light colour; 3 is garbage), the vector (V0-V2, or IR1-IR3) and the one
+# added (translation, background colour; 2, the far colour, the hardware adds wrongly; 3 none)
+MX_SHIFT, V_SHIFT, CV_SHIFT = 17, 15, 13
+FIELD_MASK = 3
+MATRICES = (RT, LLM, LCM)
+VECTOR_IR = 3
+ADDED = {0: (TRX, TRY, TRZ), 1: (RBK, GBK, BBK)}
+ADDED_NONE = 3
+DPCT_COLOURS = 3
 
 FRACTION_BITS = 12
 # MAC1-3 accumulate in 44 bits, checked after each addition
@@ -75,6 +97,13 @@ DIVIDE_STEP_SHIFT = 8
 DIVIDE_FINAL_ROUND = 0x8000
 SEED_NUMERATOR = 0x40000
 SEED_OFFSET = 0x100
+# A colour's components (RGBC, RGB0-RGB2): bytes, CODE the fourth; depth cueing starts from them shifted by 16 and
+# pushes MAC1-3 / 16 saturated to a byte
+BYTE_BITS = 8
+BYTE_MASK = 0xFF
+COLOUR_IN_SHIFT = 16
+COLOUR_OUT_SHIFT = 4
+CODE_SHIFT = 24
 # IRGB and ORGB: three 5-bit colour components, IR1-IR3 / 0x80 each
 COLOUR_BITS = 5
 COLOUR_MAX = 0x1F
@@ -181,9 +210,81 @@ class Gte:
             self.control[FLAG] = 0
             for vector in range(RTPT_VECTORS):
                 self.perspective(vector, sf, lm, vector == RTPT_VECTORS - 1)
+        elif function == NCLIP:
+            self.control[FLAG] = 0
+            self.normal_clip()
+        elif function == MVMVA:
+            matrix = (word >> MX_SHIFT) & FIELD_MASK
+            added = (word >> CV_SHIFT) & FIELD_MASK
+            if matrix >= len(MATRICES) or (added not in ADDED and added != ADDED_NONE):
+                # The garbage matrix and the far colour's wrong sum: no game code uses them
+                return False
+            else:
+                self.control[FLAG] = 0
+                self.multiply(MATRICES[matrix], (word >> V_SHIFT) & FIELD_MASK, ADDED.get(added), sf, lm)
+        elif function == DPCS:
+            self.control[FLAG] = 0
+            self.depth_cue(self.data[RGBC], sf, lm)
+        elif function == DPCT:
+            self.control[FLAG] = 0
+            for _ in range(DPCT_COLOURS):
+                # RGB0, which each push moves on
+                self.depth_cue(self.data[RGB0], sf, lm)
         else:
             return False
         return True
+
+    def ir_vector(self):
+        return tuple(signed16(self.data[register]) for register in (IR1, IR2, IR3))
+
+    def matrix_element(self, base, row, column):
+        """Element (row+1)(column+1) of the matrix whose five words start at control register base"""
+        index = row * DIMENSION + column
+        word = self.control[base + index // 2]
+        return signed16(word >> HALF_BITS) if index % 2 else signed16(word)
+
+    def set_mac_ir(self, row, value, sf, lm):
+        """MAC(row+1) from a 44-bit sum shifted by sf, and IR(row+1) saturated from it"""
+        mac = value >> (sf * FRACTION_BITS)
+        self.data[MAC1 + row] = mac & WORD_MASK
+        low = 0 if lm else IR_MIN
+        self.data[IR1 + row] = self.saturated(signed32(mac), low, IR_MAX, FLAG_IR[row]) & WORD_MASK
+
+    def multiply(self, matrix, vector, added, sf, lm):
+        """MVMVA: the matrix times the vector, plus the vector added (none when added is None)"""
+        if vector == VECTOR_IR:
+            values = self.ir_vector()
+        else:
+            values = self.vector(vector)
+        for row in range(DIMENSION):
+            value = 0 if added is None else signed32(self.control[added[row]]) << FRACTION_BITS
+            for column in range(DIMENSION):
+                value = self.mac_checked(row, value + self.matrix_element(matrix, row, column) * values[column])
+            self.set_mac_ir(row, value, sf, lm)
+
+    def normal_clip(self):
+        """NCLIP: twice the signed area of the screen triangle SXY0-SXY2, into MAC0"""
+        points = [(signed16(self.data[register]), signed16(self.data[register] >> HALF_BITS))
+                  for register in (SXY0, SXY1, SXY2)]
+        (x0, y0), (x1, y1), (x2, y2) = points
+        value = self.mac0_checked(x0 * y1 + x1 * y2 + x2 * y0 - x0 * y2 - x1 * y0 - x2 * y1)
+        self.data[MAC0] = value & WORD_MASK
+
+    def depth_cue(self, colour, sf, lm):
+        """DPCS on a colour: its components shifted by 16 moved toward the far colour by IR0, pushed on the colour FIFO
+        with RGBC's code"""
+        ir0 = signed16(self.data[IR0])
+        start = [((colour >> (row * BYTE_BITS)) & BYTE_MASK) << COLOUR_IN_SHIFT for row in range(DIMENSION)]
+        for row, far in enumerate((RFC, GFC, BFC)):
+            # The difference to the far colour goes through IR saturated as if lm were 0
+            difference = self.mac_checked(row, (signed32(self.control[far]) << FRACTION_BITS) - start[row])
+            ir = self.saturated(difference >> (sf * FRACTION_BITS), IR_MIN, IR_MAX, FLAG_IR[row])
+            self.set_mac_ir(row, self.mac_checked(row, ir * ir0 + start[row]), sf, lm)
+        pushed = (self.data[RGBC] >> CODE_SHIFT) << CODE_SHIFT
+        for row in range(DIMENSION):
+            component = signed32(self.data[MAC1 + row]) >> COLOUR_OUT_SHIFT
+            pushed |= self.saturated(component, 0, BYTE_MASK, FLAG_COLOUR[row]) << (row * BYTE_BITS)
+        self.data[RGB0], self.data[RGB1], self.data[RGB2] = self.data[RGB1], self.data[RGB2], pushed
 
     def vector(self, index):
         xy = self.data[VXY0 + 2 * index]
