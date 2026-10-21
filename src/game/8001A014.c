@@ -443,7 +443,6 @@ extern s32 D_8005B71C;
 extern s32 D_8005B75C[];
 extern s32 D_8005B760[];
 extern s32 D_8005B770;
-extern char D_80041E50[];
 
 void func_8001ABF8(u8 *arg0, void *arg1) {
     u8 *list = g_BuildBuffer;
@@ -574,7 +573,7 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
             FLD(s32, prim, 0x18) = D_80060944;
         }
         if (FLD(s32, arg0, 0xAC) & 0x40000) {
-            FLD(char *, prim, 0x1C) = D_80041E50;
+            FLD(void *, prim, 0x1C) = (void *)func_80041E50;
         } else {
             FLD(void *, prim, 0x1C) = (void *)func_80041D14;
         }

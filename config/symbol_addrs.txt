@@ -554,10 +554,13 @@ D_8003AE24 = 0x8003AE24; // type:alabel
 D_8003AE30 = 0x8003AE30; // type:alabel
 D_8003AE3C = 0x8003AE3C; // type:alabel
 D_8003AE48 = 0x8003AE48; // type:alabel
-func_8003DED8 = 0x8003DED8; // type:func size:0xA04
-D_8003E118 = 0x8003E118; // type:alabel
-D_8003E128 = 0x8003E128; // type:alabel
-D_8003E360 = 0x8003E360; // type:alabel
+// the static models' drawers, which the table at 0x8005B708 holds, and a routine for their triangles, which
+// func_8003E128 keeps in the scratchpad
+func_8003DED8 = 0x8003DED8; // type:func size:0x240
+func_8003E118 = 0x8003E118; // type:func size:0x10
+func_8003E128 = 0x8003E128; // type:func size:0x238
+func_8003E360 = 0x8003E360; // type:func size:0x19C
+func_8003E4FC = 0x8003E4FC; // type:func size:0x3E0
 func_8003EAD4 = 0x8003EAD4; // type:func size:0xF0
 // an object renderers' routine past func_8003EAD4's return and 15 nops, which the table at 0x8005B6EC holds
 func_8003EBC4 = 0x8003EBC4; // type:func size:0x150
@@ -577,17 +580,22 @@ func_80040D14 = 0x80040D14; // type:func size:0x504
 D_80040FC4 = 0x80040FC4; // type:alabel
 func_80041784 = 0x80041784; // type:func size:0x2F4
 D_800417B0 = 0x800417B0; // type:alabel
-func_80043270 = 0x80043270; // type:func size:0x134
-D_800432F4 = 0x800432F4; // type:alabel
-D_80043310 = 0x80043310; // type:alabel
-D_80043324 = 0x80043324; // type:alabel
-D_80043374 = 0x80043374; // type:alabel
-func_800433A4 = 0x800433A4; // type:func size:0x250
-D_800434EC = 0x800434EC; // type:alabel
-D_80043504 = 0x80043504; // type:alabel
-D_8004351C = 0x8004351C; // type:alabel
-D_80043554 = 0x80043554; // type:alabel
-D_80043594 = 0x80043594; // type:alabel
+// the models' visibility tests (a packet's word 0x1C): a frame's box's corners on the screen, and always
+func_80041E20 = 0x80041E20; // type:func size:0x30
+func_80041E50 = 0x80041E50; // type:func size:0xC
+// the packets' second steps, which the tables at 0x8005B75C hold, after func_80043270's cosine and sine, and the
+// models' far colour steps (the table at 0x8005B6D0) after func_800433A4's lamps
+func_80043270 = 0x80043270; // type:func size:0x84
+func_800432F4 = 0x800432F4; // type:func size:0x1C
+func_80043310 = 0x80043310; // type:func size:0x14
+func_80043324 = 0x80043324; // type:func size:0x50
+func_80043374 = 0x80043374; // type:func size:0x30
+func_800433A4 = 0x800433A4; // type:func size:0x148
+func_800434EC = 0x800434EC; // type:func size:0x18
+func_80043504 = 0x80043504; // type:func size:0x18
+func_8004351C = 0x8004351C; // type:func size:0x38
+func_80043554 = 0x80043554; // type:func size:0x40
+func_80043594 = 0x80043594; // type:func size:0x60
 func_800437F4 = 0x800437F4; // type:func size:0x1A8
 D_8004380C = 0x8004380C; // type:alabel
 // the object renderers' routines after func_80043EA0's drawer: rotation matrices from an object's angles and scale,
