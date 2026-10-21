@@ -104,6 +104,11 @@ IMAGE_FILE_END = "main_ROM_END"
 # The handwritten code's first function, at its retail address unless the code or read-only data before it changed size
 HANDWRITTEN_START_SYMBOL = "func_80039D2C"
 HANDWRITTEN_START = 0x80039D2C
+# Zeros up to that address when the code before it is shorter than retail's: a renderer reads the GOOL operations'
+# addresses as data. Inside an output section "." counts from the section's start (which ld won't take ADDR() of there)
+HANDWRITTEN_PADDING = ". = MAX(., {offset:#x});"
+# An output section's first line in the linker script, with its address
+OUTPUT_SECTION = re.compile(r"^[ \t]*\.\w+[ \t]+(0x[0-9A-Fa-f]+)[^\n]*:[^\n]*$", re.MULTILINE)
 # TRADEOFF: growth past the retail file is capped; the heap, from the end of .bss to the stack, shrinks by as much, so a
 # higher cap needs every schedule played by a build that long
 MAX_GROWTH = 0x10000
@@ -264,14 +269,25 @@ def nonmatching_link_files():
     if (HERE / HANDWRITTEN_C).exists():
         copy = re.escape(str(NONMATCHING_BUILD / HANDWRITTEN_OBJECT.relative_to(BUILD)))
 
+        def section_address(position):
+            """The address of the output section the script's line at position is in"""
+            addresses = [int(found.group(1), 16) for found in OUTPUT_SECTION.finditer(script, 0, position)]
+            if not addresses:
+                sys.exit(f"{LINKER_SCRIPT}: no output section with an address before {HANDWRITTEN_OBJECT}'s code")
+            else:
+                return addresses[-1]
+
         def beside(line):
             """The C object's sections after the handwritten copy's; its read-only data after its code, past all the
-            code before it, whose addresses then stay"""
+            code before it, whose addresses then stay. The copy's code starts at its retail address when what comes
+            before it is shorter"""
             section = line.group("section")
             if section == ".rodata":
                 return line.group(0)
             elif section == ".text":
-                return (f"{line.group(0)}\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}(.text);"
+                padding = HANDWRITTEN_PADDING.format(offset=HANDWRITTEN_START - section_address(line.start()))
+                return (f"{line.group('indent')}{padding}\n"
+                        f"{line.group(0)}\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}(.text);"
                         f"\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}(.rodata);")
             else:
                 return f"{line.group(0)}\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}({section});"

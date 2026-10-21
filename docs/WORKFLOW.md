@@ -232,8 +232,10 @@ default build assembles it whole. Its equivalent C is `src/game/80039D2C.c`, whi
 `configure.py` leaves each function the file defines (its `static` ones aside) out of the equivalent build's copy of the
 handwritten code, from its `nonmatching` line to the next one, and links the file's code and read-only data right
 after that copy, so the code before a replaced function stays where it was: the handwritten GOOL operations, whose
-addresses a renderer reads as bytes (docs/TARGET.md, "Code addresses read as data"), keep retail's unless C before them
-changed size, and `ninja nonmatching` says when they don't. Routines only one function reaches, such as the tails its dispatch jumps
+addresses a renderer reads as bytes (docs/TARGET.md, "Code addresses read as data"), keep retail's. When the code
+before the copy is shorter than retail's, the linker script pads it with zeros to retail's address (`. = MAX(., ...)`
+before the copy); when it is longer the copy moves, and `ninja nonmatching` says so.
+Routines only one function reaches, such as the tails its dispatch jumps
 into, go with it: `HANDWRITTEN_PARTS(Sys_Memcpy, Sys_Memcpy1, ...)` in the file names them, and equiv.py runs them as
 part of the retail function. `configure.py` (through `tools/handwritten.py`) stops on a function the handwritten code
 doesn't have.
