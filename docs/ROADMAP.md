@@ -519,15 +519,15 @@ verdict and refused by `tools/match.py` in a run's C: `EQUIV_RANGE`, `EQUIV_NONN
 `HANDWRITTEN_PARTS` for the tails only one function reaches, which go with it. Without a contract equiv.py draws as
 before. Three more went in with them: `Sys_Memcpy` (counts 0 to 0xFFFF, buffers never NULL nor overlapping: 2,000 of
 2,000 trials on 2 seeds, all compared), `func_8003DA00`, which descends an octree to the leaf holding a point (its save
-area), and `func_8003CBE4`, which marks a cell of a scratchpad grid and ORs a shape into its rows (it runs
-`func_8003CBF0`, which `func_8003C88C` still calls). `func_8003CBE4`'s prototype is now `void func_8003CBE4();`: the
+area), and `Zone_PlotWallEntry`, which marks a cell of a scratchpad grid and ORs a shape into its rows (it runs
+`Zone_PlotWall`, which `Zone_PlotQueryWalls` still calls). `Zone_PlotWallEntry`'s prototype is now `void Zone_PlotWallEntry();`: the
 matched `func_8002CB1C` calls it with no arguments, passing its own on in `$a0` and `$a1`. The new-game, demo and
 memory-card schedules agree with retail at every frame with all nine. `tools/progress.py`: 13 of 98 handwritten
 functions equivalent, `Sys_Memcpy`'s four tails counted.
 
 Looked at and left in assembly: `func_8003D040` (a box query over records whose sizes come from headers; a box before
 any header uses sizes left in `$s4`-`$t9` by its caller, 1 trial in 2,000, so it waits for the records' producer, likely
-`func_8003BF90`); `func_8003DB94` and `func_80041D14` (a driver calling renderers with `$v1`, `$fp` and `$gp` set, and a
+`Zone_QueryOctree`); `func_8003DB94` and `func_80041D14` (a driver calling renderers with `$v1`, `$fp` and `$gp` set, and a
 callback stored for one); `func_8003EAD4` (a second entry, `D_8003EBC4`, in its middle, which `func_8003FD14` and the
 renderers' table at 0x8005B6EC reach). The GOOL interpreter (`Gool_Interpret` and 10 routines, 0x1128 bytes) holds its
 opcode handlers as labels the data's opcode table points to, the table `func_80042818` also reads as bytes.
@@ -549,10 +549,10 @@ the heap stayed as it was). A longer build leaves the heap, from the end of `.bs
 schedule.
 
 Three more, with what they needed. The collision lists `func_80029538` builds start each zone's part with a header
-`func_8003BF90` writes first, so a box never comes before one; equiv.py now also runs a disagreeing trial's retail code
+`Zone_QueryOctree` writes first, so a box never comes before one; equiv.py now also runs a disagreeing trial's retail code
 with the registers it didn't set zeroed (flipped ones gave the same box), which leaves `func_8003D040`'s headerless
-trials uncompared, and it agrees on 2,000 of 2,000 on 2 seeds. `func_8003C88C`, which marks the boxes' edges in the
-scratchpad's grid, went in with `func_8003CBF0`, its routine and `func_8003CBE4`'s, now C both share. `func_8003D3CC`
+trials uncompared, and it agrees on 2,000 of 2,000 on 2 seeds. `Zone_PlotQueryWalls`, which marks the boxes' edges in the
+scratchpad's grid, went in with `Zone_PlotWall`, its routine and `Zone_PlotWallEntry`'s, now C both share. `func_8003D3CC`
 sets the GTE up to draw an object (its translation, culled by depth, and a rotation from its angles times its scale)
 through `mvmva`, which `tools/gte.py` and `include/gte.h` gained (`tools/gte.py` `nclip`, `dpcs` and `dpct` too, the
 handwritten code's other commands); its retail code puts a `ctc2` in a delay slot, which equiv.py now runs. A draft
@@ -564,7 +564,7 @@ then 64 bytes past the retail file: written after the disc image's last sector, 
 displays retail's image on all four schedules at every frame. `tools/progress.py`: 17 of 98 handwritten functions
 equivalent.
 
-`func_8003CD0C`, which averages the tops of a collision list's boxes under a height, asking a callback about some,
+`Zone_FindFloorY`, which averages the tops of a collision list's boxes under a height, asking a callback about some,
 needed two more things of equiv.py: `EQUIV_CALLBACK` (its one callback, `func_8002A1B8`, takes two arguments and writes
 neither `$t8` nor `$t9`, which the retail code keeps a header's halvings in across the call), and a frame address told
 only while `$sp` is the stack's (the retail code keeps the origin's x in it). Its C writes the scratchpad words the
@@ -572,8 +572,8 @@ retail code keeps its state in around the call, 0x1F800070 to 0x1F8000A3 among t
 on 2,000 of 2,000 trials on 2 seeds; every equivalent function (209) still agrees on 500 trials of seed 1, and the four
 schedules at every frame, the executable 240 bytes past the retail file. 18 of 98 handwritten functions equivalent.
 
-The sort lists' deltas (docs/TARGET.md, "The rest of the disc"): `func_8003AE54` applies one forward, its two streams'
-runs removed and inserted into the other buffer, then its swaps; `func_8003B24C` backward, its swaps undone last first,
+The sort lists' deltas (docs/TARGET.md, "The rest of the disc"): `Gfx_DecodeSortListForward` applies one forward, its two streams'
+runs removed and inserted into the other buffer, then its swaps; `Gfx_DecodeSortListBackward` backward, its swaps undone last first,
 then the streams' roles exchanged. One C merge serves both, the tails `func_8003B89C` to `func_8003B91C` (the copy's
 unrolled ends) going in with them. Random trials needed what the disc shows: lists that fit `Gfx_AllocSortLists`'s
 0xBE4-byte buffers, deltas that fit their page, and the three buffers apart (`EQUIV_BUFFER`, `EQUIV_HALF`), else the
@@ -586,7 +586,7 @@ compared (the rest of random deltas loop to the limit); every equivalent functio
 of seed 1, and the four schedules at every frame, the executable within the retail file again. 25 of 98 handwritten
 functions equivalent.
 
-`func_8003BF90` writes a zone's part of a collision list: its header, then a box for each leaf of the zone's octree
+`Zone_QueryOctree` writes a zone's part of a collision list: its header, then a box for each leaf of the zone's octree
 that an object's box overlaps (docs/TARGET.md, "The rest of the disc"). The retail code walks the tree with the nodes
 above in 7 registers and resumes each through two jump tables; the C recurses, a node's children in index order (x the
 highest bit), each visited where the box reaches its half along every axis the level splits. Its contract bounds each
@@ -845,7 +845,14 @@ Steps, in order:
   make GCC write other code than the offset did (`vel`, `status_a` in `8001D63C.c`), so those stay offsets; fields still
   `unk_` keep the files' named offsets. Where a block of `GoolObject` serves two uses, as 0x84 to 0xA4 read as a
   matrix's rows in func_8001ABF8, the offsets stay too. 0x108 took CrashEdit's name, `display_mode`, the modes
-  func_8001BFDC switches on.
+  func_8001BFDC switches on. A second batch, the handwritten code's own now that its equivalent C states what each
+  routine does: the collision routines from 0x8003BF90 are the Crash 1 catalog's run in the same order (the octree
+  query, the walls' plotter, the wall brush's 3-word entry and body, the floor's height; the query, the entry, the
+  brush and the floor of the same sizes there, 575, 3, 71 and 205 words), `Zone_QueryOctree` to `Zone_FindFloorY`, and
+  the sort lists' deltas its forward and backward decoders (`Gfx_DecodeSortListForward`, `Gfx_DecodeSortListBackward`).
+  `func_8003D040`, after the floor in both, keeps its address: the catalog's ceiling query is 153 words, it 171, and
+  its C (the lowest y or the average of three kinds' boxes) shows no ceiling. `tools/progress.py`: 210 of 638 game
+  functions named.
 - **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC

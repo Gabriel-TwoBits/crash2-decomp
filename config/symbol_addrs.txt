@@ -1397,3 +1397,24 @@ Math_SqrMagnitude2 = 0x8003BEA8; // type:func
 
 // the 64-bit sum of three values' squares >> 20 (mult); the Crash 1 decomp's catalog has RSqrMagnitude3, 34 words right after RSqrMagnitude2, as this one is after Math_SqrMagnitude2
 Math_SqrMagnitude3 = 0x8003BF04; // type:func
+
+// walks a zone's collision octree (the entry's second item: origin, size, root at 0x1C, halvings) down to the leaves overlapping a box and writes them as a collision list of 8-byte records, a header per zone (func_80029538, its one caller, builds the list with it); the Crash 1 decomp's catalog (docs/names.md, after c1's psx/r3000a.c)'s RZoneQueryOctree, 575 words in both, first of the same run of collision routines
+Zone_QueryOctree = 0x8003BF90; // type:func
+
+// marks in the scratchpad's wall grid (0x1F800180, two words a row) the edges, every 8 cells, of a collision list's boxes whose heights overlap a span, through Zone_PlotWallEntry (func_8002DE08, its one caller, after clearing the grid); the Crash 1 decomp's catalog's RPlotQueryWalls, the routine after RZoneQueryOctree there as here
+Zone_PlotQueryWalls = 0x8003C88C; // type:func
+
+// a 3-word entry into Zone_PlotWall, which func_8002CB1C calls with a cell's x and y and Zone_PlotQueryWalls runs into; the Crash 1 decomp's catalog's RPlotWallEntry, 3 words before RPlotWall in both
+Zone_PlotWallEntry = 0x8003CBE4; // type:func
+
+// marks a cell of the scratchpad's wall grid and, the first time, ORs a 32-word shape (0x1F800380) into the rows from 0x1F800100 shifted by x; the Crash 1 decomp's catalog's RPlotWall, 71 words in both, its 16-unit brush plotter
+Zone_PlotWall = 0x8003CBF0; // type:func
+
+// over a collision list's boxes overlapping a box, those whose top is at most a base: the average top of kind 0's and of the others' (a callback given the object and the box's kind word may refuse each), func_8002A3B0, its one caller, asks it over a box from below an object up to its height; the Crash 1 decomp's catalog's RFindFloorY, 205 words in both, after RPlotWall in both
+Zone_FindFloorY = 0x8003CD0C; // type:func
+
+// applies a sort list delta (an SLST entry's item whose second halfword has bit 0 set, CrashEdit's sort lists) forward to one of Gfx_AllocSortLists' buffers, from one buffer into the other; func_80029800 calls it, or Gfx_DecodeSortListBackward by the direction; the Crash 1 decomp's catalog's RSlstDecodeForward, forward before backward in both
+Gfx_DecodeSortListForward = 0x8003AE54; // type:func
+
+// applies a sort list delta (an SLST entry's item) backward, its last 0 to 4 swaps through the tails after it; func_80029800 calls it, or Gfx_DecodeSortListForward by the direction; the Crash 1 decomp's catalog's RSlstDecodeBackward
+Gfx_DecodeSortListBackward = 0x8003B24C; // type:func

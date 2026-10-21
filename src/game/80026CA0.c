@@ -1590,7 +1590,7 @@ void func_80029538(s32 arg0, s32 arg1, s32 arg2) {
         if (*(s32 *)((char *)l + 0x1B4 + i * 4) & SLOT_ACTIVE) {
             t = *(s32 **)((char *)Nsf_OpenEntry((char *)l + 0x194 + i * 4, 1, 0) + 0x14);
             if (func_80030E1C(s, t) != 0) {
-                c->count = func_8003BF90(t, s, &c->ent[c->count], c->count);
+                c->count = Zone_QueryOctree(t, s, &c->ent[c->count], c->count);
             }
         }
     }
@@ -1642,9 +1642,9 @@ u16 *func_80029800(u16 *arg0, s32 arg1, u16 *arg2, s32 arg3) {
         return arg2;
     }
     if (arg3 == 0) {
-        func_8003B24C(arg0, arg1, arg2);
+        Gfx_DecodeSortListBackward(arg0, arg1, arg2);
         return arg2;
     }
-    func_8003AE54(arg0, arg1, arg2);
+    Gfx_DecodeSortListForward(arg0, arg1, arg2);
     return arg2;
 }

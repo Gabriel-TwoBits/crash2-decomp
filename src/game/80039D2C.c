@@ -58,25 +58,26 @@ typedef struct {
 #define OCTREE_ALONG_Y 1
 #define OCTREE_SKIP_KINDS 8
 
-/* The scratchpad's grid func_8003CBE4 marks: a bit per cell, two words a row (cells x -32 to -1 in the first, 0 to 31 in
- * the second) for rows y -32 to 31; where a cell is first marked, the rows from GRID_ROWS on get a shape of 32 words
- * OR-ed in, shifted by x */
+/* The scratchpad's grid Zone_PlotWallEntry marks: a bit per cell, two words a row (cells x -32 to -1 in the first, 0 to
+ * 31 in the second) for rows y -32 to 31; where a cell is first marked, the rows from GRID_ROWS on get a shape of 32
+ * words OR-ed in, shifted by x */
 #define GRID_CELLS 0x1F800180
 #define GRID_ROWS 0x1F800100
 #define GRID_SHAPE 0x1F800380
 #define GRID_HALF 32
 #define GRID_ROW_WORDS 2
-/* func_8003C88C marks a box's edges every 8 cells; it keeps its flags and lower height in the scratchpad while it does */
+/* Zone_PlotQueryWalls marks a box's edges every 8 cells; it keeps its flags and lower height in the scratchpad while it
+ * does */
 #define GRID_EDGE_STEP 8
 #define GRID_KEPT 0x1F8000E0
 /* A box's corner in cells: its distance from the grid's base, in 1/2048ths (<< 2 then >> 13, signed) */
 #define CELL_SCALE_SHIFT 2
 #define CELL_SHIFT 13
 
-/* A collision list (func_80029538's, at most 0x1008 bytes): records of 8 bytes. func_8003BF90 starts each zone's part
- * with a header (low half 0, 16 bytes: the zone's size per axis, then how often each axis halves), boxes follow, and
- * 0xFFFF ends the list. A box's first word holds its kind in bits 3 to 5 and its level in bits 0 to 2, and its corner's
- * offsets from the query box's near corner, as halves of 16ths */
+/* A collision list (func_80029538's, at most 0x1008 bytes): records of 8 bytes. Zone_QueryOctree starts each zone's
+ * part with a header (low half 0, 16 bytes: the zone's size per axis, then how often each axis halves), boxes follow,
+ * and 0xFFFF ends the list. A box's first word holds its kind in bits 3 to 5 and its level in bits 0 to 2, and its
+ * corner's offsets from the query box's near corner, as halves of 16ths */
 #define RECORD_END 0xFFFF
 #define RECORD_HEADER 0
 #define RECORD_HALF_MASK 0xFFFF
@@ -593,7 +594,7 @@ void *func_8003DA00(s32 tree, void *point, s32 flags) {
     return (void *)node;
 }
 
-/* A collision list's records before its end mark (0x1008 bytes); func_8003BF90 leaves out the leaves past them */
+/* A collision list's records before its end mark (0x1008 bytes); Zone_QueryOctree leaves out the leaves past them */
 #define RECORDS_MAX 0x200
 /* A box's first word keeps its leaf's bits from 1 up, past the level */
 #define RECORD_LEAF_MASK 0xFFF8
@@ -604,7 +605,7 @@ void *func_8003DA00(s32 tree, void *point, s32 flags) {
  * breaks past them; the disc's 1,843 zones halve x and y at most 7 times, z 6 (docs/TARGET.md) */
 #define OCTREE_HALVINGS_MAX 7
 
-/* func_8003BF90's walk: the tree, the query box's far corner from its near one, where the next record goes */
+/* Zone_QueryOctree's walk: the tree, the query box's far corner from its near one, where the next record goes */
 typedef struct {
     Octree *octree;
     u16 depth[AXES];
@@ -683,17 +684,18 @@ static void query_node(OctreeQuery *query, u32 node, s32 level, s32 *corner, u32
 
 /* Every caller (func_80029538) passes a zone's octree, a box around an object and a record in its collision list; the
  * octree halves no axis more than OCTREE_HALVINGS_MAX times (the depths' offsets in Octree) */
-EQUIV_SCRATCH(func_8003BF90, SAVE_AREA, SAVE_AREA_BYTES)
-EQUIV_NONNULL(func_8003BF90, 0)
-EQUIV_NONNULL(func_8003BF90, 1)
-EQUIV_NONNULL(func_8003BF90, 2)
-EQUIV_HALF(func_8003BF90, 0, 0x1E, 0, OCTREE_HALVINGS_MAX)
-EQUIV_HALF(func_8003BF90, 0, 0x20, 0, OCTREE_HALVINGS_MAX)
-EQUIV_HALF(func_8003BF90, 0, 0x22, 0, OCTREE_HALVINGS_MAX)
+EQUIV_SCRATCH(Zone_QueryOctree, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_NONNULL(Zone_QueryOctree, 0)
+EQUIV_NONNULL(Zone_QueryOctree, 1)
+EQUIV_NONNULL(Zone_QueryOctree, 2)
+EQUIV_HALF(Zone_QueryOctree, 0, 0x1E, 0, OCTREE_HALVINGS_MAX)
+EQUIV_HALF(Zone_QueryOctree, 0, 0x20, 0, OCTREE_HALVINGS_MAX)
+EQUIV_HALF(Zone_QueryOctree, 0, 0x22, 0, OCTREE_HALVINGS_MAX)
 
-/* Writes a zone's part of a collision list at RECORDS, COUNT of its records before it: the zone's header, then a box for
- * each leaf of its octree overlapping BOX (its least corner then its greatest). Returns the list's records after it */
-s32 func_8003BF90(s32 *tree, s32 *box, void *records, s32 count) {
+/* Writes a zone's part of a collision list at RECORDS, COUNT of its records before it: the zone's header, then a box
+ * for each leaf of its octree overlapping BOX (its least corner then its greatest). Returns the list's records after
+ * it */
+s32 Zone_QueryOctree(s32 *tree, s32 *box, void *records, s32 count) {
     OctreeQuery query;
     u16 *header = records;
     s32 corner[AXES];
@@ -725,7 +727,7 @@ s32 func_8003BF90(s32 *tree, s32 *box, void *records, s32 count) {
     return query.count;
 }
 
-/* func_8003CBF0, which func_8003CBE4 runs into and func_8003C88C calls with x and y in $v1 and $a3 */
+/* Zone_PlotWall, which Zone_PlotWallEntry runs into and Zone_PlotQueryWalls calls with x and y in $v1 and $a3 */
 static void mark_cell(s32 x, s32 y) {
     u32 *cells = (u32 *)GRID_CELLS + (y + GRID_HALF) * GRID_ROW_WORDS;
     u32 *shape = (u32 *)GRID_SHAPE;
@@ -761,9 +763,9 @@ static void mark_cell(s32 x, s32 y) {
     }
 }
 
-EQUIV_RUNS(func_8003CBE4, func_8003CBF0)
+EQUIV_RUNS(Zone_PlotWallEntry, Zone_PlotWall)
 
-void func_8003CBE4(s32 x, s32 y) {
+void Zone_PlotWallEntry(s32 x, s32 y) {
     mark_cell(x, y);
 }
 
@@ -855,8 +857,8 @@ s32 func_8003D040(void *unused, void *records, void *origin, s32 *box, s32 kind_
     }
 }
 
-/* The box kinds func_8003C88C passes over, the two it measures from its first lower height, and the subkinds it leaves
- * unless flags are set (the box's first word, bits 6 to 11) */
+/* The box kinds Zone_PlotQueryWalls passes over, the two it measures from its first lower height, and the subkinds it
+ * leaves unless flags are set (the box's first word, bits 6 to 11) */
 #define EDGE_KIND_SHIFT 1
 #define EDGE_KIND_MASK 7
 #define EDGE_SKIPPED_A 3
@@ -871,14 +873,15 @@ static s32 cell(s32 value, s32 base) {
     return (s32)((u32)(value - base) << CELL_SCALE_SHIFT) >> CELL_SHIFT;
 }
 
-EQUIV_SCRATCH(func_8003C88C, SAVE_AREA, SAVE_AREA_BYTES)
-EQUIV_RUNS(func_8003C88C, func_8003CBE4)
-HANDWRITTEN_PARTS(func_8003C88C, func_8003CBF0)
+EQUIV_SCRATCH(Zone_PlotQueryWalls, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_RUNS(Zone_PlotQueryWalls, Zone_PlotWallEntry)
+HANDWRITTEN_PARTS(Zone_PlotQueryWalls, Zone_PlotWall)
 
-/* Marks in the scratchpad's grid (func_8003CBE4) the edges, every 8 cells, of the boxes of a collision list whose
- * heights overlap one span (from low_a for kinds 1 and 5, from low_b for the others, up to high), their corners in cells
- * from base_x and base_z */
-void func_8003C88C(void *records, void *origin, s32 flags, s32 low_a, s32 low_b, s32 high, s32 base_x, s32 base_z) {
+/* Marks in the scratchpad's grid (Zone_PlotWallEntry) the edges, every 8 cells, of the boxes of a collision list whose
+ * heights overlap one span (from low_a for kinds 1 and 5, from low_b for the others, up to high), their corners in
+ * cells from base_x and base_z */
+void Zone_PlotQueryWalls(void *records, void *origin, s32 flags, s32 low_a, s32 low_b, s32 high, s32 base_x,
+                         s32 base_z) {
     u32 *record = records;
     s32 *at = origin;
     s32 *kept = (s32 *)GRID_KEPT;
@@ -1152,8 +1155,8 @@ s32 func_8003D3CC(void *object, void *camera, s32 on_screen, s32 scale_shift, vo
     return 1;
 }
 
-/* func_8003CD0C's words in the scratchpad: its arguments (the value for none, the callback, the output, the object), the
- * second sum, and 13 words it holds across each call (what its registers hold then, as its code saves them) */
+/* Zone_FindFloorY's words in the scratchpad: its arguments (the value for none, the callback, the output, the object),
+ * the second sum, and 13 words it holds across each call (what its registers hold then, as its code saves them) */
 #define CALLED_KEPT 0x1F8000E0
 #define CALLED_SUM 0x1F8000F0
 #define CALLED_SAVED 0x1F800070
@@ -1164,16 +1167,16 @@ s32 func_8003D3CC(void *object, void *camera, s32 on_screen, s32 scale_shift, vo
 
 typedef s32 (*BoxCallback)(void *object, s32 kind);
 
-EQUIV_SCRATCH(func_8003CD0C, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_SCRATCH(Zone_FindFloorY, SAVE_AREA, SAVE_AREA_BYTES)
 /* Its one caller passes func_8002A1B8, of two arguments, which writes neither $t8 nor $t9 in either build: the retail
  * code keeps two of a header's halvings in them across the call */
-EQUIV_CALLBACK(func_8003CD0C, 7, 2, t8, t9)
+EQUIV_CALLBACK(Zone_FindFloorY, 7, 2, t8, t9)
 
 /* Over the boxes of a collision list overlapping a box, those whose top is at most base: the average top of kind 0's
- * into out[1] and of the others' into out[2] (none when there are none). A box of kind 2 or more, or with a subkind under
- * 0x30, first goes to callback with the object and its kind word, and counts only when that returns 0 */
-void func_8003CD0C(void *object, void *records, void *origin, s32 *box, s32 base, s32 *out, s32 none,
-                   BoxCallback callback) {
+ * into out[1] and of the others' into out[2] (none when there are none). A box of kind 2 or more, or with a subkind
+ * under 0x30, first goes to callback with the object and its kind word, and counts only when that returns 0 */
+void Zone_FindFloorY(void *object, void *records, void *origin, s32 *box, s32 base, s32 *out, s32 none,
+                     BoxCallback callback) {
     u32 *record = records;
     s32 *at = origin;
     u32 *kept = (u32 *)CALLED_KEPT;
@@ -1360,7 +1363,8 @@ static void slst_swap(u16 *entries, s32 index, s32 length) {
 }
 
 /* The two directions' merge: the entries of a list, with the runs of one stream removed and the other's inserted;
- * forward measures removals and insertions as func_8003AE54 does, else as func_8003B24C does */
+ * forward measures removals and insertions as Gfx_DecodeSortListForward does, else as Gfx_DecodeSortListBackward
+ * does */
 static s32 slst_merge(u16 *delta, u16 *from, u16 *to, s32 forward) {
     SlstStream first, second;
     SlstStream *removed, *inserted;
@@ -1427,23 +1431,23 @@ static s32 slst_merge(u16 *delta, u16 *from, u16 *to, s32 forward) {
 
 /* func_80029800 passes an SLST item and the zone's two sort lists, heap buffers (Cam_MoveAlongPath's D_8005F390 and
  * D_8005F398) */
-EQUIV_SCRATCH(func_8003B24C, SAVE_AREA, SAVE_AREA_BYTES)
-EQUIV_NONNULL(func_8003B24C, 0)
-EQUIV_NONNULL(func_8003B24C, 1)
-EQUIV_NONNULL(func_8003B24C, 2)
-EQUIV_BUFFER(func_8003B24C, 0, SLST_ITEM_BYTES)
-EQUIV_BUFFER(func_8003B24C, 1, SORT_LIST_BYTES)
-EQUIV_BUFFER(func_8003B24C, 2, SORT_LIST_BYTES)
-EQUIV_HALF(func_8003B24C, 1, 0, 0, SORT_LIST_ENTRIES)
+EQUIV_SCRATCH(Gfx_DecodeSortListBackward, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_NONNULL(Gfx_DecodeSortListBackward, 0)
+EQUIV_NONNULL(Gfx_DecodeSortListBackward, 1)
+EQUIV_NONNULL(Gfx_DecodeSortListBackward, 2)
+EQUIV_BUFFER(Gfx_DecodeSortListBackward, 0, SLST_ITEM_BYTES)
+EQUIV_BUFFER(Gfx_DecodeSortListBackward, 1, SORT_LIST_BYTES)
+EQUIV_BUFFER(Gfx_DecodeSortListBackward, 2, SORT_LIST_BYTES)
+EQUIV_HALF(Gfx_DecodeSortListBackward, 1, 0, 0, SORT_LIST_ENTRIES)
 /* The delta header's end of swaps, end of first stream and start of swaps, at bytes 0, 4 and 6 */
-EQUIV_HALF(func_8003B24C, 0, 0, 0, SLST_ITEM_HALVES)
-EQUIV_HALF(func_8003B24C, 0, 4, 0, SLST_ITEM_HALVES)
-EQUIV_HALF(func_8003B24C, 0, 6, 0, SLST_ITEM_HALVES)
-HANDWRITTEN_PARTS(func_8003B24C, func_8003B89C, func_8003B8BC, func_8003B8DC, func_8003B8FC, func_8003B91C)
+EQUIV_HALF(Gfx_DecodeSortListBackward, 0, 0, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(Gfx_DecodeSortListBackward, 0, 4, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(Gfx_DecodeSortListBackward, 0, 6, 0, SLST_ITEM_HALVES)
+HANDWRITTEN_PARTS(Gfx_DecodeSortListBackward, func_8003B89C, func_8003B8BC, func_8003B8DC, func_8003B8FC, func_8003B91C)
 
 /* A sort list from the next one and their delta, backward: the delta's swaps undone on from, last first, then its
  * first stream's runs inserted and its second's removed, into to */
-void func_8003B24C(void *delta, u16 *from, u16 *to) {
+void Gfx_DecodeSortListBackward(void *delta, u16 *from, u16 *to) {
     u16 *d = delta;
     u16 *list = from;
     u16 *entries = list + SLST_DATA / 2;
@@ -1481,23 +1485,24 @@ void func_8003B24C(void *delta, u16 *from, u16 *to) {
     slst_merge(d, list, to, 0);
 }
 
-EQUIV_SCRATCH(func_8003AE54, SAVE_AREA, SAVE_AREA_BYTES)
-EQUIV_NONNULL(func_8003AE54, 0)
-EQUIV_NONNULL(func_8003AE54, 1)
-EQUIV_NONNULL(func_8003AE54, 2)
-EQUIV_BUFFER(func_8003AE54, 0, SLST_ITEM_BYTES)
-EQUIV_BUFFER(func_8003AE54, 1, SORT_LIST_BYTES)
-EQUIV_BUFFER(func_8003AE54, 2, SORT_LIST_BYTES)
-EQUIV_HALF(func_8003AE54, 1, 0, 0, SORT_LIST_ENTRIES)
+EQUIV_SCRATCH(Gfx_DecodeSortListForward, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_NONNULL(Gfx_DecodeSortListForward, 0)
+EQUIV_NONNULL(Gfx_DecodeSortListForward, 1)
+EQUIV_NONNULL(Gfx_DecodeSortListForward, 2)
+EQUIV_BUFFER(Gfx_DecodeSortListForward, 0, SLST_ITEM_BYTES)
+EQUIV_BUFFER(Gfx_DecodeSortListForward, 1, SORT_LIST_BYTES)
+EQUIV_BUFFER(Gfx_DecodeSortListForward, 2, SORT_LIST_BYTES)
+EQUIV_HALF(Gfx_DecodeSortListForward, 1, 0, 0, SORT_LIST_ENTRIES)
 /* The delta header's end of swaps, end of first stream and start of swaps, at bytes 0, 4 and 6 */
-EQUIV_HALF(func_8003AE54, 0, 0, 0, SLST_ITEM_HALVES)
-EQUIV_HALF(func_8003AE54, 0, 4, 0, SLST_ITEM_HALVES)
-EQUIV_HALF(func_8003AE54, 0, 6, 0, SLST_ITEM_HALVES)
-EQUIV_RUNS(func_8003AE54, func_8003B24C, func_8003B89C, func_8003B8BC, func_8003B8DC, func_8003B8FC, func_8003B91C)
+EQUIV_HALF(Gfx_DecodeSortListForward, 0, 0, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(Gfx_DecodeSortListForward, 0, 4, 0, SLST_ITEM_HALVES)
+EQUIV_HALF(Gfx_DecodeSortListForward, 0, 6, 0, SLST_ITEM_HALVES)
+EQUIV_RUNS(Gfx_DecodeSortListForward, Gfx_DecodeSortListBackward, func_8003B89C, func_8003B8BC)
+EQUIV_RUNS(Gfx_DecodeSortListForward, func_8003B8DC, func_8003B8FC, func_8003B91C)
 
 /* The next sort list from one and their delta, forward: its first stream's runs removed from from and its second's
  * inserted, into to, then the delta's swaps done on to, up to a 0xFFFF */
-void func_8003AE54(void *delta, u16 *from, u16 *to) {
+void Gfx_DecodeSortListForward(void *delta, u16 *from, u16 *to) {
     u16 *d = delta;
     u16 *entries = to + SLST_DATA / 2;
     u16 *swap;

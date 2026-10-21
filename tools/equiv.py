@@ -1791,7 +1791,7 @@ class Machine:
             # and a local passed by reference is compared by its value
             # TRADEOFF: FRAME_WORDS words whatever the local's size; past a smaller local they may be other locals,
             # which a frame laid out otherwise holds elsewhere. Unset words read zero alike (Memory)
-            # Only while $sp is the stack's: handwritten code holds other values in it (func_8003CD0C an origin's x)
+            # Only while $sp is the stack's: handwritten code holds other values in it (Zone_FindFloorY an origin's x)
             if ENTRY_SP - STACK_RESERVE <= sp <= value < ENTRY_SP:
                 start = value - value % WORD
                 end = min(start + FRAME_WORDS * WORD, ENTRY_SP)

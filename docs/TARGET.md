@@ -62,7 +62,7 @@ Found by the matching runs (each run's notes are in `config/match/notes/<functio
 - **Tails after their function.** `Sys_Memcpy` copies `a2` halfwords (the card directory's 0x28-byte entries go with
   0x14) and ends on a dispatch to `D_8003BB94 + a2 * 32` for its last 1 to 4, into the four 32-byte tails right after it
   (`Sys_Memcpy1` to `Sys_Memcpy4`, which use its `$a0`, `$a1` and `$at`); a count below 0 jumps backwards into code. The
-  five tails before it use `$s1`, `$s2` and `$t6`, and are `func_8003B24C`'s: it ends on the same dispatch, from
+  five tails before it use `$s1`, `$s2` and `$t6`, and are `Gfx_DecodeSortListBackward`'s: it ends on the same dispatch, from
   `D_8003B87C`. The Crash 1 decomp's catalog puts the tails before their functions, which first named these the other
   way round. A halfword loop at `0x8003BC34`, after the tails, is reached by no dispatch (`a2` is at most 4 there).
   `Gfx_ResetOt` has no tails: 64 entries a pass, the terminator stored last.
@@ -153,15 +153,15 @@ engine: the GOOL interpreter, rendering, collision, the paging of NSF entries fr
 the formats (docs/REFERENCES.md).
 
 The sort lists (SLST entries, type 4) give a zone's drawing order, one per camera position: an item whose second
-halfword has bit 0 clear is a whole list (`func_80029800` copies it), else a delta the handwritten `func_8003AE54`
-applies forward and `func_8003B24C` backward, into one of `Gfx_AllocSortLists`'s two 0xBE4-byte buffers. Read from
+halfword has bit 0 clear is a whole list (`func_80029800` copies it), else a delta the handwritten `Gfx_DecodeSortListForward`
+applies forward and `Gfx_DecodeSortListBackward` backward, into one of `Gfx_AllocSortLists`'s two 0xBE4-byte buffers. Read from
 the disc's NSF pages (every one uncompressed, magic 0x1234): 3,980 whole lists, the largest of 1,026 entries; 61,960
 deltas, the largest 0x638 bytes, no header end past 794. Of their swaps, 1,315,110 flip bits, 313,226 are short,
 52,141 long and 62,033 near, a near one always after a short or long one (47,227 and 14,806), never first or after a
 flip: the retail code takes a near swap's base from the swap before it, where a flip leaves an address instead.
 
 A zone's collision octree is its entry's (type 7) second item: origin and size per axis, the root node at 0x1C, then
-how many times each axis halves (`Octree` in `src/game/80039D2C.c`). `func_8003BF90` walks one into a collision list,
+how many times each axis halves (`Octree` in `src/game/80039D2C.c`). `Zone_QueryOctree` walks one into a collision list,
 keeping the nodes above a leaf in 7 registers (a `break` past them), and loops forever on a node with children where
 no axis halves. Read from the disc's 1,843 zones: x and y halve at most 7 times, z 6, the deepest leaf is 7 levels down,
 and no node with children sits past every axis's halvings; sizes reach 15,221 (a halfword holds them, as the list's

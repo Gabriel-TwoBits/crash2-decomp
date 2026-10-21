@@ -124,7 +124,7 @@ is `void`), the callee-saved registers, the calls in order, and every word eithe
 frame. A trial where the retail run reaches the limit (500,000 instructions or 1,000 calls) agrees whatever the
 candidate does, as one where both take the same exception (reported, not compared; after an exception only the calls
 are compared); a candidate reaching its limit, four times the retail code's (C may copy by halfwords where the retail
-code moves words: `func_8003B24C`) and 4,000 instructions more for each GTE command the retail run gave (one
+code moves words: `Gfx_DecodeSortListBackward`) and 4,000 instructions more for each GTE command the retail run gave (one
 instruction there, about 2,300 for an RTPT on `include/gte.h`'s model: `func_80044F54`'s 1,017 streaks took 2,428,386
 instructions in C, 73,118 in the retail code), where the retail code returned disagrees.
 A disagreeing trial's retail code runs again with
@@ -174,11 +174,11 @@ equivalent C may state the function's contract with its callers, lines of nothin
     EQUIV_RANGE(Sys_Memcpy, 2, 0, MEMCPY_MAX_HALFWORDS)   /* $a2 between 0 and 0xFFFF, signed */
     EQUIV_NONNULL(Sys_Memcpy, 0)                         /* $a0 never NULL */
     EQUIV_DISJOINT(Sys_Memcpy, 0, 1, 2, 2)               /* $a0's and $a1's buffers, $a2 * 2 bytes, apart */
-    EQUIV_BUFFER(func_8003AE54, 2, SORT_LIST_BYTES)      /* $a2 a buffer of its own, apart from the others declared */
-    EQUIV_HALF(func_8003AE54, 1, 0, 0, SORT_LIST_ENTRIES) /* the halfword at $a1 between 0 and 0x5F0 */
+    EQUIV_BUFFER(Gfx_DecodeSortListForward, 2, SORT_LIST_BYTES)      /* $a2 a buffer of its own, apart from the others declared */
+    EQUIV_HALF(Gfx_DecodeSortListForward, 1, 0, 0, SORT_LIST_ENTRIES) /* the halfword at $a1 between 0 and 0x5F0 */
     EQUIV_SCRATCH(func_8003DA00, SAVE_AREA, SAVE_AREA_BYTES) /* what it leaves there doesn't count */
-    EQUIV_RUNS(func_8003CBE4, func_8003CBF0)             /* the retail code branches into it as its own */
-    EQUIV_CALLBACK(func_8003CD0C, 7, 2, t8, t9)          /* argument 7 a function of 2 arguments, writing neither */
+    EQUIV_RUNS(Zone_PlotWallEntry, Zone_PlotWall)             /* the retail code branches into it as its own */
+    EQUIV_CALLBACK(Zone_FindFloorY, 7, 2, t8, t9)          /* argument 7 a function of 2 arguments, writing neither */
     EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8003DD0C, ...) /* the 5 words at $a2 + 0x10 one such row (a line each) */
     EQUIV_KEEPS(func_80041E5C, func_8003DD0C, v1)        /* a call to func_8003DD0C leaves $v1 */
     EQUIV_TABLE(Gool_Interpret, GOOL_TABLE_ADDRESS, g_GoolOpcodeHandlers) /* the word there points to the table */
@@ -208,7 +208,7 @@ answering a call out.
 
 A condition on the data a function reads, which no argument names, goes in its body: `EQUIV_ASSUME(based);`, nothing in
 the build. equiv.py compiles the candidate with `EQUIV_TRIAL` defined, where a failing condition calls `Equiv_Reject`,
-which ends the trial: it agrees, not compared, and is counted apart. `func_8003AE54` assumes a near swap follows a short
+which ends the trial: it agrees, not compared, and is counted apart. `Gfx_DecodeSortListForward` assumes a near swap follows a short
 or long one, as every one of the disc's 62,033 does (docs/TARGET.md): otherwise the retail code's base is whatever a
 register holds, the caller's, a jump target its copy left, or a flipped entry's address. Its evidence is the data
 itself, read whole from the disc and counted, and it goes beside the line.

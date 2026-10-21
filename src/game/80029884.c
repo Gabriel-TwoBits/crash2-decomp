@@ -371,7 +371,7 @@ void func_8002A3B0(void *arg0, void *arg1, void *arg2, void *arg3, s32 arg4, s32
     }
     box[4] = y;
     box[5] = src[2] + far - UNK_BOX_MARGIN;
-    func_8003CD0C(arg0, arg3, (char *)arg3 + UNK_OUT_OFFSET, box, base, arg5, UNK_CALL_KEY, &func_8002A1B8);
+    Zone_FindFloorY(arg0, arg3, (char *)arg3 + UNK_OUT_OFFSET, box, base, arg5, UNK_CALL_KEY, &func_8002A1B8);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002A3B0);
@@ -1548,9 +1548,9 @@ void func_8002CB1C(s32 arg0, s32 arg1) {
     if (((arg0 < 0) ? (-arg0) : (arg0)) < 0x20) {
         if (((arg1 < 0) ? (-arg1) : (arg1)) < 0x20) {
             if (arg0 || arg1) {
-                func_8003CBE4();
+                Zone_PlotWallEntry();
             } else {
-                func_8003CBE4();
+                Zone_PlotWallEntry();
             }
         }
     }
@@ -2331,8 +2331,8 @@ void func_8002DE08(s32 *arg0, s32 *arg1, GoolObject *arg2, void *arg3) {
                 base += *(s32 *)((s8 *)arg2->unk_8 + PARENT_BASE_OFFSET);
             }
             x = arg2->pos[1];
-            func_8003C88C(arg3, (s8 *)arg3 + BUF_B_OFFSET, flags, x + D_8005F204,
-                          x + OBJ_X_END_DELTA, base, arg0[0], arg0[2]);
+            Zone_PlotQueryWalls(arg3, (s8 *)arg3 + BUF_B_OFFSET, flags, x + D_8005F204,
+                                x + OBJ_X_END_DELTA, base, arg0[0], arg0[2]);
         }
     }
     func_8002D6E4(arg0, arg1, arg2, arg3, 1);
