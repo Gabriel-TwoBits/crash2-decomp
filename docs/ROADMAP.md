@@ -586,6 +586,16 @@ compared (the rest of random deltas loop to the limit); every equivalent functio
 of seed 1, and the four schedules at every frame, the executable within the retail file again. 25 of 98 handwritten
 functions equivalent.
 
+`func_8003BF90` writes a zone's part of a collision list: its header, then a box for each leaf of the zone's octree
+that an object's box overlaps (docs/TARGET.md, "The rest of the disc"). The retail code walks the tree with the nodes
+above in 7 registers and resumes each through two jump tables; the C recurses, a node's children in index order (x the
+highest bit), each visited where the box reaches its half along every axis the level splits. Its contract bounds each
+axis's halvings at 7, what the retail code's registers hold and the disc's most; `EQUIV_ASSUME` leaves out a node with
+children where no axis splits, on which the retail code loops forever and which no zone has. It agrees on 2,000 of
+2,000 trials on 2 seeds (about 83% compared); two slips, an overlap test off at its bound and the children's bits
+reversed, disagree on 1 and 7 of 300. The four schedules agree at every frame. 26 of 98 handwritten functions
+equivalent.
+
 The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);

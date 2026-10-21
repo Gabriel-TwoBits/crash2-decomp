@@ -160,6 +160,13 @@ deltas, the largest 0x638 bytes, no header end past 794. Of their swaps, 1,315,1
 52,141 long and 62,033 near, a near one always after a short or long one (47,227 and 14,806), never first or after a
 flip: the retail code takes a near swap's base from the swap before it, where a flip leaves an address instead.
 
+A zone's collision octree is its entry's (type 7) second item: origin and size per axis, the root node at 0x1C, then
+how many times each axis halves (`Octree` in `src/game/80039D2C.c`). `func_8003BF90` walks one into a collision list,
+keeping the nodes above a leaf in 7 registers (a `break` past them), and loops forever on a node with children where
+no axis halves. Read from the disc's 1,843 zones: x and y halve at most 7 times, z 6, the deepest leaf is 7 levels down,
+and no node with children sits past every axis's halvings; sizes reach 15,221 (a halfword holds them, as the list's
+header does) and origins lie between -234,962 and 417,902 (shifted by 8 they still fit a word).
+
 ## Addresses from the disc
 
 No address of the executable turned up in the disc's data, and none holds `.data` in place. What breaks the game when

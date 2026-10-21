@@ -71,7 +71,7 @@ typedef struct {
 /* A collision list (func_80029538's, at most 0x1008 bytes): records of 8 bytes. func_8003BF90 starts each zone's part
  * with a header (low half 0, 16 bytes: the zone's size per axis, then how often each axis halves), boxes follow, and
  * 0xFFFF ends the list. A box's first word holds its kind in bits 3 to 5 and its level in bits 0 to 2, and its corner's
- * offsets from the zone's origin, as halves of 16ths */
+ * offsets from the query box's near corner, as halves of 16ths */
 #define RECORD_END 0xFFFF
 #define RECORD_HEADER 0
 #define RECORD_HALF_MASK 0xFFFF
@@ -256,6 +256,138 @@ void *func_8003DA00(s32 tree, void *point, s32 flags) {
         at[2] += dz - 1;
     }
     return (void *)node;
+}
+
+/* A collision list's records before its end mark (0x1008 bytes); func_8003BF90 leaves out the leaves past them */
+#define RECORDS_MAX 0x200
+/* A box's first word keeps its leaf's bits from 1 up, past the level */
+#define RECORD_LEAF_MASK 0xFFF8
+/* A record's halfwords, and the records a header takes */
+#define RECORD_HALVES 4
+#define HEADER_RECORDS 2
+/* The most times an octree halves an axis: the retail code keeps the nodes of 7 levels above a leaf in registers and
+ * breaks past them; the disc's 1,843 zones halve x and y at most 7 times, z 6 (docs/TARGET.md) */
+#define OCTREE_HALVINGS_MAX 7
+
+/* func_8003BF90's walk: the tree, the query box's far corner from its near one, where the next record goes */
+typedef struct {
+    Octree *octree;
+    u16 depth[AXES];
+    s32 extent[AXES];
+    u32 *record;
+    s32 count;
+} OctreeQuery;
+
+/* Lists the leaves under a node that overlap the query box: a node's corner is from the box's near corner, in the box's
+ * units (the octree's shifted by OCTREE_SHIFT) */
+static void query_node(OctreeQuery *query, u32 node, s32 level, s32 *corner, u32 *size) {
+    s32 split[AXES];
+    u32 half[AXES];
+    s32 child_corner[AXES];
+    s32 splits = 0;
+    s32 axis, child, shift, middle, overlaps;
+    u16 *children;
+
+    if (node == 0) {
+        return;
+    } else if (node & OCTREE_LEAF) {
+        if (query->count < RECORDS_MAX) {
+            query->record[0] = ((node << RECORD_KIND_SHIFT) & RECORD_LEAF_MASK) | level |
+                               (((u32)corner[0] >> RECORD_OFFSET_SHIFT) << RECORD_HALF_BITS);
+            query->record[1] = (((u32)corner[2] >> RECORD_OFFSET_SHIFT) << RECORD_HALF_BITS) |
+                               (((u32)corner[1] >> RECORD_OFFSET_SHIFT) & RECORD_HALF_MASK);
+            query->record += RECORD_WORDS;
+            query->count++;
+        } else {
+            /* The list is full */
+        }
+        return;
+    } else {
+        /* Children: one for each half of the axes this level splits */
+    }
+
+    for (axis = 0; axis < AXES; axis++) {
+        split[axis] = level < query->depth[axis];
+        splits += split[axis];
+        half[axis] = size[axis] >> split[axis];
+    }
+    /* The retail code loops forever on a node with children where no axis splits; no zone on the disc has one */
+    EQUIV_ASSUME(splits != 0);
+    if (splits == 0) {
+        return;
+    } else {
+        /* At least two children */
+    }
+    children = (u16 *)((u8 *)query->octree + node);
+    for (child = 0; child < (1 << splits); child++) {
+        overlaps = 1;
+        shift = splits;
+        for (axis = 0; axis < AXES; axis++) {
+            child_corner[axis] = corner[axis];
+            if (!split[axis]) {
+                continue;
+            } else {
+                /* The child's bit for this axis, x the highest */
+                shift--;
+            }
+            middle = corner[axis] + half[axis];
+            if ((child >> shift) & 1) {
+                child_corner[axis] = middle;
+                overlaps &= middle <= query->extent[axis];
+            } else {
+                overlaps &= middle >= 0;
+            }
+        }
+        if (overlaps) {
+            query_node(query, children[child], level + 1, child_corner, half);
+        } else {
+            /* Outside the box along some axis */
+        }
+    }
+}
+
+/* Every caller (func_80029538) passes a zone's octree, a box around an object and a record in its collision list; the
+ * octree halves no axis more than OCTREE_HALVINGS_MAX times (the depths' offsets in Octree) */
+EQUIV_SCRATCH(func_8003BF90, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_NONNULL(func_8003BF90, 0)
+EQUIV_NONNULL(func_8003BF90, 1)
+EQUIV_NONNULL(func_8003BF90, 2)
+EQUIV_HALF(func_8003BF90, 0, 0x1E, 0, OCTREE_HALVINGS_MAX)
+EQUIV_HALF(func_8003BF90, 0, 0x20, 0, OCTREE_HALVINGS_MAX)
+EQUIV_HALF(func_8003BF90, 0, 0x22, 0, OCTREE_HALVINGS_MAX)
+
+/* Writes a zone's part of a collision list at RECORDS, COUNT of its records before it: the zone's header, then a box for
+ * each leaf of its octree overlapping BOX (its least corner then its greatest). Returns the list's records after it */
+s32 func_8003BF90(s32 *tree, s32 *box, void *records, s32 count) {
+    OctreeQuery query;
+    u16 *header = records;
+    s32 corner[AXES];
+    u32 size[AXES];
+    u32 root;
+    s32 axis;
+
+    query.octree = (Octree *)tree;
+    for (axis = 0; axis < AXES; axis++) {
+        query.extent[axis] = box[AXES + axis] - box[axis];
+        corner[axis] = (query.octree->origin[axis] << OCTREE_SHIFT) - box[axis];
+        size[axis] = query.octree->size[axis];
+    }
+    root = query.octree->root;
+    for (axis = 0; axis < AXES; axis++) {
+        query.depth[axis] = query.octree->depth[axis];
+    }
+
+    header[0] = RECORD_HEADER;
+    header[RECORD_HALVES] = RECORD_HEADER;
+    for (axis = 0; axis < AXES; axis++) {
+        header[1 + axis] = size[axis];
+        header[RECORD_HALVES + 1 + axis] = query.depth[axis];
+        size[axis] <<= OCTREE_SHIFT;
+    }
+    query.record = (u32 *)records + HEADER_WORDS;
+    query.count = count + HEADER_RECORDS;
+    query_node(&query, root, 0, corner, size);
+    return query.count;
 }
 
 /* func_8003CBF0, which func_8003CBE4 runs into and func_8003C88C calls with x and y in $v1 and $a3 */
