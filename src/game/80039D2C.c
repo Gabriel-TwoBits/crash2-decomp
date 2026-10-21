@@ -33,6 +33,9 @@ extern s16 g_SinTable[];
 #define SAVE_AREA 0x1F800000
 #define SAVE_AREA_BYTES 0x40
 
+/* A shift's count as the CPU takes it from a register: its low 5 bits */
+#define SHIFT_COUNT_MASK 0x1F
+
 /* An octree func_8003DA00 descends: its origin and size per axis, scaled by OCTREE_SHIFT when read, then its root node
  * and how many levels split each axis. A node is a halfword: 0 empty, odd a leaf (its kind in bits 1 to 3), else the
  * offset from the tree's start of its children, 2 to 8 halfwords by the axes it splits (x the highest bit of the index) */
@@ -116,6 +119,44 @@ void Sys_Memcpy(void *src, void *dst, s32 halfwords) {
     }
 }
 
+/* Copies COUNT halfwords; nothing in the game calls it */
+void func_8003BC34(u16 *from, u16 *to, s32 count) {
+    for (; count != 0; count--) {
+        *to++ = *from++;
+    }
+}
+
+/* An ordering table's slots, linked each to the next (a 24-bit address), in blocks of 64; the last holds the end mark */
+#define OT_BLOCK_SLOTS 64
+#define OT_BLOCK_SHIFT 6
+#define OT_LINK_MASK 0xFFFFFF
+
+/* Every caller (Sys_MainLoop, Gfx_AllocFrameBuffers, func_80041E5C) passes a frame's table of 0x800 slots; the retail
+ * code links at least a block, a count under 64 sending it on without end */
+EQUIV_NONNULL(Gfx_ResetOt, 0)
+EQUIV_RANGE(Gfx_ResetOt, 1, OT_BLOCK_SLOTS, OT_SLOTS)
+
+/* Resets an ordering table of SLOTS slots: each linked to the one after it, the last the end */
+void Gfx_ResetOt(u8 *ot, s32 slots) {
+    u32 *slot = (u32 *)ot;
+    u32 next = (u32)ot & OT_LINK_MASK;
+    u32 blocks = (u32)slots >> OT_BLOCK_SHIFT;
+    u32 index;
+
+    for (index = 0; index < blocks * OT_BLOCK_SLOTS; index++) {
+        next += sizeof(u32);
+        slot[index] = next;
+    }
+    slot[index - 1] = OT_LINK_MASK;
+}
+
+extern u32 g_TimerTicks;
+
+/* Root counter 2's interrupt (Sys_Init opens its event): the game's ticks */
+void Sys_TimerHandler(void) {
+    g_TimerTicks++;
+}
+
 s32 Math_SqrMagnitude2(s32 x, s32 y) {
     u64 sum = (s64)x * x + (s64)y * y;
 
@@ -161,6 +202,53 @@ s32 Math_Sin(s32 angle) {
 
 s32 Math_Cos(s32 angle) {
     return cosine(angle);
+}
+
+/* func_8003EAD4's vectors: three words, x, y and z; its rotation: the GTE's five words */
+#define VECTOR_WORDS 3
+#define MATRIX_WORDS 5
+
+/* Its callers (func_8002A8D0, func_8002CC50) pass a box's eight corners, an object's rotation (a word: the matrix's
+ * address) and its position */
+#define BOX_CORNERS 8
+EQUIV_NONNULL(func_8003EAD4, 3)
+EQUIV_RANGE(func_8003EAD4, 4, 0, BOX_CORNERS)
+
+/* Transforms COUNT vectors from IN to OUT: each shifted down by SHIFT, rotated by MATRIX (its five words into the GTE),
+ * shifted back up and moved by TRANSLATION */
+void func_8003EAD4(s32 *out, s32 *in, s32 matrix, void *translation, s32 count, s32 shift) {
+    u32 *rotation = (u32 *)matrix;
+    s32 *move = translation;
+    u32 words[MATRIX_WORDS];
+    s32 x, y, z, rx, ry, rz, tx, ty, tz, word;
+
+    for (word = 0; word < MATRIX_WORDS; word++) {
+        words[word] = rotation[word];
+    }
+    tx = move[0];
+    ty = move[1];
+    tz = move[2];
+    GTE_WRITE_CONTROL(GTE_RT11RT12, words[0]);
+    GTE_WRITE_CONTROL(GTE_RT13RT21, words[1]);
+    GTE_WRITE_CONTROL(GTE_RT22RT23, words[2]);
+    GTE_WRITE_CONTROL(GTE_RT31RT32, words[3]);
+    GTE_WRITE_CONTROL(GTE_RT33, words[4]);
+    for (; count > 0; count--) {
+        x = in[0] >> (shift & SHIFT_COUNT_MASK);
+        y = in[1] >> (shift & SHIFT_COUNT_MASK);
+        z = in[2] >> (shift & SHIFT_COUNT_MASK);
+        GTE_WRITE_DATA(GTE_VXY0, ((u32)y << GTE_HALF_BITS) | ((u32)x & GTE_HALF_MASK));
+        GTE_WRITE_DATA(GTE_VZ0, z);
+        in += VECTOR_WORDS;
+        Gte_MultiplyMatrix(GTE_MATRIX_ROTATION, 0);
+        GTE_READ_DATA(GTE_IR1, rx);
+        GTE_READ_DATA(GTE_IR2, ry);
+        GTE_READ_DATA(GTE_IR3, rz);
+        out[0] = (rx << (shift & SHIFT_COUNT_MASK)) + tx;
+        out[1] = (ry << (shift & SHIFT_COUNT_MASK)) + ty;
+        out[2] = (rz << (shift & SHIFT_COUNT_MASK)) + tz;
+        out += VECTOR_WORDS;
+    }
 }
 
 void func_8003DD0C(void) {
@@ -1394,8 +1482,6 @@ void func_80044F54(s32 count, void *frame, void *scene) {
  * (x as a halfword, so only from above), its y is the scene's offset added and shifted */
 #define DOT_SHIFT 20
 #define DOT_GAP 0x70
-/* A shift's count as the CPU takes it from a register: its low 5 bits */
-#define SHIFT_COUNT_MASK 0x1F
 /* A dot's grey: the generator's byte, at least 0x40, in each of red, green and blue */
 #define DOT_GREY_MIN 0x40
 #define DOT_GREY_MASK 0xFF

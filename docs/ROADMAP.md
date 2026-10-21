@@ -653,6 +653,15 @@ otherwise from game frame 1,380, so new-game and turtle-woods are paced from gam
 end; then the four schedules agree at every frame. The executable has 3,296 bytes of the retail file's room left. 71 of
 132 handwritten functions equivalent.
 
+Four small handwritten functions: `Gfx_ResetOt` (an ordering table's slots each linked to the next, the last ended),
+`func_8003BC34` (a halfword copy), `Sys_TimerHandler` (root counter 2's interrupt, the game's ticks) and `func_8003EAD4`
+(vectors shifted down, rotated by the GTE, shifted back and moved: a box's corners for `func_8002A8D0` and
+`func_8002CC50`), its entry `func_8003EBC4` split into a function of its own (133 functions). Each agrees on 2,000 of
+2,000 trials on 2 seeds, with the counts the callers pass bounded (`EQUIV_RANGE`: a table's slots, the box's eight
+corners). `Sys_TimerHandler`'s trials agree only on its store faulting at the same address: its counter, at 0x8003BEA4,
+lies in the handwritten code's pages, which equiv.py keeps read-only; the schedules run it. The four schedules agree
+at every frame. The executable has 3,696 bytes of the retail file's room left. 75 of 133 handwritten functions equivalent.
+
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
 the object renderers (`func_8003DED8`, `func_8003ED14` and the routines the table at 0x8005B650 holds), then the GOOL
 interpreter with its opcode table.
