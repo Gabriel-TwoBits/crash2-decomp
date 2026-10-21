@@ -251,6 +251,239 @@ void func_8003EAD4(s32 *out, s32 *in, s32 matrix, void *translation, s32 count, 
     }
 }
 
+/* An object's matrix as func_8004400C and its entries build it: the rotation's five words as the GTE takes them, then
+ * the scale per axis; 1.0 in the GTE's 4.12 */
+#define FIXED_ONE 0x1000
+#define MATRIX_SCALE MATRIX_WORDS
+
+/* An angle's cosine and sine as halves of the GTE's words, from the quarter wave as func_80043270 reads it: the
+ * cosine negated in the second and third quarters, the sine in the second half, a negated value masked to 16 bits and
+ * one not as the halfword loads it */
+#define ANGLE_IN_QUARTER (ANGLE_QUARTER - 1)
+
+static u32 wave_half(s32 value, s32 negated) {
+    if (negated) {
+        return -value & GTE_HALF_MASK;
+    } else {
+        return value;
+    }
+}
+
+static void cosine_sine(s32 angle, u32 *cosine_word, u32 *sine_word) {
+    s32 index = angle & ANGLE_IN_QUARTER;
+    s32 rising = g_SinTable[index];
+    s32 falling = g_SinTable[ANGLE_QUARTER - index];
+    s32 odd_quarter = (angle & ANGLE_QUARTER) != 0;
+    s32 second_half = (angle & ANGLE_HALF) != 0;
+
+    if (odd_quarter) {
+        *cosine_word = wave_half(rising, !second_half);
+        *sine_word = wave_half(falling, second_half);
+    } else {
+        *cosine_word = wave_half(falling, second_half);
+        *sine_word = wave_half(rising, second_half);
+    }
+}
+
+/* A rotation by ANGLE about the x, y or z axis, its five words */
+static void rotation_x(u32 *words, s32 angle) {
+    u32 c, s;
+
+    cosine_sine(angle, &c, &s);
+    words[0] = FIXED_ONE;
+    words[1] = 0;
+    words[2] = ((u32)-(s32)s << GTE_HALF_BITS) | c;
+    words[3] = s << GTE_HALF_BITS;
+    words[4] = c;
+}
+
+static void rotation_y(u32 *words, s32 angle) {
+    u32 c, s;
+
+    cosine_sine(angle, &c, &s);
+    words[0] = c;
+    words[1] = s;
+    words[2] = FIXED_ONE;
+    words[3] = (u32)-(s32)s & GTE_HALF_MASK;
+    words[4] = c;
+}
+
+static void rotation_z(u32 *words, s32 angle) {
+    u32 c, s;
+
+    cosine_sine(angle, &c, &s);
+    words[0] = (s << GTE_HALF_BITS) | c;
+    words[1] = (u32)-(s32)s << GTE_HALF_BITS;
+    words[2] = c;
+    words[3] = 0;
+    words[4] = FIXED_ONE;
+}
+
+/* The GTE's rotation set to the five words (func_80043074) */
+static void rotation_load(u32 *words) {
+    GTE_WRITE_CONTROL(GTE_RT11RT12, words[0]);
+    GTE_WRITE_CONTROL(GTE_RT13RT21, words[1]);
+    GTE_WRITE_CONTROL(GTE_RT22RT23, words[2]);
+    GTE_WRITE_CONTROL(GTE_RT31RT32, words[3]);
+    GTE_WRITE_CONTROL(GTE_RT33, words[4]);
+}
+
+/* The GTE's rotation times the matrix of the five words, column by column, into the words and the rotation
+ * (func_80042FD0) */
+static void rotation_multiply(u32 *words) {
+    s32 x1, y1, z1, x2, y2, z2, x3, y3, z3;
+
+    GTE_WRITE_DATA(GTE_VXY0, (words[0] & GTE_HALF_MASK) | (words[1] & ~GTE_HALF_MASK));
+    GTE_WRITE_DATA(GTE_VZ0, words[3]);
+    Gte_MultiplyMatrix(GTE_MATRIX_ROTATION, 0);
+    GTE_WRITE_DATA(GTE_VXY1, (words[0] >> GTE_HALF_BITS) | (words[2] << GTE_HALF_BITS));
+    GTE_WRITE_DATA(GTE_VZ1, words[3] >> GTE_HALF_BITS);
+    GTE_READ_DATA(GTE_IR1, x1);
+    GTE_READ_DATA(GTE_IR2, y1);
+    GTE_READ_DATA(GTE_IR3, z1);
+    Gte_MultiplyMatrix(GTE_MATRIX_ROTATION, 1);
+    GTE_WRITE_DATA(GTE_VXY2, (words[1] & GTE_HALF_MASK) | (words[2] & ~GTE_HALF_MASK));
+    GTE_WRITE_DATA(GTE_VZ2, words[4]);
+    GTE_READ_DATA(GTE_IR1, x2);
+    GTE_READ_DATA(GTE_IR2, y2);
+    GTE_READ_DATA(GTE_IR3, z2);
+    Gte_MultiplyMatrix(GTE_MATRIX_ROTATION, 2);
+    GTE_READ_DATA(GTE_IR1, x3);
+    GTE_READ_DATA(GTE_IR2, y3);
+    GTE_READ_DATA(GTE_IR3, z3);
+    words[0] = ((u32)x1 & GTE_HALF_MASK) | ((u32)x2 << GTE_HALF_BITS);
+    words[1] = ((u32)y1 << GTE_HALF_BITS) | ((u32)x3 & GTE_HALF_MASK);
+    words[2] = ((u32)y2 & GTE_HALF_MASK) | ((u32)y3 << GTE_HALF_BITS);
+    words[3] = ((u32)z1 & GTE_HALF_MASK) | ((u32)z2 << GTE_HALF_BITS);
+    words[4] = z3;
+    rotation_load(words);
+}
+
+typedef void (*AxisTurn)(u32 *words, s32 angle);
+
+/* MATRIX from a turn by FIRST about FIRST_AXIS, then by X about x and by LAST about LAST_AXIS, each when not 0, and the
+ * scale (SCALE, times FACTORS in 4.12 when given): the turns' rotation, scaled unless the scale's words or together to
+ * 1.0 */
+static void turned_matrix(u32 *matrix, AxisTurn first_axis, s32 first, s32 x, AxisTurn last_axis, s32 last, s32 *scale,
+                          s32 *factors) {
+    u32 words[MATRIX_WORDS];
+    u32 scale_x, scale_y, scale_z;
+
+    first_axis(words, first);
+    rotation_load(words);
+    if (x != 0) {
+        rotation_x(words, x);
+        rotation_multiply(words);
+    } else {
+        /* No turn about x */
+    }
+    if (last != 0) {
+        last_axis(words, last);
+        rotation_multiply(words);
+    } else {
+        /* No last turn */
+    }
+    scale_x = scale[0];
+    scale_y = scale[1];
+    scale_z = scale[2];
+    if (factors != 0) {
+        scale_x = ((u32)factors[0] * scale_x) >> GTE_FRACTION_BITS;
+        scale_y = ((u32)factors[1] * scale_y) >> GTE_FRACTION_BITS;
+        scale_z = ((u32)factors[2] * scale_z) >> GTE_FRACTION_BITS;
+    } else {
+        /* The scale as it is */
+    }
+    matrix[MATRIX_SCALE] = scale_x;
+    matrix[MATRIX_SCALE + 1] = scale_y;
+    matrix[MATRIX_SCALE + 2] = scale_z;
+    if ((scale_x | scale_y | scale_z) == FIXED_ONE) {
+        GTE_READ_CONTROL(GTE_RT11RT12, matrix[0]);
+        GTE_READ_CONTROL(GTE_RT13RT21, matrix[1]);
+        GTE_READ_CONTROL(GTE_RT22RT23, matrix[2]);
+        GTE_READ_CONTROL(GTE_RT31RT32, matrix[3]);
+        GTE_READ_CONTROL(GTE_RT33, matrix[4]);
+    } else {
+        words[0] = scale_x;
+        words[1] = 0;
+        words[2] = scale_y;
+        words[3] = 0;
+        words[4] = scale_z;
+        rotation_multiply(words);
+        matrix[0] = words[0];
+        matrix[1] = words[1];
+        matrix[2] = words[2];
+        matrix[3] = words[3];
+        matrix[4] = words[4];
+    }
+}
+
+/* func_8001AA80 calls them through the table at 0x8005B650 by an object's kind: its matrix from its angles (x, y, z)
+ * and scale, the scale times FACTORS when given; each turns by the angles in its own order */
+EQUIV_NONNULL(func_8004400C, 0)
+EQUIV_NONNULL(func_8004400C, 1)
+EQUIV_NONNULL(func_8004400C, 2)
+EQUIV_NONNULL(func_80044178, 0)
+EQUIV_NONNULL(func_80044178, 1)
+EQUIV_NONNULL(func_80044178, 2)
+EQUIV_NONNULL(func_8004427C, 0)
+EQUIV_NONNULL(func_8004427C, 1)
+EQUIV_NONNULL(func_8004427C, 2)
+EQUIV_NONNULL(func_80044334, 0)
+EQUIV_NONNULL(func_80044334, 1)
+EQUIV_NONNULL(func_80044334, 2)
+EQUIV_RUNS(func_8004400C, func_80042FD0, func_80043074, func_80043090, func_80043110, func_80043118)
+EQUIV_RUNS(func_8004400C, func_80043270, func_800433A4, func_800435F4, func_80043658, func_800436C8)
+EQUIV_RUNS(func_8004400C, func_800436F4, func_80043750, func_80043764, func_80043778, func_8004378C)
+EQUIV_RUNS(func_8004400C, func_8004379C, func_800437BC, func_800437D8, func_800437F4, func_8004399C)
+EQUIV_RUNS(func_8004400C, func_800439D4, func_80043A84, func_80043B5C, func_80043B74, func_80043C2C)
+EQUIV_RUNS(func_8004400C, func_80043C48, func_80043D34, func_80043D54, func_80043D84, func_80043EA0)
+EQUIV_RUNS(func_80044178, func_80042FD0, func_80043074, func_80043090, func_80043110, func_80043118)
+EQUIV_RUNS(func_80044178, func_80043270, func_800433A4, func_800435F4, func_80043658, func_800436C8)
+EQUIV_RUNS(func_80044178, func_800436F4, func_80043750, func_80043764, func_80043778, func_8004378C)
+EQUIV_RUNS(func_80044178, func_8004379C, func_800437BC, func_800437D8, func_800437F4, func_8004399C)
+EQUIV_RUNS(func_80044178, func_800439D4, func_80043A84, func_80043B5C, func_80043B74, func_80043C2C)
+EQUIV_RUNS(func_80044178, func_80043C48, func_80043D34, func_80043D54, func_80043D84, func_80043EA0)
+EQUIV_RUNS(func_80044178, func_8004400C)
+EQUIV_RUNS(func_8004427C, func_80042FD0, func_80043074, func_80043090, func_80043110, func_80043118)
+EQUIV_RUNS(func_8004427C, func_80043270, func_800433A4, func_800435F4, func_80043658, func_800436C8)
+EQUIV_RUNS(func_8004427C, func_800436F4, func_80043750, func_80043764, func_80043778, func_8004378C)
+EQUIV_RUNS(func_8004427C, func_8004379C, func_800437BC, func_800437D8, func_800437F4, func_8004399C)
+EQUIV_RUNS(func_8004427C, func_800439D4, func_80043A84, func_80043B5C, func_80043B74, func_80043C2C)
+EQUIV_RUNS(func_8004427C, func_80043C48, func_80043D34, func_80043D54, func_80043D84, func_80043EA0)
+EQUIV_RUNS(func_8004427C, func_8004400C, func_80044178)
+EQUIV_RUNS(func_80044334, func_80042FD0, func_80043074, func_80043090, func_80043110, func_80043118)
+EQUIV_RUNS(func_80044334, func_80043270, func_800433A4, func_800435F4, func_80043658, func_800436C8)
+EQUIV_RUNS(func_80044334, func_800436F4, func_80043750, func_80043764, func_80043778, func_8004378C)
+EQUIV_RUNS(func_80044334, func_8004379C, func_800437BC, func_800437D8, func_800437F4, func_8004399C)
+EQUIV_RUNS(func_80044334, func_800439D4, func_80043A84, func_80043B5C, func_80043B74, func_80043C2C)
+EQUIV_RUNS(func_80044334, func_80043C48, func_80043D34, func_80043D54, func_80043D84, func_80043EA0)
+EQUIV_RUNS(func_80044334, func_8004400C, func_80044178, func_8004427C)
+
+/* z then x */
+void func_8004400C(u32 *matrix, s32 *angles, s32 *scale, s32 *factors) {
+    s32 x = angles[0];
+
+    turned_matrix(matrix, rotation_z, angles[2], x, 0, 0, scale, factors);
+}
+
+/* y by the z angle, x, then y by the y angle less the z */
+void func_80044178(u32 *matrix, s32 *angles, s32 *scale, s32 *factors) {
+    s32 z = angles[2];
+    s32 y = angles[1];
+
+    turned_matrix(matrix, rotation_y, z, angles[0], rotation_y, y - z, scale, factors);
+}
+
+/* y, x, then z */
+void func_8004427C(u32 *matrix, s32 *angles, s32 *scale, s32 *factors) {
+    turned_matrix(matrix, rotation_y, angles[1], angles[0], rotation_z, angles[2], scale, factors);
+}
+
+/* z, x, then y */
+void func_80044334(u32 *matrix, s32 *angles, s32 *scale, s32 *factors) {
+    turned_matrix(matrix, rotation_z, angles[2], angles[0], rotation_y, angles[1], scale, factors);
+}
+
 void func_8003DD0C(void) {
 }
 

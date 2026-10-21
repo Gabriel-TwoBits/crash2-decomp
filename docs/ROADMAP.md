@@ -660,7 +660,20 @@ Four small handwritten functions: `Gfx_ResetOt` (an ordering table's slots each 
 2,000 trials on 2 seeds, with the counts the callers pass bounded (`EQUIV_RANGE`: a table's slots, the box's eight
 corners). `Sys_TimerHandler`'s trials agree only on its store faulting at the same address: its counter, at 0x8003BEA4,
 lies in the handwritten code's pages, which equiv.py keeps read-only; the schedules run it. The four schedules agree
-at every frame. The executable has 3,696 bytes of the retail file's room left. 75 of 133 handwritten functions equivalent.
+at every frame. The executable has 3,696 bytes of the retail file's room left. 75 of 133 handwritten functions
+equivalent.
+
+The object renderers' matrix builders: `func_8004400C` and the three entries after it (`func_80044178`,
+`func_8004427C`, `func_80044334`), which `func_8001AA80` calls through the table at 0x8005B650 with an object's
+matrix, angles, scale and factors, split into functions of their own (with `func_800443EC`, a packet's first step; 137
+functions). Each turns the GTE's rotation by the angles in its own order (z then x; y, x, then y by the y angle less
+the z; y, x, then z; z, x, then y) and scales it, unless the scale's words or together to 1.0. The C stands for the
+routines they share with the other object renderers (`func_80043270`'s cosine and sine, `func_80042FD0`'s product),
+which stay for those; it reads the sine table as `func_80043270` does, a value it doesn't negate as the halfword
+loads it, since the trials' table holds random words. `func_80044178`'s code from 0x80044238, its angles negated, has
+no caller. Each agrees on 2,000 of 2,000 trials on 2 seeds (`EQUIV_RUNS` for the routines they jump into); the four
+schedules agree at every frame. The C is 644 bytes larger than the code it replaces: the executable has 3,056 bytes
+of the retail file's room left. 79 of 137 handwritten functions equivalent.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
 the object renderers (`func_8003DED8`, `func_8003ED14` and the routines the table at 0x8005B650 holds), then the GOOL
