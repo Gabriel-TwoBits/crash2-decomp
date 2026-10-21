@@ -598,18 +598,19 @@ func_80044178 = 0x80044178; // type:func size:0x104
 func_8004427C = 0x8004427C; // type:func size:0xB8
 func_80044334 = 0x80044334; // type:func size:0xB8
 func_800443EC = 0x800443EC; // type:func size:0x24
-func_80044410 = 0x80044410; // type:func size:0xAC
-D_80044434 = 0x80044434; // type:alabel
-D_80044468 = 0x80044468; // type:alabel
-func_800444BC = 0x800444BC; // type:func size:0xFC
-D_800444E0 = 0x800444E0; // type:alabel
-D_80044534 = 0x80044534; // type:alabel
-D_80044558 = 0x80044558; // type:alabel
-D_80044594 = 0x80044594; // type:alabel
-func_800445B8 = 0x800445B8; // type:func size:0x3C8
-D_800446F0 = 0x800446F0; // type:alabel
-D_800447DC = 0x800447DC; // type:alabel
-D_80044830 = 0x80044830; // type:alabel
+// the object renderers' packets' first steps, which the table at 0x8005B690 holds, and the sprites' drawer
+func_80044410 = 0x80044410; // type:func size:0x24
+func_80044434 = 0x80044434; // type:func size:0x34
+func_80044468 = 0x80044468; // type:func size:0x54
+func_800444BC = 0x800444BC; // type:func size:0x24
+func_800444E0 = 0x800444E0; // type:func size:0x54
+func_80044534 = 0x80044534; // type:func size:0x24
+func_80044558 = 0x80044558; // type:func size:0x3C
+func_80044594 = 0x80044594; // type:func size:0x24
+func_800445B8 = 0x800445B8; // type:func size:0x138
+func_800446F0 = 0x800446F0; // type:func size:0xEC
+func_800447DC = 0x800447DC; // type:func size:0x54
+func_80044830 = 0x80044830; // type:func size:0x150
 
 // Names, each with its evidence on the line above it (docs/WORKFLOW.md, "Naming"). A rename replaces
 // the symbol's line, never adds a second name at its address
