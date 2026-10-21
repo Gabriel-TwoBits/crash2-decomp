@@ -1646,10 +1646,10 @@ extern s32 D_8005F390;
 extern s32 D_80060944;
 extern s32 D_80062A18;
 
-void func_80041E5C(s32, Unk80063458 *, void *, s32);
+void Gfx_DrawWorlds(s32, Unk80063458 *, void *, s32);
 
 void func_80018434(void) {
-    func_80041E5C(D_8005F390, g_BuildBuffer[0], &D_80062A18, D_80060944);
+    Gfx_DrawWorlds(D_8005F390, g_BuildBuffer[0], &D_80062A18, D_80060944);
 }
 
 #ifdef NON_MATCHING

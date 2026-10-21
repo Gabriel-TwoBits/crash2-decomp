@@ -125,7 +125,7 @@ frame. A trial where the retail run reaches the limit (500,000 instructions or 1
 candidate does, as one where both take the same exception (reported, not compared; after an exception only the calls
 are compared); a candidate reaching its limit, four times the retail code's (C may copy by halfwords where the retail
 code moves words: `Gfx_DecodeSortListBackward`) and 4,000 instructions more for each GTE command the retail run gave (one
-instruction there, about 2,300 for an RTPT on `include/gte.h`'s model: `func_80044F54`'s 1,017 streaks took 2,428,386
+instruction there, about 2,300 for an RTPT on `include/gte.h`'s model: `Gfx_DrawStreaks`'s 1,017 streaks took 2,428,386
 instructions in C, 73,118 in the retail code), where the retail code returned disagrees.
 A disagreeing trial's retail code runs again with
 every bit flipped in the registers that aren't arguments, then with them zeroed: when its result changes, it depends on
@@ -179,8 +179,8 @@ equivalent C may state the function's contract with its callers, lines of nothin
     EQUIV_SCRATCH(func_8003DA00, SAVE_AREA, SAVE_AREA_BYTES) /* what it leaves there doesn't count */
     EQUIV_RUNS(Zone_PlotWallEntry, Zone_PlotWall)             /* the retail code branches into it as its own */
     EQUIV_CALLBACK(Zone_FindFloorY, 7, 2, t8, t9)          /* argument 7 a function of 2 arguments, writing neither */
-    EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8003DD0C, ...) /* the 5 words at $a2 + 0x10 one such row (a line each) */
-    EQUIV_KEEPS(func_80041E5C, func_8003DD0C, v1)        /* a call to func_8003DD0C leaves $v1 */
+    EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_8003DD0C, ...) /* the 5 words at $a2 + 0x10 one such row (a line each) */
+    EQUIV_KEEPS(Gfx_DrawWorlds, func_8003DD0C, v1)        /* a call to func_8003DD0C leaves $v1 */
     EQUIV_TABLE(Gool_Interpret, GOOL_TABLE_ADDRESS, g_GoolOpcodeHandlers) /* the word there points to the table */
 
 equiv.py then keeps its trials to it (a value outside the range moved into it by its remainder, a NULL drawn for that
@@ -195,7 +195,7 @@ prints it with the verdict, which
 function that uses it writes it before reading it, and no compiled code touches it. Nothing a function reads lives
 there either, so no word of a trial is drawn from the code's constants pointing into it: the retail code saves `$sp`
 there first, and a frame whose next primitive was 0x1F800000 (the `lui` of the area's address, among the constants)
-had `func_80044F54`'s lines overwrite it and the retail code fault on return, where the C, saving nothing there,
+had `Gfx_DrawStreaks`'s lines overwrite it and the retail code fault on return, where the C, saving nothing there,
 returned. A bound is a number or a `#define` of one in the file; a line it can't read stops it. A contract goes in by
 hand, with its evidence in the comment above it: every caller, compiled and handwritten, and what each passes.
 `tools/match.py` refuses C holding one from a run: the loop's agent never narrows its own trials.
@@ -224,7 +224,7 @@ native port would, that is a call to the model, which reads what the command nee
 and writes back what it changed; without it, in the equivalent build, it is the GTE's own instruction, two `nop`s after
 the last move as PsyQ's macros wait. equiv.py thus judges the C with the model against the retail code on
 `tools/gte.py`, and the build runs the same C with the commands the retail code gives. A projection is one instruction
-there and about 2,300 on the model: with `func_80044F54`'s streaks on the model, the equivalent build showed the
+there and about 2,300 on the model: with `Gfx_DrawStreaks`'s streaks on the model, the equivalent build showed the
 opening's game frame 846 at vsync 11,994 (retail at 2,721), the schedule's end near; and the model's code
 cost the build about 1,800 bytes for each file including it. The model agrees with `tools/gte.py` on 6,000 random
 register files and commands (checked while writing it), and on every trial of the functions using it; a command it
@@ -256,7 +256,7 @@ doesn't have.
 About 28 of its 98 functions are called from compiled code with the usual convention; the other 70 or so take values
 in registers the convention leaves alone (`$s3`, `$t5`, `$v1`) and call one another, through tables too. A function
 goes into C with every routine it alone calls, once nothing handwritten depends on registers its retail code leaves
-untouched (`grep` the handwritten code for its name and its address), `$v0` included: `func_80041E5C` never sets it
+untouched (`grep` the handwritten code for its name and its address), `$v0` included: `Gfx_DrawWorlds` never sets it
 and returns what its last call left, `Gfx_ResetOt`'s caller's value, so `Gfx_ResetOt` waits for it. A routine several
 share stays assembly until its last caller is C. Each function is tested as any equivalent one (equiv.py, 2 seeds of
 2,000 trials, then `tools/run_game.py` on every schedule), and `tools/progress.py` counts them apart.

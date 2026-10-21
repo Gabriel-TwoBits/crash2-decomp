@@ -208,7 +208,7 @@ MAX_INSTRUCTIONS = 500_000
 # halfwords where the retail code moves words), not otherwise
 CANDIDATE_SLOWDOWN = 4
 # And more for each GTE command the retail run gave, one instruction there: the C runs it on include/gte.h's model, an
-# RTPT about 2,300 instructions (func_80044F54's 1,017 projections, 2,428,386 instructions to the retail code's 73,118)
+# RTPT about 2,300 instructions (Gfx_DrawStreaks's 1,017 projections, 2,428,386 instructions to the retail code's 73,118)
 GTE_COMMAND_COST = 4_000
 MAX_CALLS = 1_000
 

@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-/* The world renderer: func_80041E5C walks the zone's sort list and draws each polygon through the scene's mode, five
+/* The world renderer: Gfx_DrawWorlds walks the zone's sort list and draws each polygon through the scene's mode, five
    entries called with a WorldPass (docs/TARGET.md, "The world renderer") */
 
 /* A world as Sys_MainLoop copies it into the scratchpad. A vertex's word (x and y, a VXY pair, and colour bits) sits

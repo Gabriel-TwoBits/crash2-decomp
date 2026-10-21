@@ -339,7 +339,7 @@ extern char g_PlaybackState[];
 extern s32 D_8006CD7C;
 
 void SetRotMatrix(void *);
-/* func_80041E5C stays undeclared: 800158E0.c declares it void, but its v0 is stored below (implicit int). */
+/* Gfx_DrawWorlds stays undeclared: 800158E0.c declares it void, but its v0 is stored below (implicit int). */
 int printf(const char *, ...);
 
 void Sys_MainLoop(s32 arg0) {
@@ -463,13 +463,13 @@ void Sys_MainLoop(s32 arg0) {
                 /* empty list */
             }
             func_8002FB84(0);
-            D_8006CCB8 = func_80041E5C(D_8005F390, g_BuildBuffer, D_80062A18, D_80060944);
+            D_8006CCB8 = Gfx_DrawWorlds(D_8005F390, g_BuildBuffer, D_80062A18, D_80060944);
         } else {
             Gfx_ResetOt((u8 *)g_BuildBuffer + PAUSE_BUF_OFFSET, PAUSE_BUF_SIZE);
         }
         if (D_8006CB94 & SAVE_FLAGS_MASK) {
             if ((D_80062A90 != 0) && (D_80062AD8 & FLAG_16)) {
-                func_80044F54(D_80062A90, g_BuildBuffer, D_80062A18);
+                Gfx_DrawStreaks(D_80062A90, g_BuildBuffer, D_80062A18);
             } else {
                 /* skipped */
             }
@@ -483,7 +483,7 @@ void Sys_MainLoop(s32 arg0) {
         }
         Obj_UpdateAll((void *)(g_Paused == 0));
         func_80011E88();
-        func_8003DB94(*(s32 *)((char *)g_BuildBuffer + BUF_FIELD_2088), g_BuildBuffer, D_80062A18);
+        Gfx_DrawObjects(*(s32 *)((char *)g_BuildBuffer + BUF_FIELD_2088), g_BuildBuffer, D_80062A18);
         Gfx_EndFrame();
         func_80011E90();
     } while (g_Quit == 0);

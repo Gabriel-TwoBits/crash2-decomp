@@ -66,7 +66,7 @@ Found by the matching runs (each run's notes are in `config/match/notes/<functio
   `D_8003B87C`. The Crash 1 decomp's catalog puts the tails before their functions, which first named these the other
   way round. A halfword loop at `0x8003BC34`, after the tails, is reached by no dispatch (`a2` is at most 4 there).
   `Gfx_ResetOt` has no tails: 64 entries a pass, the terminator stored last.
-- **What a caller keeps.** `func_80041E5C` never sets `$v0` and returns what its last call left, which
+- **What a caller keeps.** `Gfx_DrawWorlds` never sets `$v0` and returns what its last call left, which
   `800111B0.c` stores in `D_8006CCB8`; on its path through `Gfx_ResetOt`, which leaves `$v0` alone, that is
   `func_8002FB84`'s result. A handwritten caller can rely on any register its callee's retail code doesn't write.
 
@@ -167,7 +167,7 @@ no axis halves. Read from the disc's 1,843 zones: x and y halve at most 7 times,
 and no node with children sits past every axis's halvings; sizes reach 15,221 (a halfword holds them, as the list's
 header does) and origins lie between -234,962 and 417,902 (shifted by 8 they still fit a word).
 
-A camera path's property 0x1B5 sets the streaks `func_80044F54` draws, which
+A camera path's property 0x1B5 sets the streaks `Gfx_DrawStreaks` draws, which
 `func_80020A24` alone interpolates into `D_80062A6C` to `D_80062A90`: on the disc, 490 rows of 6 signed halfwords in 6
 NSF files, the fourth (the count) 1 to 1,500, the fifth (the box's y offset) -4,000 to 0, the sixth (the slot in the
 ordering table) 10 to 1,904. Property 0x2AA sets the dots `func_80045218` draws (`D_80062A94` to `D_80062AA0`): 65 rows
@@ -175,7 +175,7 @@ of 4, the count always 1,000, the y offset 0 to 2,000, the slot 0 to 900, the y 
 
 ## The world renderer
 
-`func_80041E5C` draws the zone's world polygons each frame (`Sys_MainLoop` and `func_80018434` call it, with the sort
+`Gfx_DrawWorlds` draws the zone's world polygons each frame (`Sys_MainLoop` and `func_80018434` call it, with the sort
 list, the frame being built, `D_80062A18` and the textures' clock `D_80060944`). What its code shows:
 
 - The sort list's entries are drawn from the last to the first; a list of one entry draws nothing and leaves the
@@ -219,7 +219,7 @@ keeps the same words (`WorldScratch`).
 
 ## The object renderers
 
-`func_8003DB94` draws the frame's packet list (`Sys_MainLoop` calls it with the list `func_8001ABF8` builds in the
+`Gfx_DrawObjects` draws the frame's packet list (`Sys_MainLoop` calls it with the list `func_8001ABF8` builds in the
 frame, the frame and `D_80062A18`). What its code shows:
 
 - A packet holds the next packet, three steps the root calls in turn, the object, its matrix (`func_8004400C` and the
@@ -262,9 +262,10 @@ frame, the frame and `D_80062A18`). What its code shows:
   top) or one of a linked object's (its 8 links at 0x40).
 - 79 operations, by the table at 0x8005C514 (`g_GoolOpcodeHandlers`, which `Gool_InitScratchpad` copies to the
   scratchpad's 0x60 and points the word at 0x5C to): arithmetic, comparisons and bitwise operations pushing their
-  result, moves to a destination, seeks, the sine, an ease, a random number (the generator of `func_80044F54`'s streaks,
-  its words at `D_8005F29C`), branches, calls and returns, and 27 that call 23 functions of the game's C (`Gool_Op*`),
-  most with the object and the instruction, the 10 that may end the run with the mode and the argument too.
+  result, moves to a destination, seeks, the sine, an ease, a random number (the generator of `Gfx_DrawStreaks`'s
+  streaks, its words at `D_8005F29C`), branches, calls and returns, and 27 that call 23 functions of the game's C
+  (`Gool_Op*`), most with the object and the instruction, the 10 that may end the run with the mode and the argument
+  too.
 - Operation 73 runs MIPS code that follows the instruction in the GOOL entry, on the machine's registers. The disc's
   GOOL entries hold 8,572 such blocks (read entry by entry, every path from each block's start followed to its return):
   they read only `$s0`, `$s3`, `$s6`, `$s7`, `$fp` (the scratchpad's 0x50 to 0x58) and `$ra`, write the stack, `$s5`
@@ -318,7 +319,7 @@ equivalent track").
 One handwritten renderer reads bytes of code addresses, so what it draws depends on where the code sits. The renderer
 entry `func_80042818` (one of `func_80042420`'s, which `func_80011E24` stores) picks a polygon's texture level by its
 depth: `(SZ1 + SZ2 + SZ3) >> 11` indexes a byte table at scratchpad 0xD0, and the byte is a shift (`srlv`, its low 5
-bits) that selects 2 bits of a texture word, which pick the 12-byte entry the polygon is drawn with. `func_80041E5C`
+bits) that selects 2 bits of a texture word, which pick the 12-byte entry the polygon is drawn with. `Gfx_DrawWorlds`
 copies the table there, 32 bytes from `D_8005C724` (shifts 29 down to 15), but the index can reach 95 with three far
 vertices. Past 0xEF the scratchpad holds what `Gool_InitScratchpad` copied from 0x60 on, `g_GoolOpcodeHandlers`, the
 handwritten GOOL operations' addresses: index 36 reads 0xF4, the low byte of entry 37, `D_8003A704`, a shift of 4 in
@@ -331,7 +332,7 @@ Evidence (`tools/run_game.py --schedule turtle-woods`, PCSX-Redux on the game cl
 - The equivalent build's C at the retail data addresses and its handwritten code 0x14 bytes earlier differs at the same
   frame; `.data` moved alone doesn't, nor the code moved by 0x20 bytes (the low 5 bits of the byte kept), while 0x8,
   0x10 and 0x14 do.
-- In frame 3,523, the writes to scratchpad 0xD0 to 0xF7 before the renderer's 301 reads come from `func_80041E5C`'s
+- In frame 3,523, the writes to scratchpad 0xD0 to 0xF7 before the renderer's 301 reads come from `Gfx_DrawWorlds`'s
   copy, 0xD0 to 0xEF only. At the end of frame 3,524, 47 of the scratchpad's words from 0x60 to 0x13C differ between
   the two runs, each a code address 0x14 apart, most of them the opcode table's entries.
 - Restoring retail's word at 0xF4 around the read alone (`D_8003A704`, set before the `lbu` at the shifted address and

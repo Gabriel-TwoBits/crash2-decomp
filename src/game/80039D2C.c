@@ -133,7 +133,7 @@ void func_8003BC34(u16 *from, u16 *to, s32 count) {
 #define OT_BLOCK_SHIFT 6
 #define OT_LINK_MASK 0xFFFFFF
 
-/* Every caller (Sys_MainLoop, Gfx_AllocFrameBuffers, func_80041E5C) passes a frame's table of 0x800 slots; the retail
+/* Every caller (Sys_MainLoop, Gfx_AllocFrameBuffers, Gfx_DrawWorlds) passes a frame's table of 0x800 slots; the retail
  * code links at least a block, a count under 64 sending it on without end */
 EQUIV_NONNULL(Gfx_ResetOt, 0)
 EQUIV_RANGE(Gfx_ResetOt, 1, OT_BLOCK_SLOTS, OT_SLOTS)
@@ -1543,9 +1543,9 @@ void Gfx_DecodeSortListForward(void *delta, u16 *from, u16 *to) {
     }
 }
 
-/* func_80044F54's streaks: points in a box about the camera, wrapped, 0x2000 wide (x), 0x1000 high (y) and 0x2000 deep
- * (z), each a line from where it was from the view's last position to where it is from the current one. Its generator
- * starts from the same two words every call: the same points every frame */
+/* Gfx_DrawStreaks's streaks: points in a box about the camera, wrapped, 0x2000 wide (x), 0x1000 high (y) and 0x2000
+ * deep (z), each a line from where it was from the view's last position to where it is from the current one. Its
+ * generator starts from the same two words every call: the same points every frame */
 #define STREAK_SEED_LOW 0x30125400
 #define STREAK_SEED_HIGH 0x493583FE
 #define RANDOM_BYTE_SHIFT 24
@@ -1577,7 +1577,7 @@ void Gfx_DecodeSortListForward(void *delta, u16 *from, u16 *to) {
 #define MODE_WORDS 3
 #define PRIM_ADDRESS_MASK 0xFFFFFF
 
-/* The words of the frame being built func_80044F54 uses: where the next primitive goes, and the ordering table */
+/* The words of the frame being built Gfx_DrawStreaks uses: where the next primitive goes, and the ordering table */
 typedef struct {
     u8 unk_00[8];
     u32 *next;
@@ -1626,14 +1626,14 @@ static u32 streak_random(u32 *low, u32 *high) {
 #define STREAKS_MAX 1500
 
 /* Its one caller (Sys_MainLoop) passes D_80062A90, the frame being built and D_80062A18 */
-EQUIV_SCRATCH(func_80044F54, SAVE_AREA, SAVE_AREA_BYTES)
-EQUIV_RANGE(func_80044F54, 0, STREAKS_MIN, STREAKS_MAX)
-EQUIV_NONNULL(func_80044F54, 1)
-EQUIV_NONNULL(func_80044F54, 2)
+EQUIV_SCRATCH(Gfx_DrawStreaks, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_RANGE(Gfx_DrawStreaks, 0, STREAKS_MIN, STREAKS_MAX)
+EQUIV_NONNULL(Gfx_DrawStreaks, 1)
+EQUIV_NONNULL(Gfx_DrawStreaks, 2)
 
 /* Draws COUNT + 1 streaks of the scene's box into the frame being built, all in one slot of its ordering table, then
  * the draw mode they close with; with the rotation the caller set and no translation */
-void func_80044F54(s32 count, void *frame, void *scene) {
+void Gfx_DrawStreaks(s32 count, void *frame, void *scene) {
     FrameBuffer *buffer = frame;
     StreakScene *streaks = scene;
     u32 *line = buffer->next;
@@ -1839,7 +1839,7 @@ void func_80045218(s32 count, void *frame, void *scene) {
     buffer->next = tile;
 }
 
-/* The world renderer: func_80041E5C walks the zone's sort list and draws each polygon with the scene's mode
+/* The world renderer: Gfx_DrawWorlds walks the zone's sort list and draws each polygon with the scene's mode
  * (docs/TARGET.md, "The world renderer") */
 
 /* The light's walk over its grid (func_800461E0), as the retail code keeps it: each value's start of the row, current
@@ -3730,53 +3730,53 @@ typedef char check_frame[((u32)&((FrameBuffer *)0)->ot[OT_SLOTS] == FRAME_BYTES)
  * 10 modes func_80011E24 and func_80020A24 store. The default mode's setup is func_8003DD0C, an empty function: a call
  * to it leaves $v1, the scratchpad's base the retail code keeps across it. The group's parts go with it; the other
  * functions between them (the object renderers' routines and their helpers) stay, never reached */
-EQUIV_SCRATCH(func_80041E5C, SAVE_AREA, SAVE_AREA_BYTES)
-EQUIV_SCRATCH(func_80041E5C, LIGHT_RETURN, LIGHT_RETURN_BYTES)
-EQUIV_NONNULL(func_80041E5C, 0)
-EQUIV_NONNULL(func_80041E5C, 1)
-EQUIV_NONNULL(func_80041E5C, 2)
-EQUIV_BUFFER(func_80041E5C, 0, SORT_LIST_BYTES)
-EQUIV_BUFFER(func_80041E5C, 1, FRAME_BYTES)
-EQUIV_BUFFER(func_80041E5C, 2, WORLD_SCENE_BYTES)
-EQUIV_HALF(func_80041E5C, 0, 0, 1, SORT_LIST_ENTRIES)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8003DD0C, func_80042420, func_800426A0, func_80042548, func_80042818)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8004599C, func_80042420, func_800426A0, func_800459A8, func_80045AB4)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8004399C, func_80042420, func_800426A0, func_800439D4, func_80043A84)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80044980, func_80042420, func_800426A0, func_800449B0, func_80044A04)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80043D54, func_80042420, func_800426A0, func_80043D84, func_80043EA0)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80042C70, func_80042420, func_80042698, func_80042E84, func_80042F08)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80044A70, func_80042420, func_80042698, func_80044E48, func_80044EC0)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80043B5C, func_80043B74, func_80043C48, func_80043C2C, func_80043D34)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8004299C, func_80042AB8, func_80042B7C, func_80042B44, func_80042C2C)
-EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80045C18, func_80045D88, func_80045F40, func_80042548, func_80042818)
-EQUIV_KEEPS(func_80041E5C, func_8003DD0C, v1)
-HANDWRITTEN_PARTS(func_80041E5C, func_80042420, func_80042548, func_800426A0, func_80042818)
-HANDWRITTEN_PARTS(func_80041E5C, func_8004599C, func_800459A8, func_80045AB4)
-HANDWRITTEN_PARTS(func_80041E5C, func_8004399C, func_800439D4, func_80043A84)
-HANDWRITTEN_PARTS(func_80041E5C, func_80044980, func_800449B0, func_80044A04)
-HANDWRITTEN_PARTS(func_80041E5C, func_80043D54, func_80043D84, func_80043EA0)
-HANDWRITTEN_PARTS(func_80041E5C, func_80042698, func_80042C70, func_80042D10, func_80042E84, func_80042F08)
-HANDWRITTEN_PARTS(func_80041E5C, func_80044A70, func_80044BB4, func_80044E48, func_80044EC0)
-HANDWRITTEN_PARTS(func_80041E5C, func_80043B5C, func_80043B74, func_80043C2C, func_80043C48, func_80043D34)
-HANDWRITTEN_PARTS(func_80041E5C, func_8004299C, func_800429D0, func_80042AB8, func_80042B44, func_80042B7C)
-HANDWRITTEN_PARTS(func_80041E5C, func_80042C2C, func_80045C18, func_80045C5C, func_80045CAC, func_80045D88)
-HANDWRITTEN_PARTS(func_80041E5C, func_80045F40, func_800461E0)
-EQUIV_RUNS(func_80041E5C, func_80042FA8, func_80042FD0, func_80043074, func_80043090, func_80043110)
-EQUIV_RUNS(func_80041E5C, func_80043118, func_80043270, func_800433A4, func_800435F4, func_80043658)
-EQUIV_RUNS(func_80041E5C, func_800436C8, func_800436F4, func_80043750, func_80043764, func_80043778)
-EQUIV_RUNS(func_80041E5C, func_8004378C, func_8004379C, func_800437BC, func_800437D8, func_800437F4)
-EQUIV_RUNS(func_80041E5C, func_8004400C, func_80044410, func_800444BC, func_800445B8, func_80044F54)
-EQUIV_RUNS(func_80041E5C, func_80045218, func_800454A4, func_80045878)
-EQUIV_RUNS(func_80041E5C, func_800432F4, func_80043310, func_80043324, func_80043374, func_800434EC)
-EQUIV_RUNS(func_80041E5C, func_80043504, func_8004351C, func_80043554, func_80043594, func_80044178)
-EQUIV_RUNS(func_80041E5C, func_8004427C, func_80044334, func_800443EC, func_80044434, func_80044468)
-EQUIV_RUNS(func_80041E5C, func_800444E0, func_80044534, func_80044558, func_80044594, func_800446F0)
-EQUIV_RUNS(func_80041E5C, func_800447DC, func_80044830)
-EQUIV_RUNS(func_80041E5C, func_8004380C)
+EQUIV_SCRATCH(Gfx_DrawWorlds, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_SCRATCH(Gfx_DrawWorlds, LIGHT_RETURN, LIGHT_RETURN_BYTES)
+EQUIV_NONNULL(Gfx_DrawWorlds, 0)
+EQUIV_NONNULL(Gfx_DrawWorlds, 1)
+EQUIV_NONNULL(Gfx_DrawWorlds, 2)
+EQUIV_BUFFER(Gfx_DrawWorlds, 0, SORT_LIST_BYTES)
+EQUIV_BUFFER(Gfx_DrawWorlds, 1, FRAME_BYTES)
+EQUIV_BUFFER(Gfx_DrawWorlds, 2, WORLD_SCENE_BYTES)
+EQUIV_HALF(Gfx_DrawWorlds, 0, 0, 1, SORT_LIST_ENTRIES)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_8003DD0C, func_80042420, func_800426A0, func_80042548, func_80042818)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_8004599C, func_80042420, func_800426A0, func_800459A8, func_80045AB4)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_8004399C, func_80042420, func_800426A0, func_800439D4, func_80043A84)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_80044980, func_80042420, func_800426A0, func_800449B0, func_80044A04)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_80043D54, func_80042420, func_800426A0, func_80043D84, func_80043EA0)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_80042C70, func_80042420, func_80042698, func_80042E84, func_80042F08)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_80044A70, func_80042420, func_80042698, func_80044E48, func_80044EC0)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_80043B5C, func_80043B74, func_80043C48, func_80043C2C, func_80043D34)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_8004299C, func_80042AB8, func_80042B7C, func_80042B44, func_80042C2C)
+EQUIV_WORDS(Gfx_DrawWorlds, 2, 0x10, func_80045C18, func_80045D88, func_80045F40, func_80042548, func_80042818)
+EQUIV_KEEPS(Gfx_DrawWorlds, func_8003DD0C, v1)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80042420, func_80042548, func_800426A0, func_80042818)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_8004599C, func_800459A8, func_80045AB4)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_8004399C, func_800439D4, func_80043A84)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80044980, func_800449B0, func_80044A04)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80043D54, func_80043D84, func_80043EA0)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80042698, func_80042C70, func_80042D10, func_80042E84, func_80042F08)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80044A70, func_80044BB4, func_80044E48, func_80044EC0)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80043B5C, func_80043B74, func_80043C2C, func_80043C48, func_80043D34)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_8004299C, func_800429D0, func_80042AB8, func_80042B44, func_80042B7C)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80042C2C, func_80045C18, func_80045C5C, func_80045CAC, func_80045D88)
+HANDWRITTEN_PARTS(Gfx_DrawWorlds, func_80045F40, func_800461E0)
+EQUIV_RUNS(Gfx_DrawWorlds, func_80042FA8, func_80042FD0, func_80043074, func_80043090, func_80043110)
+EQUIV_RUNS(Gfx_DrawWorlds, func_80043118, func_80043270, func_800433A4, func_800435F4, func_80043658)
+EQUIV_RUNS(Gfx_DrawWorlds, func_800436C8, func_800436F4, func_80043750, func_80043764, func_80043778)
+EQUIV_RUNS(Gfx_DrawWorlds, func_8004378C, func_8004379C, func_800437BC, func_800437D8, func_800437F4)
+EQUIV_RUNS(Gfx_DrawWorlds, func_8004400C, func_80044410, func_800444BC, func_800445B8, Gfx_DrawStreaks)
+EQUIV_RUNS(Gfx_DrawWorlds, func_80045218, func_800454A4, func_80045878)
+EQUIV_RUNS(Gfx_DrawWorlds, func_800432F4, func_80043310, func_80043324, func_80043374, func_800434EC)
+EQUIV_RUNS(Gfx_DrawWorlds, func_80043504, func_8004351C, func_80043554, func_80043594, func_80044178)
+EQUIV_RUNS(Gfx_DrawWorlds, func_8004427C, func_80044334, func_800443EC, func_80044434, func_80044468)
+EQUIV_RUNS(Gfx_DrawWorlds, func_800444E0, func_80044534, func_80044558, func_80044594, func_800446F0)
+EQUIV_RUNS(Gfx_DrawWorlds, func_800447DC, func_80044830)
+EQUIV_RUNS(Gfx_DrawWorlds, func_8004380C)
 
 /* Draws the zone's world polygons in the sort list's order (its last entry first) into the frame's ordering table,
  * through the scene's mode; a list of one entry draws nothing and leaves the table empty */
-void func_80041E5C(u16 *list, FrameBuffer *frame, WorldScene *scene, s32 clock) {
+void Gfx_DrawWorlds(u16 *list, FrameBuffer *frame, WorldScene *scene, s32 clock) {
     WorldScratch *scratch = WORLD_SCRATCH;
     WorldPass pass;
     WorldRecord polygon, next;
@@ -4765,89 +4765,89 @@ void func_8004380C(DrawPass *pass) {
 #define DRAW_SAVED_RA 0x1F800064
 #define DRAW_SAVED_RA_BYTES 8
 #define DRAW_PACKET_BYTES 0x64
-EQUIV_SCRATCH(func_8003DB94, SAVE_AREA, DRAW_SAVED_SP_BYTES)
-EQUIV_SCRATCH(func_8003DB94, DRAW_SAVED_RA, DRAW_SAVED_RA_BYTES)
+EQUIV_SCRATCH(Gfx_DrawObjects, SAVE_AREA, DRAW_SAVED_SP_BYTES)
+EQUIV_SCRATCH(Gfx_DrawObjects, DRAW_SAVED_RA, DRAW_SAVED_RA_BYTES)
 /* func_8003E118 and func_8003E128 keep their triangles' routine in word 0x130, the C's at its own address */
 #define DRAW_SAVED_TRIANGLE 0x1F800130
 #define DRAW_SAVED_TRIANGLE_BYTES 4
-EQUIV_SCRATCH(func_8003DB94, DRAW_SAVED_TRIANGLE, DRAW_SAVED_TRIANGLE_BYTES)
-EQUIV_NONNULL(func_8003DB94, 0)
-EQUIV_NONNULL(func_8003DB94, 1)
-EQUIV_NONNULL(func_8003DB94, 2)
-EQUIV_BUFFER(func_8003DB94, 0, DRAW_PACKET_BYTES)
-EQUIV_BUFFER(func_8003DB94, 1, FRAME_BYTES)
-EQUIV_BUFFER(func_8003DB94, 2, WORLD_SCENE_BYTES)
+EQUIV_SCRATCH(Gfx_DrawObjects, DRAW_SAVED_TRIANGLE, DRAW_SAVED_TRIANGLE_BYTES)
+EQUIV_NONNULL(Gfx_DrawObjects, 0)
+EQUIV_NONNULL(Gfx_DrawObjects, 1)
+EQUIV_NONNULL(Gfx_DrawObjects, 2)
+EQUIV_BUFFER(Gfx_DrawObjects, 0, DRAW_PACKET_BYTES)
+EQUIV_BUFFER(Gfx_DrawObjects, 1, FRAME_BYTES)
+EQUIV_BUFFER(Gfx_DrawObjects, 2, WORLD_SCENE_BYTES)
 /* A packet's words as func_8001ABF8 builds them: the last packet (one a trial), its first step (D_8005B690), its
  * second and drawer by mode (D_8005B75C and D_8005B708 by the same index), a model's visibility test, and its far
  * colour step and colour routine by sub-kind (D_8005B6D0 and D_8005B6EC); a sprite's words there are its own */
-EQUIV_WORDS(func_8003DB94, 0, 0, 0)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_800443EC)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_80044410)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_80044434)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_80044468)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_800444BC)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_800444E0)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_80044534)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_80044558)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_80044594)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_800445B8)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_800446F0)
-EQUIV_WORDS(func_8003DB94, 0, 4, func_800447DC)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_8003DD0C, func_8003E360)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_8003DD0C, func_8003F410)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_8003DD0C, func_80044830)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_8003DD0C, func_8004380C)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_800432F4, func_8003FF14)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_800432F4, func_80040FC4)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043310, func_8003E128)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043310, func_8003F1D8)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043324, func_8003E360)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043324, func_8003F410)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_800434EC, func_80040168)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_800434EC, func_800417B0)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043324, func_80040168)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043324, func_800417B0)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043324, func_8003FF14)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043324, func_80040FC4)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043374, func_80044830)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043310, func_8003E118)
-EQUIV_WORDS(func_8003DB94, 0, 8, func_80043310, func_8003F1C8)
-EQUIV_WORDS(func_8003DB94, 0, 0x1C, func_80041D14)
-EQUIV_WORDS(func_8003DB94, 0, 0x1C, func_80041E50)
-EQUIV_WORDS(func_8003DB94, 0, 0x20, func_80043554, func_8003EBC4)
-EQUIV_WORDS(func_8003DB94, 0, 0x20, func_80043504, func_80040B44)
-EQUIV_WORDS(func_8003DB94, 0, 0x20, func_80043554, func_8003FB84)
-EQUIV_WORDS(func_8003DB94, 0, 0x20, func_80043554, func_80041B80)
-EQUIV_WORDS(func_8003DB94, 0, 0x20, func_8004351C, func_8004075C)
-EQUIV_WORDS(func_8003DB94, 0, 0x20, func_8004351C, func_80040948)
-EQUIV_WORDS(func_8003DB94, 0, 0x20, func_80043594, func_8003EBC4)
-HANDWRITTEN_PARTS(func_8003DB94, func_8003DD14, func_8003DED8, func_8003E118, func_8003E128, func_8003E360)
-HANDWRITTEN_PARTS(func_8003DB94, func_8003E4FC, func_8003E8DC, func_8003E940, func_8003EA1C, func_8003EBC4)
-HANDWRITTEN_PARTS(func_8003DB94, func_8003ED14, func_8003F1C8, func_8003F1D8, func_8003F410, func_8003F59C)
-HANDWRITTEN_PARTS(func_8003DB94, func_8003F988, func_8003F9EC, func_8003FB24, func_8003FB84, func_8003FD14)
-HANDWRITTEN_PARTS(func_8003DB94, func_8003FF14, func_80040168, func_8004075C, func_80040948, func_80040B44)
-HANDWRITTEN_PARTS(func_8003DB94, func_80040D14, func_80040FC4, func_80041218, func_80041600, func_8004164C)
-HANDWRITTEN_PARTS(func_8003DB94, func_80041784, func_800417B0, func_80041B80, func_80041D14, func_80041E20)
-HANDWRITTEN_PARTS(func_8003DB94, func_80041E50, func_80042FA8, func_80042FD0, func_80043074, func_80043090)
-HANDWRITTEN_PARTS(func_8003DB94, func_80043110, func_80043118, func_80043270, func_800432F4, func_80043310)
-HANDWRITTEN_PARTS(func_8003DB94, func_80043324, func_80043374, func_800433A4, func_800434EC, func_80043504)
-HANDWRITTEN_PARTS(func_8003DB94, func_8004351C, func_80043554, func_80043594, func_800435F4, func_80043658)
-HANDWRITTEN_PARTS(func_8003DB94, func_800436C8, func_800436F4, func_80043750, func_80043764, func_80043778)
-HANDWRITTEN_PARTS(func_8003DB94, func_8004378C, func_8004379C, func_800437BC, func_800437D8, func_800437F4)
-HANDWRITTEN_PARTS(func_8003DB94, func_8004380C, func_800443EC, func_80044410, func_80044434, func_80044468)
-HANDWRITTEN_PARTS(func_8003DB94, func_800444BC, func_800444E0, func_80044534, func_80044558, func_80044594)
-HANDWRITTEN_PARTS(func_8003DB94, func_800445B8, func_800446F0, func_800447DC, func_80044830, func_800454A4)
-HANDWRITTEN_PARTS(func_8003DB94, func_80045878)
-HANDWRITTEN_PARTS(func_8003DB94, func_8003DD0C)
-EQUIV_RUNS(func_8003DB94, func_8003EAD4, func_80041A78, func_80041E5C, func_80042420, func_80042548)
-EQUIV_RUNS(func_8003DB94, func_80042698, func_800426A0, func_80042818, func_8004299C, func_800429D0)
-EQUIV_RUNS(func_8003DB94, func_80042AB8, func_80042B44, func_80042B7C, func_80042C2C, func_80042C70)
-EQUIV_RUNS(func_8003DB94, func_80042D10, func_80042E84, func_80042F08, func_8004399C, func_800439D4)
-EQUIV_RUNS(func_8003DB94, func_80043A84, func_80043B5C, func_80043B74, func_80043C2C, func_80043C48)
-EQUIV_RUNS(func_8003DB94, func_80043D34, func_80043D54, func_80043D84, func_80043EA0, func_8004400C)
-EQUIV_RUNS(func_8003DB94, func_80044178, func_8004427C, func_80044334, func_80044980, func_800449B0)
-EQUIV_RUNS(func_8003DB94, func_80044A04, func_80044A70, func_80044BB4, func_80044E48, func_80044EC0)
-EQUIV_RUNS(func_8003DB94, func_80044F54, func_80045218)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0, 0)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_800443EC)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_80044410)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_80044434)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_80044468)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_800444BC)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_800444E0)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_80044534)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_80044558)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_80044594)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_800445B8)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_800446F0)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 4, func_800447DC)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_8003DD0C, func_8003E360)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_8003DD0C, func_8003F410)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_8003DD0C, func_80044830)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_8003DD0C, func_8004380C)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_800432F4, func_8003FF14)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_800432F4, func_80040FC4)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043310, func_8003E128)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043310, func_8003F1D8)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043324, func_8003E360)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043324, func_8003F410)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_800434EC, func_80040168)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_800434EC, func_800417B0)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043324, func_80040168)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043324, func_800417B0)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043324, func_8003FF14)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043324, func_80040FC4)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043374, func_80044830)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043310, func_8003E118)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 8, func_80043310, func_8003F1C8)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x1C, func_80041D14)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x1C, func_80041E50)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x20, func_80043554, func_8003EBC4)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x20, func_80043504, func_80040B44)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x20, func_80043554, func_8003FB84)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x20, func_80043554, func_80041B80)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x20, func_8004351C, func_8004075C)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x20, func_8004351C, func_80040948)
+EQUIV_WORDS(Gfx_DrawObjects, 0, 0x20, func_80043594, func_8003EBC4)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8003DD14, func_8003DED8, func_8003E118, func_8003E128, func_8003E360)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8003E4FC, func_8003E8DC, func_8003E940, func_8003EA1C, func_8003EBC4)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8003ED14, func_8003F1C8, func_8003F1D8, func_8003F410, func_8003F59C)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8003F988, func_8003F9EC, func_8003FB24, func_8003FB84, func_8003FD14)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8003FF14, func_80040168, func_8004075C, func_80040948, func_80040B44)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_80040D14, func_80040FC4, func_80041218, func_80041600, func_8004164C)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_80041784, func_800417B0, func_80041B80, func_80041D14, func_80041E20)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_80041E50, func_80042FA8, func_80042FD0, func_80043074, func_80043090)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_80043110, func_80043118, func_80043270, func_800432F4, func_80043310)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_80043324, func_80043374, func_800433A4, func_800434EC, func_80043504)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8004351C, func_80043554, func_80043594, func_800435F4, func_80043658)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_800436C8, func_800436F4, func_80043750, func_80043764, func_80043778)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8004378C, func_8004379C, func_800437BC, func_800437D8, func_800437F4)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8004380C, func_800443EC, func_80044410, func_80044434, func_80044468)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_800444BC, func_800444E0, func_80044534, func_80044558, func_80044594)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_800445B8, func_800446F0, func_800447DC, func_80044830, func_800454A4)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_80045878)
+HANDWRITTEN_PARTS(Gfx_DrawObjects, func_8003DD0C)
+EQUIV_RUNS(Gfx_DrawObjects, func_8003EAD4, func_80041A78, Gfx_DrawWorlds, func_80042420, func_80042548)
+EQUIV_RUNS(Gfx_DrawObjects, func_80042698, func_800426A0, func_80042818, func_8004299C, func_800429D0)
+EQUIV_RUNS(Gfx_DrawObjects, func_80042AB8, func_80042B44, func_80042B7C, func_80042C2C, func_80042C70)
+EQUIV_RUNS(Gfx_DrawObjects, func_80042D10, func_80042E84, func_80042F08, func_8004399C, func_800439D4)
+EQUIV_RUNS(Gfx_DrawObjects, func_80043A84, func_80043B5C, func_80043B74, func_80043C2C, func_80043C48)
+EQUIV_RUNS(Gfx_DrawObjects, func_80043D34, func_80043D54, func_80043D84, func_80043EA0, func_8004400C)
+EQUIV_RUNS(Gfx_DrawObjects, func_80044178, func_8004427C, func_80044334, func_80044980, func_800449B0)
+EQUIV_RUNS(Gfx_DrawObjects, func_80044A04, func_80044A70, func_80044BB4, func_80044E48, func_80044EC0)
+EQUIV_RUNS(Gfx_DrawObjects, Gfx_DrawStreaks, func_80045218)
 
 /* ---- Models (kind 1): triangle strips of a frame's vertices ---- */
 
@@ -6631,7 +6631,7 @@ void func_80040948(DrawPass *pass) {
 /* Draws the frame's packet list, each packet through its three steps, into the frame's ordering table and primitives */
 #define CAMERA_WORDS (MATRIX_WORDS + 3)
 
-void func_8003DB94(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
+void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
     DrawScratch *scratch = DRAW_SCRATCH;
     DrawPass pass;
     DrawStep place, draw;

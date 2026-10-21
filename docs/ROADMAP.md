@@ -527,10 +527,10 @@ functions equivalent, `Sys_Memcpy`'s four tails counted.
 
 Looked at and left in assembly: `func_8003D040` (a box query over records whose sizes come from headers; a box before
 any header uses sizes left in `$s4`-`$t9` by its caller, 1 trial in 2,000, so it waits for the records' producer, likely
-`Zone_QueryOctree`); `func_8003DB94` and `func_80041D14` (a driver calling renderers with `$v1`, `$fp` and `$gp` set, and a
-callback stored for one); `func_8003EAD4` (a second entry, `D_8003EBC4`, in its middle, which `func_8003FD14` and the
-renderers' table at 0x8005B6EC reach). The GOOL interpreter (`Gool_Interpret` and 10 routines, 0x1128 bytes) holds its
-opcode handlers as labels the data's opcode table points to, the table `func_80042818` also reads as bytes.
+`Zone_QueryOctree`); `Gfx_DrawObjects` and `func_80041D14` (a driver calling renderers with `$v1`, `$fp` and `$gp` set,
+and a callback stored for one); `func_8003EAD4` (a second entry, `D_8003EBC4`, in its middle, which `func_8003FD14` and
+the renderers' table at 0x8005B6EC reach). The GOOL interpreter (`Gool_Interpret` and 10 routines, 0x1128 bytes) holds
+its opcode handlers as labels the data's opcode table points to, the table `func_80042818` also reads as bytes.
 
 The turtle-woods schedule then differed from game frame 3,666 in the equivalent build without handwritten C, and from
 4,429 with it, whether or not the handwritten code kept its retail addresses. Bisected by file with the handwritten
@@ -596,7 +596,7 @@ children where no axis splits, on which the retail code loops forever and which 
 reversed, disagree on 1 and 7 of 300. The four schedules agree at every frame. 26 of 98 handwritten functions
 equivalent.
 
-`func_80044F54` draws a scene's streaks (docs/TARGET.md, "The rest of the disc"): points of a box about the view,
+`Gfx_DrawStreaks` draws a scene's streaks (docs/TARGET.md, "The rest of the disc"): points of a box about the view,
 wrapped, from the same generator's bytes every frame, each a shaded line from where the point was from the view's last
 position to where it is from the current one, projected with RTPT, culled when its ends wrap apart or lie past one side
 of the screen, and all linked into one slot of the ordering table before a closing draw mode. Its count is bounded by
@@ -626,7 +626,7 @@ trials on 2 seeds (about 95% compared); the gap test off at its bound or no cull
 The remaining entries are GTE renderers and drivers; with the GTE's own commands in the build their C need not be
 larger than their assembly (`func_80045218`'s is 48 bytes smaller).
 
-The world renderer (docs/TARGET.md, "The world renderer"): `func_80041E5C` walks the zone's sort list from its last
+The world renderer (docs/TARGET.md, "The world renderer"): `Gfx_DrawWorlds` walks the zone's sort list from its last
 entry, each a polygon of one of the worlds `Sys_MainLoop` copies into the scratchpad from 0x280, loads its vertices into
 the GTE and jumps to the scene's projector, which runs RTPT while it decodes the next polygon, culls, picks the ordering
 table's slot by depth and jumps to the scene's drawer, which looks the texture up, writes the primitive, links it into
@@ -675,8 +675,8 @@ no caller. Each agrees on 2,000 of 2,000 trials on 2 seeds (`EQUIV_RUNS` for the
 schedules agree at every frame. The C is 644 bytes larger than the code it replaces: the executable has 3,056 bytes
 of the retail file's room left. 79 of 137 handwritten functions equivalent.
 
-The object renderers (docs/TARGET.md, "The object renderers"): `func_8003DB94` and the 81 routines its packets reach, in
-C as one group (`DrawPass`, `DrawScratch`, `DrawPacket`), their entries split into functions of their own first (172
+The object renderers (docs/TARGET.md, "The object renderers"): `Gfx_DrawObjects` and the 81 routines its packets reach,
+in C as one group (`DrawPass`, `DrawScratch`, `DrawPacket`), their entries split into functions of their own first (172
 handwritten functions; configure.py's count of `%gp_rel` accesses follows splat's). The GTE model and the build gained
 NCLIP and DPCT. The random trials keep to the packets the game builds (`EQUIV_WORDS` rows from the tables at 0x8005B690
 to 0x8005B7AC; a sprite's steps assumed with the sprites' drawers, a model's with the models', compared by the retail
@@ -852,7 +852,11 @@ Steps, in order:
   the sort lists' deltas its forward and backward decoders (`Gfx_DecodeSortListForward`, `Gfx_DecodeSortListBackward`).
   `func_8003D040`, after the floor in both, keeps its address: the catalog's ceiling query is 153 words, it 171, and
   its C (the lowest y or the average of three kinds' boxes) shows no ceiling. `tools/progress.py`: 210 of 638 game
-  functions named.
+  functions named. A third batch, the drawing, by what `tools/run_game.py` shows with a renderer's equivalent C
+  emptied (a build of the experiment only): the scenery gone, the objects drawn over black (`Gfx_DrawWorlds`); Crash
+  and Cortex's head gone, the scenery left (`Gfx_DrawObjects`); the demo's rain and the stars behind the intro's
+  Universal logo gone (`Gfx_DrawStreaks`). `func_80045218`, the dots, changes no frame of new-game or demo emptied,
+  so it keeps its address. 213 of 638 game functions named.
 - **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC

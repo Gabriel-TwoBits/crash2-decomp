@@ -1418,3 +1418,12 @@ Gfx_DecodeSortListForward = 0x8003AE54; // type:func
 
 // applies a sort list delta (an SLST entry's item) backward, its last 0 to 4 swaps through the tails after it; func_80029800 calls it, or Gfx_DecodeSortListForward by the direction; the Crash 1 decomp's catalog's RSlstDecodeBackward
 Gfx_DecodeSortListBackward = 0x8003B24C; // type:func
+
+// draws the zone's worlds (their polygons by the sort list, the worlds Sys_MainLoop copies from the zone's first item into the scratchpad); tools/run_game.py with its equivalent C emptied: the scenery is gone from the demo's Turtle Woods (game frame 1,829 on), the objects drawn over black; Sys_MainLoop and func_80018434 call it
+Gfx_DrawWorlds = 0x80041E5C; // type:func
+
+// draws the frame's object packets (Sys_MainLoop calls it with the list func_8001ABF8 builds); tools/run_game.py with its equivalent C emptied: Crash and Cortex's head are gone from the new-game schedule's speech in the warp room, the scenery left, the displays apart from game frame 7 on
+Gfx_DrawObjects = 0x8003DB94; // type:func
+
+// draws a camera's streaks, lines from each point's last view to its current one (count from property 0x1B5, D_80062A90; Sys_MainLoop calls it when the scene's flag 0x10 is set); tools/run_game.py with its equivalent C emptied: the rain is gone from the demo's Turtle Woods, and the stars from behind the intro's Universal logo
+Gfx_DrawStreaks = 0x80044F54; // type:func
