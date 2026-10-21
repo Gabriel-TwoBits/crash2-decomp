@@ -590,12 +590,14 @@ D_80043554 = 0x80043554; // type:alabel
 D_80043594 = 0x80043594; // type:alabel
 func_800437F4 = 0x800437F4; // type:func size:0x1A8
 D_8004380C = 0x8004380C; // type:alabel
-// the object renderers' routine after func_80043EA0's drawer, which the table at 0x8005B650 points to
-func_8004400C = 0x8004400C; // type:func size:0x404
-D_80044178 = 0x80044178; // type:alabel
-D_8004427C = 0x8004427C; // type:alabel
-D_80044334 = 0x80044334; // type:alabel
-D_800443EC = 0x800443EC; // type:alabel
+// the object renderers' routines after func_80043EA0's drawer: rotation matrices from an object's angles and scale,
+// which func_8001AA80 calls through the table at 0x8005B650 (func_80044178's code from 0x80044238, its negated angles'
+// variant, has no caller), and a packet's first step, which the table at 0x8005B690 holds
+func_8004400C = 0x8004400C; // type:func size:0x16C
+func_80044178 = 0x80044178; // type:func size:0x104
+func_8004427C = 0x8004427C; // type:func size:0xB8
+func_80044334 = 0x80044334; // type:func size:0xB8
+func_800443EC = 0x800443EC; // type:func size:0x24
 func_80044410 = 0x80044410; // type:func size:0xAC
 D_80044434 = 0x80044434; // type:alabel
 D_80044468 = 0x80044468; // type:alabel
