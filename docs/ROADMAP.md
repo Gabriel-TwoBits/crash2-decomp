@@ -844,7 +844,7 @@ Steps, in order:
   the nearest search, field by field, each kept only when the executable is unchanged. Some reads through the structure
   make GCC write other code than the offset did (`vel`, `status_a` in `8001D63C.c`), so those stay offsets; fields still
   `unk_` keep the files' named offsets. Where a block of `GoolObject` serves two uses, as 0x84 to 0xA4 read as a
-  matrix's rows in func_8001ABF8, the offsets stay too. 0x108 took CrashEdit's name, `display_mode`, the modes
+  matrix's rows in Gfx_QueueObject, the offsets stay too. 0x108 took CrashEdit's name, `display_mode`, the modes
   func_8001BFDC switches on. A second batch, the handwritten code's own now that its equivalent C states what each
   routine does: the collision routines from 0x8003BF90 are the Crash 1 catalog's run in the same order (the octree
   query, the walls' plotter, the wall brush's 3-word entry and body, the floor's height; the query, the entry, the
@@ -855,8 +855,10 @@ Steps, in order:
   functions named. A third batch, the drawing, by what `tools/run_game.py` shows with a renderer's equivalent C
   emptied (a build of the experiment only): the scenery gone, the objects drawn over black (`Gfx_DrawWorlds`); Crash
   and Cortex's head gone, the scenery left (`Gfx_DrawObjects`); the demo's rain and the stars behind the intro's
-  Universal logo gone (`Gfx_DrawStreaks`). `func_80045218`, the dots, changes no frame of new-game or demo emptied,
-  so it keeps its address. 213 of 638 game functions named.
+  Universal logo gone (`Gfx_DrawStreaks`); the objects gone again with the packet list's builder emptied, which
+  `Obj_Update` calls for each object (`Gfx_QueueObject`). `func_80045218`, the dots, changes no frame of new-game or
+  demo emptied, and the game stops at game frame 4 without `func_8001AA80` (an object's matrix by the table at
+  0x8005B650): both keep their addresses. 214 of 638 game functions named.
 - **R7**: the port's preparation (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC

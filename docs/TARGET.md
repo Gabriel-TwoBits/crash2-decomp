@@ -219,7 +219,7 @@ keeps the same words (`WorldScratch`).
 
 ## The object renderers
 
-`Gfx_DrawObjects` draws the frame's packet list (`Sys_MainLoop` calls it with the list `func_8001ABF8` builds in the
+`Gfx_DrawObjects` draws the frame's packet list (`Sys_MainLoop` calls it with the list `Gfx_QueueObject` builds in the
 frame, the frame and `D_80062A18`). What its code shows:
 
 - A packet holds the next packet, three steps the root calls in turn, the object, its matrix (`func_8004400C` and the

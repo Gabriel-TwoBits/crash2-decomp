@@ -515,7 +515,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
         } else {
         }
         if (hit != 0) {
-            func_8001ABF8(obj, out);
+            Gfx_QueueObject(obj, out);
         } else {
         }
     } else {

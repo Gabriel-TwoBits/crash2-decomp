@@ -45,7 +45,7 @@ typedef struct GoolObject {
     /* Indexed by 3 bits (Gool_ResolveRef), GoolLink */
     /* 0x40 */ struct GoolObject *links[GOOL_LINK_COUNT];
     /* Six vectors: 0x60 and 0x90 read as x, y, z (func_8001CEDC), 0x6C and 0x78 passed by address (func_8001AA80),
-       0x84, 0x90 and 0x9C read as a matrix's rows (func_8001ABF8) */
+       0x84, 0x90 and 0x9C read as a matrix's rows (Gfx_QueueObject) */
     /* 0x60 */ s32 pos[3]; /* a path point (Obj_SpawnEntity) or the level's start (the player's) */
     /* 0x6C */ s32 rot[3]; /* CrashEdit's rotx, roty, rotz: passed with scale to the model's drawer */
     /* 0x78 */ s32 scale[3]; /* 0x1000 each without a parent (Obj_Init); x negated to flip (Gool_OpPlayAnim) */
@@ -82,7 +82,7 @@ typedef struct GoolObject {
     /* 0x114 */ s32 unk_114;
     /* 0x118 */ s32 unk_118;
     /* 0x11C */ s32 event_received; /* CrashEdit's eventreceived: the event an object accepted */
-    /* 0x120 */ u8 unk_120; /* 0x120 to 0x123 also read as a u32 (func_8001ABF8) and cleared as one (Obj_Init) */
+    /* 0x120 */ u8 unk_120; /* 0x120 to 0x123 also read as a u32 (Gfx_QueueObject) and cleared as one (Obj_Init) */
     /* 0x121 */ u8 unk_121;
     /* 0x122 */ u8 unk_122;
     /* 0x123 */ u8 unk_123[1];

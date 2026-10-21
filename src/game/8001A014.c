@@ -444,7 +444,7 @@ extern s32 D_8005B75C[];
 extern s32 D_8005B760[];
 extern s32 D_8005B770;
 
-void func_8001ABF8(u8 *arg0, void *arg1) {
+void Gfx_QueueObject(u8 *arg0, void *arg1) {
     u8 *list = g_BuildBuffer;
     u8 *prim = FLD(u8 *, list, PACKET_LIST_FREE);
     u8 *data = FLD(u8 *, arg0, 0xE8);
@@ -740,7 +740,7 @@ void func_8001ABF8(u8 *arg0, void *arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001ABF8);
+INCLUDE_ASM("asm/nonmatchings/game/8001A014", Gfx_QueueObject);
 #endif
 
 #ifdef NON_MATCHING

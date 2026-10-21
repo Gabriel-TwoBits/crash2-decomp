@@ -106,7 +106,7 @@ void Zone_QueueDrawLists(s32, s32, s32);
 void Zone_RunEntityQueue(void *, s32);
 u32 func_8001A90C(GoolObject *, s32 *, s32 *);
 void func_8001AA80(GoolObject *, s32 *);
-void func_8001ABF8(u8 *, void *);
+void Gfx_QueueObject(u8 *, void *);
 s32 func_8001B83C(void *, char *, s32, s32, void *, s32, s32);
 void func_8001BD84(GoolObject *, char *, s32, s32, s32);
 void func_8001BFD4(void *, s32);

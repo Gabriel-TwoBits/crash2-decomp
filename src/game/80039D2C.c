@@ -3837,7 +3837,7 @@ void Gfx_DrawWorlds(u16 *list, FrameBuffer *frame, WorldScene *scene, s32 clock)
 
 /* ---- The object renderers (docs/TARGET.md, "The object renderers") ---- */
 
-/* A draw packet, as func_8001ABF8 builds them in the frame's packet list: the next packet, its three steps (the
+/* A draw packet, as Gfx_QueueObject builds them in the frame's packet list: the next packet, its three steps (the
  * GTE's rotation and translation for the object, a light or scene setup, the drawer), the object, its matrix (a
  * rotation's five words, then the scale), and what the steps read; a model's packet (kind 1) holds them all, a sprite's
  * (kind 2) to 0x2C, kind 5's to 0x30 */
@@ -4133,7 +4133,7 @@ static s32 depth_past_fog(void) {
 
 /* The packets' placing steps (the table at 0x8005B690, func_8001AA80): the GTE's rotation and translation */
 
-/* func_8001AA80 picks an object's first step by its kind, as func_8001ABF8 its packet's drawer: a sprite's steps (its
+/* func_8001AA80 picks an object's first step by its kind, as Gfx_QueueObject its packet's drawer: a sprite's steps (its
  * fade at 0x20) go with the sprites' drawers, a model's (its fade at 0x40, its vectors from 0x50) with the models';
  * the trials' rows pair them freely, holding the drawers' retail addresses (only the trials compare them) */
 #define SPRITE_DRAWER_ADDRESS 0x80044830
@@ -4777,7 +4777,7 @@ EQUIV_NONNULL(Gfx_DrawObjects, 2)
 EQUIV_BUFFER(Gfx_DrawObjects, 0, DRAW_PACKET_BYTES)
 EQUIV_BUFFER(Gfx_DrawObjects, 1, FRAME_BYTES)
 EQUIV_BUFFER(Gfx_DrawObjects, 2, WORLD_SCENE_BYTES)
-/* A packet's words as func_8001ABF8 builds them: the last packet (one a trial), its first step (D_8005B690), its
+/* A packet's words as Gfx_QueueObject builds them: the last packet (one a trial), its first step (D_8005B690), its
  * second and drawer by mode (D_8005B75C and D_8005B708 by the same index), a model's visibility test, and its far
  * colour step and colour routine by sub-kind (D_8005B6D0 and D_8005B6EC); a sprite's words there are its own */
 EQUIV_WORDS(Gfx_DrawObjects, 0, 0, 0)

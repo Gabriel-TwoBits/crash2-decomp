@@ -1427,3 +1427,6 @@ Gfx_DrawObjects = 0x8003DB94; // type:func
 
 // draws a camera's streaks, lines from each point's last view to its current one (count from property 0x1B5, D_80062A90; Sys_MainLoop calls it when the scene's flag 0x10 is set); tools/run_game.py with its equivalent C emptied: the rain is gone from the demo's Turtle Woods, and the stars from behind the intro's Universal logo
 Gfx_DrawStreaks = 0x80044F54; // type:func
+
+// appends an object's draw packet (its steps from the renderers' tables between 0x8005B6D0 and 0x8005B770, by its kind) to the frame's packet list at the build buffer's 0x2088, which Gfx_DrawObjects draws; Obj_Update calls it for each object drawn; tools/run_game.py with its equivalent C emptied: Crash and Cortex's head gone from the new-game schedule's warp room, the scenery left, as with Gfx_DrawObjects emptied
+Gfx_QueueObject = 0x8001ABF8; // type:func
