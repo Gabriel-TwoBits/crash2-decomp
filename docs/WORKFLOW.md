@@ -186,7 +186,11 @@ past them all, the halfword moved into its range by its remainder wherever the a
 of the memory compared, the routine run as part of the retail function, which still has other callers in the build, a call through the callback compared on
 its arguments only and leaving the registers named, which a call otherwise sets at random), and prints it with the verdict, which
 `tools/match.py` records. The scratch is the handwritten code's save area, the scratchpad's first 16 words: every
-function that uses it writes it before reading it, and no compiled code touches it. A bound is a number or a `#define` of one in the file; a line it can't read stops it. A contract goes in by
+function that uses it writes it before reading it, and no compiled code touches it. Nothing a function reads lives
+there either, so no word of a trial is drawn from the code's constants pointing into it: the retail code saves `$sp`
+there first, and a frame whose next primitive was 0x1F800000 (the `lui` of the area's address, among the constants)
+had `func_80044F54`'s lines overwrite it and the retail code fault on return, where the C, saving nothing there,
+returned. A bound is a number or a `#define` of one in the file; a line it can't read stops it. A contract goes in by
 hand, with its evidence in the comment above it: every caller, compiled and handwritten, and what each passes.
 `tools/match.py` refuses C holding one from a run: the loop's agent never narrows its own trials.
 

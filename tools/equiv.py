@@ -2029,7 +2029,10 @@ def main():
     # The retail code's, run again with other values in the registers it gets unset (made on the first disagreement)
     again_machine = None
     first = None
-    constants = immediates(retail_code)
+    # A scratch area holds nothing the function reads, so no word drawn from its code's constants points into it: the
+    # retail code saves registers there first, and a pointer to it would read them where the C reads the trial's words
+    constants = [value for value in immediates(retail_code)
+                 if not any(physical(value) in area for area in declared.scratch)]
     decoded = decode(retail_code)
     pool = fuzz_pool(arguments.seed, constants)
     machines = None
