@@ -460,70 +460,108 @@ static void Gte_MultiplyMatrix(s32 matrix, s32 vector) {
 
 #endif /* GTE_MVMVA */
 
-/* GCC 2.7.2 emits a static function used or not: a file defines GTE_DPCS before including this to have DPCS */
+/* GCC 2.7.2 emits a static function used or not: a file defines GTE_DPCS before including this to have DPCS and DPCL */
 #ifdef GTE_DPCS
 
-/* A colour's components as DPCS takes them (<< 16) and gives them (>> 4), and RGBC's code byte */
+/* A colour's components as DPCS takes them (<< 16), DPCL (times IR1-IR3, << 4), and as both give them (>> 4); RGBC's
+   code byte */
 #define GTE_COLOUR_IN_SHIFT 16
+#define GTE_LIGHT_IN_SHIFT 4
 #define GTE_COLOUR_OUT_SHIFT 4
 #define GTE_COLOUR_BITS 8
 #define GTE_COLOUR_MAX 0xFF
 #define GTE_CODE_MASK 0xFF000000
+/* DPCL with sf = 1 and lm = 0 */
+#define GTE_DPCL_CODE 0x0680029
 
 #ifdef GTE_MODEL
 
-/* DPCS: RGBC's components moved toward the far colour by IR0 into MAC1-3 and IR1-3, and pushed, with RGBC's code, on
-   the colour FIFO (RGB0-RGB2) */
-static void Gte_DepthCue(void) {
-    GteRegs regs;
+/* The depth cue's interpolation, DPCS's and DPCL's: start, a value a component, moved toward the far colour by IR0
+   into MAC1-3 and IR1-3, and pushed, with RGBC's code, on the colour FIFO (RGB0-RGB2) */
+static void Gte_Cue(GteRegs *regs, s64 *start) {
     s32 ir0, row, ir, mac;
-    s64 start, value;
+    s64 value;
     u32 pushed;
 
-    GTE_SAVE_DATA(&regs, GTE_IR0);
-    GTE_SAVE_DATA(&regs, GTE_RGBC);
-    GTE_SAVE_DATA(&regs, GTE_RGB1);
-    GTE_SAVE_DATA(&regs, GTE_RGB2);
-    GTE_SAVE_CONTROL(&regs, GTE_RFC);
-    GTE_SAVE_CONTROL(&regs, GTE_GFC);
-    GTE_SAVE_CONTROL(&regs, GTE_BFC);
-    regs.control[GTE_FLAG] = 0;
-    ir0 = (s16)regs.data[GTE_IR0];
+    ir0 = (s16)regs->data[GTE_IR0];
     for (row = 0; row < GTE_DIMENSION; row++) {
-        start = (s64)((regs.data[GTE_RGBC] >> (row * GTE_COLOUR_BITS)) & GTE_COLOUR_MAX) << GTE_COLOUR_IN_SHIFT;
         /* The difference to the far colour goes through IR saturated as if lm were 0 */
-        value = Gte_MacChecked(&regs, row, ((s64)(s32)regs.control[GTE_RFC + row] << GTE_FRACTION_BITS) - start);
-        ir = Gte_Saturated(&regs, (s32)(value >> GTE_FRACTION_BITS), GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
-        value = Gte_MacChecked(&regs, row, (s64)ir * ir0 + start);
+        value = Gte_MacChecked(regs, row, ((s64)(s32)regs->control[GTE_RFC + row] << GTE_FRACTION_BITS) - start[row]);
+        ir = Gte_Saturated(regs, (s32)(value >> GTE_FRACTION_BITS), GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
+        value = Gte_MacChecked(regs, row, (s64)ir * ir0 + start[row]);
         mac = (s32)(value >> GTE_FRACTION_BITS);
-        regs.data[GTE_MAC1 + row] = mac;
-        regs.data[GTE_IR1 + row] = Gte_Saturated(&regs, mac, GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
+        regs->data[GTE_MAC1 + row] = mac;
+        regs->data[GTE_IR1 + row] = Gte_Saturated(regs, mac, GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
     }
-    pushed = regs.data[GTE_RGBC] & GTE_CODE_MASK;
+    pushed = regs->data[GTE_RGBC] & GTE_CODE_MASK;
     for (row = 0; row < GTE_DIMENSION; row++) {
-        pushed |= (u32)Gte_Saturated(&regs, (s32)regs.data[GTE_MAC1 + row] >> GTE_COLOUR_OUT_SHIFT, 0, GTE_COLOUR_MAX,
+        pushed |= (u32)Gte_Saturated(regs, (s32)regs->data[GTE_MAC1 + row] >> GTE_COLOUR_OUT_SHIFT, 0, GTE_COLOUR_MAX,
                                      GTE_FLAG_COLOUR_R >> row) << (row * GTE_COLOUR_BITS);
     }
-    regs.data[GTE_RGB0] = regs.data[GTE_RGB1];
-    regs.data[GTE_RGB1] = regs.data[GTE_RGB2];
-    regs.data[GTE_RGB2] = pushed;
-    GTE_RESTORE_DATA(&regs, GTE_MAC1);
-    GTE_RESTORE_DATA(&regs, GTE_MAC2);
-    GTE_RESTORE_DATA(&regs, GTE_MAC3);
-    GTE_RESTORE_DATA(&regs, GTE_IR1);
-    GTE_RESTORE_DATA(&regs, GTE_IR2);
-    GTE_RESTORE_DATA(&regs, GTE_IR3);
-    GTE_RESTORE_DATA(&regs, GTE_RGB0);
-    GTE_RESTORE_DATA(&regs, GTE_RGB1);
-    GTE_RESTORE_DATA(&regs, GTE_RGB2);
-    GTE_WRITE_CONTROL(GTE_FLAG, regs.control[GTE_FLAG]);
+    regs->data[GTE_RGB0] = regs->data[GTE_RGB1];
+    regs->data[GTE_RGB1] = regs->data[GTE_RGB2];
+    regs->data[GTE_RGB2] = pushed;
+    GTE_RESTORE_DATA(regs, GTE_MAC1);
+    GTE_RESTORE_DATA(regs, GTE_MAC2);
+    GTE_RESTORE_DATA(regs, GTE_MAC3);
+    GTE_RESTORE_DATA(regs, GTE_IR1);
+    GTE_RESTORE_DATA(regs, GTE_IR2);
+    GTE_RESTORE_DATA(regs, GTE_IR3);
+    GTE_RESTORE_DATA(regs, GTE_RGB0);
+    GTE_RESTORE_DATA(regs, GTE_RGB1);
+    GTE_RESTORE_DATA(regs, GTE_RGB2);
+    GTE_WRITE_CONTROL(GTE_FLAG, regs->control[GTE_FLAG]);
+}
+
+/* What DPCS and DPCL read, into regs */
+static void Gte_SaveCue(GteRegs *regs) {
+    GTE_SAVE_DATA(regs, GTE_IR0);
+    GTE_SAVE_DATA(regs, GTE_IR1);
+    GTE_SAVE_DATA(regs, GTE_IR2);
+    GTE_SAVE_DATA(regs, GTE_IR3);
+    GTE_SAVE_DATA(regs, GTE_RGBC);
+    GTE_SAVE_DATA(regs, GTE_RGB1);
+    GTE_SAVE_DATA(regs, GTE_RGB2);
+    GTE_SAVE_CONTROL(regs, GTE_RFC);
+    GTE_SAVE_CONTROL(regs, GTE_GFC);
+    GTE_SAVE_CONTROL(regs, GTE_BFC);
+    regs->control[GTE_FLAG] = 0;
+}
+
+/* DPCS: RGBC's components (<< 16) moved toward the far colour by IR0 */
+static void Gte_DepthCue(void) {
+    GteRegs regs;
+    s64 start[GTE_DIMENSION];
+    s32 row;
+
+    Gte_SaveCue(&regs);
+    for (row = 0; row < GTE_DIMENSION; row++) {
+        start[row] = (s64)((regs.data[GTE_RGBC] >> (row * GTE_COLOUR_BITS)) & GTE_COLOUR_MAX) << GTE_COLOUR_IN_SHIFT;
+    }
+    Gte_Cue(&regs, start);
+}
+
+/* DPCL: RGBC's components times IR1-IR3 (<< 4) moved toward the far colour by IR0 */
+static void Gte_DepthCueLight(void) {
+    GteRegs regs;
+    s64 start[GTE_DIMENSION];
+    s32 row;
+
+    Gte_SaveCue(&regs);
+    for (row = 0; row < GTE_DIMENSION; row++) {
+        start[row] = ((s64)((regs.data[GTE_RGBC] >> (row * GTE_COLOUR_BITS)) & GTE_COLOUR_MAX) *
+                      (s16)regs.data[GTE_IR1 + row]) << GTE_LIGHT_IN_SHIFT;
+    }
+    Gte_Cue(&regs, start);
 }
 
 #define Gte_Dpcs() Gte_DepthCue()
+#define Gte_Dpcl() Gte_DepthCueLight()
 
 #else
 
 #define Gte_Dpcs() GTE_COMMAND(GTE_DPCS_CODE)
+#define Gte_Dpcl() GTE_COMMAND(GTE_DPCL_CODE)
 
 #endif /* GTE_MODEL */
 

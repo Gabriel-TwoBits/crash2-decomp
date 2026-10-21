@@ -230,8 +230,9 @@ lacks is added to both, from psx-spx. `tools/gte.py` also runs `mvmva` (the rota
 the translation or background colour added or none), `nclip`, `dpcs` and `dpct`, the handwritten code's other commands;
 it refuses the garbage matrix and the far colour's wrongly added sum, which no code uses. The C has
 `Gte_MultiplyMatrix` (`mvmva` as the game encodes it: sf 1, nothing added), for a file that defines `GTE_MVMVA` before
-including the header, since GCC 2.7.2 emits every static function, and `Gte_Dpcs` (sf 1, lm 0) for one that defines
-`GTE_DPCS`, ported from `tools/gte.py`'s and agreeing with it in the world renderer's fogged modes. The handwritten code also puts a GTE instruction in
+including the header, since GCC 2.7.2 emits every static function, and `Gte_Dpcs` and `Gte_Dpcl` (sf 1, lm 0) for one
+that defines `GTE_DPCS`, ported from `tools/gte.py`'s (DPCL added to both from psx-spx: RGBC's components times IR1-IR3,
+then DPCS's interpolation) and agreeing with it in the world renderer's modes. The handwritten code also puts a GTE instruction in
 a branch's delay slot (`func_8003D3CC`'s `ctc2`), where equiv.py's hook can't stop: it runs the instruction on the model
 as the branch starts, with the slot a `nop` meanwhile, when it moves no CPU register and the branch doesn't link into
 what it reads.

@@ -62,9 +62,10 @@ RTPS = 0x01
 NCLIP = 0x06
 DPCS = 0x10
 MVMVA = 0x12
+DPCL = 0x29
 DPCT = 0x2A
 RTPT = 0x30
-COMMANDS = {RTPS: "rtps", NCLIP: "nclip", DPCS: "dpcs", MVMVA: "mvmva", DPCT: "dpct", RTPT: "rtpt"}
+COMMANDS = {RTPS: "rtps", NCLIP: "nclip", DPCS: "dpcs", MVMVA: "mvmva", DPCL: "dpcl", DPCT: "dpct", RTPT: "rtpt"}
 # MVMVA's fields: the matrix (rotation, light, light colour; 3 is garbage), the vector (V0-V2, or IR1-IR3) and the one
 # added (translation, background colour; 2, the far colour, the hardware adds wrongly; 3 none)
 MX_SHIFT, V_SHIFT, CV_SHIFT = 17, 15, 13
@@ -102,6 +103,8 @@ SEED_OFFSET = 0x100
 BYTE_BITS = 8
 BYTE_MASK = 0xFF
 COLOUR_IN_SHIFT = 16
+# DPCL's start: a colour's component times IR1-IR3, shifted by 4
+LIGHT_IN_SHIFT = 4
 COLOUR_OUT_SHIFT = 4
 CODE_SHIFT = 24
 # IRGB and ORGB: three 5-bit colour components, IR1-IR3 / 0x80 each
@@ -225,6 +228,12 @@ class Gte:
         elif function == DPCS:
             self.control[FLAG] = 0
             self.depth_cue(self.data[RGBC], sf, lm)
+        elif function == DPCL:
+            self.control[FLAG] = 0
+            colour = self.data[RGBC]
+            light = self.ir_vector()
+            self.cue([((colour >> (row * BYTE_BITS)) & BYTE_MASK) * light[row] << LIGHT_IN_SHIFT
+                      for row in range(DIMENSION)], sf, lm)
         elif function == DPCT:
             self.control[FLAG] = 0
             for _ in range(DPCT_COLOURS):
@@ -273,8 +282,12 @@ class Gte:
     def depth_cue(self, colour, sf, lm):
         """DPCS on a colour: its components shifted by 16 moved toward the far colour by IR0, pushed on the colour FIFO
         with RGBC's code"""
+        self.cue([((colour >> (row * BYTE_BITS)) & BYTE_MASK) << COLOUR_IN_SHIFT for row in range(DIMENSION)], sf, lm)
+
+    def cue(self, start, sf, lm):
+        """The depth cue's interpolation, DPCS's and DPCL's: start, a value a component, moved toward the far colour by
+        IR0 into MAC1-3 and IR1-3, and pushed on the colour FIFO with RGBC's code"""
         ir0 = signed16(self.data[IR0])
-        start = [((colour >> (row * BYTE_BITS)) & BYTE_MASK) << COLOUR_IN_SHIFT for row in range(DIMENSION)]
         for row, far in enumerate((RFC, GFC, BFC)):
             # The difference to the far colour goes through IR saturated as if lm were 0
             difference = self.mac_checked(row, (signed32(self.control[far]) << FRACTION_BITS) - start[row])
