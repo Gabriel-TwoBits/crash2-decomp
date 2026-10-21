@@ -689,9 +689,11 @@ trials found: the packet's command read per triangle; records shifting only thei
 offset, left by the colour routines (the screen points and-ed, the facing) for the next call; the clipped pieces' first
 corner's colour the triangle's own in `func_800454A4`; the sine table read as `func_80043270` reads it; the unaligned
 vertex bytes read by words; and equiv.py's candidate code, a primitive's random address able to overwrite it, kept
-read-only. The four schedules agree at every frame; the C draws slower (the demo's 4,800 game frames by vsync 26,246,
-retail's by 14,130), so memory-card and demo run longer. The C is smaller than the code it replaces: the executable has
-7,184 bytes of the retail file's room left. 161 of 172 handwritten functions equivalent.
+read-only. The four schedules agree at every frame; the C draws slower (the demo's 4,800 game frames by vsync 22,628,
+retail's by 14,130, its hot helpers inline; 26,246 without), so memory-card and demo run longer. A kind 5 list's first
+two loads keep their order (a compiler barrier, where a wild pointer faults), and a colour routine culling off the
+screen's top or bottom leaves the and-ed points in `$a2`, off its sides not. The executable is 3,344 bytes longer than
+the retail file, the heap that much smaller. 161 of 172 handwritten functions equivalent.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
 the GOOL interpreter with its opcode table (`Gool_Interpret` and the 10 routines around it), the last of the

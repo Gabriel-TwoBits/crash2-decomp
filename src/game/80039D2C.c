@@ -4608,7 +4608,7 @@ s32 func_80041E50(DrawPass *pass) {
 #define OT_LAST_OFFSET 0x1FFC
 #define PRIMITIVE_WORDS_SHIFT 24
 
-static u32 *depth_slot_of_depth(DrawPass *pass, s32 depth) {
+static inline u32 *depth_slot_of_depth(DrawPass *pass, s32 depth) {
     s32 offset = (u32)depth * sizeof(u32);
 
     if (depth < 0) {
@@ -4625,7 +4625,7 @@ static u32 *depth_slot_of_depth(DrawPass *pass, s32 depth) {
     return (u32 *)((u8 *)pass->frame->ot + offset);
 }
 
-static u32 *depth_slot_of(DrawPass *pass, u32 depth_sum) {
+static inline u32 *depth_slot_of(DrawPass *pass, u32 depth_sum) {
     return depth_slot_of_depth(pass, DRAW_SCRATCH->far_depth - (depth_sum >> DEPTH_SUM_SHIFT));
 }
 
@@ -4916,7 +4916,7 @@ static void model_setup(DrawPass *pass) {
 #define WORD_BITS 32
 #define FIELD_SHIFT_FROM_CODE 0x1F
 
-static void vertex_field(DrawPass *pass, u32 code, s32 base, u8 *field) {
+static inline void vertex_field(DrawPass *pass, u32 code, s32 base, u8 *field) {
     s32 width = code + 1;
     s32 shift = code ^ FIELD_SHIFT_FROM_CODE;
     s32 used = width;
@@ -4962,14 +4962,14 @@ static void vertex_field(DrawPass *pass, u32 code, s32 base, u8 *field) {
 
 /* A strip vertex (func_8003DD14): its VXY pair and z, from the cache or the stream (fields, or three bytes when the
  * model has no widths) and cached; its colour, the return value */
-static void morph_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z);
+static inline void morph_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z);
 
 /* A vertex's three bytes as the retail code's unaligned loads read them: the word holding the first (lwr), and the
  * next when the first's address has bit 1 set (lwl); only the low 24 bits count */
 #define STREAM_CROSSES 2
 #define WORD_ALIGN_MASK 3
 
-static u32 stream_bytes(u8 *at, u32 crosses) {
+static inline u32 stream_bytes(u8 *at, u32 crosses) {
     u32 *word = (u32 *)((u32)at & ~WORD_ALIGN_MASK);
     u32 shift = ((u32)at & WORD_ALIGN_MASK) * BYTE_BITS;
     u32 value = word[0] >> shift;
@@ -4983,7 +4983,7 @@ static u32 stream_bytes(u8 *at, u32 crosses) {
 }
 
 /* A vertex turned by the light matrix (func_8003FD14), a row at a time from three copies of it: y, x, then z */
-static void lit_turn(u32 *xy, u32 *z) {
+static inline void lit_turn(u32 *xy, u32 *z) {
     u32 x, y;
 
     GTE_WRITE_DATA(GTE_VXY0, *xy);
@@ -5001,7 +5001,7 @@ static void lit_turn(u32 *xy, u32 *z) {
     GTE_READ_DATA(GTE_IR3, *z);
 }
 
-static u32 strip_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z) {
+static inline u32 strip_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z) {
     DrawScratch *scratch = DRAW_SCRATCH;
     u32 *cache = (u32 *)((u8 *)scratch + DRAW_COPY + ((command >> VERTEX_CACHE_SHIFT) & VERTEX_CACHE_MASK));
     u32 index = (command >> COLOUR_INDEX_SHIFT) & COLOUR_INDEX_MASK;
@@ -5046,7 +5046,7 @@ static u32 strip_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z) {
 }
 
 /* A morphing vertex's field from both streams in step, the second's bits in BITS2 (func_8003ED14) */
-static void morph_field(DrawPass *pass, u32 code, s32 base, u8 *field, u8 *field2) {
+static inline void morph_field(DrawPass *pass, u32 code, s32 base, u8 *field, u8 *field2) {
     s32 width = code + 1;
     s32 shift = code ^ FIELD_SHIFT_FROM_CODE;
     s32 used = width;
@@ -5086,7 +5086,7 @@ static void morph_field(DrawPass *pass, u32 code, s32 base, u8 *field, u8 *field
 #define MORPH_Z_MASK 0xFF00
 #define MORPH_Z_SHIFT 7
 
-static void morph_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z) {
+static inline void morph_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z) {
     DrawScratch *scratch = DRAW_SCRATCH;
     u32 *cache = (u32 *)((u8 *)scratch + DRAW_COPY + ((command >> VERTEX_CACHE_SHIFT) & VERTEX_CACHE_MASK));
     u32 packed, packed2, at;
@@ -5129,7 +5129,7 @@ static void morph_vertex(DrawPass *pass, u32 command, u32 *xy, u32 *z) {
 }
 
 /* A colour command's colour: the scratchpad's copy's or the model's */
-static u32 strip_colour(DrawPass *pass, u32 index, s32 from_copy) {
+static inline u32 strip_colour(DrawPass *pass, u32 index, s32 from_copy) {
     if (from_copy) {
         return DRAW_SCRATCH->copied[index / sizeof(u32)];
     } else {
@@ -5138,7 +5138,7 @@ static u32 strip_colour(DrawPass *pass, u32 index, s32 from_copy) {
 }
 
 /* The triangle's texture's record's offset in the model's textures, 0 for none: an animation's frame by the clock */
-static u32 strip_texture(DrawPass *pass, u32 command) {
+static inline u32 strip_texture(DrawPass *pass, u32 command) {
     u32 index = command & TEXTURE_INDEX_MASK;
     u32 entry, step, chained;
 
@@ -5161,7 +5161,7 @@ static u32 strip_texture(DrawPass *pass, u32 command) {
 
 /* A strip's next command after its triangle: the colour commands' colours taken, the next vertex's command (or the
  * next strip's first, negative) the return value */
-static u32 strip_next(DrawPass *pass) {
+static inline u32 strip_next(DrawPass *pass) {
     u32 command;
 
     for (;;) {
@@ -5295,7 +5295,7 @@ static void model_strips(DrawPass *pass, s32 records, void (*draw)(DrawPass *)) 
 }
 
 /* A triangle by the colour routine, the texture's record in the scratchpad (D_8003E360's) */
-static void shade_triangle(DrawPass *pass) {
+static inline void shade_triangle(DrawPass *pass) {
     DRAW_SCRATCH->texture_record = pass->textures + pass->texture;
     pass->shade(pass);
 }
@@ -6197,7 +6197,7 @@ void func_80040FC4(DrawPass *pass) {
 #define DRAW_MODE_TAG_LENGTH 0x02000000
 
 /* The triangle's depths' sum, 0 when culled at a depth of 0 (the GTE's normal then in MAC0) */
-static u32 shade_depths(void) {
+static inline u32 shade_depths(void) {
     u32 first, second, third;
 
     GTE_READ_DATA(GTE_SZ1, first);
@@ -6216,7 +6216,7 @@ static u32 shade_depths(void) {
 }
 
 /* The facing's sign word: the normal's, turned by the fade word's bit 31 and the command's bit 29; 0 for no normal */
-static s32 shade_facing(DrawPass *pass, u32 fade, s32 *facing) {
+static inline s32 shade_facing(DrawPass *pass, u32 fade, s32 *facing) {
     s32 normal;
 
     GTE_READ_DATA(GTE_MAC0, normal);
@@ -6225,7 +6225,7 @@ static s32 shade_facing(DrawPass *pass, u32 fade, s32 *facing) {
 }
 
 /* The corners' colours faded toward the far colour, unless unfaded */
-static void shade_fade(DrawPass *pass, u32 fade) {
+static inline void shade_fade(DrawPass *pass, u32 fade) {
     GTE_WRITE_DATA(GTE_RGB0, pass->corner[0]);
     GTE_WRITE_DATA(GTE_RGB1, pass->corner[1]);
     GTE_WRITE_DATA(GTE_RGB2, pass->corner[2]);
@@ -6238,7 +6238,7 @@ static void shade_fade(DrawPass *pass, u32 fade) {
 }
 
 /* The primitive linked into its slot, the frame's next primitive past it */
-static void shade_link(DrawPass *pass, u32 *slot, u32 tag, u32 words) {
+static inline void shade_link(DrawPass *pass, u32 *slot, u32 tag, u32 words) {
     u32 *primitive = pass->next;
 
     primitive[0] = *slot | tag;
@@ -6248,7 +6248,7 @@ static void shade_link(DrawPass *pass, u32 *slot, u32 tag, u32 words) {
 
 /* A G3 or GT3 of the GTE's colours, translucent ones: the G3 code 0x32 after a draw mode primitive, the GT3's page
  * made additive */
-static void shade_emit(DrawPass *pass, u32 *slot, s32 translucent) {
+static inline void shade_emit(DrawPass *pass, u32 *slot, s32 translucent) {
     u32 *primitive = pass->next;
     u32 *mode;
     u32 *record;
