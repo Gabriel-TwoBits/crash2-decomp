@@ -4705,6 +4705,9 @@ void func_80044830(DrawPass *pass) {
     scratch->next = sprite_quad(pass, packet->kind.sprite.record, (near << GTE_HALF_BITS) | far, scratch->next);
 }
 
+/* The loads before it come first: a list a wild pointer reaches faults where the retail code's first load does */
+#define LOADS_BEFORE() __asm__ volatile("" : : : "memory")
+
 /* Kind 5's sprites (func_8004380C): the packet's frame's records (0x18 bytes, after the count at word 2 and three
  * words), each its own corners' halves (x0 y0 x1 y1 from 0x10); at least one */
 #define SPRITE_RECORD_WORDS 6
@@ -4737,6 +4740,7 @@ void func_8004380C(DrawPass *pass) {
     do {
         corners = (u16 *)(record + SPRITE_CORNERS);
         x0 = corners[0];
+        LOADS_BEFORE();
         y0 = (u32)corners[1] << GTE_HALF_BITS;
         x1 = corners[2];
         y1 = (u32)corners[3] << GTE_HALF_BITS;
@@ -6308,7 +6312,8 @@ static void shade_emit(DrawPass *pass, u32 *slot, s32 translucent) {
 #define SCREEN_EDGES 0x00D90200
 #define HALF_SIGN_UP 16
 
-/* The screen points and-ed together are left where the texture's offset was (the retail code's $a2) */
+/* Off the top or bottom, the screen points and-ed together are left where the texture's offset was (the retail
+ * code's $a2, which it reloads before the test of the sides) */
 static s32 off_one_edge(DrawPass *pass) {
     u32 first, second, third, beyond, before;
 
@@ -6317,8 +6322,10 @@ static s32 off_one_edge(DrawPass *pass) {
     GTE_READ_DATA(GTE_SXY2, third);
     before = first & second & third;
     beyond = ~((first - SCREEN_EDGES) | (second - SCREEN_EDGES) | (third - SCREEN_EDGES)) | before;
-    if ((s32)beyond < 0 || (s32)(beyond << HALF_SIGN_UP) < 0) {
+    if ((s32)beyond < 0) {
         pass->texture = before;
+        return 1;
+    } else if ((s32)(beyond << HALF_SIGN_UP) < 0) {
         return 1;
     } else {
         return 0;
