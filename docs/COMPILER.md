@@ -124,3 +124,11 @@ old value. Reported upstream ([mkst/maspsx#154](https://github.com/mkst/maspsx/i
 that commit. `tools/psx_cc.py` rewrote maspsx's line until then; without the rewrite, the new maspsx gives the same two
 executables, both built from scratch (the retail SHA-1 and the equivalent build's `ddf5927`), and the sum above
 assembles to `0x34030000`.
+
+## `$fp` in inline assembly
+
+GCC 2.7.2 at `-O2` saves `$fp` (`$30`) in a function's prologue only when its own allocation uses it: neither a local
+register variable bound to it (`register u8 *x __asm__("$30")`) nor `"$30"` among an `asm`'s clobbers makes it save it.
+Proven by `Gool_Interpret`'s call of a GOOL entry's native code, which needs `$fp` at the scratchpad's base: with
+either, its prologue saved `$s0` to `$s7` and `$ra` only, and the trials of a copy of equiv.py that runs that code
+left the caller's `$fp` changed; the C now saves `$fp` on the stack inside the `asm` around the call.

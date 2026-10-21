@@ -245,10 +245,9 @@ The handwritten code (`asm/game/80039D2C.s`, docs/TARGET.md) can't match from C 
 default build assembles it whole. Its equivalent C is `src/game/80039D2C.c`, which only `ninja nonmatching` compiles:
 `configure.py` leaves each function the file defines (its `static` ones aside) out of the equivalent build's copy of the
 handwritten code, from its `nonmatching` line to the next one, and links the file's code and read-only data right
-after that copy, so the code before a replaced function stays where it was: the handwritten GOOL operations, whose
-addresses a renderer reads as bytes (docs/TARGET.md, "Code addresses read as data"), keep retail's. When the code
-before the copy is shorter than retail's, the linker script pads it with zeros to retail's address (`. = MAX(., ...)`
-before the copy); when it is longer the copy moves, and `ninja nonmatching` says so.
+after that copy, so the code before a replaced function stays where it was. The GOOL opcode table's entries, retail
+code addresses a renderer reads as bytes (docs/TARGET.md, "Code addresses read as data"), keep retail's values: the
+C defines the operations' labels at their retail addresses.
 Routines only one function reaches, such as the tails its dispatch jumps
 into, go with it: `HANDWRITTEN_PARTS(Sys_Memcpy, Sys_Memcpy1, ...)` in the file names them, and equiv.py runs them as
 part of the retail function. `configure.py` (through `tools/handwritten.py`) stops on a function the handwritten code
@@ -332,8 +331,8 @@ and writes into `build/` only:
    call starts: New Game from the title's menu, the intro, Cortex's speech, into Turtle Woods from the first warp room,
    run, jump, spin; 3,450 game frames, about three minutes paced (below). `--schedule turtle-woods` runs on into Turtle Woods blindly,
    jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames. A renderer there reads
-   code addresses' bytes (docs/TARGET.md, "Code addresses read as data"), so a build whose handwritten GOOL operations
-   moved differs from game frame 3,524; and the level's sound and disc reads go on in real time, so a build of another
+   code addresses' bytes (docs/TARGET.md, "Code addresses read as data"), so a build whose GOOL opcode table holds other
+   addresses differs from game frame 3,524; and the level's sound and disc reads go on in real time, so a build of another
    speed played otherwise from game frame 3,666 until the schedule paced game frames 2,900 to 6,000 (5 vsyncs each,
    as below). Cortex's lips follow his speech's sound, which plays in real time too: with the world renderer in C,
    which takes 3 vsyncs a game frame where retail takes 2, the equivalent build drew another mouth from game frame 1,380,

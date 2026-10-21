@@ -695,9 +695,25 @@ two loads keep their order (a compiler barrier, where a wild pointer faults), an
 screen's top or bottom leaves the and-ed points in `$a2`, off its sides not. The executable is 3,344 bytes longer than
 the retail file, the heap that much smaller. 161 of 172 handwritten functions equivalent.
 
-Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
-the GOOL interpreter with its opcode table (`Gool_Interpret` and the 10 routines around it), the last of the
-handwritten code.
+The GOOL interpreter (docs/TARGET.md, "The GOOL interpreter"): `Gool_Interpret` and the 10 routines its operations
+share, in C as one group: the machine its registers hold (`GoolVm`), the operands' decoders kept as functions of their
+own (inline at each use, the interpreter took 27,888 bytes), and a `switch` over the 79 opcodes in place of the table,
+whose entries keep the retail operations' addresses (the C defines their labels there), so the scratchpad's copy that
+the world renderer reads past its own table is retail's wherever the code lies, and configure.py's padding of the
+handwritten code to its retail address is gone. Operation 73's native code (8,572 blocks in the disc's GOOL entries,
+read entry by entry) runs through an inline call with the registers it reads; a division by 0 gets the CPU's results,
+where GCC's code traps. equiv.py gained `EQUIV_TABLE` (the scratchpad's word 0x5C points to the opcode table, its words
+retail's): its random trials of random words agree, nearly all ended by the C's assumptions (an opcode past the table,
+native code). A copy of equiv.py that builds a machine behind each trial's object (valid instructions that end,
+subroutines, links, frames in the object, native blocks of the disc's forms after operation 73, run on both sides)
+agrees on 2,000 of 2,000 trials on 2 seeds, and catches a mutation in each opcode's case and in each helper's result but
+those of a zero divisor and of the lowest word by -1, which they don't reach. What the trials found: GCC 2.7.2 leaves
+`$fp` unsaved around the native call (docs/COMPILER.md). The four schedules agree at every frame, turtle-woods' far rain
+included, at nearly the speed they had (new-game's 3,450 game frames by vsync 16,979, 3 more; the demo's by 22,725, 97
+more). The executable is 4,416 bytes longer than the retail file, the heap that much smaller. 172 of 172 handwritten
+functions equivalent.
+
+Next: the handwritten code's C made readable with the rest (section 5); matching goes on in the loop.
 
 ## 5. Readable C (in progress)
 

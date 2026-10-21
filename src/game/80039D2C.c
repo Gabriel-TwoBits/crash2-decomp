@@ -6660,3 +6660,1209 @@ void func_8003DB94(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
     }
     frame->next = scratch->next;
 }
+
+/* ---- The GOOL interpreter (docs/TARGET.md, "The GOOL interpreter") ---- */
+
+/* The routines the interpreter's operations share, which the retail code keeps apart and only it reaches: the operands'
+ * decoders (func_80039D2C, func_80039E10, func_80039E80, func_80039F74, func_80039F9C), the calls into the game's C
+ * (func_80039FC4), three seeks (func_8003A680, func_8003A718, func_8003A7CC) and the sine (func_8003A9B8) */
+HANDWRITTEN_PARTS(Gool_Interpret, func_80039D2C, func_80039E10, func_80039E80, func_80039F74, func_80039F9C)
+HANDWRITTEN_PARTS(Gool_Interpret, func_80039FC4, func_8003A680, func_8003A718, func_8003A7CC, func_8003A9B8)
+
+/* The machine as the retail code keeps it in registers: the object ($s0), the run's mode and argument ($s1, $s2), the
+ * constant pools of the object's code and of its state's ($s4, $s3), the pc, the stack and the frame ($s5 to $s7),
+ * and the instruction ($a1) */
+typedef struct {
+    GoolObject *object;
+    u32 mode;
+    s32 *argument;
+    s32 *pool;
+    s32 *state_pool;
+    s32 *pc;
+    s32 *sp;
+    u8 *fp;
+    u32 word;
+} GoolVm;
+
+/* An instruction: its operation in the top byte, operand A in bits 12 to 23 and B in bits 0 to 11 (read in that order),
+ * a destination in bits 0 to 10 */
+#define GOOL_OPCODE_SHIFT 24
+#define OPERAND_A_SHIFT 12
+#define OPERAND_MASK 0xFFF
+
+/* An operand (12 bits). Bit 11 clear: a word of the code's constant pool (bit 10 set, the state's), bits 0 to 9 its
+ * index. Bits 11 and 10 set: a register, a linked object's when bit 9 is clear (bits 6 to 8 the link, 0 to 5 the
+ * register), else the object's own (bits 0 to 8; OPERAND_STACK_TOP the stack's top, popped). Bit 11 set and 10 clear,
+ * a value the instruction holds: bit 9 clear, bits 0 to 8 signed, times 256; else bit 8 clear, bits 0 to 7 signed,
+ * times 16; else bit 7 clear, a word of the frame (bits 0 to 6 signed, in words); else bit 4, 0 or 1. A destination
+ * (11 bits) is a frame's word or a register alike, an own register OPERAND_STACK_TOP the stack's next word, pushed */
+#define OPERAND_NOT_POOL 0x800
+#define OPERAND_STATE_POOL 0x400
+#define OPERAND_POOL_INDEX 0x3FF
+#define OPERAND_REGISTER 0x400
+#define OPERAND_OWN 0x200
+#define OPERAND_LINK_SHIFT 6
+#define OPERAND_LINK_MASK 7
+#define OPERAND_LINKED_INDEX 0x3F
+#define OPERAND_OWN_INDEX 0x1FF
+#define OPERAND_STACK_TOP 0x1F
+#define OPERAND_NOT_LARGE 0x200
+#define OPERAND_LARGE_BITS 9
+#define OPERAND_LARGE_SCALE 8
+#define OPERAND_NOT_SMALL 0x100
+#define OPERAND_SMALL_BITS 8
+#define OPERAND_SMALL_SCALE 4
+#define OPERAND_NOT_FRAME 0x80
+#define OPERAND_FRAME_BITS 7
+#define OPERAND_TRUE 0x10
+/* A register operand of 6 bits (bits 14 to 19, or 18 to 23 for a destination): the object's own */
+#define REGISTER_OPERAND_MASK 0x3F
+#define REGISTER_TESTED_SHIFT 14
+#define REGISTER_DESTINATION_SHIFT 18
+/* A word's byte offset from its index */
+#define WORD_SHIFT 2
+/* An index operand's value: the index times 256 */
+#define INDEX_SHIFT 8
+
+/* The scratchpad's words the operations read (Gool_InitScratchpad sets the clock, the frame's length and the globals'
+ * address each frame), and its words they use: two temporaries an immediate operand's address points to, and the
+ * vector func_8001EAD8's operation copies there */
+#define GOOL_SCRATCH ((u8 *)SAVE_AREA)
+#define GOOL_CLOCK (*(s32 *)(GOOL_SCRATCH + 0x50))
+#define GOOL_FRAME_TIME (*(s32 *)(GOOL_SCRATCH + 0x54))
+#define GOOL_GLOBALS (*(s32 **)(GOOL_SCRATCH + 0x58))
+/* The mode Gool_OpAcceptOrRejectEvent leaves for the run */
+#define GOOL_EVENT_MODE (*(u32 *)(GOOL_SCRATCH + 0x48))
+#define GOOL_VECTOR ((s32 *)(GOOL_SCRATCH + 0x20))
+#define GOOL_TEMP_A 0x1C
+#define GOOL_TEMP_B 0x18
+
+/* A GOOL entry's items: its code and its constant pool, and its animations */
+#define GOOL_ITEM_CODE 1
+#define GOOL_ITEM_POOL 2
+#define GOOL_ITEM_ANIMATIONS 5
+
+/* A code address an instruction holds: bits 0 to 13 the word's index in the code of the object's entry (bit 14 set:
+ * its state's), GOOL_NO_CODE none */
+#define GOOL_CODE_INDEX 0x3FFF
+#define GOOL_NO_CODE 0x3FFF
+#define GOOL_STATE_CODE 0x4000
+
+/* A frame (Gool_PushFrame's too): the caller's mode and pc, then where the stack started (below the arguments) and the
+ * caller's frame, offsets from the registers in the low and high halves; a frame's half 0 is none */
+#define FRAME_MODE 0
+#define FRAME_PC 1
+#define FRAME_PLACES 2
+#define FRAME_WORDS 3
+#define HALF_BITS 16
+#define HALF_MASK 0xFFFF
+/* A call's argument count: bits 20 to 23 */
+#define CALL_ARGUMENTS_SHIFT 20
+#define CALL_ARGUMENTS_MASK 0xF
+
+/* The run's mode: a return ends the run (else it goes back to the caller), an event's handler runs (a return ends
+ * the run, reporting the event accepted when GOOL_MODE_ACCEPTED), and a return that ends it pushes 0. A call clears the
+ * first two; a return to a caller restores the caller's low half, unless that is GOOL_MODE_KEPT */
+#define GOOL_MODE_RETURN_ENDS 1
+#define GOOL_MODE_EVENT 8
+#define GOOL_MODE_PUSHES_ZERO 0x10
+#define GOOL_MODE_ACCEPTED 0x20
+#define GOOL_MODE_KEPT 0xFFFF
+#define GOOL_ACCEPTED 0xFF
+/* What a run returns: GOOL_NEXT goes on to the next instruction, any other value ends the run with it. A return with no
+ * caller gives GOOL_NO_CALLER, an event's handler not accepting GOOL_EVENT_ENDED, and SUCCESS (include/game.h) */
+#define GOOL_NEXT 0
+#define GOOL_NO_CALLER -0x19
+#define GOOL_EVENT_ENDED -0x1A
+
+/* A branch: bits 0 to 9 the offset in words, signed, bits 10 to 13 the words it drops from the stack */
+#define BRANCH_OFFSET_BITS 10
+#define BRANCH_DROP_SHIFT 10
+#define BRANCH_DROP_MASK 0xF
+
+/* A linked object's halfword from 0x20: bits 12 to 14 the link, 15 to 20 the halfword */
+#define HALF_LINK_SHIFT 12
+#define HALF_INDEX_SHIFT 15
+#define HALF_INDEX_MASK 0x3F
+
+/* The pad's bits Gool_OpTestPad tests */
+#define GOOL_PAD_MASK 0x1FFFFF
+
+/* The operations, by the instruction's top byte (the table at 0x8005C514, g_GoolOpcodeHandlers): those of no clear
+ * purpose yet by their number */
+enum GoolOpcode {
+    GOOL_ADD = 0,
+    GOOL_SUBTRACT = 1,
+    GOOL_MULTIPLY = 2,
+    GOOL_DIVIDE = 3,
+    GOOL_EQUAL = 4,
+    GOOL_AND_LOGICAL = 5,
+    GOOL_OR_LOGICAL = 6,
+    GOOL_AND = 7,
+    GOOL_OR = 8,
+    GOOL_LESS = 9,
+    GOOL_LESS_EQUAL = 10,
+    GOOL_GREATER = 11,
+    GOOL_GREATER_EQUAL = 12,
+    GOOL_MODULO = 13,
+    GOOL_XOR = 14,
+    GOOL_HAS_BITS = 15,
+    GOOL_RANDOM = 16,
+    GOOL_MOVE = 17,
+    GOOL_NOT = 18,
+    GOOL_OP_19 = 19,
+    GOOL_ADDRESS = 20,
+    GOOL_SHIFT = 21,
+    GOOL_PUSH_VALUES = 22,
+    GOOL_COMPLEMENT = 23,
+    GOOL_CODE_ADDRESS = 24,
+    GOOL_ABSOLUTE = 25,
+    GOOL_TEST_PAD = 26,
+    GOOL_PER_FRAME = 27,
+    GOOL_MISC = 28,
+    GOOL_EASE = 29,
+    GOOL_CLOCK_MODULO = 30,
+    GOOL_GLOBAL = 31,
+    GOOL_SET_GLOBAL = 32,
+    GOOL_ANGLE_DIFFERENCE = 33,
+    GOOL_SEEK = 34,
+    GOOL_LINKED_HALF = 35,
+    GOOL_SET_LINKED_HALF = 36,
+    GOOL_SEEK_ANGLE = 37,
+    GOOL_PUSH_ADDRESSES = 38,
+    GOOL_ANIMATION_ADDRESS = 39,
+    GOOL_ENTITY_FIELD_ROW = 40,
+    GOOL_ENTITY_FIELD_VALUE = 41,
+    GOOL_INDEXED = 42,
+    GOOL_SINE = 43,
+    GOOL_COSINE = 44,
+    GOOL_ARCTANGENT = 45,
+    GOOL_VECTOR_OP = 46,
+    GOOL_NOP = 47,
+    GOOL_OP_48 = 48,
+    GOOL_RETURN = 49,
+    GOOL_BRANCH = 50,
+    GOOL_BRANCH_IF = 51,
+    GOOL_BRANCH_UNLESS = 52,
+    GOOL_GO_TO_STATE = 53,
+    GOOL_GO_TO_STATE_IF = 54,
+    GOOL_GO_TO_STATE_UNLESS = 55,
+    GOOL_PLAY_ANIMATION = 56,
+    GOOL_PLAY_FRAME = 57,
+    GOOL_OP_58 = 58,
+    GOOL_CALL = 59,
+    GOOL_SEND_EVENT = 60,
+    /* Gool_OpAcceptOrRejectEvent accepts but for 61 */
+    GOOL_REJECT_EVENT = 61,
+    GOOL_ACCEPT_EVENT = 62,
+    GOOL_SPAWN = 63,
+    GOOL_CHUNK = 64,
+    GOOL_PLAY_SOUND = 65,
+    GOOL_SET_AUDIO = 66,
+    GOOL_COLLIDE = 67,
+    GOOL_BROADCAST_EVENT = 68,
+    GOOL_CASCADE_EVENT = 69,
+    /* Gool_OpSpawn too, Obj_Spawn's last argument set */
+    GOOL_OP_70 = 70,
+    GOOL_CALL_INDIRECT = 71,
+    GOOL_OP_72 = 72,
+    GOOL_NATIVE = 73,
+    GOOL_OP_74 = 74,
+    GOOL_OP_75 = 75,
+    GOOL_OP_76 = 76,
+    GOOL_OP_77 = 77,
+    GOOL_SET_INDEXED = 78
+};
+
+extern u32 D_8005F29C[];
+long ratan2(long y, long x);
+void func_80037440(void);
+void func_8003817C(GoolObject *, u32);
+void func_80038E14(GoolObject *, u32);
+void func_80039A14(GoolObject *, s32);
+void func_80039AA4(GoolObject *, s32);
+void func_80039B14(GoolObject *, u32);
+void func_80039C08(GoolObject *, u32);
+void Gool_OpEntityFieldRow(GoolObject *, u32);
+void Gool_OpSpawn(GoolObject *, u32);
+void Gool_OpPlaySound(GoolObject *, u32);
+void Gool_OpSetAudio(GoolObject *, u32);
+s32 Gool_OpPlayAnim(GoolObject *, u32, s32);
+s32 Gool_OpPlayFrame(GoolObject *, u32, s32);
+s32 Gool_OpCascadeEvent(GoolObject *, u32, s32);
+s32 Gool_OpBroadcastEvent(GoolObject *, u32, s32);
+
+/* Whether the retail code's addi of IMMEDIATE to VALUE stays in a word: it traps otherwise, which no object's stack or
+ * frame comes near */
+#define ADDI_HOLDS(value, immediate) ((s64)(s32)(value) + (immediate) == (s32)((u32)(value) + (immediate)))
+
+/* The CPU's division, defined where C's isn't (psx-spx): by 0, a quotient of -1 for a dividend from 0 (1 below it),
+ * the dividend left over; WORD_MIN by -1, WORD_MIN and 0. GCC's code traps on both. equiv.py's emulator divides by 0
+ * otherwise, so its trials leave that out */
+static inline s32 cpu_quotient(s32 dividend, s32 divisor) {
+    EQUIV_ASSUME(divisor != 0);
+    if (divisor == 0) {
+        if (dividend >= 0) {
+            return -1;
+        } else {
+            return 1;
+        }
+    } else if (dividend == WORD_MIN && divisor == -1) {
+        return WORD_MIN;
+    } else {
+        return dividend / divisor;
+    }
+}
+
+static inline s32 cpu_remainder(s32 dividend, s32 divisor) {
+    EQUIV_ASSUME(divisor != 0);
+    if (divisor == 0) {
+        return dividend;
+    } else if (dividend == WORD_MIN && divisor == -1) {
+        return 0;
+    } else {
+        return dividend % divisor;
+    }
+}
+
+static inline u32 cpu_unsigned_remainder(u32 dividend, u32 divisor) {
+    EQUIV_ASSUME(divisor != 0);
+    if (divisor == 0) {
+        return dividend;
+    } else {
+        return dividend % divisor;
+    }
+}
+
+/* Bits 0 to BITS - 1 of a field, signed, times 1 << SCALE */
+static inline s32 signed_bits(u32 field, s32 bits, s32 scale) {
+    return (s32)(field << (WORD_BITS - bits)) >> (WORD_BITS - bits - scale);
+}
+
+/* An object's register: its words from the links on, by index */
+static inline s32 *gool_register(GoolObject *object, u32 index) {
+    return (s32 *)object->links + index;
+}
+
+/* A linked object's register, NULL without the link */
+static inline s32 *linked_register(GoolVm *vm, u32 field) {
+    GoolObject *link = vm->object->links[(field >> OPERAND_LINK_SHIFT) & OPERAND_LINK_MASK];
+
+    if (link == 0) {
+        return 0;
+    } else {
+        return gool_register(link, field & OPERAND_LINKED_INDEX);
+    }
+}
+
+static inline s32 *gool_pop(GoolVm *vm) {
+    vm->sp--;
+    return vm->sp;
+}
+
+static inline s32 *gool_pushed(GoolVm *vm) {
+    s32 *slot = vm->sp;
+
+    vm->sp++;
+    return slot;
+}
+
+static inline void gool_push(GoolVm *vm, s32 value) {
+    *gool_pushed(vm) = value;
+}
+
+static inline s32 *frame_word(GoolVm *vm, u32 field) {
+    return (s32 *)(vm->fp + signed_bits(field, OPERAND_FRAME_BITS, WORD_SHIFT));
+}
+
+/* An operand's value (func_80039E80) */
+static s32 gool_value(GoolVm *vm, u32 field) {
+    s32 *slot;
+
+    if (!(field & OPERAND_NOT_POOL)) {
+        if (!(field & OPERAND_STATE_POOL)) {
+            return vm->pool[field & OPERAND_POOL_INDEX];
+        } else {
+            return vm->state_pool[field & OPERAND_POOL_INDEX];
+        }
+    } else if (!(field & OPERAND_REGISTER)) {
+        if (!(field & OPERAND_NOT_LARGE)) {
+            return signed_bits(field, OPERAND_LARGE_BITS, OPERAND_LARGE_SCALE);
+        } else if (!(field & OPERAND_NOT_SMALL)) {
+            return signed_bits(field, OPERAND_SMALL_BITS, OPERAND_SMALL_SCALE);
+        } else if (!(field & OPERAND_NOT_FRAME)) {
+            return *frame_word(vm, field);
+        } else if (field & OPERAND_TRUE) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else if (!(field & OPERAND_OWN)) {
+        slot = linked_register(vm, field);
+        if (slot == 0) {
+            return 0;
+        } else {
+            return *slot;
+        }
+    } else if ((field & OPERAND_OWN_INDEX) == OPERAND_STACK_TOP) {
+        return *gool_pop(vm);
+    } else {
+        return *gool_register(vm->object, field & OPERAND_OWN_INDEX);
+    }
+}
+
+/* An operand's address (func_80039D2C): a value the instruction holds written to the scratchpad's TEMP first, and 0 or
+ * 1 itself the address */
+static s32 *gool_reference(GoolVm *vm, u32 field, u32 temp) {
+    s32 *slot = (s32 *)(GOOL_SCRATCH + temp);
+
+    if (!(field & OPERAND_NOT_POOL)) {
+        if (!(field & OPERAND_STATE_POOL)) {
+            return &vm->pool[field & OPERAND_POOL_INDEX];
+        } else {
+            return &vm->state_pool[field & OPERAND_POOL_INDEX];
+        }
+    } else if (!(field & OPERAND_REGISTER)) {
+        if (!(field & OPERAND_NOT_LARGE)) {
+            *slot = signed_bits(field, OPERAND_LARGE_BITS, OPERAND_LARGE_SCALE);
+            return slot;
+        } else if (!(field & OPERAND_NOT_SMALL)) {
+            *slot = signed_bits(field, OPERAND_SMALL_BITS, OPERAND_SMALL_SCALE);
+            return slot;
+        } else if (!(field & OPERAND_NOT_FRAME)) {
+            return frame_word(vm, field);
+        } else if (field & OPERAND_TRUE) {
+            return (s32 *)1;
+        } else {
+            return 0;
+        }
+    } else if (!(field & OPERAND_OWN)) {
+        return linked_register(vm, field);
+    } else if ((field & OPERAND_OWN_INDEX) == OPERAND_STACK_TOP) {
+        return gool_pop(vm);
+    } else {
+        return gool_register(vm->object, field & OPERAND_OWN_INDEX);
+    }
+}
+
+/* The destination's address (func_80039E10) */
+static s32 *gool_destination(GoolVm *vm) {
+    u32 field = vm->word;
+
+    if (!(field & OPERAND_REGISTER)) {
+        return frame_word(vm, field);
+    } else if (!(field & OPERAND_OWN)) {
+        return linked_register(vm, field);
+    } else if ((field & OPERAND_OWN_INDEX) == OPERAND_STACK_TOP) {
+        return gool_pushed(vm);
+    } else {
+        return gool_register(vm->object, field & OPERAND_OWN_INDEX);
+    }
+}
+
+/* A register operand of 6 bits, its stack's top popped (func_80039F74) or pushed (func_80039F9C) */
+static s32 *register_popped(GoolVm *vm, u32 index) {
+    if (index == OPERAND_STACK_TOP) {
+        return gool_pop(vm);
+    } else {
+        return gool_register(vm->object, index);
+    }
+}
+
+static s32 *register_pushed(GoolVm *vm, u32 index) {
+    if (index == OPERAND_STACK_TOP) {
+        return gool_pushed(vm);
+    } else {
+        return gool_register(vm->object, index);
+    }
+}
+
+static inline s32 operand_a(GoolVm *vm) {
+    return gool_value(vm, vm->word >> OPERAND_A_SHIFT);
+}
+
+static inline s32 operand_b(GoolVm *vm) {
+    return gool_value(vm, vm->word);
+}
+
+/* The register a conditional instruction tests (bits 14 to 19) */
+static inline s32 tested(GoolVm *vm) {
+    return *register_popped(vm, (vm->word >> REGISTER_TESTED_SHIFT) & REGISTER_OPERAND_MASK);
+}
+
+/* A linked object's halfword the instruction names */
+static inline s16 *linked_half(GoolVm *vm) {
+    GoolObject *link = vm->object->links[(vm->word >> HALF_LINK_SHIFT) & OPERAND_LINK_MASK];
+
+    return link->unk_20 + ((vm->word >> HALF_INDEX_SHIFT) & HALF_INDEX_MASK);
+}
+
+static inline NsfEntry *gool_entry(void *entry) {
+    return (NsfEntry *)entry;
+}
+
+/* The pools: the item of the object's GOOL entry (unk_10) and of its state's */
+static inline void gool_load_pools(GoolVm *vm) {
+    vm->state_pool = (s32 *)gool_entry(vm->object->state_exe)->items[GOOL_ITEM_POOL];
+    vm->pool = (s32 *)gool_entry(vm->object->unk_10)->items[GOOL_ITEM_POOL];
+}
+
+/* The code address the instruction holds, 0 for none */
+static inline s32 *gool_code_address(GoolVm *vm) {
+    u32 index = vm->word & GOOL_CODE_INDEX;
+    NsfEntry *entry;
+
+    if (index == GOOL_NO_CODE) {
+        return 0;
+    } else {
+        if (vm->word & GOOL_STATE_CODE) {
+            entry = gool_entry(vm->object->state_exe);
+        } else {
+            entry = vm->object->exe;
+        }
+        return (s32 *)entry->items[GOOL_ITEM_CODE] + index;
+    }
+}
+
+/* The stack and frame given to the game's C, which may move them, the pc with them */
+static inline void gool_store(GoolVm *vm) {
+    vm->object->sp = vm->sp;
+    vm->object->fp = vm->fp;
+}
+
+static inline void gool_load(GoolVm *vm) {
+    vm->pc = (s32 *)vm->object->pc;
+    vm->sp = vm->object->sp;
+    vm->fp = vm->object->fp;
+}
+
+/* An operation of the game's C on the object and the instruction (func_80039FC4) */
+static inline void gool_operation(GoolVm *vm, void (*operation)()) {
+    gool_store(vm);
+    operation(vm->object, vm->word);
+    gool_load(vm);
+}
+
+/* One that may end the run, returning what it ends with or GOOL_NEXT (func_80039FC4's second entry) */
+static inline s32 gool_ending(GoolVm *vm, s32 (*operation)()) {
+    s32 result;
+
+    gool_store(vm);
+    result = operation(vm->object, vm->word, vm->mode, vm->argument);
+    gool_load(vm);
+    return result;
+}
+
+/* A call: a frame for the caller over the stack, its last ARGUMENTS words the callee's arguments (the callee's pc set
+ * after it) */
+#define OBJECT_REGISTERS 0x40
+
+static inline void gool_call(GoolVm *vm, s32 arguments) {
+    u8 *registers = (u8 *)gool_register(vm->object, 0);
+    s32 *frame = vm->sp;
+    u8 *start = (u8 *)(frame - arguments);
+
+    EQUIV_ASSUME(ADDI_HOLDS(start - (u8 *)vm->object, -OBJECT_REGISTERS) &&
+                 ADDI_HOLDS(vm->fp - (u8 *)vm->object, -OBJECT_REGISTERS) &&
+                 ADDI_HOLDS(frame, FRAME_WORDS * sizeof(s32)));
+    frame[FRAME_MODE] = vm->mode;
+    frame[FRAME_PC] = (s32)vm->pc;
+    frame[FRAME_PLACES] = (u32)(start - registers) | ((u32)(vm->fp - registers) << HALF_BITS);
+    vm->fp = (u8 *)frame;
+    vm->sp = frame + FRAME_WORDS;
+    vm->mode &= ~(GOOL_MODE_RETURN_ENDS | GOOL_MODE_EVENT);
+}
+
+/* A return: to the caller's frame when there is one, then the mode's choice of ending the run */
+static s32 gool_return(GoolVm *vm) {
+    s32 *frame = (s32 *)vm->fp;
+    u32 places = frame[FRAME_PLACES];
+    u32 caller = places >> HALF_BITS;
+    u8 *registers = (u8 *)gool_register(vm->object, 0);
+    u32 mode = vm->mode;
+    s32 result = GOOL_NO_CALLER;
+
+    if (caller != 0) {
+        vm->sp = (s32 *)(registers + (places & HALF_MASK));
+        vm->pc = (s32 *)frame[FRAME_PC];
+        mode = (mode & ~HALF_MASK) | *(u16 *)&frame[FRAME_MODE];
+        vm->fp = registers + caller;
+        result = SUCCESS;
+    } else {
+        /* The first frame: nowhere to go back to */
+    }
+    if (vm->mode & GOOL_MODE_EVENT) {
+        if (vm->mode & GOOL_MODE_ACCEPTED) {
+            *vm->argument = GOOL_ACCEPTED;
+            return SUCCESS;
+        } else {
+            return GOOL_EVENT_ENDED;
+        }
+    } else if ((vm->mode & GOOL_MODE_RETURN_ENDS) || result != SUCCESS) {
+        if ((vm->mode & GOOL_MODE_PUSHES_ZERO) && result == SUCCESS) {
+            EQUIV_ASSUME(ADDI_HOLDS(vm->sp, sizeof(s32)));
+            gool_push(vm, 0);
+        } else {
+            /* Nothing pushed */
+        }
+        return result;
+    } else {
+        if ((mode & HALF_MASK) != GOOL_MODE_KEPT) {
+            vm->mode = mode;
+        } else {
+            /* The caller's mode as it is */
+        }
+        return GOOL_NEXT;
+    }
+}
+
+/* A branch by the instruction's offset, dropping its words from the stack */
+static inline void gool_drop(GoolVm *vm) {
+    vm->sp -= (vm->word >> BRANCH_DROP_SHIFT) & BRANCH_DROP_MASK;
+}
+
+static inline void gool_branch(GoolVm *vm) {
+    vm->pc += signed_bits(vm->word, BRANCH_OFFSET_BITS, 0);
+    gool_drop(vm);
+}
+
+/* The seeks' target and speed: A and 0x100, or, for an operand A of GOOL_STACK_PAIR, the stack's top the speed and the
+ * word under it the target */
+#define GOOL_STACK_PAIR 0xBF0
+#define SEEK_SPEED 0x100
+
+static inline s32 seek_target(GoolVm *vm, s32 *speed) {
+    if (((vm->word >> OPERAND_A_SHIFT) & OPERAND_MASK) == GOOL_STACK_PAIR) {
+        *speed = *gool_pop(vm);
+        return *gool_pop(vm);
+    } else {
+        *speed = SEEK_SPEED;
+        return operand_a(vm);
+    }
+}
+
+/* B moved towards A by the speed's magnitude, A once within it (func_8003A680) */
+static inline s32 gool_seek(GoolVm *vm) {
+    s32 speed;
+    s32 target = seek_target(vm, &speed);
+    s32 value = operand_b(vm);
+    s32 distance = target - value;
+
+    if (speed < 0) {
+        speed = -(u32)speed;
+    } else {
+        /* Its magnitude already */
+    }
+    if (distance >= 0) {
+        if (distance - speed <= 0) {
+            return target;
+        } else {
+            return value + speed;
+        }
+    } else if (distance + speed >= 0) {
+        return target;
+    } else {
+        return value - speed;
+    }
+}
+
+/* An angle B moved towards A the short way by the speed times the frame's length (10 fraction bits), A once within it
+ * (func_8003A718) */
+#define ANGLE_SHIFT 20
+#define FRAME_TIME_SHIFT 10
+
+static inline s32 gool_seek_angle(GoolVm *vm) {
+    s32 speed;
+    s32 target = seek_target(vm, &speed);
+    s32 value = operand_b(vm);
+    s32 step = (GOOL_FRAME_TIME * speed) >> FRAME_TIME_SHIFT;
+    s32 distance = (s32)(((u32)target << ANGLE_SHIFT) - ((u32)value << ANGLE_SHIFT)) >> ANGLE_SHIFT;
+    s32 length;
+
+    if (distance >= 0) {
+        length = distance;
+    } else {
+        length = -(u32)distance;
+    }
+    if (length - step <= 0) {
+        return target;
+    } else if (distance >= 0) {
+        return (value + step) & ANGLE_MASK;
+    } else {
+        return (value - step) & ANGLE_MASK;
+    }
+}
+
+/* func_8003A7CC: the word at B's address moved by the speed the way A's sign points, back to twice the speed less A
+ * once it would pass A, and returned as a magnitude with A's sign */
+static inline s32 gool_op_19(GoolVm *vm) {
+    s32 speed;
+    s32 target = seek_target(vm, &speed);
+    s32 *slot = gool_reference(vm, vm->word, GOOL_TEMP_B);
+    s32 value = *slot;
+
+    if (target >= 0) {
+        if (value - target + speed < 0) {
+            value += speed;
+        } else {
+            value = (speed << 1) - target;
+        }
+        *slot = value;
+        if (value >= 0) {
+            return value;
+        } else {
+            return -(u32)value;
+        }
+    } else {
+        if (value - target - speed > 0) {
+            value -= speed;
+        } else {
+            value = -(u32)target - (speed << 1);
+        }
+        *slot = value;
+        if (value <= 0) {
+            return value;
+        } else {
+            return -(u32)value;
+        }
+    }
+}
+
+/* A cosine ease from 0 to A as B goes from 0 to A: A (1 - cos(B / A half turns)) / 2, the 13 fraction bits 2 fewer
+ * for an A past 0xFFFF */
+#define EASE_DIVIDEND_SHIFT 11
+#define EASE_WIDE 0xFFFF
+#define EASE_WIDE_SHIFT 2
+#define EASE_SHIFT 13
+#define SINE_ONE 0x1000
+
+static inline s32 gool_ease(s32 a, s32 b) {
+    s32 shift = 0;
+    s32 curve;
+
+    if (a > EASE_WIDE) {
+        shift = EASE_WIDE_SHIFT;
+    } else {
+        /* The product fits */
+    }
+    curve = (sine(cpu_quotient(b << EASE_DIVIDEND_SHIFT, a) - ANGLE_QUARTER) + SINE_ONE) >> shift;
+    return (curve * a) >> (EASE_SHIFT - shift);
+}
+
+/* A random number from B up to A (excluded): the generator streak_random steps (its two words at D_8005F29C), its high
+ * word modulo the span */
+static inline s32 gool_random(s32 a, s32 b) {
+    streak_random(&D_8005F29C[0], &D_8005F29C[1]);
+    return cpu_unsigned_remainder(D_8005F29C[1], a - b) + b;
+}
+
+/* The instruction's native code (MIPS, after it), run on the machine's registers. As the disc's GOOL entries' 8,572
+ * blocks do, it reads the object ($s0), the state's pool ($s3), the stack, the frame and the scratchpad ($s6, $s7,
+ * $fp: 0x50 to 0x58), writes the stack and temporaries, calls nothing, and returns with the next instruction's address
+ * in $s5 (jalr $s5, $ra) or 0 to return (docs/TARGET.md) */
+#define NATIVE_SAVE_BYTES 8
+
+static inline void gool_native(GoolVm *vm) {
+    register GoolObject *object __asm__("$16") = vm->object;
+    register s32 *state_pool __asm__("$19") = vm->state_pool;
+    register s32 *pc __asm__("$21") = vm->pc;
+    register s32 *sp __asm__("$22") = vm->sp;
+    register u8 *fp __asm__("$23") = vm->fp;
+
+    /* $fp kept on the stack around the call (the native code leaves $sp alone), in a doubleword that keeps $sp's
+     * alignment: GCC saves it neither as a register variable nor as a clobbered register */
+    __asm__ volatile("addiu $sp, $sp, %8\n\tsw $30, 0($sp)\n\tmove $30, %6\n\tjalr %0\n\tnop\n\t"
+                     "lw $30, 0($sp)\n\taddiu $sp, $sp, %9"
+                     : "=r"(pc), "=r"(sp)
+                     : "0"(pc), "1"(sp), "r"(object), "r"(state_pool), "r"(GOOL_SCRATCH), "r"(fp),
+                       "i"(-NATIVE_SAVE_BYTES), "i"(NATIVE_SAVE_BYTES)
+                     : "$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15",
+                       "$24", "$25", "$31", "memory");
+    vm->pc = pc;
+    vm->sp = sp;
+}
+
+/* The opcode table's entries (g_GoolOpcodeHandlers), the retail operations' addresses, as numbers: the world renderer
+ * reads the scratchpad's copy of the table past its own as texture bits (docs/TARGET.md, "Code addresses read as
+ * data"), and Gool_Interpret runs each opcode's operation without the table */
+#define RETAIL_ADDRESS(name, address) __asm__(".globl " #name "\n" #name " = " #address);
+RETAIL_ADDRESS(D_8003A06C, 0x8003A06C)
+RETAIL_ADDRESS(D_8003A0D4, 0x8003A0D4)
+RETAIL_ADDRESS(D_8003A0F8, 0x8003A0F8)
+RETAIL_ADDRESS(D_8003A11C, 0x8003A11C)
+RETAIL_ADDRESS(D_8003A144, 0x8003A144)
+RETAIL_ADDRESS(D_8003A16C, 0x8003A16C)
+RETAIL_ADDRESS(D_8003A194, 0x8003A194)
+RETAIL_ADDRESS(D_8003A1B4, 0x8003A1B4)
+RETAIL_ADDRESS(D_8003A1DC, 0x8003A1DC)
+RETAIL_ADDRESS(D_8003A200, 0x8003A200)
+RETAIL_ADDRESS(D_8003A228, 0x8003A228)
+RETAIL_ADDRESS(D_8003A24C, 0x8003A24C)
+RETAIL_ADDRESS(D_8003A274, 0x8003A274)
+RETAIL_ADDRESS(D_8003A298, 0x8003A298)
+RETAIL_ADDRESS(D_8003A2C0, 0x8003A2C0)
+RETAIL_ADDRESS(D_8003A2E0, 0x8003A2E0)
+RETAIL_ADDRESS(D_8003A304, 0x8003A304)
+RETAIL_ADDRESS(D_8003A328, 0x8003A328)
+RETAIL_ADDRESS(D_8003A354, 0x8003A354)
+RETAIL_ADDRESS(D_8003A3C0, 0x8003A3C0)
+RETAIL_ADDRESS(D_8003A3DC, 0x8003A3DC)
+RETAIL_ADDRESS(D_8003A3FC, 0x8003A3FC)
+RETAIL_ADDRESS(D_8003A42C, 0x8003A42C)
+RETAIL_ADDRESS(D_8003A46C, 0x8003A46C)
+RETAIL_ADDRESS(D_8003A4A4, 0x8003A4A4)
+RETAIL_ADDRESS(D_8003A4E8, 0x8003A4E8)
+RETAIL_ADDRESS(D_8003A510, 0x8003A510)
+RETAIL_ADDRESS(D_8003A530, 0x8003A530)
+RETAIL_ADDRESS(D_8003A564, 0x8003A564)
+RETAIL_ADDRESS(D_8003A58C, 0x8003A58C)
+RETAIL_ADDRESS(D_8003A5E8, 0x8003A5E8)
+RETAIL_ADDRESS(D_8003A618, 0x8003A618)
+RETAIL_ADDRESS(D_8003A640, 0x8003A640)
+RETAIL_ADDRESS(D_8003A66C, 0x8003A66C)
+RETAIL_ADDRESS(D_8003A704, 0x8003A704)
+RETAIL_ADDRESS(D_8003A7B8, 0x8003A7B8)
+RETAIL_ADDRESS(D_8003A870, 0x8003A870)
+RETAIL_ADDRESS(D_8003A89C, 0x8003A89C)
+RETAIL_ADDRESS(D_8003A8C8, 0x8003A8C8)
+RETAIL_ADDRESS(D_8003A8F8, 0x8003A8F8)
+RETAIL_ADDRESS(D_8003A904, 0x8003A904)
+RETAIL_ADDRESS(D_8003A910, 0x8003A910)
+RETAIL_ADDRESS(D_8003A940, 0x8003A940)
+RETAIL_ADDRESS(D_8003A970, 0x8003A970)
+RETAIL_ADDRESS(D_8003A994, 0x8003A994)
+RETAIL_ADDRESS(D_8003AA14, 0x8003AA14)
+RETAIL_ADDRESS(D_8003AA44, 0x8003AA44)
+RETAIL_ADDRESS(D_8003AA74, 0x8003AA74)
+RETAIL_ADDRESS(D_8003AA80, 0x8003AA80)
+RETAIL_ADDRESS(D_8003AA8C, 0x8003AA8C)
+RETAIL_ADDRESS(D_8003AA98, 0x8003AA98)
+RETAIL_ADDRESS(D_8003AAA4, 0x8003AAA4)
+RETAIL_ADDRESS(D_8003AAB0, 0x8003AAB0)
+RETAIL_ADDRESS(D_8003AABC, 0x8003AABC)
+RETAIL_ADDRESS(D_8003AAC8, 0x8003AAC8)
+RETAIL_ADDRESS(D_8003AAD4, 0x8003AAD4)
+RETAIL_ADDRESS(D_8003AAEC, 0x8003AAEC)
+RETAIL_ADDRESS(D_8003AB64, 0x8003AB64)
+RETAIL_ADDRESS(D_8003ABE8, 0x8003ABE8)
+RETAIL_ADDRESS(D_8003AC98, 0x8003AC98)
+RETAIL_ADDRESS(D_8003ACB4, 0x8003ACB4)
+RETAIL_ADDRESS(D_8003ACE4, 0x8003ACE4)
+RETAIL_ADDRESS(D_8003AD08, 0x8003AD08)
+RETAIL_ADDRESS(D_8003AD14, 0x8003AD14)
+RETAIL_ADDRESS(D_8003AD3C, 0x8003AD3C)
+RETAIL_ADDRESS(D_8003AD68, 0x8003AD68)
+RETAIL_ADDRESS(D_8003AD74, 0x8003AD74)
+RETAIL_ADDRESS(D_8003AD80, 0x8003AD80)
+RETAIL_ADDRESS(D_8003AD8C, 0x8003AD8C)
+RETAIL_ADDRESS(D_8003AD98, 0x8003AD98)
+RETAIL_ADDRESS(D_8003ADA4, 0x8003ADA4)
+RETAIL_ADDRESS(D_8003ADD8, 0x8003ADD8)
+RETAIL_ADDRESS(D_8003AE24, 0x8003AE24)
+RETAIL_ADDRESS(D_8003AE30, 0x8003AE30)
+RETAIL_ADDRESS(D_8003AE3C, 0x8003AE3C)
+RETAIL_ADDRESS(D_8003AE48, 0x8003AE48)
+
+/* Every run follows Gool_InitScratchpad's pointing the scratchpad's word GOOL_TABLE_ADDRESS at the opcode table's copy
+ * (Obj_UpdateAll, func_8001D63C) or Obj_UpdateAll's and func_8002E884's at the table */
+#define GOOL_TABLE_ADDRESS 0x1F80005C
+EQUIV_TABLE(Gool_Interpret, GOOL_TABLE_ADDRESS, g_GoolOpcodeHandlers)
+
+/* Runs an object's code from its pc until an instruction ends the run, returning what it ends with; the pc, stack and
+ * frame then stored back. Its callers (Obj_Update, Gool_ChangeState, Gool_SendEvent, func_8001D22C) pass the object,
+ * the mode and the address a return reports an accepted event to. The retail code runs the operation the table its
+ * scratchpad word 0x5C points to holds (g_GoolOpcodeHandlers or its copy in the scratchpad, Gool_InitScratchpad), the
+ * same for every opcode: the table keeps the retail operations' addresses, which the world renderer reads as data */
+s32 Gool_Interpret(void *self, s32 mode, s32 argument) {
+    GoolVm vm;
+    s32 result = GOOL_NEXT;
+    s32 a, b, c;
+    s32 *slot, *from;
+
+    vm.object = self;
+    vm.mode = mode;
+    vm.argument = (s32 *)argument;
+    gool_load(&vm);
+    gool_load_pools(&vm);
+    while (result == GOOL_NEXT) {
+        vm.word = *vm.pc;
+        vm.pc++;
+        vm.object->pc = (s32)vm.pc;
+        switch (vm.word >> GOOL_OPCODE_SHIFT) {
+        case GOOL_ADD:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) + a);
+            break;
+        case GOOL_SUBTRACT:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) - a);
+            break;
+        case GOOL_MULTIPLY:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) * a);
+            break;
+        case GOOL_DIVIDE:
+            a = operand_a(&vm);
+            gool_push(&vm, cpu_quotient(operand_b(&vm), a));
+            break;
+        case GOOL_MODULO:
+            a = operand_a(&vm);
+            gool_push(&vm, cpu_remainder(operand_b(&vm), a));
+            break;
+        case GOOL_EQUAL:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) == a);
+            break;
+        case GOOL_AND_LOGICAL:
+            /* B when A isn't 0 */
+            a = operand_a(&vm);
+            b = operand_b(&vm);
+            if (a != 0) {
+                gool_push(&vm, b);
+            } else {
+                gool_push(&vm, a);
+            }
+            break;
+        case GOOL_OR_LOGICAL:
+        case GOOL_OR:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) | a);
+            break;
+        case GOOL_AND:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) & a);
+            break;
+        case GOOL_XOR:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) ^ a);
+            break;
+        case GOOL_LESS:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) < a);
+            break;
+        case GOOL_LESS_EQUAL:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) <= a);
+            break;
+        case GOOL_GREATER:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) > a);
+            break;
+        case GOOL_GREATER_EQUAL:
+            a = operand_a(&vm);
+            gool_push(&vm, operand_b(&vm) >= a);
+            break;
+        case GOOL_HAS_BITS:
+            a = operand_a(&vm);
+            gool_push(&vm, (operand_b(&vm) & a) == a);
+            break;
+        case GOOL_RANDOM:
+            a = operand_a(&vm);
+            gool_push(&vm, gool_random(a, operand_b(&vm)));
+            break;
+        case GOOL_SHIFT:
+            /* B shifted left by A, or right (arithmetic) by -A */
+            a = operand_a(&vm);
+            b = operand_b(&vm);
+            if (a >= 0) {
+                gool_push(&vm, b << (a & SHIFT_COUNT_MASK));
+            } else {
+                gool_push(&vm, b >> (-(u32)a & SHIFT_COUNT_MASK));
+            }
+            break;
+        case GOOL_PER_FRAME:
+            /* A per the frame's length (10 fraction bits), plus B */
+            a = operand_a(&vm);
+            b = operand_b(&vm);
+            gool_push(&vm, ((a * GOOL_FRAME_TIME) >> FRAME_TIME_SHIFT) + b);
+            break;
+        case GOOL_EASE:
+            a = operand_a(&vm);
+            gool_push(&vm, gool_ease(a, operand_b(&vm)));
+            break;
+        case GOOL_CLOCK_MODULO:
+            /* A plus the clock, modulo B */
+            a = GOOL_CLOCK;
+            a += operand_a(&vm);
+            gool_push(&vm, cpu_remainder(a, operand_b(&vm)));
+            break;
+        case GOOL_ANGLE_DIFFERENCE:
+            /* From B to A, the short way */
+            a = operand_a(&vm);
+            b = operand_b(&vm);
+            gool_push(&vm, (s32)(((u32)a << ANGLE_SHIFT) - ((u32)b << ANGLE_SHIFT)) >> ANGLE_SHIFT);
+            break;
+        case GOOL_GLOBAL:
+            gool_push(&vm, GOOL_GLOBALS[operand_b(&vm) >> INDEX_SHIFT]);
+            break;
+        case GOOL_SET_GLOBAL:
+            a = operand_a(&vm);
+            GOOL_GLOBALS[operand_b(&vm) >> INDEX_SHIFT] = a;
+            break;
+        case GOOL_INDEXED:
+            /* The word A from address B */
+            a = operand_a(&vm);
+            gool_push(&vm, ((s32 *)operand_b(&vm))[(u32)a >> INDEX_SHIFT]);
+            break;
+        case GOOL_SET_INDEXED:
+            a = operand_a(&vm);
+            slot = (s32 *)operand_b(&vm) + ((u32)a >> INDEX_SHIFT);
+            *slot = *gool_pop(&vm);
+            break;
+        case GOOL_LINKED_HALF:
+            gool_push(&vm, *linked_half(&vm));
+            break;
+        case GOOL_SET_LINKED_HALF:
+            b = operand_b(&vm);
+            *linked_half(&vm) = b;
+            break;
+        case GOOL_MOVE:
+            a = operand_a(&vm);
+            *gool_destination(&vm) = a;
+            break;
+        case GOOL_NOT:
+            a = operand_a(&vm);
+            *gool_destination(&vm) = a == 0;
+            break;
+        case GOOL_COMPLEMENT:
+            a = operand_a(&vm);
+            *gool_destination(&vm) = ~a;
+            break;
+        case GOOL_ABSOLUTE:
+            a = operand_a(&vm);
+            slot = gool_destination(&vm);
+            if (a >= 0) {
+                *slot = a;
+            } else {
+                *slot = -(u32)a;
+            }
+            break;
+        case GOOL_SINE:
+            a = operand_a(&vm);
+            slot = gool_destination(&vm);
+            *slot = sine(a);
+            break;
+        case GOOL_COSINE:
+            a = operand_a(&vm);
+            slot = gool_destination(&vm);
+            *slot = sine(a + ANGLE_QUARTER);
+            break;
+        case GOOL_ADDRESS:
+            slot = gool_reference(&vm, vm.word >> OPERAND_A_SHIFT, GOOL_TEMP_A);
+            *gool_destination(&vm) = (s32)slot;
+            break;
+        case GOOL_ANIMATION_ADDRESS:
+            /* The animations' word A */
+            a = operand_a(&vm);
+            slot = gool_destination(&vm);
+            *slot = (s32)((s32 *)vm.object->exe->items[GOOL_ITEM_ANIMATIONS] + ((u32)a >> INDEX_SHIFT));
+            break;
+        case GOOL_PUSH_VALUES:
+            /* B, then the word at A's address unless that is 0 */
+            from = gool_reference(&vm, vm.word >> OPERAND_A_SHIFT, GOOL_TEMP_A);
+            b = operand_b(&vm);
+            if (from != 0) {
+                a = *from;
+            } else {
+                /* Nothing read */
+            }
+            gool_push(&vm, b);
+            if (from != 0) {
+                gool_push(&vm, a);
+            } else {
+                /* Only B */
+            }
+            break;
+        case GOOL_PUSH_ADDRESSES:
+            /* B's address, then A's unless that is 0 */
+            from = gool_reference(&vm, vm.word >> OPERAND_A_SHIFT, GOOL_TEMP_A);
+            slot = gool_reference(&vm, vm.word, GOOL_TEMP_B);
+            gool_push(&vm, (s32)slot);
+            if (from != 0) {
+                gool_push(&vm, (s32)from);
+            } else {
+                /* Only B's */
+            }
+            break;
+        case GOOL_CODE_ADDRESS:
+            slot = register_pushed(&vm, (vm.word >> REGISTER_DESTINATION_SHIFT) & REGISTER_OPERAND_MASK);
+            *slot = (s32)gool_code_address(&vm);
+            break;
+        case GOOL_TEST_PAD:
+            gool_push(&vm, Gool_OpTestPad(vm.word & GOOL_PAD_MASK, 0));
+            break;
+        case GOOL_SEEK:
+            gool_push(&vm, gool_seek(&vm));
+            break;
+        case GOOL_SEEK_ANGLE:
+            gool_push(&vm, gool_seek_angle(&vm));
+            break;
+        case GOOL_OP_19:
+            gool_push(&vm, gool_op_19(&vm));
+            break;
+        case GOOL_ARCTANGENT:
+            /* Of the word at B's address over A */
+            a = operand_a(&vm);
+            slot = gool_reference(&vm, vm.word, GOOL_TEMP_B);
+            gool_push(&vm, ratan2(*slot, a));
+            break;
+        case GOOL_VECTOR_OP:
+            /* The vector at A's address, copied to the scratchpad, and the destination's address to func_8001EAD8 */
+            from = gool_reference(&vm, vm.word >> OPERAND_A_SHIFT, GOOL_TEMP_A);
+            slot = gool_destination(&vm);
+            a = from[0];
+            b = from[1];
+            c = from[2];
+            GOOL_VECTOR[0] = a;
+            GOOL_VECTOR[1] = b;
+            GOOL_VECTOR[2] = c;
+            func_8001EAD8(from, slot);
+            break;
+        case GOOL_MISC:
+            /* The state may change: the pools follow */
+            gool_store(&vm);
+            Gool_OpMisc((u8 *)vm.object, vm.word);
+            gool_load_pools(&vm);
+            vm.sp = vm.object->sp;
+            break;
+        case GOOL_ENTITY_FIELD_ROW:
+            gool_operation(&vm, Gool_OpEntityFieldRow);
+            break;
+        case GOOL_ENTITY_FIELD_VALUE:
+            gool_operation(&vm, Gool_OpEntityFieldValue);
+            break;
+        case GOOL_OP_48:
+            gool_operation(&vm, func_80037440);
+            break;
+        case GOOL_OP_58:
+            gool_operation(&vm, func_8003817C);
+            break;
+        case GOOL_COLLIDE:
+            gool_operation(&vm, Gool_OpCollide);
+            break;
+        case GOOL_SPAWN:
+        case GOOL_OP_70:
+            gool_operation(&vm, Gool_OpSpawn);
+            break;
+        case GOOL_PLAY_SOUND:
+            gool_operation(&vm, Gool_OpPlaySound);
+            break;
+        case GOOL_SET_AUDIO:
+            gool_operation(&vm, Gool_OpSetAudio);
+            break;
+        case GOOL_OP_72:
+            gool_operation(&vm, func_80038E14);
+            break;
+        case GOOL_CHUNK:
+            gool_operation(&vm, Gool_OpChunk);
+            break;
+        case GOOL_OP_74:
+            gool_operation(&vm, func_80039A14);
+            break;
+        case GOOL_OP_75:
+            gool_operation(&vm, func_80039AA4);
+            break;
+        case GOOL_OP_76:
+            gool_operation(&vm, func_80039B14);
+            break;
+        case GOOL_OP_77:
+            gool_operation(&vm, func_80039C08);
+            break;
+        case GOOL_GO_TO_STATE:
+            result = gool_ending(&vm, Gool_OpGoToState);
+            break;
+        case GOOL_GO_TO_STATE_IF:
+            if (tested(&vm) != 0) {
+                result = gool_ending(&vm, Gool_OpGoToState);
+            } else {
+                gool_drop(&vm);
+            }
+            break;
+        case GOOL_GO_TO_STATE_UNLESS:
+            if (tested(&vm) == 0) {
+                result = gool_ending(&vm, Gool_OpGoToState);
+            } else {
+                gool_drop(&vm);
+            }
+            break;
+        case GOOL_PLAY_ANIMATION:
+            result = gool_ending(&vm, Gool_OpPlayAnim);
+            break;
+        case GOOL_PLAY_FRAME:
+            result = gool_ending(&vm, Gool_OpPlayFrame);
+            break;
+        case GOOL_SEND_EVENT:
+            result = gool_ending(&vm, Gool_OpSendEvent);
+            break;
+        case GOOL_CASCADE_EVENT:
+            result = gool_ending(&vm, Gool_OpCascadeEvent);
+            break;
+        case GOOL_BROADCAST_EVENT:
+            result = gool_ending(&vm, Gool_OpBroadcastEvent);
+            break;
+        case GOOL_REJECT_EVENT:
+        case GOOL_ACCEPT_EVENT:
+            gool_store(&vm);
+            result = Gool_OpAcceptOrRejectEvent(vm.object, vm.word, vm.mode, vm.argument);
+            vm.mode = GOOL_EVENT_MODE;
+            gool_load(&vm);
+            break;
+        case GOOL_BRANCH:
+            gool_branch(&vm);
+            break;
+        case GOOL_BRANCH_IF:
+            if (tested(&vm) != 0) {
+                gool_branch(&vm);
+            } else {
+                /* On to the next instruction */
+            }
+            break;
+        case GOOL_BRANCH_UNLESS:
+            if (tested(&vm) == 0) {
+                gool_branch(&vm);
+            } else {
+                /* On to the next instruction */
+            }
+            break;
+        case GOOL_CALL:
+            gool_call(&vm, (vm.word >> CALL_ARGUMENTS_SHIFT) & CALL_ARGUMENTS_MASK);
+            vm.pc = gool_code_address(&vm);
+            break;
+        case GOOL_CALL_INDIRECT:
+            /* To the code address at B's address, unless that or it is 0: then A's argument count dropped (A as it
+             * is, not shifted) */
+            a = operand_a(&vm);
+            slot = gool_reference(&vm, vm.word, GOOL_TEMP_B);
+            if (slot != 0 && *slot != 0) {
+                from = (s32 *)*slot;
+                gool_call(&vm, a >> INDEX_SHIFT);
+                vm.pc = from;
+            } else {
+                vm.sp = (s32 *)((u8 *)vm.sp - ((u32)a << WORD_SHIFT));
+            }
+            break;
+        case GOOL_RETURN:
+            result = gool_return(&vm);
+            break;
+        case GOOL_NATIVE:
+            /* The game's native code: random trials hold none */
+            EQUIV_ASSUME(0);
+            gool_native(&vm);
+            if (vm.pc == 0) {
+                result = gool_return(&vm);
+            } else {
+                /* On from the address it gave */
+            }
+            break;
+        case GOOL_NOP:
+            break;
+        default:
+            /* The game's code holds no other operation: random trials' does */
+            EQUIV_ASSUME(0);
+            break;
+        }
+    }
+    vm.object->pc = (s32)vm.pc;
+    gool_store(&vm);
+    return result;
+}

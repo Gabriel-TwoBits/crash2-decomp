@@ -245,6 +245,37 @@ frame, the frame and `D_80062A18`). What its code shows:
   keeps (`DrawPass`, `DrawScratch`); a colour routine's leftover `$a2`, which the next call reads as the texture's
   offset, too. The handwritten code's `$gp` is the object (its `%gp_rel` accesses are its fields).
 
+## The GOOL interpreter
+
+`Gool_Interpret` runs an object's GOOL code from its pc until an instruction ends the run (its callers: `Obj_Update`,
+`Gool_ChangeState`, `Gool_SendEvent`, `func_8001D22C`). What its code shows:
+
+- The machine lives in registers its operations share: the object (`$s0`), the run's mode and argument (`$s1`, `$s2`),
+  the constant pools of the object's GOOL entry (`unk_10`'s item 2) and of its state's (`state_exe`'s), the pc, the
+  stack and the frame (`$s5` to `$s7`, stored back to the object around each call into the game's C and at the end),
+  and the scratchpad's base in `$fp`. The stack and the frames lie in the object: a frame (`Gool_PushFrame`'s too)
+  holds the caller's mode and pc, then the stack's start and the caller's frame as offsets from the object's
+  registers (0x40).
+- An instruction is a word: the operation in its top byte, then two 12-bit operands (A in bits 12 to 23, read first,
+  and B) or an 11-bit destination. An operand is a constant pool's word, a value the instruction holds (9 bits times
+  256 or 8 bits times 16), a frame's word, 0 or 1, or a register: the object's own (0x40 + index * 4, 0x1F the stack's
+  top) or one of a linked object's (its 8 links at 0x40).
+- 79 operations, by the table at 0x8005C514 (`g_GoolOpcodeHandlers`, which `Gool_InitScratchpad` copies to the
+  scratchpad's 0x60 and points the word at 0x5C to): arithmetic, comparisons and bitwise operations pushing their
+  result, moves to a destination, seeks, the sine, an ease, a random number (the generator of `func_80044F54`'s streaks,
+  its words at `D_8005F29C`), branches, calls and returns, and 27 that call 23 functions of the game's C (`Gool_Op*`),
+  most with the object and the instruction, the 10 that may end the run with the mode and the argument too.
+- Operation 73 runs MIPS code that follows the instruction in the GOOL entry, on the machine's registers. The disc's
+  GOOL entries hold 8,572 such blocks (read entry by entry, every path from each block's start followed to its return):
+  they read only `$s0`, `$s3`, `$s6`, `$s7`, `$fp` (the scratchpad's 0x50 to 0x58) and `$ra`, write the stack, `$s5`
+  and temporaries, call nothing, and return with the address to go on from in `$s5` (`jalr $s5, $ra`, 7,226 of them) or
+  0 to return (`jr $ra`, `ori $s5, $zero, 0` in its delay slot, 1,346). The C calls them with those registers set.
+- Division is the CPU's: by 0 a quotient of -1 (1 for a negative dividend) and the dividend left over, where GCC's
+  code traps (`break 7`), so the C computes those results itself. equiv.py's emulator divides by 0 otherwise (the
+  dividend as the quotient, a remainder of 0), so its trials leave a zero divisor out.
+- A return with no caller's frame ends the run with -0x19; an event's handler's return with -0x1A, or `SUCCESS` with
+  0xFF stored at the argument when the mode's bit 0x20 accepts the event.
+
 ## Addresses from the disc
 
 No address of the executable turned up in the disc's data, and none holds `.data` in place. What breaks the game when
@@ -307,4 +338,7 @@ Evidence (`tools/run_game.py --schedule turtle-woods`, PCSX-Redux on the game cl
   put back after it), the shifted build displays retail's image at every one of the 6,001 game frames.
 
 A build that moves the handwritten GOOL operations draws far polygons with other texture bits; an equivalent rewrite of
-`func_80042818` reproduces retail only by reading the same bytes past the table.
+`func_80042818` reproduces retail only by reading the same bytes past the table. The equivalent build keeps the
+table's entries: its C defines the GOOL operations' labels at their retail addresses (`RETAIL_ADDRESS` in
+`src/game/80039D2C.c`), so the table and its copy hold retail's words wherever the code lies, and `Gool_Interpret`
+runs each opcode's operation itself, not through the table.

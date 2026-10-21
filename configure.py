@@ -101,14 +101,6 @@ NONMATCHING_ASSEMBLY = {HEADER_OBJECT: NONMATCHING_HEADER, HANDWRITTEN_OBJECT: N
 # The equivalent build's data follows its code wherever that ends; past the retail file's size, tools/patch_disc.py
 # writes the executable after the image's last sector. Where the linker's image ends in the file, the header included
 IMAGE_FILE_END = "main_ROM_END"
-# The handwritten code's first function, at its retail address unless the code or read-only data before it changed size
-HANDWRITTEN_START_SYMBOL = "func_80039D2C"
-HANDWRITTEN_START = 0x80039D2C
-# Zeros up to that address when the code before it is shorter than retail's: a renderer reads the GOOL operations'
-# addresses as data. Inside an output section "." counts from the section's start (which ld won't take ADDR() of there)
-HANDWRITTEN_PADDING = ". = MAX(., {offset:#x});"
-# An output section's first line in the linker script, with its address
-OUTPUT_SECTION = re.compile(r"^[ \t]*\.\w+[ \t]+(0x[0-9A-Fa-f]+)[^\n]*:[^\n]*$", re.MULTILINE)
 # TRADEOFF: growth past the retail file is capped; the heap, from the end of .bss to the stack, shrinks by as much, so a
 # higher cap needs every schedule played by a build that long
 MAX_GROWTH = 0x10000
@@ -230,14 +222,6 @@ def check_layout(elf):
             continue
     if IMAGE_FILE_END not in symbols:
         sys.exit(f"{elf} has no {IMAGE_FILE_END}")
-    if symbols.get(HANDWRITTEN_START_SYMBOL) != HANDWRITTEN_START:
-        # Not an error: the build holds, but a game schedule may differ for this alone
-        print(f"{elf}: the handwritten code starts at {symbols.get(HANDWRITTEN_START_SYMBOL, 0):#010x}, not retail's "
-              f"{HANDWRITTEN_START:#010x}: a renderer reads its GOOL operations' addresses as data (docs/TARGET.md, "
-              "\"Code addresses read as data\"), and turtle-woods draws otherwise from game frame 3,524")
-    else:
-        # The GOOL operations at their retail addresses
-        pass
     over = symbols[IMAGE_FILE_END] - EXE_SIZE
     if over > MAX_GROWTH:
         sys.exit(f"the equivalent executable is {over} bytes longer than the retail file's {EXE_SIZE}, past the "
@@ -269,25 +253,14 @@ def nonmatching_link_files():
     if (HERE / HANDWRITTEN_C).exists():
         copy = re.escape(str(NONMATCHING_BUILD / HANDWRITTEN_OBJECT.relative_to(BUILD)))
 
-        def section_address(position):
-            """The address of the output section the script's line at position is in"""
-            addresses = [int(found.group(1), 16) for found in OUTPUT_SECTION.finditer(script, 0, position)]
-            if not addresses:
-                sys.exit(f"{LINKER_SCRIPT}: no output section with an address before {HANDWRITTEN_OBJECT}'s code")
-            else:
-                return addresses[-1]
-
         def beside(line):
             """The C object's sections after the handwritten copy's; its read-only data after its code, past all the
-            code before it, whose addresses then stay. The copy's code starts at its retail address when what comes
-            before it is shorter"""
+            code before it, whose addresses then stay"""
             section = line.group("section")
             if section == ".rodata":
                 return line.group(0)
             elif section == ".text":
-                padding = HANDWRITTEN_PADDING.format(offset=HANDWRITTEN_START - section_address(line.start()))
-                return (f"{line.group('indent')}{padding}\n"
-                        f"{line.group(0)}\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}(.text);"
+                return (f"{line.group(0)}\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}(.text);"
                         f"\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}(.rodata);")
             else:
                 return f"{line.group(0)}\n{line.group('indent')}{HANDWRITTEN_C_OBJECT}({section});"
