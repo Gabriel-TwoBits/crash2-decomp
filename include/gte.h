@@ -20,6 +20,7 @@
 #define GTE_VZ1 3
 #define GTE_VXY2 4
 #define GTE_VZ2 5
+#define GTE_RGBC 6
 #define GTE_IR0 8
 #define GTE_IR1 9
 #define GTE_IR2 10
@@ -31,6 +32,9 @@
 #define GTE_SZ1 17
 #define GTE_SZ2 18
 #define GTE_SZ3 19
+#define GTE_RGB0 20
+#define GTE_RGB1 21
+#define GTE_RGB2 22
 #define GTE_MAC0 24
 #define GTE_MAC1 25
 #define GTE_MAC2 26
@@ -56,6 +60,10 @@
 #define GTE_H 26
 #define GTE_DQA 27
 #define GTE_DQB 28
+/* The far colour */
+#define GTE_RFC 21
+#define GTE_GFC 22
+#define GTE_BFC 23
 #define GTE_FLAG 31
 
 /* FLAG's bits, for MAC1 and IR1 (MAC2's, MAC3's, IR2's and IR3's follow, one lower each) and the rest; bit 31, the OR of
@@ -63,6 +71,7 @@
 #define GTE_FLAG_MAC1_POSITIVE (1 << 30)
 #define GTE_FLAG_MAC1_NEGATIVE (1 << 27)
 #define GTE_FLAG_IR1 (1 << 24)
+#define GTE_FLAG_COLOUR_R (1 << 21)
 #define GTE_FLAG_SZ3 (1 << 18)
 #define GTE_FLAG_DIVIDE (1 << 17)
 #define GTE_FLAG_MAC0_POSITIVE (1 << 16)
@@ -132,6 +141,8 @@ typedef struct GteRegs {
 #define GTE_MVMVA_CODE 0x0486012
 #define GTE_MVMVA_MATRIX_SHIFT 17
 #define GTE_MVMVA_VECTOR_SHIFT 15
+/* DPCS with sf = 1 and lm = 0 */
+#define GTE_DPCS_CODE 0x0780010
 
 #ifdef GTE_MODEL
 
@@ -448,5 +459,74 @@ static void Gte_MultiplyMatrix(s32 matrix, s32 vector) {
 #endif /* GTE_MODEL */
 
 #endif /* GTE_MVMVA */
+
+/* GCC 2.7.2 emits a static function used or not: a file defines GTE_DPCS before including this to have DPCS */
+#ifdef GTE_DPCS
+
+/* A colour's components as DPCS takes them (<< 16) and gives them (>> 4), and RGBC's code byte */
+#define GTE_COLOUR_IN_SHIFT 16
+#define GTE_COLOUR_OUT_SHIFT 4
+#define GTE_COLOUR_BITS 8
+#define GTE_COLOUR_MAX 0xFF
+#define GTE_CODE_MASK 0xFF000000
+
+#ifdef GTE_MODEL
+
+/* DPCS: RGBC's components moved toward the far colour by IR0 into MAC1-3 and IR1-3, and pushed, with RGBC's code, on
+   the colour FIFO (RGB0-RGB2) */
+static void Gte_DepthCue(void) {
+    GteRegs regs;
+    s32 ir0, row, ir, mac;
+    s64 start, value;
+    u32 pushed;
+
+    GTE_SAVE_DATA(&regs, GTE_IR0);
+    GTE_SAVE_DATA(&regs, GTE_RGBC);
+    GTE_SAVE_DATA(&regs, GTE_RGB1);
+    GTE_SAVE_DATA(&regs, GTE_RGB2);
+    GTE_SAVE_CONTROL(&regs, GTE_RFC);
+    GTE_SAVE_CONTROL(&regs, GTE_GFC);
+    GTE_SAVE_CONTROL(&regs, GTE_BFC);
+    regs.control[GTE_FLAG] = 0;
+    ir0 = (s16)regs.data[GTE_IR0];
+    for (row = 0; row < GTE_DIMENSION; row++) {
+        start = (s64)((regs.data[GTE_RGBC] >> (row * GTE_COLOUR_BITS)) & GTE_COLOUR_MAX) << GTE_COLOUR_IN_SHIFT;
+        /* The difference to the far colour goes through IR saturated as if lm were 0 */
+        value = Gte_MacChecked(&regs, row, ((s64)(s32)regs.control[GTE_RFC + row] << GTE_FRACTION_BITS) - start);
+        ir = Gte_Saturated(&regs, (s32)(value >> GTE_FRACTION_BITS), GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
+        value = Gte_MacChecked(&regs, row, (s64)ir * ir0 + start);
+        mac = (s32)(value >> GTE_FRACTION_BITS);
+        regs.data[GTE_MAC1 + row] = mac;
+        regs.data[GTE_IR1 + row] = Gte_Saturated(&regs, mac, GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
+    }
+    pushed = regs.data[GTE_RGBC] & GTE_CODE_MASK;
+    for (row = 0; row < GTE_DIMENSION; row++) {
+        pushed |= (u32)Gte_Saturated(&regs, (s32)regs.data[GTE_MAC1 + row] >> GTE_COLOUR_OUT_SHIFT, 0, GTE_COLOUR_MAX,
+                                     GTE_FLAG_COLOUR_R >> row) << (row * GTE_COLOUR_BITS);
+    }
+    regs.data[GTE_RGB0] = regs.data[GTE_RGB1];
+    regs.data[GTE_RGB1] = regs.data[GTE_RGB2];
+    regs.data[GTE_RGB2] = pushed;
+    GTE_RESTORE_DATA(&regs, GTE_MAC1);
+    GTE_RESTORE_DATA(&regs, GTE_MAC2);
+    GTE_RESTORE_DATA(&regs, GTE_MAC3);
+    GTE_RESTORE_DATA(&regs, GTE_IR1);
+    GTE_RESTORE_DATA(&regs, GTE_IR2);
+    GTE_RESTORE_DATA(&regs, GTE_IR3);
+    GTE_RESTORE_DATA(&regs, GTE_RGB0);
+    GTE_RESTORE_DATA(&regs, GTE_RGB1);
+    GTE_RESTORE_DATA(&regs, GTE_RGB2);
+    GTE_WRITE_CONTROL(GTE_FLAG, regs.control[GTE_FLAG]);
+}
+
+#define Gte_Dpcs() Gte_DepthCue()
+
+#else
+
+#define Gte_Dpcs() GTE_COMMAND(GTE_DPCS_CODE)
+
+#endif /* GTE_MODEL */
+
+#endif /* GTE_DPCS */
 
 #endif
