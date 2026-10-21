@@ -4,6 +4,7 @@
 #include "common.h"
 #include "game.h"
 #define GTE_MVMVA
+#define GTE_DPCS
 #include "gte.h"
 
 #ifndef NON_MATCHING
@@ -1499,4 +1500,1994 @@ void func_80045218(s32 count, void *frame, void *scene) {
     *slot = (u32)tile & PRIM_ADDRESS_MASK;
     tile += MODE_WORDS;
     buffer->next = tile;
+}
+
+/* The world renderer: func_80041E5C walks the zone's sort list and draws each polygon with the scene's mode
+ * (docs/TARGET.md, "The world renderer") */
+
+/* The light's walk over its grid (func_800461E0), as the retail code keeps it: each value's start of the row, current
+ * value, step along a row (toward the polygon's second corner) and down the rows (toward its third). x, y and z are in
+ * 8ths; red and green, the distances from Crash along z and x, and the texture's u and v go in pairs (the low half
+ * first), bit 15 cleared after each step so that the low half's carry stays out of the high one */
+typedef struct {
+    s32 x_row;
+    s32 x;
+    s16 x_along;
+    s16 x_down;
+    s32 y_row;
+    s32 y;
+    s16 y_along;
+    s16 y_down;
+    s32 z_row;
+    s32 z;
+    s16 z_along;
+    s16 z_down;
+    u32 rg_row;
+    u32 rg;
+    u32 rg_along;
+    u32 rg_down;
+    s16 b_row;
+    s16 b;
+    s16 b_along;
+    s16 b_down;
+    u32 near_row;
+    u32 near;
+    u32 near_along;
+    u32 near_down;
+    u32 uv_row;
+    u32 uv;
+    u32 uv_along;
+    u32 uv_down;
+} LightWalk;
+
+/* The scratchpad as the world renderer keeps it. The mode's entries are copied there, where its setup may change them;
+ * its other words are the retail code's state, which the C keeps where it did */
+/* The worlds Sys_MainLoop copies into the scratchpad, at most */
+#define WORLDS 8
+/* A quad's record: two words */
+#define QUAD_RECORD_WORDS 2
+
+typedef struct {
+    u8 unk_00[8];
+    s32 depth_fog_shift;
+    u8 unk_0C[4];
+    s32 depth_fog_start;
+    u8 unk_14[8];
+    s32 clock;
+    u8 unk_20[SAVE_AREA_BYTES - 0x20];
+    u8 unk_40[0x20];
+    s32 sway_scale;
+    WorldStep draw_triangle;
+    WorldStep draw_quad;
+    u32 drained;
+    u8 unk_70[8];
+    /* The next entry, its kind alone in the lit modes */
+    u32 upcoming;
+    u32 lamp1[2];
+    s32 pulse;
+    u32 lamp2[2];
+    u32 shade;
+    s32 light_x;
+    s32 light_z;
+    u16 *first;
+    u8 unk_A0[8];
+    WorldStep project_triangle;
+    WorldStep project_quad;
+    u32 lit_words[4];
+    s32 camera_x;
+    s32 camera_y;
+    /* The lit modes keep a corner's colour there in turn */
+    s32 camera_z;
+    u32 wave_phase;
+    u8 depth_shifts[0x20];
+    s32 sway_shift;
+    u32 light_texture[3];
+    u8 waves[0x10];
+    LightWalk walk;
+    u8 unk_16C[4];
+    u8 *light_heights;
+    u8 unk_174[4];
+    u32 quad_first_xy;
+    u32 quad_first_z;
+    u8 unk_180[4];
+    u32 rotated;
+    u32 lit_depth;
+    u8 unk_18C[4];
+    u32 light_corners[3][2];
+    /* The swaying mode's replacement colour in the first; the light's polygon's corners' colours */
+    u32 mode_colours[3];
+    u32 quad_first_vxy;
+    u32 quad_first_vz;
+    u32 light_vectors[2][2];
+    u8 *light_shades;
+    u32 light_depth;
+    u8 *light_grid;
+    u32 vertex_mask;
+    u32 pair_mask;
+    u32 *light_slot;
+    u32 light_saved_texture[3];
+    u32 lamp_far[AXES];
+    u32 tint_far[AXES];
+    u32 lamp_full[AXES];
+    s32 tint;
+    u32 light_material;
+    u32 screen_end;
+    u32 light_last_xy;
+    u32 light_last_z;
+    u32 light_first_colour;
+    u8 unk_22C[0x54];
+    WorldBlock worlds[WORLDS];
+} WorldScratch;
+
+/* The fields' offsets the retail code addresses, checked as the build compiles (an array of negative size otherwise) */
+#define SCRATCH_AT(field, offset) typedef char check_##field[((u32)&((WorldScratch *)0)->field == (offset)) ? 1 : -1]
+SCRATCH_AT(clock, 0x1c);
+SCRATCH_AT(draw_triangle, 0x64);
+SCRATCH_AT(upcoming, 0x78);
+SCRATCH_AT(light_x, 0x94);
+SCRATCH_AT(first, 0x9c);
+SCRATCH_AT(project_triangle, 0xa8);
+SCRATCH_AT(camera_z, 0xc8);
+SCRATCH_AT(depth_shifts, 0xd0);
+SCRATCH_AT(light_texture, 0xf4);
+SCRATCH_AT(walk, 0x110);
+SCRATCH_AT(light_heights, 0x170);
+SCRATCH_AT(quad_first_xy, 0x178);
+SCRATCH_AT(rotated, 0x184);
+SCRATCH_AT(light_corners, 0x190);
+SCRATCH_AT(mode_colours, 0x1a8);
+SCRATCH_AT(quad_first_vxy, 0x1b4);
+SCRATCH_AT(light_shades, 0x1cc);
+SCRATCH_AT(vertex_mask, 0x1d8);
+SCRATCH_AT(light_slot, 0x1e0);
+SCRATCH_AT(lamp_far, 0x1f0);
+SCRATCH_AT(tint, 0x214);
+SCRATCH_AT(screen_end, 0x21c);
+SCRATCH_AT(light_first_colour, 0x228);
+SCRATCH_AT(worlds, 0x280);
+
+#define WORLD_SCRATCH ((WorldScratch *)SAVE_AREA)
+
+/* A sort list's entry: its world (8 a frame), the polygon's kind and its index there */
+#define ENTRY_WORLD_SHIFT 13
+#define ENTRY_KIND_MASK 0x1800
+#define ENTRY_INDEX_MASK 0x7FF
+/* Triangles in the world's triangle table, and three kinds in its quad table: two triangles of a quad's corners (the
+ * second with its texture's corners turned) and the quad */
+#define KIND_TRIANGLE 0
+#define KIND_QUAD_FIRST 0x800
+#define KIND_QUAD_LAST 0x1000
+#define KIND_QUAD 0x1800
+/* The sort list's entries, after its count and a halfword */
+#define SORT_LIST_FIRST 2
+/* A polygon's vertices: 12-bit indices in its words, from the top */
+#define VERTEX_HIGH_SHIFT 20
+#define VERTEX_LOW_SHIFT 8
+#define VERTEX_HALF_SHIFT 4
+#define VERTEX_INDEX_MASK 0xFFF
+/* A polygon's material: 0 none, else its texture's index (bit 11 an animation's) from its first word's low byte and
+ * its second's low 4 bits */
+#define MATERIAL_SHIFT 4
+#define MATERIAL_LOW_MASK 0xF
+#define MATERIAL_MASK 0xFFF
+#define MATERIAL_ANIMATED 0x800
+#define MATERIAL_INDEX_MASK 0x7FF
+/* A vertex's position and colour bits: its word's x and y less their low 4 bits, its halfword's z less its low 4; the
+ * colour's index from the halfword's low 4 bits, the word's low 4 and bits 16 and 17 */
+#define VERTEX_MASK 0xFFF0FFF0
+#define VERTEX_Z_MASK 0xFFF0
+#define COLOUR_HALF_MASK 0xF
+#define COLOUR_HALF_SHIFT 2
+#define COLOUR_HIGH_SHIFT 6
+#define COLOUR_HIGH_MASK 0xC00
+#define COLOUR_LOW_SHIFT 6
+#define COLOUR_LOW_MASK 0x3C0
+/* The ordering table's slots (2,048) and the deepest a polygon goes; its slot from the sum of its last three depths */
+#define OT_SLOTS 0x800
+#define OT_LAST (OT_SLOTS - 1)
+#define OT_END 0xFFFFFF
+#define DEPTH_DEEPEST 0x770
+#define DEPTH_SUM_SHIFT 5
+#define DEPTH_SHIFT_STEP 6
+/* A texture: three words (four for a quad, its last halfword the fourth corner), indices from 1; an animation's word:
+ * its clock's shift (bits 26 to 31), its phase (from bit 19), its frames less one (bits 12 to 18), and either a
+ * texture's index or, bit 11 set, another animation's; a depth level's (bit 31 set): its index and 2 bits a level */
+#define TEXTURE_WORDS 3
+#define ANIMATION_LEVELS 0x80000000
+#define ANIMATION_CLOCK_SHIFT 26
+#define ANIMATION_PHASE_SHIFT 19
+#define ANIMATION_FRAMES_SHIFT 12
+#define ANIMATION_FRAMES_MASK 0x7F
+#define LEVEL_MASK 3
+/* A texture's second word: its page's blending (bits 21 and 22, 3 none) */
+#define TEXTURE_BLEND_MASK 0x600000
+#define TEXTURE_OPAQUE TEXTURE_BLEND_MASK
+#define HALF_LOW_MASK 0xFFFF
+#define HALF_HIGH_MASK 0xFFFF0000
+/* The primitives: a shaded triangle (G3) or quad (G4), textured (GT3, GT4) opaque or not; their words, after the tag */
+#define POLY_G3_CODE 0x30000000
+#define POLY_GT3_CODE 0x34000000
+#define POLY_GT3_BLENDED_CODE 0x36000000
+#define POLY_G4_CODE 0x38000000
+#define POLY_GT4_CODE 0x3C000000
+#define POLY_GT4_BLENDED_CODE 0x3E000000
+#define POLY_G3_WORDS 7
+#define POLY_GT3_WORDS 10
+#define POLY_G4_WORDS 9
+#define POLY_GT4_WORDS 13
+#define TAG_LENGTH_SHIFT 24
+/* A triangle's corners and a quad's */
+#define TRIANGLE_CORNERS 3
+#define QUAD_CORNERS 4
+/* Two bits of a vertex's word, which each mode reads its own way */
+#define VERTEX_BIT_18 0x40000
+#define VERTEX_BIT_19 0x80000
+/* The kind of triangle whose texture is turned: the flag the retail code sets, a register's constant */
+#define ROTATED_FLAG VERTEX_MASK
+/* The camera's position in whole units, from 24.8 */
+#define CAMERA_SHIFT 8
+
+extern u8 D_8005C724[];
+
+/* A vertex's colour, from the world's colour table */
+static u32 vertex_colour(WorldPass *pass, s32 vertex) {
+    u32 word = pass->word[vertex];
+    u32 offset = ((pass->half[vertex] & COLOUR_HALF_MASK) << COLOUR_HALF_SHIFT) |
+                 ((word >> COLOUR_HIGH_SHIFT) & COLOUR_HIGH_MASK) | ((word << COLOUR_LOW_SHIFT) & COLOUR_LOW_MASK);
+
+    return *(u32 *)(pass->world->colours + offset);
+}
+
+/* Off the screen: every corner past the same side of it (both halves of a packed SXY at least the screen's end, or
+ * negative) */
+static s32 off_screen(u32 *points, s32 count) {
+    u32 end = WORLD_SCRATCH->screen_end;
+    u32 past = 0;
+    u32 all = ~0;
+    s32 point;
+
+    for (point = 0; point < count; point++) {
+        past |= points[point] - end;
+        all &= points[point];
+    }
+    past = ~past | all;
+    return (s32)past < 0 || (s32)(past << GTE_HALF_BITS) < 0;
+}
+
+/* The polygon's slot by its depth (SZ1 + SZ2 + SZ3, / 32): nearer, higher */
+static void depth_slot(WorldPass *pass) {
+    u32 sz1, sz2, sz3;
+    s32 slot;
+
+    GTE_READ_DATA(GTE_SZ1, sz1);
+    GTE_READ_DATA(GTE_SZ2, sz2);
+    GTE_READ_DATA(GTE_SZ3, sz3);
+    pass->depth = (sz1 + sz2 + sz3) >> DEPTH_SUM_SHIFT;
+    slot = DEPTH_DEEPEST - (s32)pass->depth;
+    if (slot < 0) {
+        slot = 0;
+    } else {
+        /* In the table */
+    }
+    pass->slot = &pass->ot[slot];
+}
+
+/* The slots below lowest down to past (left out), each linked to the one above */
+static void link_down(u32 *lowest, u32 *past) {
+    u32 head = (u32)lowest & PRIM_ADDRESS_MASK;
+
+    for (lowest--; lowest != past; lowest--) {
+        *lowest = head;
+        head -= sizeof(u32);
+    }
+}
+
+/* Links the primitive at pass->next into the ordering table and moves past it. The polygons come sorted, far first: one
+ * deeper than the lowest slot linked so far goes into that one, else the slots down to its own are linked first, each
+ * to the one above */
+static void link_primitive(WorldPass *pass, s32 words) {
+    u32 *primitive = pass->next;
+    u32 *lowest = pass->lowest;
+    u32 *slot = pass->slot;
+    u32 head = pass->head;
+
+    if (slot < lowest) {
+        head = (u32)lowest & PRIM_ADDRESS_MASK;
+        for (lowest--; lowest != slot; lowest--) {
+            *lowest = head;
+            head -= sizeof(u32);
+        }
+    } else {
+        /* Into the lowest slot */
+    }
+    primitive[0] = head | ((u32)(words - 1) << TAG_LENGTH_SHIFT);
+    head = (u32)primitive & PRIM_ADDRESS_MASK;
+    *lowest = head;
+    pass->lowest = lowest;
+    pass->head = head;
+    pass->next = primitive + words;
+}
+
+/* The texture a material shows now: a fixed one, an animation's frame by the clock, or a depth level's by the polygon's
+ * depth (the shift for 2 bits from a byte table the renderer copies to the scratchpad, read past its 32 bytes for the
+ * farthest polygons: docs/TARGET.md, "Code addresses read as data") */
+static u32 *texture(WorldPass *pass) {
+    u32 index = pass->material & MATERIAL_INDEX_MASK;
+    u32 word, frame, shift;
+
+    if (pass->material & MATERIAL_ANIMATED) {
+        word = pass->world->animations[index];
+        shift = *((u8 *)WORLD_SCRATCH->depth_shifts + (pass->depth >> DEPTH_SHIFT_STEP));
+        if (!(word & ANIMATION_LEVELS)) {
+            frame = (((u32)pass->clock >> ((word >> ANIMATION_CLOCK_SHIFT) & SHIFT_COUNT_MASK)) +
+                     (word >> ANIMATION_PHASE_SHIFT)) & ((word >> ANIMATION_FRAMES_SHIFT) & ANIMATION_FRAMES_MASK);
+            index = (word + frame) & MATERIAL_INDEX_MASK;
+            if (word & MATERIAL_ANIMATED) {
+                word = pass->world->animations[index];
+            } else {
+                return pass->world->textures + (index - 1) * TEXTURE_WORDS;
+            }
+        } else {
+            /* A depth level's */
+        }
+        index = (word & MATERIAL_INDEX_MASK) + ((word >> (shift & SHIFT_COUNT_MASK)) & LEVEL_MASK);
+    } else {
+        /* A fixed texture */
+    }
+    return pass->world->textures + (index - 1) * TEXTURE_WORDS;
+}
+
+/* A triangle's texture's three words, its corners turned for the second triangle of a quad's (WorldScratch.rotated) */
+static void triangle_texture(WorldPass *pass, u32 *words) {
+    u32 rotated = WORLD_SCRATCH->rotated;
+    u32 *corners = texture(pass);
+    u32 first = corners[0];
+    u32 second = corners[1];
+    u32 third = corners[2];
+
+    if (rotated) {
+        first = (first & HALF_HIGH_MASK) | (second & HALF_LOW_MASK);
+        second = (second & HALF_HIGH_MASK) | (third & HALF_LOW_MASK);
+        third >>= GTE_HALF_BITS;
+    } else {
+        /* The texture's corners as they are */
+    }
+    words[0] = first;
+    words[1] = second;
+    words[2] = third;
+}
+
+/* The default mode's triangle drawer: a shaded triangle, textured unless its material is 0 */
+void func_80042548(WorldPass *pass) {
+    u32 *primitive = pass->next;
+    u32 words[3];
+    u32 first, second, third;
+
+    if (!(pass->material & MATERIAL_MASK)) {
+        GTE_STORE_DATA(GTE_SXY0, primitive[2]);
+        GTE_STORE_DATA(GTE_SXY1, primitive[4]);
+        GTE_STORE_DATA(GTE_SXY2, primitive[6]);
+        primitive[1] = pass->colour[0] | POLY_G3_CODE;
+        primitive[3] = pass->colour[1];
+        primitive[5] = pass->colour[2];
+        link_primitive(pass, POLY_G3_WORDS);
+        return;
+    } else {
+        triangle_texture(pass, words);
+    }
+    first = words[0];
+    second = words[1];
+    third = words[2];
+    primitive[3] = first;
+    primitive[6] = second;
+    primitive[9] = third;
+    primitive[4] = pass->colour[1];
+    primitive[7] = pass->colour[2];
+    if ((second & TEXTURE_BLEND_MASK) == TEXTURE_OPAQUE) {
+        primitive[1] = pass->colour[0] | POLY_GT3_CODE;
+    } else {
+        primitive[1] = pass->colour[0] | POLY_GT3_BLENDED_CODE;
+    }
+    GTE_STORE_DATA(GTE_SXY0, primitive[2]);
+    GTE_STORE_DATA(GTE_SXY1, primitive[5]);
+    GTE_STORE_DATA(GTE_SXY2, primitive[8]);
+    link_primitive(pass, POLY_GT3_WORDS);
+}
+
+/* The default mode's quad drawer: a shaded quad, textured unless its material is 0; its first corner's position the
+ * projector wrote */
+void func_80042818(WorldPass *pass) {
+    u32 *primitive = pass->next;
+    u32 *corners;
+    u32 first, second, third;
+
+    if (!(pass->material & MATERIAL_MASK)) {
+        GTE_STORE_DATA(GTE_SXY0, primitive[4]);
+        GTE_STORE_DATA(GTE_SXY1, primitive[6]);
+        GTE_STORE_DATA(GTE_SXY2, primitive[8]);
+        primitive[1] = pass->colour[0] | POLY_G4_CODE;
+        primitive[3] = pass->colour[1];
+        primitive[5] = pass->colour[2];
+        primitive[7] = pass->colour[3];
+        link_primitive(pass, POLY_G4_WORDS);
+        return;
+    } else {
+        corners = texture(pass);
+    }
+    /* Read before the primitive is written, as the retail code does */
+    first = corners[0];
+    second = corners[1];
+    third = corners[2];
+    primitive[3] = first;
+    primitive[6] = second;
+    primitive[9] = third;
+    primitive[12] = third >> GTE_HALF_BITS;
+    primitive[4] = pass->colour[1];
+    primitive[7] = pass->colour[2];
+    primitive[10] = pass->colour[3];
+    if ((second & TEXTURE_BLEND_MASK) == TEXTURE_OPAQUE) {
+        primitive[1] = pass->colour[0] | POLY_GT4_CODE;
+    } else {
+        primitive[1] = pass->colour[0] | POLY_GT4_BLENDED_CODE;
+    }
+    GTE_STORE_DATA(GTE_SXY0, primitive[5]);
+    GTE_STORE_DATA(GTE_SXY1, primitive[8]);
+    GTE_STORE_DATA(GTE_SXY2, primitive[11]);
+    link_primitive(pass, POLY_GT4_WORDS);
+}
+
+/* Reads an entry's polygon from its world's tables */
+static void read_polygon(WorldRecord *record, u32 entry) {
+    WorldBlock *world = &WORLD_SCRATCH->worlds[entry >> ENTRY_WORLD_SHIFT];
+    u32 index = entry & ENTRY_INDEX_MASK;
+
+    record->world = world;
+    record->kind = entry & ENTRY_KIND_MASK;
+    if (record->kind == KIND_TRIANGLE) {
+        record->second = *(u16 *)(world->triangles + index * sizeof(u16));
+        record->first = *(u32 *)(world->triangles - (index + 1) * sizeof(u32));
+    } else {
+        record->first = world->quads[index * QUAD_RECORD_WORDS];
+        record->second = world->quads[index * QUAD_RECORD_WORDS + 1];
+    }
+}
+
+/* The default mode's triangle projector: its three corners, culled off the screen, then drawn; the next polygon read
+ * after its first corner's colour (WorldPass) */
+void func_80042420(WorldPass *pass) {
+    u32 points[3];
+
+    Gte_Rtpt();
+    pass->colour[0] = vertex_colour(pass, 0);
+    read_polygon(pass->upcoming, pass->upcoming_entry);
+    GTE_READ_DATA(GTE_SXY0, points[0]);
+    GTE_READ_DATA(GTE_SXY1, points[1]);
+    GTE_READ_DATA(GTE_SXY2, points[2]);
+    if (off_screen(points, TRIANGLE_CORNERS)) {
+        return;
+    } else {
+        /* Drawn */
+    }
+    pass->colour[1] = vertex_colour(pass, 1);
+    pass->colour[2] = vertex_colour(pass, 2);
+    depth_slot(pass);
+    WORLD_SCRATCH->draw_triangle(pass);
+}
+
+/* The default mode's quad projector: its first three corners, then the fourth (RTPS pushing the first out), culled off
+ * the screen, then drawn; the first corner's position and depth are kept in the scratchpad, the position also written
+ * into the primitive, drawn or not */
+void func_800426A0(WorldPass *pass) {
+    u32 points[4];
+
+    Gte_Rtpt();
+    pass->colour[0] = vertex_colour(pass, 0);
+    read_polygon(pass->upcoming, pass->upcoming_entry);
+    GTE_STORE_DATA(GTE_SXY0, WORLD_SCRATCH->quad_first_xy);
+    GTE_STORE_DATA(GTE_SZ1, WORLD_SCRATCH->quad_first_z);
+    GTE_WRITE_DATA(GTE_VXY0, pass->quad_last_xy);
+    GTE_WRITE_DATA(GTE_VZ0, pass->quad_last_z);
+    GTE_READ_DATA(GTE_SXY0, points[0]);
+    GTE_READ_DATA(GTE_SXY1, points[1]);
+    GTE_READ_DATA(GTE_SXY2, points[2]);
+    pass->next[2] = points[0];
+    Gte_Rtps();
+    pass->colour[1] = vertex_colour(pass, 1);
+    GTE_READ_DATA(GTE_SXY2, points[3]);
+    if (off_screen(points, QUAD_CORNERS)) {
+        return;
+    } else {
+        /* Drawn */
+    }
+    pass->colour[2] = vertex_colour(pass, 2);
+    pass->colour[3] = vertex_colour(pass, 3);
+    depth_slot(pass);
+    WORLD_SCRATCH->draw_quad(pass);
+}
+
+/* A vertex of the polygon: its words read, its VXY pair returned and its z kept */
+static u32 load_vertex(WorldPass *pass, s32 vertex, u32 index) {
+    WorldBlock *world = pass->world;
+    u32 word = *(u32 *)(world->vertices - (index + 1) * sizeof(u32));
+    u32 half = *(u16 *)(world->vertices + index * sizeof(u16));
+
+    pass->word[vertex] = word;
+    pass->half[vertex] = half;
+    pass->vertex_z[vertex] = (half & VERTEX_Z_MASK) + world->offset_z;
+    return ((word & VERTEX_MASK) + world->offset_xy) & PAIR_MASK;
+}
+
+/* Draws a polygon: its corners loaded into the GTE's vectors (a quad's fourth kept for its projector), then the scene's
+ * projector run, which reads the next entry's polygon */
+static void world_polygon(WorldPass *pass, WorldRecord *polygon, WorldRecord *next, u32 next_entry) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 first = polygon->first;
+    u32 second = polygon->second;
+    u32 corners[4];
+    u32 xy;
+    WorldStep project;
+
+    pass->world = polygon->world;
+    pass->material = (first << MATERIAL_SHIFT) | (second & MATERIAL_LOW_MASK);
+    if (polygon->kind == KIND_TRIANGLE) {
+        corners[0] = first >> VERTEX_HIGH_SHIFT;
+        corners[1] = (first >> VERTEX_LOW_SHIFT) & VERTEX_INDEX_MASK;
+        corners[2] = (second >> VERTEX_HALF_SHIFT) & VERTEX_INDEX_MASK;
+    } else if (polygon->kind == KIND_QUAD_LAST) {
+        corners[0] = (first >> VERTEX_LOW_SHIFT) & VERTEX_INDEX_MASK;
+        corners[1] = second >> VERTEX_HIGH_SHIFT;
+        corners[2] = (second >> VERTEX_LOW_SHIFT) & VERTEX_INDEX_MASK;
+    } else {
+        corners[0] = first >> VERTEX_HIGH_SHIFT;
+        corners[1] = (first >> VERTEX_LOW_SHIFT) & VERTEX_INDEX_MASK;
+        corners[2] = second >> VERTEX_HIGH_SHIFT;
+        corners[3] = (second >> VERTEX_LOW_SHIFT) & VERTEX_INDEX_MASK;
+    }
+    xy = load_vertex(pass, 0, corners[0]);
+    GTE_WRITE_DATA(GTE_VXY0, xy);
+    GTE_WRITE_DATA(GTE_VZ0, pass->vertex_z[0]);
+    xy = load_vertex(pass, 1, corners[1]);
+    GTE_WRITE_DATA(GTE_VXY1, xy);
+    GTE_WRITE_DATA(GTE_VZ1, pass->vertex_z[1]);
+    xy = load_vertex(pass, 2, corners[2]);
+    GTE_WRITE_DATA(GTE_VXY2, xy);
+    GTE_WRITE_DATA(GTE_VZ2, pass->vertex_z[2]);
+    if (polygon->kind == KIND_QUAD) {
+        pass->quad_last_xy = load_vertex(pass, 3, corners[3]);
+        pass->quad_last_z = pass->vertex_z[3];
+        project = scratch->project_quad;
+    } else if (polygon->kind == KIND_QUAD_LAST) {
+        scratch->rotated = ROTATED_FLAG;
+        project = scratch->project_triangle;
+    } else {
+        scratch->rotated = 0;
+        project = scratch->project_triangle;
+    }
+    pass->upcoming = next;
+    pass->upcoming_entry = next_entry;
+    project(pass);
+}
+
+/* The fog's far colours: bright where a vertex's word has bit 18 set, else dark */
+#define FOG_BRIGHT_VERTEX VERTEX_BIT_18
+#define FOG_BRIGHT 0xFF0
+#define FOG_DARK 0x200
+
+/* The corners' colours moved toward the fog's far colour by its depth, with DPCS */
+static void fog_colours(WorldPass *pass, s32 corners) {
+    u32 far;
+    s32 corner;
+
+    GTE_LOAD_DATA(GTE_IR0, WORLD_SCRATCH->shade);
+    for (corner = 0; corner < corners; corner++) {
+        GTE_WRITE_DATA(GTE_RGBC, pass->colour[corner]);
+        if (pass->word[corner] & FOG_BRIGHT_VERTEX) {
+            far = FOG_BRIGHT;
+        } else {
+            far = FOG_DARK;
+        }
+        GTE_WRITE_CONTROL(GTE_RFC, far);
+        GTE_WRITE_CONTROL(GTE_GFC, far);
+        GTE_WRITE_CONTROL(GTE_BFC, far);
+        Gte_Dpcs();
+        GTE_READ_DATA(GTE_RGB2, pass->colour[corner]);
+    }
+}
+
+/* The fogged mode's setup (the scene's flag 0x200000 with D_8006CDC4 set): the fog's depth into the scratchpad */
+void func_8004599C(WorldScene *scene) {
+    WORLD_SCRATCH->shade = scene->shade;
+}
+
+/* The fogged mode's drawers: the default ones, the corners' colours fogged first */
+void func_800459A8(WorldPass *pass) {
+    fog_colours(pass, TRIANGLE_CORNERS);
+    func_80042548(pass);
+}
+
+void func_80045AB4(WorldPass *pass) {
+    fog_colours(pass, QUAD_CORNERS);
+    func_80042818(pass);
+}
+
+/* The depth fog's colour: a component in each of bits 4 to 11, 12 to 19 and 20 to 27 */
+#define DEPTH_FOG_GREEN_SHIFT 8
+#define DEPTH_FOG_RED_SHIFT 16
+#define DEPTH_FOG_COMPONENT_MASK 0xFF0
+/* A flat triangle (F3) or quad (F4): its code, black, and its words */
+#define POLY_F3_CODE 0x20000000
+#define POLY_F4_CODE 0x28000000
+#define POLY_F3_WORDS 5
+#define POLY_F4_WORDS 6
+
+/* The depth fog's mode (the camera's flags 0x20, or 0x200000 without D_8006CDC4): the far colour into the GTE, its
+ * shift and starting depth into the scratchpad */
+void func_8004399C(WorldScene *scene) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 colour = scene->depth_fog_colour;
+
+    GTE_WRITE_CONTROL(GTE_RFC, (colour >> DEPTH_FOG_RED_SHIFT) & DEPTH_FOG_COMPONENT_MASK);
+    GTE_WRITE_CONTROL(GTE_GFC, (colour >> DEPTH_FOG_GREEN_SHIFT) & DEPTH_FOG_COMPONENT_MASK);
+    GTE_WRITE_CONTROL(GTE_BFC, colour & DEPTH_FOG_COMPONENT_MASK);
+    scratch->depth_fog_shift = scene->depth_fog_shift;
+    scratch->depth_fog_start = scene->depth_fog_start;
+}
+
+/* A black flat polygon instead of the shaded one: its three last corners from the GTE (a quad's first the projector
+ * wrote) */
+static void flat_black(WorldPass *pass, s32 corners) {
+    if (corners == QUAD_CORNERS) {
+        GTE_STORE_DATA(GTE_SXY0, pass->next[3]);
+        GTE_STORE_DATA(GTE_SXY1, pass->next[4]);
+        GTE_STORE_DATA(GTE_SXY2, pass->next[5]);
+        pass->next[1] = POLY_F4_CODE;
+        link_primitive(pass, POLY_F4_WORDS);
+    } else {
+        GTE_STORE_DATA(GTE_SXY0, pass->next[2]);
+        GTE_STORE_DATA(GTE_SXY1, pass->next[3]);
+        GTE_STORE_DATA(GTE_SXY2, pass->next[4]);
+        pass->next[1] = POLY_F3_CODE;
+        link_primitive(pass, POLY_F3_WORDS);
+    }
+}
+
+/* A corner's colour fogged by its depth past the fog's start; whether it was */
+static s32 depth_fog(WorldPass *pass, s32 corner, u32 depth) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    s32 past = depth - scratch->depth_fog_start;
+
+    if (past < 0) {
+        return 0;
+    } else {
+        GTE_WRITE_DATA(GTE_RGBC, pass->colour[corner]);
+        GTE_WRITE_DATA(GTE_IR0, past << (scratch->depth_fog_shift & SHIFT_COUNT_MASK));
+        Gte_Dpcs();
+        GTE_READ_DATA(GTE_RGB2, pass->colour[corner]);
+        return 1;
+    }
+}
+
+/* The depth fog's drawers: the corners fogged by their depths (the quad's first kept by its projector), then the
+ * default drawer, or a black flat polygon where the last corner was fogged and every colour came out 0 */
+void func_800439D4(WorldPass *pass) {
+    u32 sz1, sz2, sz3;
+    s32 fogged;
+
+    GTE_READ_DATA(GTE_SZ1, sz1);
+    GTE_READ_DATA(GTE_SZ2, sz2);
+    GTE_READ_DATA(GTE_SZ3, sz3);
+    depth_fog(pass, 0, sz1);
+    depth_fog(pass, 1, sz2);
+    fogged = depth_fog(pass, 2, sz3);
+    if (fogged && (pass->colour[0] | pass->colour[1] | pass->colour[2]) == 0) {
+        flat_black(pass, TRIANGLE_CORNERS);
+    } else {
+        func_80042548(pass);
+    }
+}
+
+void func_80043A84(WorldPass *pass) {
+    u32 sz1, sz2, sz3;
+    s32 fogged;
+
+    GTE_READ_DATA(GTE_SZ1, sz1);
+    GTE_READ_DATA(GTE_SZ2, sz2);
+    GTE_READ_DATA(GTE_SZ3, sz3);
+    depth_fog(pass, 0, WORLD_SCRATCH->quad_first_z);
+    depth_fog(pass, 1, sz1);
+    depth_fog(pass, 2, sz2);
+    fogged = depth_fog(pass, 3, sz3);
+    if (fogged && (pass->colour[0] | pass->colour[1] | pass->colour[2] | pass->colour[3]) == 0) {
+        flat_black(pass, QUAD_CORNERS);
+    } else {
+        func_80042818(pass);
+    }
+}
+
+/* The tinted vertices: bit 19 of their words */
+#define TINTED_VERTEX VERTEX_BIT_19
+
+/* The tinted mode (the camera's flag 0x8000): the tint's colour into the GTE's far colour, its depth into the
+ * scratchpad */
+void func_80044980(WorldScene *scene) {
+    u32 colour = scene->tint_colour;
+
+    GTE_WRITE_CONTROL(GTE_RFC, (colour >> DEPTH_FOG_RED_SHIFT) & DEPTH_FOG_COMPONENT_MASK);
+    GTE_WRITE_CONTROL(GTE_GFC, (colour >> DEPTH_FOG_GREEN_SHIFT) & DEPTH_FOG_COMPONENT_MASK);
+    GTE_WRITE_CONTROL(GTE_BFC, colour & DEPTH_FOG_COMPONENT_MASK);
+    WORLD_SCRATCH->tint = scene->tint;
+}
+
+/* The corners of tinted vertices moved toward the tint's colour */
+static void tint_colours(WorldPass *pass, s32 corners) {
+    s32 corner;
+
+    GTE_LOAD_DATA(GTE_IR0, WORLD_SCRATCH->tint);
+    for (corner = 0; corner < corners; corner++) {
+        GTE_WRITE_DATA(GTE_RGBC, pass->colour[corner]);
+        if (pass->word[corner] & TINTED_VERTEX) {
+            Gte_Dpcs();
+            GTE_READ_DATA(GTE_RGB2, pass->colour[corner]);
+        } else {
+            /* As it is */
+        }
+    }
+}
+
+/* The tinted mode's drawers: the default ones, the tinted vertices' colours moved first */
+void func_800449B0(WorldPass *pass) {
+    tint_colours(pass, TRIANGLE_CORNERS);
+    func_80042548(pass);
+}
+
+void func_80044A04(WorldPass *pass) {
+    tint_colours(pass, QUAD_CORNERS);
+    func_80042818(pass);
+}
+
+/* The pulse: a triangle wave of the clock, 0 to 0x800 and back every 32 ticks */
+#define PULSE_SHIFT 7
+#define PULSE_MASK 0xFFF
+#define PULSE_HALF 0x800
+#define PULSE_PERIOD 0x1000
+/* The dimmed vertices (bit 18 of the first's word): a corner black nearer than DIM_NEAR, dimmed out to DIM_FAR past it,
+ * as it is farther */
+#define DIM_NEAR 0x258
+#define DIM_SPAN 0x2D8
+#define DIM_SHIFT 5
+/* The waving mode's dimmed polygons (all its vertices tinted) dim out farther */
+#define DIM_SPAN_WAVING 0x3A0
+
+/* The pulsing mode (the camera's flag 0x40): a black far colour, and the pulse into the scratchpad */
+void func_80043D54(WorldScene *scene) {
+    s32 pulse = ((u32)WORLD_SCRATCH->clock << PULSE_SHIFT) & PULSE_MASK;
+
+    GTE_WRITE_CONTROL(GTE_RFC, 0);
+    GTE_WRITE_CONTROL(GTE_GFC, 0);
+    GTE_WRITE_CONTROL(GTE_BFC, 0);
+    if (pulse - PULSE_HALF > 0) {
+        pulse = PULSE_PERIOD - pulse;
+    } else {
+        /* Rising */
+    }
+    WORLD_SCRATCH->pulse = pulse;
+}
+
+/* The corners dimmed toward black by their depths; whether any colour is left */
+static s32 dim_colours(WorldPass *pass, s32 corners, s32 span) {
+    u32 depths[4];
+    u32 left = 0;
+    s32 corner, past, depth;
+
+    if (corners == QUAD_CORNERS) {
+        depths[0] = WORLD_SCRATCH->quad_first_z;
+        GTE_READ_DATA(GTE_SZ1, depths[1]);
+        GTE_READ_DATA(GTE_SZ2, depths[2]);
+        GTE_READ_DATA(GTE_SZ3, depths[3]);
+    } else {
+        GTE_READ_DATA(GTE_SZ1, depths[0]);
+        GTE_READ_DATA(GTE_SZ2, depths[1]);
+        GTE_READ_DATA(GTE_SZ3, depths[2]);
+    }
+    for (corner = 0; corner < corners; corner++) {
+        depth = depths[corner] - DIM_NEAR;
+        past = span - depth;
+        if (past < 0) {
+            /* Beyond the dimming: as it is */
+        } else {
+            GTE_WRITE_DATA(GTE_RGBC, pass->colour[corner]);
+            if (depth <= 0) {
+                pass->colour[corner] = 0;
+            } else {
+                GTE_WRITE_DATA(GTE_IR0, past << DIM_SHIFT);
+                Gte_Dpcs();
+                GTE_READ_DATA(GTE_RGB2, pass->colour[corner]);
+            }
+        }
+        left |= pass->colour[corner];
+    }
+    return left != 0;
+}
+
+/* The pulsing mode's drawers: where a corner's vertex has bit 19 set, the tinted ones pulse; else, the first's bit 18
+ * set, the corners dim by depth (none drawn left black); then the default drawer */
+static void pulse_polygon(WorldPass *pass, s32 corners, WorldStep draw) {
+    u32 any = 0;
+    s32 corner;
+
+    for (corner = 0; corner < corners; corner++) {
+        any |= pass->word[corner];
+    }
+    if (any & TINTED_VERTEX) {
+        GTE_LOAD_DATA(GTE_IR0, WORLD_SCRATCH->pulse);
+        for (corner = 0; corner < corners; corner++) {
+            GTE_WRITE_DATA(GTE_RGBC, pass->colour[corner]);
+            if (pass->word[corner] & TINTED_VERTEX) {
+                Gte_Dpcs();
+                GTE_READ_DATA(GTE_RGB2, pass->colour[corner]);
+            } else {
+                /* As it is */
+            }
+        }
+    } else if (!(pass->word[0] & FOG_BRIGHT_VERTEX)) {
+        /* As it is */
+    } else if (!dim_colours(pass, corners, DIM_SPAN)) {
+        /* Black: not drawn */
+        return;
+    } else {
+        /* Dimmed */
+    }
+    draw(pass);
+}
+
+void func_80043D84(WorldPass *pass) {
+    pulse_polygon(pass, TRIANGLE_CORNERS, func_80042548);
+}
+
+void func_80043EA0(WorldPass *pass) {
+    pulse_polygon(pass, QUAD_CORNERS, func_80042818);
+}
+
+/* A lamp's light at a vertex: from LAMP_REACH less how far the vertex is along z, y and x (less LAMP_FLAT more), none
+ * past it. The lamp and the vertex are VXY pairs, y's difference taking x's borrow */
+#define LAMP_REACH 0x1320
+#define LAMP_FLAT 0x320
+/* The lit vertices' light, the two lamps' summed: none lights a corner with the lamps' far colour, full or more with
+ * their full colour, between with their colour moved toward the far one */
+#define LAMP_FULL 0x1000
+/* The lit vertices: bit 18 set leaves the corner the GTE's last colour */
+#define UNLIT_VERTEX VERTEX_BIT_18
+
+/* A component's colour, its bits 4 to 11, from a colour word with red in bits 20 to 27 (the lamps' far colour and the
+ * tint's), or with red in the low byte (the lamps' colour) shifted by 4 */
+static void colour_components(u32 *components, u32 colour, s32 red_high) {
+    if (red_high) {
+        components[0] = (colour >> DEPTH_FOG_RED_SHIFT) & DEPTH_FOG_COMPONENT_MASK;
+        components[1] = (colour >> DEPTH_FOG_GREEN_SHIFT) & DEPTH_FOG_COMPONENT_MASK;
+        components[2] = colour & DEPTH_FOG_COMPONENT_MASK;
+    } else {
+        colour <<= GTE_COLOUR_OUT_SHIFT;
+        components[0] = colour & DEPTH_FOG_COMPONENT_MASK;
+        components[1] = (colour >> DEPTH_FOG_GREEN_SHIFT) & DEPTH_FOG_COMPONENT_MASK;
+        components[2] = (colour >> DEPTH_FOG_RED_SHIFT) & DEPTH_FOG_COMPONENT_MASK;
+    }
+}
+
+/* The lit mode (the camera's flag 0x100): the lamps' colours, positions and the tint into the scratchpad */
+void func_80042C70(WorldScene *scene) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 lamp_far[AXES], lamp_full[AXES], tint_far[AXES];
+    s32 axis;
+
+    colour_components(lamp_far, scene->lamp_far, 1);
+    for (axis = 0; axis < AXES; axis++) {
+        scratch->lamp_far[axis] = lamp_far[axis];
+    }
+    scratch->shade = scene->shade;
+    colour_components(lamp_full, scene->shade, 0);
+    for (axis = 0; axis < AXES; axis++) {
+        scratch->lamp_full[axis] = lamp_full[axis];
+    }
+    scratch->tint = scene->tint;
+    colour_components(tint_far, scene->tint_colour, 1);
+    for (axis = 0; axis < AXES; axis++) {
+        scratch->tint_far[axis] = tint_far[axis];
+    }
+    scratch->lamp1[0] = scene->lamps[0][0];
+    scratch->lamp1[1] = scene->lamps[0][1];
+    scratch->lamp2[0] = scene->lamps[1][0];
+    scratch->lamp2[1] = scene->lamps[1][1];
+}
+
+/* A number's magnitude, as the retail code negates it (the most negative word stays itself) */
+static u32 magnitude(u32 value) {
+    if ((s32)value < 0) {
+        return 0 - value;
+    } else {
+        return value;
+    }
+}
+
+static u32 lamp_light(u32 xy, s32 z, u32 *lamp) {
+    u32 offset = xy - lamp[0];
+    u32 light = LAMP_REACH - magnitude((u32)z - lamp[1]);
+
+    if ((s32)light < 0) {
+        return 0;
+    } else {
+        light -= magnitude((u32)((s32)offset >> GTE_HALF_BITS));
+    }
+    if ((s32)light < 0) {
+        return 0;
+    } else {
+        light = light - LAMP_FLAT - magnitude((u32)((s32)(offset << GTE_HALF_BITS) >> GTE_HALF_BITS));
+    }
+    if ((s32)light < 0) {
+        return 0;
+    } else {
+        return light;
+    }
+}
+
+/* A corner lit (func_80042D10): its vertex's vector and word, its colour in the scratchpad; the result is the GTE's
+ * last colour (RGB2), left as it was for an unlit vertex */
+static void lamp_corner(u32 xy, s32 z, u32 word) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 light, between;
+
+    if (word & TINTED_VERTEX) {
+        GTE_WRITE_CONTROL(GTE_RFC, scratch->tint_far[0]);
+        GTE_WRITE_CONTROL(GTE_GFC, scratch->tint_far[1]);
+        GTE_WRITE_CONTROL(GTE_BFC, scratch->tint_far[2]);
+        GTE_LOAD_DATA(GTE_IR0, scratch->tint);
+        GTE_LOAD_DATA(GTE_RGBC, scratch->camera_z);
+        Gte_Dpcs();
+        return;
+    } else if (word & UNLIT_VERTEX) {
+        return;
+    } else {
+        light = lamp_light(xy, z, scratch->lamp1) + lamp_light(xy, z, scratch->lamp2);
+    }
+    between = LAMP_FULL - light;
+    if (light == 0) {
+        GTE_LOAD_DATA(GTE_IR1, scratch->lamp_far[0]);
+        GTE_LOAD_DATA(GTE_IR2, scratch->lamp_far[1]);
+        GTE_LOAD_DATA(GTE_IR3, scratch->lamp_far[2]);
+    } else if ((s32)between <= 0) {
+        GTE_LOAD_DATA(GTE_IR1, scratch->lamp_full[0]);
+        GTE_LOAD_DATA(GTE_IR2, scratch->lamp_full[1]);
+        GTE_LOAD_DATA(GTE_IR3, scratch->lamp_full[2]);
+    } else {
+        GTE_WRITE_CONTROL(GTE_RFC, scratch->lamp_far[0]);
+        GTE_WRITE_CONTROL(GTE_GFC, scratch->lamp_far[1]);
+        GTE_WRITE_CONTROL(GTE_BFC, scratch->lamp_far[2]);
+        GTE_LOAD_DATA(GTE_RGBC, scratch->shade);
+        GTE_WRITE_DATA(GTE_IR0, between);
+        Gte_Dpcs();
+    }
+    GTE_WRITE_DATA(GTE_IR0, 0);
+    GTE_LOAD_DATA(GTE_RGBC, scratch->camera_z);
+    Gte_Dpcl();
+}
+
+static void lit_vectors(WorldPass *pass, s32 corners, u32 (*vectors)[2]);
+
+/* The lit mode's corners: each lit by the lamps from its vertex's vector */
+static void lamp_colours(WorldPass *pass, s32 corners) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 vectors[4][2];
+    s32 corner;
+
+    lit_vectors(pass, corners, vectors);
+    for (corner = 0; corner < corners; corner++) {
+        scratch->camera_z = pass->colour[corner];
+        lamp_corner(vectors[corner][0], vectors[corner][1], scratch->lit_words[corner]);
+        GTE_READ_DATA(GTE_RGB2, pass->colour[corner]);
+    }
+}
+
+/* The lit modes' corners' vectors (the quad's first as its projector kept it); the scratchpad keeps the vertices'
+ * words, the next entry's kind and the depth meanwhile, as the retail code did */
+static void lit_vectors(WorldPass *pass, s32 corners, u32 (*vectors)[2]) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    s32 corner;
+
+    for (corner = 0; corner < corners; corner++) {
+        scratch->lit_words[corner] = pass->word[corner];
+    }
+    scratch->upcoming = pass->upcoming_entry & ENTRY_KIND_MASK;
+    scratch->lit_depth = pass->depth;
+    if (corners == QUAD_CORNERS) {
+        vectors[0][0] = scratch->quad_first_vxy;
+        vectors[0][1] = scratch->quad_first_vz;
+        GTE_READ_DATA(GTE_VXY1, vectors[1][0]);
+        GTE_READ_DATA(GTE_VZ1, vectors[1][1]);
+        GTE_READ_DATA(GTE_VXY2, vectors[2][0]);
+        GTE_READ_DATA(GTE_VZ2, vectors[2][1]);
+        GTE_READ_DATA(GTE_VXY0, vectors[3][0]);
+        GTE_READ_DATA(GTE_VZ0, vectors[3][1]);
+    } else {
+        GTE_READ_DATA(GTE_VXY0, vectors[0][0]);
+        GTE_READ_DATA(GTE_VZ0, vectors[0][1]);
+        GTE_READ_DATA(GTE_VXY1, vectors[1][0]);
+        GTE_READ_DATA(GTE_VZ1, vectors[1][1]);
+        GTE_READ_DATA(GTE_VXY2, vectors[2][0]);
+        GTE_READ_DATA(GTE_VZ2, vectors[2][1]);
+    }
+}
+
+/* The lit modes' quad projector: the first corner's vector kept before the default one pushes it out */
+void func_80042698(WorldPass *pass) {
+    GTE_STORE_DATA(GTE_VXY0, WORLD_SCRATCH->quad_first_vxy);
+    GTE_STORE_DATA(GTE_VZ0, WORLD_SCRATCH->quad_first_vz);
+    func_800426A0(pass);
+}
+
+/* The lit mode's drawers: the default ones, the corners lit first */
+void func_80042E84(WorldPass *pass) {
+    lamp_colours(pass, TRIANGLE_CORNERS);
+    func_80042548(pass);
+}
+
+void func_80042F08(WorldPass *pass) {
+    lamp_colours(pass, QUAD_CORNERS);
+    func_80042818(pass);
+}
+
+/* The glowing mode's lamps: what is left of a lamp's reach at a vertex lights it; its first corner tries the lamps
+ * farther and takes LAMP_FLAT off what is left, the others take the lamps near enough at their first */
+#define GLOW_FIRST_REACH 0x15E0
+#define GLOW_REACH 0x12C0
+/* A tinted vertex glows more, an unlit one keeps its colour */
+#define GLOW_TINTED (0x199 + 0x332)
+#define SPECIAL_VERTICES (TINTED_VERTEX | UNLIT_VERTEX)
+
+/* The lamps the glowing mode takes for a polygon's later corners */
+enum { GLOW_NONE, GLOW_ONE, GLOW_BOTH };
+
+/* The glowing mode (the camera's flags 4 or 0x800000): a black far colour, the lamps' positions into the scratchpad */
+void func_80044A70(WorldScene *scene) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+
+    GTE_WRITE_CONTROL(GTE_RFC, 0);
+    GTE_WRITE_CONTROL(GTE_GFC, 0);
+    GTE_WRITE_CONTROL(GTE_BFC, 0);
+    scratch->lamp1[0] = scene->lamps[0][0];
+    scratch->lamp1[1] = scene->lamps[0][1];
+    scratch->lamp2[0] = scene->lamps[1][0];
+    scratch->lamp2[1] = scene->lamps[1][1];
+}
+
+/* What is left of a lamp's reach at a vertex, less how far the vertex is along z, y and x: negative once it runs out */
+static s32 glow_left(u32 xy, s32 z, u32 *lamp, u32 reach) {
+    u32 offset = xy - lamp[0];
+    u32 left = reach - magnitude((u32)z - lamp[1]);
+
+    if ((s32)left < 0) {
+        return left;
+    } else {
+        left -= magnitude((u32)((s32)offset >> GTE_HALF_BITS));
+    }
+    if ((s32)left < 0) {
+        return left;
+    } else {
+        return left - magnitude((u32)((s32)(offset << GTE_HALF_BITS) >> GTE_HALF_BITS));
+    }
+}
+
+static s32 at_least_zero(s32 value) {
+    if (value < 0) {
+        return 0;
+    } else {
+        return value;
+    }
+}
+
+/* A corner's colour dimmed toward black by how little light it has (into RGB2) */
+static void glow_corner(u32 word, s32 light) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    s32 between;
+
+    if (word & TINTED_VERTEX) {
+        light += GLOW_TINTED;
+    } else if (word & UNLIT_VERTEX) {
+        GTE_LOAD_DATA(GTE_RGB2, scratch->camera_z);
+        return;
+    } else {
+        /* Lit by the lamps alone */
+    }
+    if (light == 0) {
+        GTE_WRITE_DATA(GTE_RGB2, 0);
+        return;
+    } else {
+        between = LAMP_FULL - light;
+    }
+    GTE_WRITE_DATA(GTE_IR0, between);
+    GTE_LOAD_DATA(GTE_RGBC, scratch->camera_z);
+    if (between <= 0) {
+        GTE_LOAD_DATA(GTE_RGB2, scratch->camera_z);
+    } else {
+        Gte_Dpcs();
+    }
+}
+
+/* The glowing mode's corners: the lamps the first corner is near light it and the later ones; near neither, with no
+ * tinted or unlit vertex, the polygon is a black flat one (whether so) */
+static s32 glow_colours(WorldPass *pass, s32 corners) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 vectors[4][2];
+    u32 *lamp = scratch->lamp1;
+    u32 special = 0;
+    s32 lamps, corner, first, second, light;
+
+    lit_vectors(pass, corners, vectors);
+    /* The first corner's colour is in the scratchpad as the lamps are tried, the polygon flat or not */
+    scratch->camera_z = pass->colour[0];
+    first = glow_left(vectors[0][0], vectors[0][1], scratch->lamp1, GLOW_FIRST_REACH);
+    if (first >= 0) {
+        second = glow_left(vectors[0][0], vectors[0][1], scratch->lamp2, GLOW_FIRST_REACH);
+    } else {
+        second = glow_left(vectors[0][0], vectors[0][1], scratch->lamp2, GLOW_FIRST_REACH);
+        lamp = scratch->lamp2;
+    }
+    if (first >= 0 && second >= 0) {
+        lamps = GLOW_BOTH;
+        light = at_least_zero(first - LAMP_FLAT);
+        if (second - LAMP_FLAT >= 0) {
+            light += second - LAMP_FLAT;
+        } else {
+            /* The second lamp too far once flattened */
+        }
+    } else if (first >= 0) {
+        lamps = GLOW_ONE;
+        light = at_least_zero(first - LAMP_FLAT);
+    } else if (second >= 0) {
+        lamps = GLOW_ONE;
+        light = at_least_zero(second - LAMP_FLAT);
+    } else {
+        lamps = GLOW_NONE;
+        light = 0;
+        for (corner = 0; corner < corners; corner++) {
+            special |= scratch->lit_words[corner];
+        }
+        if (!(special & SPECIAL_VERTICES)) {
+            flat_black(pass, corners);
+            return 1;
+        } else {
+            /* Some corner tinted or unlit */
+        }
+    }
+    for (corner = 0; corner < corners; corner++) {
+        if (corner == 0) {
+            /* Its light found above */
+        } else if (lamps == GLOW_BOTH) {
+            light = at_least_zero(glow_left(vectors[corner][0], vectors[corner][1], scratch->lamp1, GLOW_REACH));
+            second = glow_left(vectors[corner][0], vectors[corner][1], scratch->lamp2, GLOW_REACH);
+            if (second >= 0) {
+                light += second;
+            } else {
+                /* The second lamp too far */
+            }
+        } else if (lamps == GLOW_ONE) {
+            light = at_least_zero(glow_left(vectors[corner][0], vectors[corner][1], lamp, GLOW_REACH));
+        } else {
+            light = 0;
+        }
+        scratch->camera_z = pass->colour[corner];
+        glow_corner(scratch->lit_words[corner], light);
+        GTE_READ_DATA(GTE_RGB2, pass->colour[corner]);
+    }
+    return 0;
+}
+
+/* The glowing mode's drawers: the default ones, the corners lit by the lamps first, or a black flat polygon */
+void func_80044E48(WorldPass *pass) {
+    if (!glow_colours(pass, TRIANGLE_CORNERS)) {
+        func_80042548(pass);
+    } else {
+        /* Drawn black */
+    }
+}
+
+void func_80044EC0(WorldPass *pass) {
+    if (!glow_colours(pass, QUAD_CORNERS)) {
+        func_80042818(pass);
+    } else {
+        /* Drawn black */
+    }
+}
+
+/* The waving vertices (bit 18 of their words) move along y by a byte of the scratchpad's wave table, the index from
+ * their position and the camera's; the swaying ones (the same bit) by a sine */
+#define MOVING_VERTEX VERTEX_BIT_18
+#define WAVE_SHIFT 4
+#define WAVE_MASK 0xF
+
+/* The waving mode (the camera's flag 0x200): the waves' phase from the camera's position */
+void func_80043B5C(WorldScene *scene) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+
+    scratch->wave_phase = scratch->camera_x + scratch->camera_y;
+}
+
+/* A waving vertex's VXY pair, moved */
+static u32 waved(u32 xy, u32 phase) {
+    u32 index = (((xy >> GTE_HALF_BITS) + phase + xy) >> WAVE_SHIFT) & WAVE_MASK;
+
+    return xy + ((u32)WORLD_SCRATCH->waves[index] << GTE_HALF_BITS);
+}
+
+/* The waving mode's projectors: the waving corners moved in the GTE's vectors (a quad's fourth in the pass), then the
+ * default projectors */
+void func_80043B74(WorldPass *pass) {
+    u32 phase = WORLD_SCRATCH->wave_phase;
+    u32 xy;
+
+    if (pass->word[0] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY0, xy);
+        GTE_WRITE_DATA(GTE_VXY0, waved(xy, phase));
+    } else {
+        /* Still */
+    }
+    if (pass->word[1] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY1, xy);
+        GTE_WRITE_DATA(GTE_VXY1, waved(xy, phase));
+    } else {
+        /* Still */
+    }
+    if (pass->word[2] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY2, xy);
+        GTE_WRITE_DATA(GTE_VXY2, waved(xy, phase));
+    } else {
+        /* Still */
+    }
+    func_80042420(pass);
+}
+
+void func_80043C48(WorldPass *pass) {
+    u32 phase = WORLD_SCRATCH->wave_phase;
+    u32 xy;
+
+    if (pass->word[0] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY0, xy);
+        GTE_WRITE_DATA(GTE_VXY0, waved(xy, phase));
+    } else {
+        /* Still */
+    }
+    if (pass->word[1] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY1, xy);
+        GTE_WRITE_DATA(GTE_VXY1, waved(xy, phase));
+    } else {
+        /* Still */
+    }
+    if (pass->word[2] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY2, xy);
+        GTE_WRITE_DATA(GTE_VXY2, waved(xy, phase));
+    } else {
+        /* Still */
+    }
+    if (pass->word[3] & MOVING_VERTEX) {
+        pass->quad_last_xy = waved(pass->quad_last_xy, phase);
+    } else {
+        /* Still */
+    }
+    func_800426A0(pass);
+}
+
+/* The waving mode's drawers: a polygon whose vertices are all tinted dims by depth (none drawn left black), else the
+ * default drawer */
+static void wave_polygon(WorldPass *pass, s32 corners, WorldStep draw) {
+    u32 all = ~0;
+    s32 corner;
+
+    for (corner = 0; corner < corners; corner++) {
+        all &= pass->word[corner];
+    }
+    if ((all & TINTED_VERTEX) && !dim_colours(pass, corners, DIM_SPAN_WAVING)) {
+        /* Black: not drawn */
+        return;
+    } else {
+        draw(pass);
+    }
+}
+
+void func_80043C2C(WorldPass *pass) {
+    wave_polygon(pass, TRIANGLE_CORNERS, func_80042548);
+}
+
+void func_80043D34(WorldPass *pass) {
+    wave_polygon(pass, QUAD_CORNERS, func_80042818);
+}
+
+/* The swaying vertices (bit 18 of their words) move by a sine of their position, the camera's and the clock: its
+ * angle in 32ths of a turn, the table's quarter wave in 16 steps */
+#define SWAY_SHIFT 4
+#define SWAY_FLIP 0x20
+#define SWAY_QUADRANT_SHIFT 4
+#define SWAY_QUADRANT_MASK 3
+#define SWAY_STEP_MASK 0xF
+#define SWAY_STEP_ENTRIES 0x40
+#define SWAY_COLOUR_MASK 0xFFFFFF
+
+/* The swaying mode (the camera's flag 8): the sway's phase from the camera's position, its replacement colour, clock
+ * shift and size into the scratchpad */
+void func_8004299C(WorldScene *scene) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+
+    scratch->wave_phase = scratch->camera_x + scratch->camera_z;
+    scratch->mode_colours[0] = scene->tint_colour & SWAY_COLOUR_MASK;
+    scratch->sway_shift = scene->sway_shift;
+    scratch->sway_scale = scene->sway_scale;
+}
+
+/* A swaying vertex moved (func_800429D0): its VXY pair and z by the sine and cosine of its angle, shifted by the sway's
+ * size, the quadrant (bits 4 and 5 of the angle) choosing which goes where and its sign */
+static void swayed(u32 *xy, u32 *z, s32 clock, s32 scale, u32 phase) {
+    s32 angle = (s32)(*z + phase + *xy) >> SWAY_SHIFT;
+    s32 step, cosine, sine;
+
+    if (angle & SWAY_FLIP) {
+        angle = -(angle + clock);
+    } else {
+        angle += clock;
+    }
+    step = (angle & SWAY_STEP_MASK) * SWAY_STEP_ENTRIES;
+    cosine = (s32)((u32)g_SinTable[ANGLE_QUARTER - step] << GTE_HALF_BITS) >> (scale & SHIFT_COUNT_MASK);
+    sine = (s32)((u32)g_SinTable[step] << GTE_HALF_BITS) >> (scale & SHIFT_COUNT_MASK);
+    switch ((angle >> SWAY_QUADRANT_SHIFT) & SWAY_QUADRANT_MASK) {
+        case 0:
+            *z += cosine;
+            *xy += sine;
+            break;
+        case 1:
+            *xy += cosine;
+            *z -= sine;
+            break;
+        case 2:
+            *z -= cosine;
+            *xy -= sine;
+            break;
+        default:
+            *xy -= cosine;
+            *z += sine;
+            break;
+    }
+}
+
+/* The swaying mode's projectors: the swaying corners moved (in the GTE's vectors; the triangle's third and the quad's
+ * fourth from what the dispatcher loaded, its z whole), then the default projectors; the scratchpad keeps the next
+ * entry meanwhile, as the retail code did */
+static void sway_corners(WorldPass *pass, s32 corners) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    s32 clock = scratch->clock >> (scratch->sway_shift & SHIFT_COUNT_MASK);
+    s32 scale = scratch->sway_scale;
+    u32 phase = scratch->wave_phase;
+    u32 xy, z;
+
+    scratch->upcoming = pass->upcoming_entry;
+    if (pass->word[0] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY0, xy);
+        GTE_READ_DATA(GTE_VZ0, z);
+        swayed(&xy, &z, clock, scale, phase);
+        GTE_WRITE_DATA(GTE_VXY0, xy);
+        GTE_WRITE_DATA(GTE_VZ0, z);
+    } else {
+        /* Still */
+    }
+    if (pass->word[1] & MOVING_VERTEX) {
+        GTE_READ_DATA(GTE_VXY1, xy);
+        GTE_READ_DATA(GTE_VZ1, z);
+        swayed(&xy, &z, clock, scale, phase);
+        GTE_WRITE_DATA(GTE_VXY1, xy);
+        GTE_WRITE_DATA(GTE_VZ1, z);
+    } else {
+        /* Still */
+    }
+    if (!(pass->word[2] & MOVING_VERTEX)) {
+        /* Still */
+    } else if (corners == QUAD_CORNERS) {
+        GTE_READ_DATA(GTE_VXY2, xy);
+        GTE_READ_DATA(GTE_VZ2, z);
+        swayed(&xy, &z, clock, scale, phase);
+        GTE_WRITE_DATA(GTE_VXY2, xy);
+        GTE_WRITE_DATA(GTE_VZ2, z);
+    } else {
+        GTE_READ_DATA(GTE_VXY2, xy);
+        z = pass->vertex_z[2];
+        swayed(&xy, &z, clock, scale, phase);
+        GTE_WRITE_DATA(GTE_VXY2, xy);
+        GTE_WRITE_DATA(GTE_VZ2, z);
+    }
+    if (corners == QUAD_CORNERS && (pass->word[3] & MOVING_VERTEX)) {
+        xy = pass->quad_last_xy;
+        z = pass->quad_last_z;
+        swayed(&xy, &z, clock, scale, phase);
+        pass->quad_last_xy = xy;
+        pass->quad_last_z = z;
+    } else {
+        /* Still, or no fourth corner */
+    }
+}
+
+void func_80042AB8(WorldPass *pass) {
+    sway_corners(pass, TRIANGLE_CORNERS);
+    func_80042420(pass);
+}
+
+void func_80042B7C(WorldPass *pass) {
+    sway_corners(pass, QUAD_CORNERS);
+    func_800426A0(pass);
+}
+
+/* The swaying mode's drawers: the tinted vertices' corners in its replacement colour, when it isn't 0, then the default
+ * drawers */
+static void sway_colours(WorldPass *pass, s32 corners) {
+    u32 colour = WORLD_SCRATCH->mode_colours[0];
+    s32 corner;
+
+    if (colour == 0) {
+        return;
+    } else {
+        for (corner = 0; corner < corners; corner++) {
+            if (pass->word[corner] & TINTED_VERTEX) {
+                pass->colour[corner] = colour;
+            } else {
+                /* Its own colour */
+            }
+        }
+    }
+}
+
+void func_80042B44(WorldPass *pass) {
+    sway_colours(pass, TRIANGLE_CORNERS);
+    func_80042548(pass);
+}
+
+void func_80042C2C(WorldPass *pass) {
+    sway_colours(pass, QUAD_CORNERS);
+    func_80042818(pass);
+}
+
+/* The light around Crash (the game's flag 0x1000000, its light's entry loaded): a polygon with a lit vertex (bit 18)
+ * whose corners come within 0x400 of him along z and along x is divided into a grid of 45 points, each shaded and
+ * raised from the light's 16 by 16 maps by its distance from him, and drawn as the triangles a strip list makes of
+ * them, each in its own slot, with the polygon itself 40 slots farther */
+#define LIGHT_CENTRE 0x200
+#define LIT_VERTEX VERTEX_BIT_18
+/* Where func_800461E0, alone, keeps its return address */
+#define LIGHT_RETURN 0x1F80018C
+#define LIGHT_RETURN_BYTES 4
+#define LIGHT_NEAR_MASK 0xFC00
+#define LIGHT_ROWS 8
+#define LIGHT_MAP_SHIFT 4
+#define LIGHT_MAP_MASK 0xFFF0
+#define LIGHT_SHADE_SHIFT 5
+#define LIGHT_UNLIT 0xFF
+#define LIGHT_NEARER 5
+#define LIGHT_BEHIND 40
+/* The walk's fixed point: positions, colours and the texture's corners in 8ths; the distances from Crash in 64ths
+ * along z (z << 6) and x, a step an 8th of the corners' difference */
+#define WALK_SHIFT 3
+#define WALK_Z_SHIFT 6
+#define WALK_X_SHIFT 22
+#define WALK_COLOUR_MASK 0x7FFF
+#define WALK_PAIR_MASK 0xFFFF7FFF
+#define LIGHT_Y_SHIFT 4
+#define LIGHT_Y_PAIR_SHIFT 17
+#define LIGHT_V_SHIFT 5
+#define LIGHT_V_MASK 0xFF00
+#define COLOUR_INVALID 0xFFFFFFFF
+
+/* A point of the light's grid: its colour (all bits set when unlit), screen position, depth and texture corner */
+typedef struct {
+    u32 colour;
+    u32 screen;
+    s16 depth;
+    u16 uv;
+} LightPoint;
+
+/* The triangles of the grid: strips of point indices, each started by one with bit 7 set, the list ended by -1 */
+extern s8 D_8005C6D0[];
+#define STRIP_START 0x80
+#define STRIP_INDEX_MASK 0x7F
+#define STRIPS_END (-1)
+
+/* The light's mode: a black far colour and depth, its maps, its grid's buffer and Crash's place into the scratchpad */
+void func_80045C18(WorldScene *scene) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    s32 x, z;
+
+    GTE_WRITE_CONTROL(GTE_RFC, 0);
+    GTE_WRITE_CONTROL(GTE_GFC, 0);
+    GTE_WRITE_CONTROL(GTE_BFC, 0);
+    GTE_WRITE_DATA(GTE_IR0, 0);
+    x = scene->crash_x;
+    z = scene->crash_z;
+    scratch->light_heights = scene->light_heights;
+    scratch->light_shades = scene->light_shades;
+    scratch->light_grid = scene->light_grid;
+    scratch->light_x = x + LIGHT_CENTRE;
+    scratch->light_z = z + LIGHT_CENTRE;
+}
+
+/* Whether a polygon is lit: one of its vertices lit, and one of its first three corners near Crash along z, one along x
+ */
+static s32 light_near(WorldPass *pass, s32 corners) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 words = 0;
+    u32 z[3], xy[3];
+    s32 corner;
+
+    for (corner = 0; corner < corners; corner++) {
+        words |= pass->word[corner];
+    }
+    if (!(words & LIT_VERTEX)) {
+        return 0;
+    } else {
+        GTE_READ_DATA(GTE_VZ0, z[0]);
+        GTE_READ_DATA(GTE_VZ1, z[1]);
+        GTE_READ_DATA(GTE_VZ2, z[2]);
+    }
+    if (((scratch->light_z - z[0]) & LIGHT_NEAR_MASK) && ((scratch->light_z - z[1]) & LIGHT_NEAR_MASK) &&
+        ((scratch->light_z - z[2]) & LIGHT_NEAR_MASK)) {
+        return 0;
+    } else {
+        GTE_READ_DATA(GTE_VXY0, xy[0]);
+        GTE_READ_DATA(GTE_VXY1, xy[1]);
+        GTE_READ_DATA(GTE_VXY2, xy[2]);
+    }
+    return !(((scratch->light_x - xy[0]) & LIGHT_NEAR_MASK) && ((scratch->light_x - xy[1]) & LIGHT_NEAR_MASK) &&
+             ((scratch->light_x - xy[2]) & LIGHT_NEAR_MASK));
+}
+
+/* One of the light's triangles (func_80045CAC): shaded, textured with the light's texture words when the polygon is,
+ * into its own slot unless that is below the lowest linked so far (own_slot 0: linked as the other polygons) */
+static void light_emit(WorldPass *pass, u32 *slot, s32 own_slot, s32 textured, u32 *colours, u32 *screens) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 *primitive = pass->next;
+    s32 words;
+
+    if (!textured) {
+        primitive[1] = colours[0] | POLY_G3_CODE;
+        primitive[3] = colours[1];
+        primitive[5] = colours[2];
+        primitive[2] = screens[0];
+        primitive[4] = screens[1];
+        primitive[6] = screens[2];
+        words = POLY_G3_WORDS;
+    } else {
+        primitive[3] = scratch->light_texture[0];
+        primitive[6] = scratch->light_texture[1];
+        primitive[9] = scratch->light_texture[2];
+        primitive[2] = screens[0];
+        primitive[5] = screens[1];
+        primitive[8] = screens[2];
+        primitive[1] = colours[0] | POLY_GT3_CODE;
+        primitive[4] = colours[1];
+        primitive[7] = colours[2];
+        words = POLY_GT3_WORDS;
+    }
+    if (own_slot && slot >= pass->lowest) {
+        primitive[0] = *slot | ((u32)(words - 1) << TAG_LENGTH_SHIFT);
+        *slot = (u32)primitive & PRIM_ADDRESS_MASK;
+        pass->next = primitive + words;
+    } else {
+        pass->slot = slot;
+        link_primitive(pass, words);
+    }
+}
+
+/* A triangle of three grid points (func_80045C5C): none if one is unlit, else into the slot of their depth, a little
+ * nearer than their polygon's */
+static void light_points(WorldPass *pass, s32 textured, LightPoint **points) {
+    u32 colours[3], screens[3];
+    s32 sum, index, corner;
+    u32 *slot;
+
+    for (corner = 0; corner < 3; corner++) {
+        colours[corner] = points[corner]->colour;
+        screens[corner] = points[corner]->screen;
+    }
+    if ((s32)(colours[0] | colours[1] | colours[2]) < 0) {
+        return;
+    } else {
+        sum = (s16)(points[0]->depth + points[1]->depth + points[2]->depth);
+    }
+    index = DEPTH_DEEPEST - (s32)((u32)sum >> DEPTH_SUM_SHIFT) - LIGHT_NEARER;
+    if (index - DEPTH_DEEPEST >= 0) {
+        index = DEPTH_DEEPEST;
+    } else {
+        /* In the table, or past its far end */
+    }
+    if (index >= 0) {
+        slot = &pass->ot[index];
+    } else {
+        slot = pass->ot;
+    }
+    light_emit(pass, slot, 1, textured, colours, screens);
+}
+
+/* A lit triangle (func_800461E0): its corners on the GTE (vectors, screen positions and depths) with their colours; the
+ * grid walked, then drawn by the strip list, then the triangle itself */
+static void light_triangle(WorldPass *pass, u32 material, u32 first, u32 second, u32 third) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    LightWalk *walk = &scratch->walk;
+    LightPoint *point, *points[3];
+    u32 xy[3], words[3];
+    s32 z[3], near[3], past[3];
+    u32 colour, shade, height;
+    s32 textured, row, column, index, corner, u, v;
+    s8 *strip;
+    s32 next;
+
+    scratch->mode_colours[0] = first;
+    scratch->mode_colours[1] = second;
+    scratch->mode_colours[2] = third;
+    GTE_STORE_DATA(GTE_SXY0, scratch->light_corners[0][0]);
+    GTE_STORE_DATA(GTE_SXY1, scratch->light_corners[1][0]);
+    GTE_STORE_DATA(GTE_SXY2, scratch->light_corners[2][0]);
+    GTE_STORE_DATA(GTE_SZ1, scratch->light_corners[0][1]);
+    GTE_STORE_DATA(GTE_SZ2, scratch->light_corners[1][1]);
+    GTE_STORE_DATA(GTE_SZ3, scratch->light_corners[2][1]);
+    GTE_READ_DATA(GTE_VXY0, xy[0]);
+    GTE_READ_DATA(GTE_VXY1, xy[1]);
+    GTE_READ_DATA(GTE_VXY2, xy[2]);
+    walk->x_row = walk->x = (s32)(xy[0] << GTE_HALF_BITS) >> (GTE_HALF_BITS - WALK_SHIFT);
+    walk->x_along = xy[1] - xy[0];
+    walk->x_down = xy[2] - xy[0];
+    walk->y_row = walk->y = ((s32)xy[0] >> GTE_HALF_BITS) << WALK_SHIFT;
+    walk->y_along = ((s32)xy[1] >> GTE_HALF_BITS) - ((s32)xy[0] >> GTE_HALF_BITS);
+    walk->y_down = ((s32)xy[2] >> GTE_HALF_BITS) - ((s32)xy[0] >> GTE_HALF_BITS);
+    GTE_READ_DATA(GTE_VZ0, z[0]);
+    GTE_READ_DATA(GTE_VZ1, z[1]);
+    GTE_READ_DATA(GTE_VZ2, z[2]);
+    walk->z_row = walk->z = z[0] << WALK_SHIFT;
+    walk->z_along = z[1] - z[0];
+    walk->z_down = z[2] - z[0];
+    walk->rg_row = walk->rg =
+        (u16)((first & GTE_COLOUR_MAX) << WALK_SHIFT) |
+        ((u32)(u16)(((first >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX) << WALK_SHIFT) << GTE_HALF_BITS);
+    walk->rg_along = (((second & GTE_COLOUR_MAX) - (first & GTE_COLOUR_MAX)) & WALK_COLOUR_MASK) |
+                     ((u32)(u16)(((second >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX) -
+                                 ((first >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX)) << GTE_HALF_BITS);
+    walk->rg_down = (((third & GTE_COLOUR_MAX) - (first & GTE_COLOUR_MAX)) & WALK_COLOUR_MASK) |
+                    ((u32)(u16)(((third >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX) -
+                                ((first >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX)) << GTE_HALF_BITS);
+    walk->b_row = walk->b = (first >> GTE_HALF_BITS) << WALK_SHIFT;
+    walk->b_along = (second >> GTE_HALF_BITS) - (first >> GTE_HALF_BITS);
+    walk->b_down = (third >> GTE_HALF_BITS) - (first >> GTE_HALF_BITS);
+    for (corner = 0; corner < 3; corner++) {
+        near[corner] = (s32)(scratch->light_z - z[corner]) >> WALK_Z_SHIFT;
+        past[corner] = (s32)(((u32)scratch->light_x << GTE_HALF_BITS) - (xy[corner] << GTE_HALF_BITS)) >> WALK_X_SHIFT;
+    }
+    walk->near_row = walk->near = (near[0] & WALK_COLOUR_MASK) | ((u32)(u16)past[0] << GTE_HALF_BITS);
+    walk->near_along = (((near[1] - near[0]) >> WALK_SHIFT) & WALK_COLOUR_MASK) |
+                       ((u32)(u16)((past[1] - past[0]) >> WALK_SHIFT) << GTE_HALF_BITS);
+    walk->near_down = (((near[2] - near[0]) >> WALK_SHIFT) & WALK_COLOUR_MASK) |
+                      ((u32)(u16)((past[2] - past[0]) >> WALK_SHIFT) << GTE_HALF_BITS);
+    textured = (material & MATERIAL_MASK) != 0;
+    if (textured) {
+        triangle_texture(pass, words);
+        for (corner = 0; corner < 3; corner++) {
+            scratch->light_texture[corner] = words[corner];
+            scratch->light_saved_texture[corner] = words[corner];
+        }
+        walk->uv_row = walk->uv = (u16)((words[0] & GTE_COLOUR_MAX) << WALK_SHIFT) |
+                                  ((u32)(u16)(((words[0] >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX) << WALK_SHIFT)
+                                   << GTE_HALF_BITS);
+        walk->uv_along = (((words[1] & GTE_COLOUR_MAX) - (words[0] & GTE_COLOUR_MAX)) & WALK_COLOUR_MASK) |
+                         ((u32)(u16)(((words[1] >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX) -
+                                     ((words[0] >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX)) << GTE_HALF_BITS);
+        walk->uv_down = (((words[2] & GTE_COLOUR_MAX) - (words[0] & GTE_COLOUR_MAX)) & WALK_COLOUR_MASK) |
+                        ((u32)(u16)(((words[2] >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX) -
+                                    ((words[0] >> GTE_COLOUR_BITS) & GTE_COLOUR_MAX)) << GTE_HALF_BITS);
+    } else {
+        /* The texture's walk left as it was */
+    }
+
+    point = (LightPoint *)scratch->light_grid;
+    for (row = LIGHT_ROWS; row >= 0; row--) {
+        for (column = row; column >= 0; column--) {
+            point->colour = COLOUR_INVALID;
+            u = (s16)walk->near;
+            v = (s16)(walk->near >> GTE_HALF_BITS);
+            if (!(u & LIGHT_MAP_MASK) && !(v & LIGHT_MAP_MASK)) {
+                index = u + (v << LIGHT_MAP_SHIFT);
+                colour = ((u32)(s32)(s16)walk->rg >> WALK_SHIFT) |
+                         (((u32)(s32)(s16)(walk->rg >> GTE_HALF_BITS) >> WALK_SHIFT) << GTE_COLOUR_BITS) |
+                         (((u32)(s32)walk->b >> WALK_SHIFT) << GTE_HALF_BITS);
+                GTE_WRITE_DATA(GTE_RGBC, colour);
+                shade = (u32)scratch->light_shades[index] << LIGHT_SHADE_SHIFT;
+                GTE_WRITE_DATA(GTE_IR1, shade);
+                GTE_WRITE_DATA(GTE_IR2, shade);
+                GTE_WRITE_DATA(GTE_IR3, shade);
+                height = scratch->light_heights[index];
+                Gte_Dpcl();
+                if (height != LIGHT_UNLIT) {
+                    GTE_WRITE_DATA(GTE_VXY0, ((u32)(walk->x >> WALK_SHIFT) & GTE_HALF_MASK) |
+                                                 ((u32)((s32)(walk->y + (height << WALK_SHIFT)) >> LIGHT_Y_SHIFT)
+                                                  << LIGHT_Y_PAIR_SHIFT));
+                    GTE_WRITE_DATA(GTE_VZ0, walk->z >> WALK_SHIFT);
+                    GTE_STORE_DATA(GTE_RGB2, point->colour);
+                    u = (s16)walk->uv;
+                    v = (s16)(walk->uv >> GTE_HALF_BITS);
+                    Gte_Rtps();
+                    if (textured) {
+                        point->uv = ((u32)u >> WALK_SHIFT) | ((v << LIGHT_V_SHIFT) & LIGHT_V_MASK);
+                    } else {
+                        /* Untextured: no corner */
+                    }
+                    GTE_READ_DATA(GTE_SZ3, colour);
+                    GTE_STORE_DATA(GTE_SXY2, point->screen);
+                    point->depth = colour;
+                } else {
+                    /* Out of the light */
+                }
+            } else {
+                /* Off the light's maps */
+            }
+            walk->near = (walk->near + walk->near_along) & WALK_PAIR_MASK;
+            walk->uv = (walk->uv + walk->uv_along) & WALK_PAIR_MASK;
+            walk->rg = (walk->rg + walk->rg_along) & WALK_PAIR_MASK;
+            walk->b += walk->b_along;
+            walk->x += walk->x_along;
+            walk->y += walk->y_along;
+            walk->z += walk->z_along;
+            point++;
+        }
+        walk->near_row = (walk->near_row + walk->near_down) & WALK_PAIR_MASK;
+        walk->uv_row = (walk->uv_row + walk->uv_down) & WALK_PAIR_MASK;
+        walk->near = walk->near_row;
+        walk->uv = walk->uv_row;
+        walk->rg_row = (walk->rg_row + walk->rg_down) & WALK_PAIR_MASK;
+        walk->b_row += walk->b_down;
+        walk->rg = walk->rg_row;
+        walk->b = walk->b_row;
+        walk->x_row += walk->x_down;
+        walk->x = walk->x_row;
+        walk->y_row += walk->y_down;
+        walk->y = walk->y_row;
+        walk->z_row += walk->z_down;
+        walk->z = walk->z_row;
+    }
+
+    strip = D_8005C6D0;
+    next = *strip++;
+    while (next != STRIPS_END) {
+        points[0] = (LightPoint *)scratch->light_grid + (next & STRIP_INDEX_MASK);
+        *(u16 *)&scratch->light_texture[0] = points[0]->uv;
+        points[1] = (LightPoint *)scratch->light_grid + strip[0];
+        *(u16 *)&scratch->light_texture[1] = points[1]->uv;
+        next = strip[1];
+        strip += 2;
+        for (;;) {
+            points[2] = (LightPoint *)scratch->light_grid + next;
+            *(u16 *)&scratch->light_texture[2] = points[2]->uv;
+            light_points(pass, textured, points);
+            next = *strip++;
+            if (next < 0) {
+                /* The next strip, or the list's end */
+                break;
+            } else {
+                points[0] = points[1];
+                points[1] = points[2];
+                *(u16 *)&scratch->light_texture[0] = *(u16 *)&scratch->light_texture[1];
+                *(u16 *)&scratch->light_texture[1] = *(u16 *)&scratch->light_texture[2];
+            }
+        }
+    }
+
+    for (corner = 0; corner < 3; corner++) {
+        words[corner] = scratch->light_corners[corner][0];
+        scratch->light_texture[corner] = scratch->light_saved_texture[corner];
+    }
+    light_emit(pass, scratch->light_slot - LIGHT_BEHIND, 0, textured, scratch->mode_colours, words);
+}
+
+/* The light's projectors: an unlit polygon goes to the default ones; a lit one is projected, culled and coloured here,
+ * its next polygon read after its first colour, and drawn by the light (a quad as its last three corners' triangle,
+ * then its first three's), not by the scene's drawers */
+void func_80045D88(WorldPass *pass) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 points[3];
+
+    if (!light_near(pass, TRIANGLE_CORNERS)) {
+        func_80042420(pass);
+        return;
+    } else {
+        Gte_Rtpt();
+    }
+    pass->colour[0] = vertex_colour(pass, 0);
+    read_polygon(pass->upcoming, pass->upcoming_entry);
+    GTE_READ_DATA(GTE_SXY0, points[0]);
+    GTE_READ_DATA(GTE_SXY1, points[1]);
+    GTE_READ_DATA(GTE_SXY2, points[2]);
+    if (off_screen(points, TRIANGLE_CORNERS)) {
+        return;
+    } else {
+        pass->colour[1] = vertex_colour(pass, 1);
+        pass->colour[2] = vertex_colour(pass, 2);
+    }
+    depth_slot(pass);
+    scratch->light_depth = pass->depth;
+    scratch->light_slot = pass->slot;
+    light_triangle(pass, pass->material, pass->colour[0], pass->colour[1], pass->colour[2]);
+}
+
+void func_80045F40(WorldPass *pass) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    u32 points[4];
+
+    if (!light_near(pass, QUAD_CORNERS)) {
+        func_800426A0(pass);
+        return;
+    } else {
+        Gte_Rtpt();
+    }
+    pass->colour[0] = vertex_colour(pass, 0);
+    read_polygon(pass->upcoming, pass->upcoming_entry);
+    GTE_STORE_DATA(GTE_SXY0, scratch->quad_first_xy);
+    GTE_STORE_DATA(GTE_SZ1, scratch->quad_first_z);
+    GTE_STORE_DATA(GTE_VXY0, scratch->quad_first_vxy);
+    GTE_STORE_DATA(GTE_VZ0, scratch->quad_first_vz);
+    GTE_WRITE_DATA(GTE_VXY0, pass->quad_last_xy);
+    GTE_WRITE_DATA(GTE_VZ0, pass->quad_last_z);
+    scratch->light_last_xy = pass->quad_last_xy;
+    scratch->light_last_z = pass->quad_last_z;
+    GTE_READ_DATA(GTE_SXY0, points[0]);
+    GTE_READ_DATA(GTE_SXY1, points[1]);
+    GTE_READ_DATA(GTE_SXY2, points[2]);
+    Gte_Rtps();
+    pass->colour[1] = vertex_colour(pass, 1);
+    GTE_READ_DATA(GTE_SXY2, points[3]);
+    if (off_screen(points, QUAD_CORNERS)) {
+        return;
+    } else {
+        pass->colour[2] = vertex_colour(pass, 2);
+        pass->colour[3] = vertex_colour(pass, 3);
+    }
+    depth_slot(pass);
+    scratch->light_slot = pass->slot;
+    scratch->light_depth = pass->depth;
+    scratch->rotated = ROTATED_FLAG;
+    scratch->light_material = pass->material;
+    GTE_STORE_DATA(GTE_VXY1, scratch->light_vectors[0][0]);
+    GTE_STORE_DATA(GTE_VZ1, scratch->light_vectors[0][1]);
+    GTE_LOAD_DATA(GTE_VXY0, scratch->light_vectors[0][0]);
+    GTE_LOAD_DATA(GTE_VZ0, scratch->light_vectors[0][1]);
+    GTE_STORE_DATA(GTE_VXY2, scratch->light_vectors[1][0]);
+    GTE_STORE_DATA(GTE_VZ2, scratch->light_vectors[1][1]);
+    GTE_LOAD_DATA(GTE_VXY1, scratch->light_vectors[1][0]);
+    GTE_LOAD_DATA(GTE_VZ1, scratch->light_vectors[1][1]);
+    GTE_LOAD_DATA(GTE_VXY2, scratch->light_last_xy);
+    GTE_LOAD_DATA(GTE_VZ2, scratch->light_last_z);
+    scratch->light_first_colour = pass->colour[0];
+    light_triangle(pass, pass->material, pass->colour[1], pass->colour[2], pass->colour[3]);
+
+    GTE_LOAD_DATA(GTE_SXY1, scratch->light_corners[0][0]);
+    GTE_LOAD_DATA(GTE_SXY2, scratch->light_corners[1][0]);
+    GTE_LOAD_DATA(GTE_SXY0, scratch->quad_first_xy);
+    GTE_LOAD_DATA(GTE_VXY1, scratch->light_vectors[0][0]);
+    GTE_LOAD_DATA(GTE_VZ1, scratch->light_vectors[0][1]);
+    GTE_LOAD_DATA(GTE_VXY2, scratch->light_vectors[1][0]);
+    GTE_LOAD_DATA(GTE_VZ2, scratch->light_vectors[1][1]);
+    GTE_LOAD_DATA(GTE_VXY0, scratch->quad_first_vxy);
+    GTE_LOAD_DATA(GTE_VZ0, scratch->quad_first_vz);
+    scratch->rotated = 0;
+    light_triangle(pass, scratch->light_material, scratch->light_first_colour, scratch->mode_colours[0],
+                   scratch->mode_colours[1]);
+}
+
+/* What the world renderer reads of its arguments: the frame up to its ordering table's end, the scene up to its light's
+ * grid (checked as the build compiles) */
+#define FRAME_BYTES 0x2018
+#define WORLD_SCENE_BYTES 0xB4
+typedef char check_world_scene[(sizeof(WorldScene) == WORLD_SCENE_BYTES) ? 1 : -1];
+typedef char check_frame[((u32)&((FrameBuffer *)0)->ot[OT_SLOTS] == FRAME_BYTES) ? 1 : -1];
+
+/* Every caller (Sys_MainLoop, func_80018434) passes the zone's sort list, the frame being built, D_80062A18 and
+ * D_80060944, the textures' clock: a heap buffer of Gfx_AllocSortLists's, one of Gfx_AllocFrameBuffers's and a global,
+ * apart. A sort list holds 1 to SORT_LIST_ENTRIES entries: the disc's whole lists hold 1 to 1,026 but one of 0
+ * (S2/S0000022.NSF, an SLST's last item, 4 bytes after an empty delta), which the retail code can't draw (it reads on
+ * below the list); the deltas build into Gfx_AllocSortLists's buffers. The scene's five words from 0x10 are one of the
+ * 10 modes func_80011E24 and func_80020A24 store. The default mode's setup is func_8003DD0C, an empty function: a call
+ * to it leaves $v1, the scratchpad's base the retail code keeps across it. The group's parts go with it; the other
+ * functions between them (the object renderers' routines and their helpers) stay, never reached */
+EQUIV_SCRATCH(func_80041E5C, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_SCRATCH(func_80041E5C, LIGHT_RETURN, LIGHT_RETURN_BYTES)
+EQUIV_NONNULL(func_80041E5C, 0)
+EQUIV_NONNULL(func_80041E5C, 1)
+EQUIV_NONNULL(func_80041E5C, 2)
+EQUIV_BUFFER(func_80041E5C, 0, SORT_LIST_BYTES)
+EQUIV_BUFFER(func_80041E5C, 1, FRAME_BYTES)
+EQUIV_BUFFER(func_80041E5C, 2, WORLD_SCENE_BYTES)
+EQUIV_HALF(func_80041E5C, 0, 0, 1, SORT_LIST_ENTRIES)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8003DD0C, func_80042420, func_800426A0, func_80042548, func_80042818)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8004599C, func_80042420, func_800426A0, func_800459A8, func_80045AB4)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8004399C, func_80042420, func_800426A0, func_800439D4, func_80043A84)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80044980, func_80042420, func_800426A0, func_800449B0, func_80044A04)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80043D54, func_80042420, func_800426A0, func_80043D84, func_80043EA0)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80042C70, func_80042420, func_80042698, func_80042E84, func_80042F08)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80044A70, func_80042420, func_80042698, func_80044E48, func_80044EC0)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80043B5C, func_80043B74, func_80043C48, func_80043C2C, func_80043D34)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8004299C, func_80042AB8, func_80042B7C, func_80042B44, func_80042C2C)
+EQUIV_WORDS(func_80041E5C, 2, 0x10, func_80045C18, func_80045D88, func_80045F40, func_80042548, func_80042818)
+EQUIV_KEEPS(func_80041E5C, func_8003DD0C, v1)
+HANDWRITTEN_PARTS(func_80041E5C, func_80042420, func_80042548, func_800426A0, func_80042818)
+HANDWRITTEN_PARTS(func_80041E5C, func_8004599C, func_800459A8, func_80045AB4)
+HANDWRITTEN_PARTS(func_80041E5C, func_8004399C, func_800439D4, func_80043A84)
+HANDWRITTEN_PARTS(func_80041E5C, func_80044980, func_800449B0, func_80044A04)
+HANDWRITTEN_PARTS(func_80041E5C, func_80043D54, func_80043D84, func_80043EA0)
+HANDWRITTEN_PARTS(func_80041E5C, func_80042698, func_80042C70, func_80042D10, func_80042E84, func_80042F08)
+HANDWRITTEN_PARTS(func_80041E5C, func_80044A70, func_80044BB4, func_80044E48, func_80044EC0)
+HANDWRITTEN_PARTS(func_80041E5C, func_80043B5C, func_80043B74, func_80043C2C, func_80043C48, func_80043D34)
+HANDWRITTEN_PARTS(func_80041E5C, func_8004299C, func_800429D0, func_80042AB8, func_80042B44, func_80042B7C)
+HANDWRITTEN_PARTS(func_80041E5C, func_80042C2C, func_80045C18, func_80045C5C, func_80045CAC, func_80045D88)
+HANDWRITTEN_PARTS(func_80041E5C, func_80045F40, func_800461E0)
+EQUIV_RUNS(func_80041E5C, func_80042FA8, func_80042FD0, func_80043074, func_80043090, func_80043110)
+EQUIV_RUNS(func_80041E5C, func_80043118, func_80043270, func_800433A4, func_800435F4, func_80043658)
+EQUIV_RUNS(func_80041E5C, func_800436C8, func_800436F4, func_80043750, func_80043764, func_80043778)
+EQUIV_RUNS(func_80041E5C, func_8004378C, func_8004379C, func_800437BC, func_800437D8, func_800437F4)
+EQUIV_RUNS(func_80041E5C, func_8004400C, func_80044410, func_800444BC, func_800445B8, func_80044F54)
+EQUIV_RUNS(func_80041E5C, func_80045218, func_800454A4, func_80045878)
+
+/* Draws the zone's world polygons in the sort list's order (its last entry first) into the frame's ordering table,
+ * through the scene's mode; a list of one entry draws nothing and leaves the table empty */
+void func_80041E5C(u16 *list, FrameBuffer *frame, WorldScene *scene, s32 clock) {
+    WorldScratch *scratch = WORLD_SCRATCH;
+    WorldPass pass;
+    WorldRecord polygon, next;
+    u16 *first = list + SORT_LIST_FIRST;
+    u16 *entry = list + 1 + (s16)list[0];
+    s32 word;
+
+    GTE_WRITE_CONTROL(GTE_TRX, 0);
+    GTE_WRITE_CONTROL(GTE_TRY, 0);
+    GTE_WRITE_CONTROL(GTE_TRZ, 0);
+    scratch->clock = clock;
+    scratch->first = first;
+    if (entry == first) {
+        Gfx_ResetOt((u8 *)frame->ot, OT_SLOTS);
+        return;
+    } else {
+        /* Polygons to draw */
+    }
+    scratch->camera_x = scene->camera[0] >> CAMERA_SHIFT;
+    scratch->camera_y = scene->camera[1] >> CAMERA_SHIFT;
+    scratch->camera_z = scene->camera[2] >> CAMERA_SHIFT;
+    scratch->project_triangle = scene->project_triangle;
+    scratch->project_quad = scene->project_quad;
+    scratch->draw_triangle = scene->draw_triangle;
+    scratch->draw_quad = scene->draw_quad;
+    scene->setup(scene);
+    for (word = 0; word < (s32)(sizeof(scratch->depth_shifts) / sizeof(u32)); word++) {
+        ((u32 *)scratch->depth_shifts)[word] = ((u32 *)D_8005C724)[word];
+    }
+    pass.next = frame->next;
+    pass.ot = frame->ot;
+    pass.clock = clock;
+    scratch->vertex_mask = VERTEX_MASK;
+    scratch->pair_mask = PAIR_MASK;
+    scratch->screen_end = STREAK_SCREEN_END;
+    pass.lowest = &frame->ot[OT_LAST];
+    *pass.lowest = OT_END;
+    read_polygon(&next, *entry);
+    scratch->drained = 0;
+    for (;; entry--) {
+        polygon = next;
+        if (entry == first) {
+            /* The retail code marks the list's end reached before it draws the first entry, and reads it again */
+            scratch->drained = (u32)scratch;
+            world_polygon(&pass, &polygon, &next, *entry);
+            break;
+        } else {
+            world_polygon(&pass, &polygon, &next, entry[-1]);
+        }
+    }
+    if (pass.lowest != pass.ot) {
+        link_down(pass.lowest, pass.ot - 1);
+    } else {
+        /* Every slot linked */
+    }
+    frame->next = pass.next;
 }

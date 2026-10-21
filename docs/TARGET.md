@@ -173,6 +173,50 @@ NSF files, the fourth (the count) 1 to 1,500, the fifth (the box's y offset) -4,
 ordering table) 10 to 1,904. Property 0x2AA sets the dots `func_80045218` draws (`D_80062A94` to `D_80062AA0`): 65 rows
 of 4, the count always 1,000, the y offset 0 to 2,000, the slot 0 to 900, the y shift 0 to 2.
 
+## The world renderer
+
+`func_80041E5C` draws the zone's world polygons each frame (`Sys_MainLoop` and `func_80018434` call it, with the sort
+list, the frame being built, `D_80062A18` and the textures' clock `D_80060944`). What its code shows:
+
+- The sort list's entries are drawn from the last to the first; a list of one entry draws nothing and leaves the
+  ordering table reset (`Gfx_ResetOt`). An entry is a world (bits 13 to 15), a kind (bits 11 and 12) and an index:
+  kind 0 a triangle of the world's triangle table (its word below the table's address, its halfword above), the others
+  an 8-byte record of its quad table, read as the triangle of its first three corners, the triangle of its last three
+  (its texture's corners turned) or the quad.
+- `Sys_MainLoop` copies the worlds from the zone's first item into the scratchpad from 0x280, 32 bytes each: the
+  world's position from the camera (a VXY pair and z), its triangle, quad, vertex, colour, animation and texture tables.
+  A vertex's word holds x and y (a VXY pair, less their low 4 bits), its halfword z (less its low 4); those 12 bits
+  and the word's bits 16 and 17 index its colour; bits 18 and 19 are what the modes read.
+- A polygon's material is its first word's low byte and its second's low 4 bits: 0 draws it shaded only (G3, G4),
+  otherwise textured (GT3, GT4, opaque unless the texture's page blends). Bit 11 makes it an animation's index: a frame
+  by the clock, or (bit 31 of the animation's word) a level by the polygon's depth, 2 bits a level at a shift from the
+  byte table at `D_8005C724`, which the renderer copies to the scratchpad at 0xD0 (and reads past for the farthest
+  polygons: "Code addresses read as data").
+- The polygons come sorted, far first: the ordering table is built from its top slot down, a polygon linked into the
+  lowest slot so far unless its own depth's slot is lower, the slots between linked to the ones above.
+- The code is pipelined: the projector reads the next polygon's record while the GTE projects the current one, and
+  the dispatcher, projectors and drawers share registers, jumping into one another. The C keeps that one read's order,
+  where a record and the frame's primitives may share memory in random trials.
+
+The scene chooses one of 10 modes (`func_80011E24`'s default, `func_80020A24`'s 9 by the camera's flags), five entries
+each: a setup the dispatcher calls once, a triangle and a quad projector, a triangle and a quad drawer.
+
+| Mode | Chosen by | What it does |
+| --- | --- | --- |
+| default | no flag | projects, culls off the screen, draws shaded or textured polygons |
+| fog | 0x200000 with `D_8006CDC4` | fogs each corner by the scene's depth (DPCS), bright or dark by bit 18 |
+| depth fog | 0x20, or 0x200000 without | fogs corners past a depth by how far (property 0x1DE), black flat polygons where all are black |
+| tint | 0x8000 | moves bit 19's corners toward a colour |
+| pulse | 0x40 | pulses bit 19's corners with the clock, or dims by depth when the first vertex has bit 18 |
+| lamps | 0x100 | lights corners from two objects' positions (DPCS, DPCL), tints bit 19's, keeps bit 18's |
+| glow | 4 or 0x800000 | dims corners by their distance from two objects, a polygon far from both black and flat |
+| waves | 0x200 | moves bit 18's vertices along y by a table at scratchpad 0x100, dims polygons whose vertices all have bit 19 |
+| sway | 8 | moves bit 18's vertices by a sine (property 0x1B8), recolours bit 19's |
+| light | the game's flag 0x1000000 | divides polygons near the player into a lit grid of 45 points from two 16 by 16 maps |
+
+The retail code keeps its state in the scratchpad between 0x60 and 0x230, over the GOOL opcode table's copy; the C
+keeps the same words (`WorldScratch`).
+
 ## Addresses from the disc
 
 No address of the executable turned up in the disc's data, and none holds `.data` in place. What breaks the game when

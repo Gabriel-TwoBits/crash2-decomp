@@ -626,24 +626,36 @@ trials on 2 seeds (about 95% compared); the gap test off at its bound or no cull
 The remaining entries are GTE renderers and drivers; with the GTE's own commands in the build their C need not be
 larger than their assembly (`func_80045218`'s is 48 bytes smaller).
 
-The world renderer, in progress. `func_80041E5C` (`Sys_MainLoop` and `func_80018434` call it) walks the zone's sort list
-from its last entry, each a polygon of one of the worlds `Sys_MainLoop` copies into the scratchpad from 0x280 (32 bytes
-each); it loads the polygon's vertices into the GTE and jumps to the scene's projector, which runs RTPT while it decodes
-the next polygon, culls, picks the ordering table's slot by depth and jumps to the scene's drawer, which looks the
-texture up (fixed, animated or by depth), writes the primitive, links it into the ordering table built from the top down
-(the polygons come sorted) and jumps back into the dispatcher's loop. All of it shares registers, so it goes into C as
-one group: the dispatcher, the five entries of each of the scene's 10 modes (`func_80011E24`'s default and
-`func_80020A24`'s 9, chosen by the camera's flags: a setup the dispatcher calls, a triangle and a quad projector, a
-triangle and a quad drawer) and the routines they call with values in registers, 13 functions and 9 helpers, about 14 KB
-of the handwritten code. The object renderers (`func_8003DED8`, `func_8003ED14`) reach it only through `func_80045878`'s
-7 instructions, which a mode's code follows after 60 `nop`s. Its steps: the modes' 32 entries split into functions of
-their own (done: `config/symbol_addrs.txt`, the handwritten code 131 functions, both executables as they were;
-`func_800437F4`, `func_800445B8` and `func_80043EA0` given the sizes up to them); equiv.py's trials given each call's
-mode, a row of the 10, and the group's routines run as the C's own where the C calls their retail addresses; the C
-written and tested mode by mode; the group landed whole and played on the schedules.
+The world renderer (docs/TARGET.md, "The world renderer"): `func_80041E5C` walks the zone's sort list from its last
+entry, each a polygon of one of the worlds `Sys_MainLoop` copies into the scratchpad from 0x280, loads its vertices into
+the GTE and jumps to the scene's projector, which runs RTPT while it decodes the next polygon, culls, picks the ordering
+table's slot by depth and jumps to the scene's drawer, which looks the texture up, writes the primitive, links it into
+the table built from the top down and jumps back into the dispatcher's loop. All of it shares registers, so it went into
+C as one group of 43 handwritten functions: the dispatcher, the 10 modes' five entries (`func_80011E24`'s default and
+`func_80020A24`'s 9: fog, depth fog, tint, pulse, lamps, glow, waves, sway, and the light around Crash) and the routines
+they reach. Steps: the modes' 32 entries split into functions of their own (`config/symbol_addrs.txt`, `func_8004400C`
+too, an object renderers' routine past a drawer; 132 functions); equiv.py's contract gained `EQUIV_WORDS` (rows of words
+an argument points to: the scene's mode) and `EQUIV_KEEPS` (a callee's kept registers), and a group's parts the C
+defines run as its own where the C calls their retail addresses; the GTE model and the build gained DPCS and DPCL
+(`tools/gte.py` too); the C written and judged mode by mode, then landed whole. In C the entries are functions taking a
+`WorldPass`, the retail code's registers, and the scratchpad's words keep the retail code's state (`WorldScratch`, its
+offsets checked as it compiles). Four things the random trials found: a texture's words read before the primitive over
+them is written, and the next polygon's record read after the current one's first colour, as the retail code does (in a
+trial, records and primitives may share memory); and the glowing mode's first corner's colour put in the scratchpad
+before the lamps are tried, the polygon black or not; and the three arguments apart (`EQUIV_BUFFER`, the sort list and
+the frame heap buffers, the scene a global), since a list inside the scene had its count's bound rewrite a mode's
+pointer. It agrees on 2,000 of 2,000 trials on 2 seeds (about 52% compared). The light's path barely runs in random
+trials (the player and the worlds' positions are random words); a run with them at 0 and its maps' and grid's buffers in
+the arena, outside equiv.py, takes it: the C agrees on 1,000 of 1,000 on 2 seeds, while one with the base triangle a
+slot off disagrees on 26 of 1,000. In the game the C renderer is slower (3 vsyncs a game frame where retail takes 2,
+after its loops' locals were kept in registers): Cortex's lips, which follow his speech's sound in real time, moved
+otherwise from game frame 1,380, so new-game and turtle-woods are paced from game frame 1,100 and memory-card to its
+end; then the four schedules agree at every frame. The executable has 3,296 bytes of the retail file's room left. 71 of
+132 handwritten functions equivalent.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
-the world renderer (above), then the object renderers, and the GOOL interpreter with its opcode table.
+the object renderers (`func_8003DED8`, `func_8003ED14` and the routines the table at 0x8005B650 holds), then the GOOL
+interpreter with its opcode table.
 
 ## 5. Readable C (in progress)
 

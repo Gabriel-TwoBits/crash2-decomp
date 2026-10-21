@@ -5,6 +5,7 @@
 #include "game/entity.h"
 #include "game/nsf.h"
 #include "game/object.h"
+#include "game/world.h"
 
 /* What the game's functions return when they succeed; their errors are other negative values (-0x12, -0x10) */
 #define SUCCESS -0xFF
@@ -344,11 +345,43 @@ void func_8003DB94(s32, void *, void *);
 void func_8003EAD4(s32 *, s32 *, s32, void *, s32, s32);
 s32 func_80041A78(s32);
 void func_80041D14(void);
-void func_80042420(void);
-void func_80042548(void);
-void func_800426A0(void);
-void func_80042818(void);
+void func_80042420(WorldPass *);
+void func_80042548(WorldPass *);
+void func_80042698(WorldPass *);
+void func_800426A0(WorldPass *);
+void func_80042818(WorldPass *);
+void func_8004299C(WorldScene *);
+void func_80042AB8(WorldPass *);
+void func_80042B44(WorldPass *);
+void func_80042B7C(WorldPass *);
+void func_80042C2C(WorldPass *);
+void func_80042C70(WorldScene *);
+void func_80042E84(WorldPass *);
+void func_80042F08(WorldPass *);
+void func_8004399C(WorldScene *);
+void func_800439D4(WorldPass *);
+void func_80043A84(WorldPass *);
+void func_80043B5C(WorldScene *);
+void func_80043B74(WorldPass *);
+void func_80043C2C(WorldPass *);
+void func_80043C48(WorldPass *);
+void func_80043D34(WorldPass *);
+void func_80043D54(WorldScene *);
+void func_80043D84(WorldPass *);
+void func_80043EA0(WorldPass *);
+void func_80044980(WorldScene *);
+void func_800449B0(WorldPass *);
+void func_80044A04(WorldPass *);
+void func_80044A70(WorldScene *);
+void func_80044E48(WorldPass *);
+void func_80044EC0(WorldPass *);
 void func_80044F54(s32, void *, void *);
 void func_80045218(s32, void *, void *);
+void func_8004599C(WorldScene *);
+void func_800459A8(WorldPass *);
+void func_80045AB4(WorldPass *);
+void func_80045C18(WorldScene *);
+void func_80045D88(WorldPass *);
+void func_80045F40(WorldPass *);
 
 #endif /* GAME_H */

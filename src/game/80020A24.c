@@ -5,38 +5,6 @@
 char D_8005F1FC[] = "DirnD";
 
 #ifdef NON_MATCHING
-void func_80042698(void);
-void func_80042AB8(void);
-void func_80042B44(void);
-void func_80042B7C(void);
-void func_80042C2C(void);
-void func_80042E84(void);
-void func_80042F08(void);
-void func_800439D4(void);
-void func_80043A84(void);
-void func_80043B74(void);
-void func_80043C2C(void);
-void func_80043C48(void);
-void func_80043D34(void);
-void func_80043D84(void);
-void func_80043EA0(void);
-void func_800449B0(void);
-void func_80044A04(void);
-void func_80044E48(void);
-void func_80044EC0(void);
-void func_800459A8(void);
-void func_80045AB4(void);
-void func_80045D88(void);
-void func_80045F40(void);
-void func_8004299C(void);
-void func_80042C70(void);
-void func_8004399C(void);
-void func_80043B5C(void);
-void func_80043D54(void);
-void func_80044980(void);
-void func_80044A70(void);
-void func_8004599C(void);
-void func_80045C18(void);
 extern s32 g_Paused;
 extern s32 g_Player;
 extern s32 g_CameraX;
