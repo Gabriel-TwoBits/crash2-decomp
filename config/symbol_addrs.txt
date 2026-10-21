@@ -369,6 +369,9 @@ func_80042420 = 0x80042420; // type:func
 func_80042548 = 0x80042548; // type:func
 func_800426A0 = 0x800426A0; // type:func
 func_80042818 = 0x80042818; // type:func
+// a routine of its own after func_80045218's return, whose address func_8003DED8 and func_8003ED14 store in the
+// scratchpad (0x130 past $v1) for their renderers to call
+func_800454A4 = 0x800454A4; // type:func
 
 // Game constants in .rodata: GCC 2.7.2 writes them before the functions, so each file includes them with INCLUDE_RODATA
 // rather than with the function that reads them (docs/TARGET.md, "The game's read-only data")
