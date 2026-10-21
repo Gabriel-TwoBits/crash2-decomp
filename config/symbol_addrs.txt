@@ -558,8 +558,9 @@ func_8003DED8 = 0x8003DED8; // type:func size:0xA04
 D_8003E118 = 0x8003E118; // type:alabel
 D_8003E128 = 0x8003E128; // type:alabel
 D_8003E360 = 0x8003E360; // type:alabel
-func_8003EAD4 = 0x8003EAD4; // type:func size:0x240
-D_8003EBC4 = 0x8003EBC4; // type:alabel
+func_8003EAD4 = 0x8003EAD4; // type:func size:0xF0
+// an object renderers' routine past func_8003EAD4's return and 15 nops, which the table at 0x8005B6EC holds
+func_8003EBC4 = 0x8003EBC4; // type:func size:0x150
 func_8003ED14 = 0x8003ED14; // type:func size:0x888
 D_8003F1C8 = 0x8003F1C8; // type:alabel
 D_8003F1D8 = 0x8003F1D8; // type:alabel
