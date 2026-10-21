@@ -568,14 +568,16 @@ func_8003ED14 = 0x8003ED14; // type:func size:0x888
 D_8003F1C8 = 0x8003F1C8; // type:alabel
 D_8003F1D8 = 0x8003F1D8; // type:alabel
 D_8003F410 = 0x8003F410; // type:alabel
-func_8003FB24 = 0x8003FB24; // type:func size:0x1F0
-D_8003FB84 = 0x8003FB84; // type:alabel
-func_8003FD14 = 0x8003FD14; // type:func size:0x1000
-D_8003FF14 = 0x8003FF14; // type:alabel
-D_80040168 = 0x80040168; // type:alabel
-D_8004075C = 0x8004075C; // type:alabel
-D_80040948 = 0x80040948; // type:alabel
-D_80040B44 = 0x80040B44; // type:alabel
+// the clipped models' pieces' colour mask and the colour routines after it (the table at 0x8005B6EC), and the lit
+// models' drawers (the table at 0x8005B708) with their colour routines
+func_8003FB24 = 0x8003FB24; // type:func size:0x60
+func_8003FB84 = 0x8003FB84; // type:func size:0x190
+func_8003FD14 = 0x8003FD14; // type:func size:0x200
+func_8003FF14 = 0x8003FF14; // type:func size:0x254
+func_80040168 = 0x80040168; // type:func size:0x5F4
+func_8004075C = 0x8004075C; // type:func size:0x1EC
+func_80040948 = 0x80040948; // type:func size:0x1FC
+func_80040B44 = 0x80040B44; // type:func size:0x1D0
 func_80040D14 = 0x80040D14; // type:func size:0x504
 D_80040FC4 = 0x80040FC4; // type:alabel
 func_80041784 = 0x80041784; // type:func size:0x2F4
