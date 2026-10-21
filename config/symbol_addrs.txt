@@ -603,8 +603,9 @@ func_80043504 = 0x80043504; // type:func size:0x18
 func_8004351C = 0x8004351C; // type:func size:0x38
 func_80043554 = 0x80043554; // type:func size:0x40
 func_80043594 = 0x80043594; // type:func size:0x60
-func_800437F4 = 0x800437F4; // type:func size:0x1A8
-D_8004380C = 0x8004380C; // type:alabel
+// the lit models' level from the object, and kind 5's sprites' drawer (the table at 0x8005B708)
+func_800437F4 = 0x800437F4; // type:func size:0x18
+func_8004380C = 0x8004380C; // type:func size:0x190
 // the object renderers' routines after func_80043EA0's drawer: rotation matrices from an object's angles and scale,
 // which func_8001AA80 calls through the table at 0x8005B650 (func_80044178's code from 0x80044238, its negated angles'
 // variant, has no caller), and a packet's first step, which the table at 0x8005B690 holds
