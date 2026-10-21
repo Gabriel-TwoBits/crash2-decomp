@@ -124,7 +124,10 @@ is `void`), the callee-saved registers, the calls in order, and every word eithe
 frame. A trial where the retail run reaches the limit (500,000 instructions or 1,000 calls) agrees whatever the
 candidate does, as one where both take the same exception (reported, not compared; after an exception only the calls
 are compared); a candidate reaching its limit, four times the retail code's (C may copy by halfwords where the retail
-code moves words: `func_8003B24C`), where the retail code returned disagrees. A disagreeing trial's retail code runs again with
+code moves words: `func_8003B24C`) and 4,000 instructions more for each GTE command the retail run gave (one
+instruction there, about 2,300 for an RTPT on `include/gte.h`'s model: `func_80044F54`'s 1,017 streaks took 2,428,386
+instructions in C, 73,118 in the retail code), where the retail code returned disagrees.
+A disagreeing trial's retail code runs again with
 every bit flipped in the registers that aren't arguments, then with them zeroed: when its result changes, it depends on
 registers its caller left (a path reading one it never set, which C can't name: `func_80017380` uses the caller's `$s0`
 for an entry type it doesn't handle; `func_8003D040` a box's sizes before its list's first header, two huge values and

@@ -200,6 +200,9 @@ MAX_INSTRUCTIONS = 500_000
 # The candidate's limit, as many times the retail code's: equivalent C may be slower than handwritten code (a copy by
 # halfwords where the retail code moves words), not otherwise
 CANDIDATE_SLOWDOWN = 4
+# And more for each GTE command the retail run gave, one instruction there: the C runs it on include/gte.h's model, an
+# RTPT about 2,300 instructions (func_80044F54's 1,017 projections, 2,428,386 instructions to the retail code's 73,118)
+GTE_COMMAND_COST = 4_000
 MAX_CALLS = 1_000
 
 # Repairs. A retail run ending on a memory access fault whose address comes from a word of the trial's inputs (a word
@@ -1282,8 +1285,9 @@ class Call:
 class Run:
     status: str = None
     unsupported: str = None
-    # The GTE's registers at the end (gte.Gte.registers)
+    # The GTE's registers at the end (gte.Gte.registers), and the commands it ran
     gte: tuple = ()
+    gte_commands: int = 0
     # Where an exception stopped it
     fault_pc: int = None
     registers: dict = field(default_factory=dict)
@@ -1568,9 +1572,9 @@ class Machine:
             emulator.hook_add(UC_HOOK_CODE, self.delayed_coprocessor, begin=address, end=address)
         return emulator, emulator.context_save()
 
-    def run(self, memory, fuzz, tracer=None):
-        """Runs the function on the trial's memory and registers: how it ended, its registers, its calls out and its
-        final memory (the machine's buffers, valid until its next run)"""
+    def run(self, memory, fuzz, tracer=None, extra=0):
+        """Runs the function on the trial's memory and registers, EXTRA instructions past the machine's limit: how it
+        ended, its registers, its calls out and its final memory (the machine's buffers, valid until its next run)"""
         self.outcome = outcome = Run()
         self.fuzz = fuzz
         self.tracer = tracer
@@ -1603,7 +1607,7 @@ class Machine:
         emulator.reg_write(REGISTERS["sp"], ENTRY_SP)
         emulator.reg_write(REGISTERS["ra"], SENTINEL_RETURN)
         try:
-            emulator.emu_start(self.entry, SENTINEL_RETURN, count=self.limit)
+            emulator.emu_start(self.entry, SENTINEL_RETURN, count=self.limit + extra)
         except UcError as error:
             if outcome.status is None:
                 outcome.status = f"emulator error: {error}"
@@ -1756,6 +1760,8 @@ class Machine:
             if not self.gte.command(word):
                 outcome.unsupported = f"GTE command {word:#010x}, which tools/gte.py doesn't model"
                 outcome.status = outcome.unsupported
+            else:
+                outcome.gte_commands += 1
         elif opcode == OP_COP2 and rs in (COP2_MFC2, COP2_CFC2):
             value = self.gte.read_data(rd) if rs == COP2_MFC2 else self.gte.read_control(rd)
             if rt:
@@ -2040,7 +2046,7 @@ def main():
                         Machine(base, retail, candidate.entry, candidate.size, declared.callee_arguments,
                                 start=candidate.start, limit=MAX_INSTRUCTIONS * CANDIDATE_SLOWDOWN))
         memory, expected = repaired_run(fuzz, base, machines[0], machines[1], decoded)
-        actual = machines[2].run(memory, fuzz)
+        actual = machines[2].run(memory, fuzz, extra=expected.gte_commands * GTE_COMMAND_COST)
         if fuzz.repairs:
             repaired += 1
             replaced += len(fuzz.repairs)
