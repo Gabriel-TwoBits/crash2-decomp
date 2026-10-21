@@ -460,7 +460,8 @@ static void Gte_MultiplyMatrix(s32 matrix, s32 vector) {
 
 #endif /* GTE_MVMVA */
 
-/* GCC 2.7.2 emits a static function used or not: a file defines GTE_DPCS before including this to have DPCS and DPCL */
+/* GCC 2.7.2 emits a static function used or not: a file defines GTE_DPCS before including this to have DPCS, DPCL and
+   DPCT */
 #ifdef GTE_DPCS
 
 /* A colour's components as DPCS takes them (<< 16), DPCL (times IR1-IR3, << 4), and as both give them (>> 4); RGBC's
@@ -471,8 +472,10 @@ static void Gte_MultiplyMatrix(s32 matrix, s32 vector) {
 #define GTE_COLOUR_BITS 8
 #define GTE_COLOUR_MAX 0xFF
 #define GTE_CODE_MASK 0xFF000000
-/* DPCL with sf = 1 and lm = 0 */
+/* DPCL and DPCT with sf = 1 and lm = 0; DPCT cues the colour FIFO's three colours in turn */
 #define GTE_DPCL_CODE 0x0680029
+#define GTE_DPCT_CODE 0x0F8002A
+#define GTE_DPCT_COLOURS 3
 
 #ifdef GTE_MODEL
 
@@ -555,16 +558,73 @@ static void Gte_DepthCueLight(void) {
     Gte_Cue(&regs, start);
 }
 
+/* DPCT: RGB0's components (<< 16) moved toward the far colour by IR0, three times, each push moving RGB0 on */
+static void Gte_DepthCueTriple(void) {
+    GteRegs regs;
+    s64 start[GTE_DIMENSION];
+    s32 colour, row;
+
+    Gte_SaveCue(&regs);
+    GTE_SAVE_DATA(&regs, GTE_RGB0);
+    for (colour = 0; colour < GTE_DPCT_COLOURS; colour++) {
+        for (row = 0; row < GTE_DIMENSION; row++) {
+            start[row] = (s64)((regs.data[GTE_RGB0] >> (row * GTE_COLOUR_BITS)) & GTE_COLOUR_MAX)
+                         << GTE_COLOUR_IN_SHIFT;
+        }
+        Gte_Cue(&regs, start);
+    }
+}
+
 #define Gte_Dpcs() Gte_DepthCue()
 #define Gte_Dpcl() Gte_DepthCueLight()
+#define Gte_Dpct() Gte_DepthCueTriple()
 
 #else
 
 #define Gte_Dpcs() GTE_COMMAND(GTE_DPCS_CODE)
 #define Gte_Dpcl() GTE_COMMAND(GTE_DPCL_CODE)
+#define Gte_Dpct() GTE_COMMAND(GTE_DPCT_CODE)
 
 #endif /* GTE_MODEL */
 
 #endif /* GTE_DPCS */
+
+/* A file defines GTE_NCLIP before including this to have NCLIP */
+#ifdef GTE_NCLIP
+
+#define GTE_NCLIP_CODE 0x1400006
+
+#ifdef GTE_MODEL
+
+/* NCLIP: twice the signed area of the screen triangle SXY0-SXY2, into MAC0 */
+static void Gte_NormalClip(void) {
+    GteRegs regs;
+    s32 x0, y0, x1, y1, x2, y2;
+
+    GTE_SAVE_DATA(&regs, GTE_SXY0);
+    GTE_SAVE_DATA(&regs, GTE_SXY1);
+    GTE_SAVE_DATA(&regs, GTE_SXY2);
+    regs.control[GTE_FLAG] = 0;
+    x0 = (s16)regs.data[GTE_SXY0];
+    y0 = (s16)(regs.data[GTE_SXY0] >> GTE_HALF_BITS);
+    x1 = (s16)regs.data[GTE_SXY1];
+    y1 = (s16)(regs.data[GTE_SXY1] >> GTE_HALF_BITS);
+    x2 = (s16)regs.data[GTE_SXY2];
+    y2 = (s16)(regs.data[GTE_SXY2] >> GTE_HALF_BITS);
+    regs.data[GTE_MAC0] = (s32)Gte_Mac0Checked(&regs, (s64)x0 * y1 + (s64)x1 * y2 + (s64)x2 * y0 - (s64)x0 * y2 -
+                                                          (s64)x1 * y0 - (s64)x2 * y1);
+    GTE_RESTORE_DATA(&regs, GTE_MAC0);
+    GTE_WRITE_CONTROL(GTE_FLAG, regs.control[GTE_FLAG]);
+}
+
+#define Gte_Nclip() Gte_NormalClip()
+
+#else
+
+#define Gte_Nclip() GTE_COMMAND(GTE_NCLIP_CODE)
+
+#endif /* GTE_MODEL */
+
+#endif /* GTE_NCLIP */
 
 #endif
