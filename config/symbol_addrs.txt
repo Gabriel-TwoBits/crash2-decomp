@@ -372,6 +372,40 @@ func_80042818 = 0x80042818; // type:func
 // a routine of its own after func_80045218's return, whose address func_8003DED8 and func_8003ED14 store in the
 // scratchpad (0x130 past $v1) for their renderers to call
 func_800454A4 = 0x800454A4; // type:func
+// the world renderer's modes' entries, which func_80011E24 and func_80020A24 store in the scene (D_80062A28 to
+// D_80062A38) for func_80041E5C: each mode's setup, triangle and quad projectors, triangle and quad drawers
+func_80042698 = 0x80042698; // type:func
+func_8004299C = 0x8004299C; // type:func
+func_80042AB8 = 0x80042AB8; // type:func
+func_80042B44 = 0x80042B44; // type:func
+func_80042B7C = 0x80042B7C; // type:func
+func_80042C2C = 0x80042C2C; // type:func
+func_80042C70 = 0x80042C70; // type:func
+func_80042E84 = 0x80042E84; // type:func
+func_80042F08 = 0x80042F08; // type:func
+func_8004399C = 0x8004399C; // type:func
+func_800439D4 = 0x800439D4; // type:func
+func_80043A84 = 0x80043A84; // type:func
+func_80043B5C = 0x80043B5C; // type:func
+func_80043B74 = 0x80043B74; // type:func
+func_80043C2C = 0x80043C2C; // type:func
+func_80043C48 = 0x80043C48; // type:func
+func_80043D34 = 0x80043D34; // type:func
+func_80043D54 = 0x80043D54; // type:func
+func_80043D84 = 0x80043D84; // type:func
+func_80043EA0 = 0x80043EA0; // type:func size:0x570
+func_80044980 = 0x80044980; // type:func
+func_800449B0 = 0x800449B0; // type:func
+func_80044A04 = 0x80044A04; // type:func
+func_80044A70 = 0x80044A70; // type:func
+func_80044E48 = 0x80044E48; // type:func
+func_80044EC0 = 0x80044EC0; // type:func
+func_8004599C = 0x8004599C; // type:func
+func_800459A8 = 0x800459A8; // type:func
+func_80045AB4 = 0x80045AB4; // type:func
+func_80045C18 = 0x80045C18; // type:func
+func_80045D88 = 0x80045D88; // type:func
+func_80045F40 = 0x80045F40; // type:func
 
 // Game constants in .rodata: GCC 2.7.2 writes them before the functions, so each file includes them with INCLUDE_RODATA
 // rather than with the function that reads them (docs/TARGET.md, "The game's read-only data")
@@ -553,7 +587,7 @@ D_80043504 = 0x80043504; // type:alabel
 D_8004351C = 0x8004351C; // type:alabel
 D_80043554 = 0x80043554; // type:alabel
 D_80043594 = 0x80043594; // type:alabel
-func_800437F4 = 0x800437F4; // type:func size:0xC1C
+func_800437F4 = 0x800437F4; // type:func size:0x1A8
 D_8004380C = 0x8004380C; // type:alabel
 D_8004400C = 0x8004400C; // type:alabel
 D_80044178 = 0x80044178; // type:alabel
@@ -568,7 +602,7 @@ D_800444E0 = 0x800444E0; // type:alabel
 D_80044534 = 0x80044534; // type:alabel
 D_80044558 = 0x80044558; // type:alabel
 D_80044594 = 0x80044594; // type:alabel
-func_800445B8 = 0x800445B8; // type:func size:0x5FC
+func_800445B8 = 0x800445B8; // type:func size:0x3C8
 D_800446F0 = 0x800446F0; // type:alabel
 D_800447DC = 0x800447DC; // type:alabel
 D_80044830 = 0x80044830; // type:alabel

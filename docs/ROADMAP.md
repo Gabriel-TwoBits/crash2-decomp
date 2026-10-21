@@ -626,9 +626,24 @@ trials on 2 seeds (about 95% compared); the gap test off at its bound or no cull
 The remaining entries are GTE renderers and drivers; with the GTE's own commands in the build their C need not be
 larger than their assembly (`func_80045218`'s is 48 bytes smaller).
 
+The world renderer, in progress. `func_80041E5C` (`Sys_MainLoop` and `func_80018434` call it) walks the zone's sort list
+from its last entry, each a polygon of one of the worlds `Sys_MainLoop` copies into the scratchpad from 0x280 (32 bytes
+each); it loads the polygon's vertices into the GTE and jumps to the scene's projector, which runs RTPT while it decodes
+the next polygon, culls, picks the ordering table's slot by depth and jumps to the scene's drawer, which looks the
+texture up (fixed, animated or by depth), writes the primitive, links it into the ordering table built from the top down
+(the polygons come sorted) and jumps back into the dispatcher's loop. All of it shares registers, so it goes into C as
+one group: the dispatcher, the five entries of each of the scene's 10 modes (`func_80011E24`'s default and
+`func_80020A24`'s 9, chosen by the camera's flags: a setup the dispatcher calls, a triangle and a quad projector, a
+triangle and a quad drawer) and the routines they call with values in registers, 13 functions and 9 helpers, about 14 KB
+of the handwritten code. The object renderers (`func_8003DED8`, `func_8003ED14`) reach it only through `func_80045878`'s
+7 instructions, which a mode's code follows after 60 `nop`s. Its steps: the modes' 32 entries split into functions of
+their own (done: `config/symbol_addrs.txt`, the handwritten code 131 functions, both executables as they were;
+`func_800437F4`, `func_800445B8` and `func_80043EA0` given the sizes up to them); equiv.py's trials given each call's
+mode, a row of the 10, and the group's routines run as the C's own where the C calls their retail addresses; the C
+written and tested mode by mode; the group landed whole and played on the schedules.
+
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
-the handwritten code's renderers by caller, with what each relies on of its callees' registers checked, and the GOOL
-interpreter with its opcode table.
+the world renderer (above), then the object renderers, and the GOOL interpreter with its opcode table.
 
 ## 5. Readable C (in progress)
 

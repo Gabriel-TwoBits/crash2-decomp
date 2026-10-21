@@ -5,38 +5,38 @@
 char D_8005F1FC[] = "DirnD";
 
 #ifdef NON_MATCHING
-void D_80042698(void);
-void D_80042AB8(void);
-void D_80042B44(void);
-void D_80042B7C(void);
-void D_80042C2C(void);
-void D_80042E84(void);
-void D_80042F08(void);
-void D_800439D4(void);
-void D_80043A84(void);
-void D_80043B74(void);
-void D_80043C2C(void);
-void D_80043C48(void);
-void D_80043D34(void);
-void D_80043D84(void);
-void D_80043EA0(void);
-void D_800449B0(void);
-void D_80044A04(void);
-void D_80044E48(void);
-void D_80044EC0(void);
-void D_800459A8(void);
-void D_80045AB4(void);
-void D_80045D88(void);
-void D_80045F40(void);
-extern u8 D_8004299C[];
-extern u8 D_80042C70[];
-extern u8 D_8004399C[];
-extern u8 D_80043B5C[];
-extern u8 D_80043D54[];
-extern u8 D_80044980[];
-extern u8 D_80044A70[];
-extern u8 D_8004599C[];
-extern u8 D_80045C18[];
+void func_80042698(void);
+void func_80042AB8(void);
+void func_80042B44(void);
+void func_80042B7C(void);
+void func_80042C2C(void);
+void func_80042E84(void);
+void func_80042F08(void);
+void func_800439D4(void);
+void func_80043A84(void);
+void func_80043B74(void);
+void func_80043C2C(void);
+void func_80043C48(void);
+void func_80043D34(void);
+void func_80043D84(void);
+void func_80043EA0(void);
+void func_800449B0(void);
+void func_80044A04(void);
+void func_80044E48(void);
+void func_80044EC0(void);
+void func_800459A8(void);
+void func_80045AB4(void);
+void func_80045D88(void);
+void func_80045F40(void);
+void func_8004299C(void);
+void func_80042C70(void);
+void func_8004399C(void);
+void func_80043B5C(void);
+void func_80043D54(void);
+void func_80044980(void);
+void func_80044A70(void);
+void func_8004599C(void);
+void func_80045C18(void);
 extern s32 g_Paused;
 extern s32 g_Player;
 extern s32 g_CameraX;
@@ -265,11 +265,11 @@ void func_80020A24(void) {
     }
     if (D_80062AD8 & (SCENE_FLAG_4 | SCENE_FLAG_800000)) {
         Ent_GetProperty(D_800608DC, 0x1B7, g_CameraProgress, 0, 0, 0, 0, 0, 0);
-        D_80062A28 = D_80044A70;
+        D_80062A28 = func_80044A70;
         D_80062A2C = func_80042420;
-        D_80062A30 = D_80042698;
-        D_80062A34 = D_80044E48;
-        D_80062A38 = D_80044EC0;
+        D_80062A30 = func_80042698;
+        D_80062A34 = func_80044E48;
+        D_80062A38 = func_80044EC0;
         D_80062ACC = 0xA;
         D_80062ADC = 0x12;
         if (D_8006CD50 != 0) {
@@ -290,18 +290,18 @@ void func_80020A24(void) {
         D_80062A5C = v;
     }
     if (D_80062AD8 & SCENE_FLAG_200) {
-        D_80062A28 = D_80043B5C;
-        D_80062A2C = D_80043B74;
-        D_80062A30 = D_80043C48;
-        D_80062A34 = D_80043C2C;
-        D_80062A38 = D_80043D34;
+        D_80062A28 = func_80043B5C;
+        D_80062A2C = func_80043B74;
+        D_80062A30 = func_80043C48;
+        D_80062A34 = func_80043C2C;
+        D_80062A38 = func_80043D34;
     }
     if (D_80062AD8 & SCENE_FLAG_100) {
-        D_80062A28 = D_80042C70;
+        D_80062A28 = func_80042C70;
         D_80062A2C = func_80042420;
-        D_80062A30 = D_80042698;
-        D_80062A34 = D_80042E84;
-        D_80062A38 = D_80042F08;
+        D_80062A30 = func_80042698;
+        D_80062A34 = func_80042E84;
+        D_80062A38 = func_80042F08;
         D_80062A50 = D_8006CC38 << SCALE_SHIFT;
         D_80062A54 = D_8006CC3C;
         D_80062AC0 = D_8006CD90 << SCALE_SHIFT;
@@ -324,11 +324,11 @@ void func_80020A24(void) {
         D_80062A5C = v;
     }
     if (D_80062AD8 & SCENE_FLAG_8000) {
-        D_80062A28 = D_80044980;
+        D_80062A28 = func_80044980;
         D_80062A2C = func_80042420;
         D_80062A30 = func_800426A0;
-        D_80062A34 = D_800449B0;
-        D_80062A38 = D_80044A04;
+        D_80062A34 = func_800449B0;
+        D_80062A38 = func_80044A04;
         D_80062AC0 = D_8006CD90 << SCALE_SHIFT;
         D_80062AC4 = D_8006CD94;
     }
@@ -338,11 +338,11 @@ void func_80020A24(void) {
             D_80062A48 = p[0];
             D_80062A4C = p[1];
         }
-        D_80062A28 = D_8004299C;
-        D_80062A2C = D_80042AB8;
-        D_80062A30 = D_80042B7C;
-        D_80062A34 = D_80042B44;
-        D_80062A38 = D_80042C2C;
+        D_80062A28 = func_8004299C;
+        D_80062A2C = func_80042AB8;
+        D_80062A30 = func_80042B7C;
+        D_80062A34 = func_80042B44;
+        D_80062A38 = func_80042C2C;
         D_80062AC0 = D_8006CD90;
     }
     if (D_80062AD8 & SCENE_FLAG_20) {
@@ -352,21 +352,21 @@ void func_80020A24(void) {
             D_80062AB8 = p[1];
             D_80062ABC = p[2];
         }
-        D_80062A28 = D_8004399C;
+        D_80062A28 = func_8004399C;
         D_80062A2C = func_80042420;
         D_80062A30 = func_800426A0;
-        D_80062A34 = D_800439D4;
-        D_80062A38 = D_80043A84;
+        D_80062A34 = func_800439D4;
+        D_80062A38 = func_80043A84;
         D_80062AE4 = 8;
         D_80062AE0 = 0xC;
     }
     if (D_80062AD8 & SCENE_FLAG_200000) {
         if (D_8006CDC4 != 0) {
-            D_80062A28 = D_8004599C;
+            D_80062A28 = func_8004599C;
             D_80062A2C = func_80042420;
             D_80062A30 = func_800426A0;
-            D_80062A34 = D_800459A8;
-            D_80062A38 = D_80045AB4;
+            D_80062A34 = func_800459A8;
+            D_80062A38 = func_80045AB4;
             D_80062A54 = D_8006CDC4;
         } else {
             p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, g_CameraProgress, 0, 0, 0, 0, 0, 0);
@@ -375,27 +375,27 @@ void func_80020A24(void) {
                 D_80062AB8 = p[1];
                 D_80062ABC = p[2];
             }
-            D_80062A28 = D_8004399C;
+            D_80062A28 = func_8004399C;
             D_80062A2C = func_80042420;
             D_80062A30 = func_800426A0;
-            D_80062A34 = D_800439D4;
-            D_80062A38 = D_80043A84;
+            D_80062A34 = func_800439D4;
+            D_80062A38 = func_80043A84;
             D_80062AE4 = 8;
             D_80062AE0 = 0xC;
         }
     }
     if (D_80062AD8 & SCENE_FLAG_40) {
-        D_80062A28 = D_80043D54;
+        D_80062A28 = func_80043D54;
         D_80062A2C = func_80042420;
         D_80062A30 = func_800426A0;
-        D_80062A34 = D_80043D84;
-        D_80062A38 = D_80043EA0;
+        D_80062A34 = func_80043D84;
+        D_80062A38 = func_80043EA0;
     }
     if (D_8006CB94 & GLOBAL_FLAG_1000000) {
         frame[6] = Nsf_NameToEid(D_8005F1FC);
-        D_80062A28 = D_80045C18;
-        D_80062A2C = D_80045D88;
-        D_80062A30 = D_80045F40;
+        D_80062A28 = func_80045C18;
+        D_80062A2C = func_80045D88;
+        D_80062A30 = func_80045F40;
         D_80062A34 = func_80042548;
         D_8006CDAC = &frame[6];
         D_80062A38 = func_80042818;
