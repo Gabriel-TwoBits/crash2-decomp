@@ -154,7 +154,8 @@ GAME_SCHEDULES = {
         vsync_limit=31000,
         pace=LEVEL_PACE,
     ),
-    # Retail reaches game frame 3,500 by vsync 29,203, paced
+    # Retail reaches game frame 3,500 by vsync 29,203, paced; the equivalent build, its object renderers in C, by vsync
+    # 31,505
     "memory-card": GameSchedule(
         presses=[
             (1050, GAME_TAP_FRAMES, "DOWN"),  # Load Game, on the title's menu
@@ -172,11 +173,11 @@ GAME_SCHEDULES = {
             (3490, "card_last"),
         ],
         last=3500,
-        vsync_limit=31000,
+        vsync_limit=VSYNC_EVENT_LIMIT,
         pace=MENU_PACE,
     ),
     # Nothing pressed: the title's menu left alone plays the attract demo, Turtle Woods then a river level; retail
-    # reaches game frame 4,800 by vsync 14,100
+    # reaches game frame 4,800 by vsync 14,130, the equivalent build (its object renderers in C) by vsync 26,246
     "demo": GameSchedule(
         presses=[],
         checkpoints=[
@@ -190,7 +191,7 @@ GAME_SCHEDULES = {
             (4790, "title_last"),
         ],
         last=4800,
-        vsync_limit=20000,
+        vsync_limit=30000,
         pace=None,
     ),
 }
