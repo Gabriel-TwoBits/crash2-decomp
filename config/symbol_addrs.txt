@@ -580,8 +580,9 @@ func_80040168 = 0x80040168; // type:func size:0x5F4
 func_8004075C = 0x8004075C; // type:func size:0x1EC
 func_80040948 = 0x80040948; // type:func size:0x1FC
 func_80040B44 = 0x80040B44; // type:func size:0x1D0
-func_80040D14 = 0x80040D14; // type:func size:0x504
-D_80040FC4 = 0x80040FC4; // type:alabel
+// the morphing lit models' vertex reader and their drawer (the table at 0x8005B70C)
+func_80040D14 = 0x80040D14; // type:func size:0x2B0
+func_80040FC4 = 0x80040FC4; // type:func size:0x254
 // the lit models' pieces' colour mask, and the morphing models' drawer with their reflection in a level (the table at
 // 0x8005B70C)
 func_80041784 = 0x80041784; // type:func size:0x2C

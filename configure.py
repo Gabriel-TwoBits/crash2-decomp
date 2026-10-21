@@ -76,12 +76,12 @@ ADDRESS_PAIR = re.compile(r"^(?P<lui>[ ]*/\*[^*]*\*/ +lui +)(?P<register>\$\w+),
                           re.MULTILINE)
 ADDRESS_PAIRS = 21
 # The handwritten code's $gp is one more register, a pointer to its structures (docs/TARGET.md, "Addresses from the
-# disc"). splat writes 29 of its offsets as %gp_rel of the small variable each reaches from the retail _gp, which the
+# disc"). splat writes 32 of its offsets as %gp_rel of the small variable each reaches from the retail _gp, which the
 # linker would move with .data; the equivalent build's copy writes each as the number its instruction holds (the word in
 # the comment, little-endian)
 GP_RELATIVE = re.compile(r"^(?P<head>[ ]*/\* [0-9A-F]+ [0-9A-F]+ (?P<word>[0-9A-F]{8}) \*/ +\w+ +\$\w+, )"
                          r"%gp_rel\(\w+\)(?P<base>\(\$gp\))", re.MULTILINE)
-GP_RELATIVE_ACCESSES = 29
+GP_RELATIVE_ACCESSES = 32
 GP_RELATIVE_LEFT = "%gp_rel"
 # A 16-bit immediate: the instruction's low halfword, and its sign
 IMMEDIATE_BYTES = 2
