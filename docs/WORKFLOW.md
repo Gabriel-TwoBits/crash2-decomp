@@ -179,12 +179,16 @@ equivalent C may state the function's contract with its callers, lines of nothin
     EQUIV_SCRATCH(func_8003DA00, SAVE_AREA, SAVE_AREA_BYTES) /* what it leaves there doesn't count */
     EQUIV_RUNS(func_8003CBE4, func_8003CBF0)             /* the retail code branches into it as its own */
     EQUIV_CALLBACK(func_8003CD0C, 7, 2, t8, t9)          /* argument 7 a function of 2 arguments, writing neither */
+    EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8003DD0C, ...) /* the 5 words at $a2 + 0x10 one such row (a line each) */
+    EQUIV_KEEPS(func_80041E5C, func_8003DD0C, v1)        /* a call to func_8003DD0C leaves $v1 */
 
 equiv.py then keeps its trials to it (a value outside the range moved into it by its remainder, a NULL drawn for that
 pointer left out, the second buffer moved past the first, a buffer of its own that overlaps one declared before it moved
 past them all, the halfword moved into its range by its remainder wherever the argument points, the scratch left out
 of the memory compared, the routine run as part of the retail function, which still has other callers in the build, a call through the callback compared on
-its arguments only and leaving the registers named, which a call otherwise sets at random), and prints it with the verdict, which
+its arguments only and leaving the registers named, which a call otherwise sets at random, one of the rows drawn and
+written there, a name standing for its retail address, and a call to the callee leaving the registers named), and
+prints it with the verdict, which
 `tools/match.py` records. The scratch is the handwritten code's save area, the scratchpad's first 16 words: every
 function that uses it writes it before reading it, and no compiled code touches it. Nothing a function reads lives
 there either, so no word of a trial is drawn from the code's constants pointing into it: the retail code saves `$sp`
@@ -193,6 +197,12 @@ had `func_80044F54`'s lines overwrite it and the retail code fault on return, wh
 returned. A bound is a number or a `#define` of one in the file; a line it can't read stops it. A contract goes in by
 hand, with its evidence in the comment above it: every caller, compiled and handwritten, and what each passes.
 `tools/match.py` refuses C holding one from a run: the loop's agent never narrows its own trials.
+
+A group of handwritten routines that share registers goes into C together, its routines the function's
+`HANDWRITTEN_PARTS`; those the C file defines are the candidate's own code, as the retail ones are the retail
+function's. A call to one resolves to the candidate's, and so does a call through a pointer the trial holds to its
+retail address (the world renderer calls its scene's mode entries so): equiv.py runs the candidate's there instead of
+answering a call out.
 
 A condition on the data a function reads, which no argument names, goes in its body: `EQUIV_ASSUME(based);`, nothing in
 the build. equiv.py compiles the candidate with `EQUIV_TRIAL` defined, where a failing condition calls `Equiv_Reject`,

@@ -43,6 +43,11 @@ void Equiv_Reject(void);
 /* Argument ARGUMENT is a function every caller passes that takes COUNT arguments: a call through it compares those, and
  * leaves the registers named after COUNT as they were (the callback never writes them) */
 #define EQUIV_CALLBACK(function, argument, count, kept...)
+/* The words OFFSET bytes past pointer argument ARGUMENT's address are, in every call, the words of one such line: a
+ * number, a #define of one, or a symbol's address */
+#define EQUIV_WORDS(function, argument, offset, words...)
+/* A call to CALLEE leaves the registers named as they were (its code never writes them) */
+#define EQUIV_KEEPS(function, callee, kept...)
 
 /* The split's functions (asm/nonmatchings/) use macro.inc's labels */
 #define INCLUDE_ASM_USE_MACRO_INC 1
