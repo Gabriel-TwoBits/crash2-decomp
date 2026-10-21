@@ -167,6 +167,12 @@ no axis halves. Read from the disc's 1,843 zones: x and y halve at most 7 times,
 and no node with children sits past every axis's halvings; sizes reach 15,221 (a halfword holds them, as the list's
 header does) and origins lie between -234,962 and 417,902 (shifted by 8 they still fit a word).
 
+A camera path's property 0x1B5 sets the streaks `func_80044F54` draws, which
+`func_80020A24` alone interpolates into `D_80062A6C` to `D_80062A90`: on the disc, 490 rows of 6 signed halfwords in 6
+NSF files, the fourth (the count) 1 to 1,500, the fifth (the box's y offset) -4,000 to 0, the sixth (the slot in the
+ordering table) 10 to 1,904. Property 0x2AA sets the dots `func_80045218` draws (`D_80062A94` to `D_80062AA0`): 65 rows
+of 4, the count always 1,000, the y offset 0 to 2,000, the slot 0 to 900, the y shift 0 to 2.
+
 ## Addresses from the disc
 
 No address of the executable turned up in the disc's data, and none holds `.data` in place. What breaks the game when

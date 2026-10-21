@@ -596,6 +596,25 @@ children where no axis splits, on which the retail code loops forever and which 
 reversed, disagree on 1 and 7 of 300. The four schedules agree at every frame. 26 of 98 handwritten functions
 equivalent.
 
+`func_80044F54` draws a scene's streaks (docs/TARGET.md, "The rest of the disc"): points of a box about the view,
+wrapped, from the same generator's bytes every frame, each a shaded line from where the point was from the view's last
+position to where it is from the current one, projected with RTPT, culled when its ends wrap apart or lie past one side
+of the screen, and all linked into one slot of the ordering table before a closing draw mode. Its count is bounded by
+the disc's, 1 to 1,500. Three things changed in equiv.py and the build for it. The C's instruction limit grows by 4,000
+for each GTE command the retail run gave, since the model takes about 2,300 for an RTPT (1,017 streaks: 2,428,386
+instructions to the retail code's 73,118). No word drawn from the code's constants points into a scratch area: a frame's
+next primitive at 0x1F800000 had the retail code's lines overwrite the `$sp` it saves there. And the equivalent build
+runs each GTE command as the GTE's instruction, equiv.py's candidate on the model (`GTE_MODEL`, docs/WORKFLOW.md, "The
+GTE in C"): on the model the build showed the opening's game frame 846 at vsync 11,994 where retail did at 2,721, and
+the model's code cost each file including it about 1,800 bytes. Without it `src/game/800158E0.c` came out 0x794 bytes
+shorter and took the handwritten code that much below its retail address, and turtle-woods differed from game frame
+3,526 in 11 frames, as when the GOOL operations' addresses moved before: the equivalent build's linker script now pads
+the code before the handwritten copy to retail's address when it is shorter (docs/WORKFLOW.md, "The handwritten code").
+The executable has 5,008 bytes of the retail file's room left (2,352 before). It agrees on 2,000 of 2,000 trials on 2
+seeds (about 80% compared); without the cull past the screen's side or without the wrap check along z it disagrees on 22
+and 67 of 300. Every equivalent function (213) still agrees on 500 trials of seed 1, and the four schedules at every
+frame. 27 of 98 handwritten functions equivalent.
+
 The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly.
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);

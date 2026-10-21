@@ -1202,3 +1202,189 @@ void func_8003AE54(void *delta, u16 *from, u16 *to) {
         slst_swap(entries, index, length);
     }
 }
+
+/* func_80044F54's streaks: points in a box about the camera, wrapped, 0x2000 wide (x), 0x1000 high (y) and 0x2000 deep
+ * (z), each a line from where it was from the view's last position to where it is from the current one. Its generator
+ * starts from the same two words every call: the same points every frame */
+#define STREAK_SEED_LOW 0x30125400
+#define STREAK_SEED_HIGH 0x493583FE
+#define RANDOM_BYTE_SHIFT 24
+#define RANDOM_BYTE_BITS 8
+/* A point's coordinates from the generator's bytes at the top of a word: x in 32nds, y in 16ths (a VXY pair's high
+ * half), z in 64ths */
+#define STREAK_X_SHIFT 19
+#define STREAK_Y_SHIFT 4
+#define STREAK_Z_SHIFT 18
+/* A VXY pair (x low, y high) with y's lowest bit clear, where a carry out of x lands; the box's wrap of a pair and
+ * of z */
+#define PAIR_MASK 0xFFFEFFFF
+#define STREAK_PAIR_WRAP 0x0FFF1FFF
+#define STREAK_Z_WRAP 0x1FFF
+/* What the box's corner is from the view, x and z; y's adds the scene's offset */
+#define STREAK_X_BIAS 0x1000
+#define STREAK_Y_BIAS 0x800
+#define STREAK_Z_BIAS 0x1C00
+/* The screen: a point past it has x from 512 or y from 217 (a packed SXY less this, the halves' signs clear) */
+#define STREAK_SCREEN_END 0x00D90200
+#define SXY_X_SIGN_SHIFT 16
+
+/* A shaded line, semi-transparent (LineG2: tag, colour and code, xy, colour, xy), and the closing draw mode (tag, its
+ * word, 0); a tag's word count is in its top byte, the next primitive's address below */
+#define LINE_G2_CODE 0x52000000
+#define LINE_G2_TAG_LENGTH 0x04000000
+#define LINE_G2_WORDS 5
+#define MODE_TAG_LENGTH 0x02000000
+#define MODE_WORDS 3
+#define PRIM_ADDRESS_MASK 0xFFFFFF
+
+/* The words of the frame being built func_80044F54 uses: where the next primitive goes, and the ordering table */
+typedef struct {
+    u8 unk_00[8];
+    u32 *next;
+    u8 unk_0C[0xC];
+    u32 ot[1];
+} FrameBuffer;
+
+/* D_80062A18's scene: the view matrix (its translation at 0x14, as a MATRIX), the streaks' VXY pair and z from the
+ * view's last position and from the current one, both lines' colours (the first with its code), the closing mode's
+ * word, the box's y offset and the streaks' slot in the ordering table */
+typedef struct {
+    u8 unk_00[0xC];
+    s32 *view;
+    u8 unk_10[0x44];
+    u32 last_pair;
+    s32 last_z;
+    u32 pair;
+    s32 z;
+    u32 colour_last;
+    u32 colour;
+    u32 mode;
+    s32 y_offset;
+    s32 slot;
+} StreakScene;
+
+/* A MATRIX's translation: its words from the sixth, after nine halfwords and a pad */
+#define VIEW_TRANSLATION 5
+
+/* The generator's step: both words shift a byte, the low one's lowest into the high one's highest, and the sum of the
+ * bytes shifted out (and one more of the low word's) the new byte at the top of the high word, returned there */
+static u32 streak_random(u32 *low, u32 *high) {
+    u32 carried = *high << RANDOM_BYTE_SHIFT;
+    u32 byte;
+
+    *high >>= RANDOM_BYTE_BITS;
+    byte = *low + *high;
+    *low = (*low >> RANDOM_BYTE_BITS) | carried;
+    byte = (byte + (*low >> RANDOM_BYTE_BITS)) << RANDOM_BYTE_SHIFT;
+    *high |= byte;
+    return byte;
+}
+
+/* The most streaks a scene asks for: its camera's property 0x1B5, interpolated, is D_80062A90's only source
+ * (func_80020A24), its fourth value 1 to 1,500 on the disc (docs/TARGET.md) */
+#define STREAKS_MIN 1
+#define STREAKS_MAX 1500
+
+/* Its one caller (Sys_MainLoop) passes D_80062A90, the frame being built and D_80062A18 */
+EQUIV_SCRATCH(func_80044F54, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_RANGE(func_80044F54, 0, STREAKS_MIN, STREAKS_MAX)
+EQUIV_NONNULL(func_80044F54, 1)
+EQUIV_NONNULL(func_80044F54, 2)
+
+/* Draws COUNT + 1 streaks of the scene's box into the frame being built, all in one slot of its ordering table, then
+ * the draw mode they close with; with the rotation the caller set and no translation */
+void func_80044F54(s32 count, void *frame, void *scene) {
+    FrameBuffer *buffer = frame;
+    StreakScene *streaks = scene;
+    u32 *line = buffer->next;
+    u32 *slot;
+    u32 low = STREAK_SEED_LOW;
+    u32 high = STREAK_SEED_HIGH;
+    u32 code, colour, mode, bias, view_pair, last_pair, pair, pair_span;
+    s32 view_z, last_z, z, z_span, left;
+    u32 x, y, depth, point, from, to, both, past, flag, head, address;
+    s32 z_from, z_to;
+
+    GTE_WRITE_CONTROL(GTE_TRX, 0);
+    GTE_WRITE_CONTROL(GTE_TRY, 0);
+    GTE_WRITE_CONTROL(GTE_TRZ, 0);
+    GTE_WRITE_DATA(GTE_VXY2, 0);
+    GTE_WRITE_DATA(GTE_VZ2, 0);
+    last_pair = streaks->last_pair & PAIR_MASK;
+    last_z = streaks->last_z;
+    pair = streaks->pair & PAIR_MASK;
+    z = streaks->z;
+    code = streaks->colour_last | LINE_G2_CODE;
+    colour = streaks->colour;
+    mode = streaks->mode;
+    bias = ((u32)(streaks->y_offset + STREAK_Y_BIAS) << GTE_HALF_BITS) | STREAK_X_BIAS;
+    slot = &buffer->ot[streaks->slot];
+    view_pair = (((u32)streaks->view[VIEW_TRANSLATION] & GTE_HALF_MASK) |
+                 ((u32)streaks->view[VIEW_TRANSLATION + 1] << GTE_HALF_BITS)) & PAIR_MASK;
+    view_z = streaks->view[VIEW_TRANSLATION + 2];
+    last_pair = (last_pair - view_pair) & PAIR_MASK;
+    last_z -= view_z;
+    pair = (pair - view_pair) & PAIR_MASK;
+    z -= view_z;
+    pair_span = last_pair - pair;
+    z_span = last_z - z;
+
+    for (left = count; left >= 0; left--) {
+        x = streak_random(&low, &high);
+        y = streak_random(&low, &high);
+        depth = streak_random(&low, &high);
+        point = (x >> STREAK_X_SHIFT) | (y >> STREAK_Y_SHIFT);
+        from = (point + last_pair) & STREAK_PAIR_WRAP;
+        to = (point + pair) & STREAK_PAIR_WRAP;
+        if (from - to != pair_span) {
+            /* The box wraps x or y between the two ends */
+            continue;
+        } else {
+            /* One side of the box */
+        }
+        GTE_WRITE_DATA(GTE_VXY0, (from - bias) & PAIR_MASK);
+        GTE_WRITE_DATA(GTE_VXY1, (to - bias) & PAIR_MASK);
+        z_from = ((depth >> STREAK_Z_SHIFT) + last_z) & STREAK_Z_WRAP;
+        z_to = ((depth >> STREAK_Z_SHIFT) + z) & STREAK_Z_WRAP;
+        if (z_from - z_to != z_span) {
+            /* The box wraps z between the two ends */
+            continue;
+        } else {
+            /* One side of the box */
+        }
+        GTE_WRITE_DATA(GTE_VZ0, z_from - STREAK_Z_BIAS);
+        GTE_WRITE_DATA(GTE_VZ1, z_to - STREAK_Z_BIAS);
+        address = (u32)line & PRIM_ADDRESS_MASK;
+        Gte_Rtpt();
+        head = *slot;
+        line[1] = code;
+        line[0] = head | LINE_G2_TAG_LENGTH;
+        GTE_READ_CONTROL(GTE_FLAG, flag);
+        GTE_READ_DATA(GTE_SXY0, from);
+        GTE_READ_DATA(GTE_SXY1, to);
+        both = from & to;
+        past = ~((from - STREAK_SCREEN_END) | (to - STREAK_SCREEN_END)) | both;
+        if (flag & GTE_FLAG_SZ3) {
+            /* A depth out of range */
+            continue;
+        } else if ((s32)past < 0 || (s32)(past << SXY_X_SIGN_SHIFT) < 0) {
+            /* Both ends past the same side of the screen */
+            continue;
+        } else {
+            /* On the screen */
+        }
+        line[3] = colour;
+        GTE_STORE_DATA(GTE_SXY0, line[2]);
+        GTE_STORE_DATA(GTE_SXY1, line[4]);
+        *slot = address;
+        line += LINE_G2_WORDS;
+    }
+
+    line[1] = mode;
+    line[2] = 0;
+    head = *slot;
+    line[0] = head | MODE_TAG_LENGTH;
+    *slot = (u32)line & PRIM_ADDRESS_MASK;
+    line += MODE_WORDS;
+    buffer->next = line;
+}
