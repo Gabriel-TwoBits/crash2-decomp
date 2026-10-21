@@ -1388,3 +1388,115 @@ void func_80044F54(s32 count, void *frame, void *scene) {
     line += MODE_WORDS;
     buffer->next = line;
 }
+
+/* func_80045218's dots: the streaks' generator, its bytes as signed 16ths. A dot's x and z keep 0x70 from the middle
+ * (x as a halfword, so only from above), its y is the scene's offset added and shifted */
+#define DOT_SHIFT 20
+#define DOT_GAP 0x70
+/* A shift's count as the CPU takes it from a register: its low 5 bits */
+#define SHIFT_COUNT_MASK 0x1F
+/* A dot's grey: the generator's byte, at least 0x40, in each of red, green and blue */
+#define DOT_GREY_MIN 0x40
+#define DOT_GREY_MASK 0xFF
+#define GREEN_SHIFT 8
+#define BLUE_SHIFT 16
+/* A 1x1 tile, opaque (tag, colour and code, xy), and the closing draw mode's word (a texture page) */
+#define TILE_1_CODE 0x68000000
+#define TILE_1_TAG_LENGTH 0x02000000
+#define TILE_1_WORDS 3
+#define DOTS_MODE 0xE1000A60
+
+/* D_80062A18's scene as func_80045218 reads it: the dots' y offset, shift and slot in the ordering table */
+typedef struct {
+    u8 unk_00[0x7C];
+    s32 y_offset;
+    s32 y_shift;
+    s32 slot;
+} DotScene;
+
+/* The most dots a scene asks for: its camera's property 0x2AA, interpolated, is D_80062AA0's only source
+ * (func_80020A24), its first value 1,000 on the disc (docs/TARGET.md) */
+#define DOTS_MIN 1
+#define DOTS_MAX 1000
+
+/* A dot's x or z from the generator, kept 0x70 from 0 */
+static s32 dot_coordinate(s32 value) {
+    if (value < 0) {
+        if (value + DOT_GAP < 0) {
+            return value;
+        } else {
+            return value - DOT_GAP;
+        }
+    } else if (value - DOT_GAP > 0) {
+        return value;
+    } else {
+        return value + DOT_GAP;
+    }
+}
+
+/* Its one caller (Sys_MainLoop) passes D_80062AA0, the frame being built and D_80062A18 */
+EQUIV_SCRATCH(func_80045218, SAVE_AREA, SAVE_AREA_BYTES)
+EQUIV_RANGE(func_80045218, 0, DOTS_MIN, DOTS_MAX)
+EQUIV_NONNULL(func_80045218, 1)
+EQUIV_NONNULL(func_80045218, 2)
+
+/* Draws COUNT + 1 dots into the frame being built, all in one slot of its ordering table, then the draw mode they
+ * close with; with the rotation the caller set and no translation */
+void func_80045218(s32 count, void *frame, void *scene) {
+    FrameBuffer *buffer = frame;
+    DotScene *dots = scene;
+    u32 *tile = buffer->next;
+    u32 *slot;
+    u32 low = STREAK_SEED_LOW;
+    u32 high = STREAK_SEED_HIGH;
+    s32 y_offset, y_shift, left, x, y, z;
+    u32 grey, flag, at, past, head, address;
+
+    GTE_WRITE_CONTROL(GTE_TRX, 0);
+    GTE_WRITE_CONTROL(GTE_TRY, 0);
+    GTE_WRITE_CONTROL(GTE_TRZ, 0);
+    y_offset = dots->y_offset;
+    y_shift = dots->y_shift;
+    slot = &buffer->ot[dots->slot];
+
+    for (left = count; left >= 0; left--) {
+        x = (s32)streak_random(&low, &high) >> DOT_SHIFT;
+        y = (s32)streak_random(&low, &high) >> DOT_SHIFT;
+        z = (s32)streak_random(&low, &high) >> DOT_SHIFT;
+        x = dot_coordinate(x & GTE_HALF_MASK);
+        y = (y + y_offset) >> (y_shift & SHIFT_COUNT_MASK);
+        z = dot_coordinate(z);
+        address = (u32)tile & PRIM_ADDRESS_MASK;
+        GTE_WRITE_DATA(GTE_VXY0, ((u32)y << GTE_HALF_BITS) | x);
+        GTE_WRITE_DATA(GTE_VZ0, z);
+        grey = streak_random(&low, &high);
+        Gte_Rtps();
+        grey = ((grey >> RANDOM_BYTE_SHIFT) | DOT_GREY_MIN) & DOT_GREY_MASK;
+        grey |= (grey << GREEN_SHIFT) | (grey << BLUE_SHIFT);
+        GTE_READ_CONTROL(GTE_FLAG, flag);
+        GTE_READ_DATA(GTE_SXY2, at);
+        past = ~((at - STREAK_SCREEN_END) | at);
+        if (flag & GTE_FLAG_SZ3) {
+            /* A depth out of range */
+            continue;
+        } else if ((s32)past < 0 || (s32)(past << SXY_X_SIGN_SHIFT) < 0) {
+            /* Past the screen's bottom or right */
+            continue;
+        } else {
+            /* On the screen, or past its top or left, which the GPU clips */
+        }
+        head = *slot;
+        tile[1] = grey | TILE_1_CODE;
+        tile[0] = head | TILE_1_TAG_LENGTH;
+        tile[2] = at;
+        *slot = address;
+        tile += TILE_1_WORDS;
+    }
+
+    tile[1] = DOTS_MODE;
+    tile[2] = 0;
+    tile[0] = *slot | MODE_TAG_LENGTH;
+    *slot = (u32)tile & PRIM_ADDRESS_MASK;
+    tile += MODE_WORDS;
+    buffer->next = tile;
+}

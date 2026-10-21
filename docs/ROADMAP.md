@@ -615,7 +615,16 @@ seeds (about 80% compared); without the cull past the screen's side or without t
 and 67 of 300. Every equivalent function (213) still agrees on 500 trials of seed 1, and the four schedules at every
 frame. 27 of 98 handwritten functions equivalent.
 
-The remaining entries are GTE renderers and drivers, whose C with `include/gte.h` is larger than their assembly.
+`func_80045218` draws a scene's dots (property 0x2AA's, docs/TARGET.md): the streaks' generator again, each point a 1x1
+tile of a random grey, projected with RTPS, its x and z kept 0x70 from the view (x only from above, as the retail code
+masks it to a halfword first), culled past the screen's bottom or right, all in one slot before a closing texture page.
+Its count is bounded by the disc's, 1,000. Its extent as splat saw it ran on past its return into a routine of its own,
+whose address two renderers store: `func_800454A4` now, the handwritten code 99 functions. It agrees on 2,000 of 2,000
+trials on 2 seeds (about 95% compared); the gap test off at its bound or no cull past the right side disagree on 41 and
+78 of 300. The four schedules agree at every frame. 28 of 99 handwritten functions equivalent.
+
+The remaining entries are GTE renderers and drivers; with the GTE's own commands in the build their C need not be
+larger than their assembly (`func_80045218`'s is 48 bytes smaller).
 
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
 the handwritten code's renderers by caller, with what each relies on of its callees' registers checked, and the GOOL
