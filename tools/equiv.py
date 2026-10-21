@@ -1298,11 +1298,15 @@ class Memory:
             physical(SENTINEL_RETURN): bytes(PAGE_SIZE),
         }
         self.code = (physical(retail.kept_start), physical(retail.kept_end))
+        # The candidate's own code, kept read-only as the retail code is: a store through a wild pointer (a primitive
+        # written at a random frame's next word) would otherwise rewrite it as it runs
+        self.candidate_code = (physical(candidate.start), physical(candidate.start + candidate.size))
 
     def patched(self, words):
         """A copy with {physical address: word} written over"""
         copy = object.__new__(Memory)
         copy.code = self.code
+        copy.candidate_code = self.candidate_code
         copy.regions = dict(self.regions)
         for start, content in self.regions.items():
             inside = {address: word for address, word in words.items() if start <= address < start + len(content)}
@@ -1606,8 +1610,10 @@ class Machine:
         self.start = entry if start is None else start
         self.size = size
         self.code = memory.code
-        # The pages Unicorn keeps read-only (make_emulator), where a store is a store to code
-        self.protected = (align(self.code[0], PAGE_SIZE), self.code[1] // PAGE_SIZE * PAGE_SIZE)
+        # The pages Unicorn keeps read-only (make_emulator), where a store is a store to code: the retail code's and
+        # the candidate's whole pages
+        self.protected = tuple((align(start, PAGE_SIZE), end // PAGE_SIZE * PAGE_SIZE)
+                               for start, end in (self.code, memory.candidate_code))
         self.gte_instructions, self.delay_slots = gte_addresses(memory, self.start, size)
         self.gte = None
         self.traced_hook = traced
@@ -1636,8 +1642,12 @@ class Machine:
         for start, buffer in self.buffers.items():
             address = ctypes.addressof((ctypes.c_char * len(buffer)).from_buffer(buffer))
             emulator.mem_map_ptr(start, len(buffer), UC_PROT_ALL, address)
-        code_start, code_end = self.protected
-        emulator.mem_protect(code_start, code_end - code_start, UC_PROT_READ | UC_PROT_EXEC)
+        for code_start, code_end in self.protected:
+            if code_end > code_start:
+                emulator.mem_protect(code_start, code_end - code_start, UC_PROT_READ | UC_PROT_EXEC)
+            else:
+                # Less than a page: left writable
+                continue
         emulator.hook_add(UC_HOOK_MEM_UNMAPPED, self.unmapped)
         emulator.hook_add(UC_HOOK_MEM_WRITE_PROT, self.store_to_code)
         if self.traced_hook:
@@ -1877,7 +1887,7 @@ class Machine:
             outcome.status = EXCEPTIONS[EXCEPTION_ADDRESS_STORE if store else EXCEPTION_ADDRESS_LOAD]
         elif target >= KSEG2:
             outcome.status = EXCEPTIONS[EXCEPTION_TLB_STORE if store else EXCEPTION_TLB_LOAD]
-        elif store and self.protected[0] <= address < self.protected[1]:
+        elif store and any(start <= address < end for start, end in self.protected):
             outcome.status = f"{STORE_TO_CODE} {virtual(address):#010x}"
         elif not any(start <= address < start + len(buffer) for start, buffer in self.buffers.items()):
             outcome.status = f"{UNMAPPED} {virtual(address):#010x}"
