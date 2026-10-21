@@ -582,8 +582,10 @@ func_80040948 = 0x80040948; // type:func size:0x1FC
 func_80040B44 = 0x80040B44; // type:func size:0x1D0
 func_80040D14 = 0x80040D14; // type:func size:0x504
 D_80040FC4 = 0x80040FC4; // type:alabel
-func_80041784 = 0x80041784; // type:func size:0x2F4
-D_800417B0 = 0x800417B0; // type:alabel
+// the lit models' pieces' colour mask, and the morphing models' drawer with their reflection in a level (the table at
+// 0x8005B70C)
+func_80041784 = 0x80041784; // type:func size:0x2C
+func_800417B0 = 0x800417B0; // type:func size:0x2C8
 // the models' visibility tests (a packet's word 0x1C): a frame's box's corners on the screen, and always
 func_80041E20 = 0x80041E20; // type:func size:0x30
 func_80041E50 = 0x80041E50; // type:func size:0xC
