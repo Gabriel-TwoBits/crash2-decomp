@@ -19,7 +19,8 @@ The C file may state the function's contract with its callers (include/common.h)
 high), EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_BUFFER(function,
 argument, bytes), EQUIV_HALF(function, argument, offset, low, high), EQUIV_SCRATCH(function, address, bytes),
 EQUIV_RUNS(function, routine, ...), EQUIV_CALLBACK(function, argument, count, register...), EQUIV_WORDS(function,
-argument, offset, word, ...) and EQUIV_KEEPS(function, callee, register, ...), and its body EQUIV_ASSUME(condition) on
+argument, offset, word, ...), EQUIV_KEEPS(function, callee, register, ...) and EQUIV_TABLE(function, address, table), and
+its body EQUIV_ASSUME(condition) on
 the data it reads. The trials then keep to it, a trial failing an assumption left uncompared,
 and the verdict says so; each line goes in by hand with the evidence that every call keeps to it (docs/WORKFLOW.md, "A
 function's contract").
@@ -335,7 +336,7 @@ LONG_RETURN = r"\b(?:long\s+long|s64|u64)\s+"
 # its bounds numbers or names the file #defines as numbers, EQUIV_NONNULL(function, argument),
 # EQUIV_DISJOINT(function, first, second, count, unit), EQUIV_BUFFER(function, argument, bytes),
 # EQUIV_HALF(function, argument, offset, low, high), EQUIV_SCRATCH(function, address, bytes),
-# EQUIV_RUNS(function, routine, ...) and EQUIV_CALLBACK(function, argument, count)
+# EQUIV_RUNS(function, routine, ...), EQUIV_CALLBACK(function, argument, count) and EQUIV_TABLE(function, address, table)
 NUMBER = r"-?(?:0x[0-9A-Fa-f]+|\d+)"
 BOUND = rf"{NUMBER}|[A-Za-z_]\w*"
 CONTRACT_LINE = re.compile(r"^EQUIV_\w*\(.*$", re.MULTILINE)
@@ -349,6 +350,7 @@ SCRATCH_AREA = re.compile(rf"^EQUIV_SCRATCH\((\w+),\s*({BOUND}),\s*({BOUND})\)$"
 RUNS_INTO = re.compile(r"^EQUIV_RUNS\((\w+)((?:,\s*\w+)+)\)$")
 CALLBACK_ARGUMENT = re.compile(r"^EQUIV_CALLBACK\((\w+),\s*(\d+),\s*(\d+)((?:,\s*\w+)*)\)$")
 CALLEE_KEEPS = re.compile(r"^EQUIV_KEEPS\((\w+),\s*(\w+)((?:,\s*\w+)+)\)$")
+POINTED_TABLE = re.compile(rf"^EQUIV_TABLE\((\w+),\s*({BOUND}),\s*(\w+)\)$")
 NUMERIC_DEFINE = re.compile(rf"^#define\s+(\w+)\s+\(?({NUMBER})\)?\s*$", re.MULTILINE)
 CONTRACT = "the C's contract:"
 SIGNED_MIN = -(1 << (WORD_BITS - 1))
@@ -739,7 +741,8 @@ class Declarations:
     # (argument, offset, low, high) of the halfwords in a range, the physical ranges of its own scratch, and the
     # handwritten routines its retail code runs into, {argument's index: (the arguments a callback it holds takes, the
     # registers a call to it leaves)}, {(argument, offset): the rows of words one of which is there}, {a callee's
-    # address: the registers a call to it leaves}
+    # address: the registers a call to it leaves}, (address, table) of the words pointing to a table and {physical
+    # address: word} of the words every trial holds with them (EQUIV_TABLE)
     argument_ranges: dict
     nonnull_arguments: frozenset
     disjoint_arguments: tuple
@@ -750,6 +753,8 @@ class Declarations:
     callbacks: dict
     word_rows: dict
     callee_kept: dict
+    tables: tuple
+    fixed_words: dict
 
 
 # A parameter's integer types narrower than a word, by the words that name them: (bits, signed). Plain char is left out,
@@ -819,8 +824,18 @@ def declarations(source, function, retail):
     counts.update(variadic)
     returns_void = re.search(rf"\bvoid\s+{function}\s*\(", text) is not None
     returns_long = re.search(rf"{LONG_RETURN}{function}\s*\(", text) is not None
-    ranges, nonnull, disjoint, buffers, halves, scratch, runs, callbacks, rows, keeps = contract(source, function,
-                                                                                           retail.addresses)
+    ranges, nonnull, disjoint, buffers, halves, scratch, runs, callbacks, rows, keeps, tables = contract(
+        source, function, retail.addresses)
+    fixed = {}
+    for address, table in tables:
+        start, size = retail.addresses[table], retail.sizes[table]
+        offset = start - retail.kept_end
+        if size == 0 or size % WORD or start % WORD or not 0 <= offset <= len(retail.data) - size:
+            sys.exit(f"{source}: EQUIV_TABLE's {table} isn't whole words of {RETAIL_ELF}'s data")
+        else:
+            fixed[physical(address)] = start
+            fixed.update((physical(start + index), read_word(retail.data, offset + index))
+                         for index in range(0, size, WORD))
     pointers = pointer_parameters or ()
     named_pointers = nonnull.union(*((first, second) for first, second, _, _ in disjoint),
                                    (index for index, _ in buffers), (index for index, _, _, _ in halves),
@@ -831,15 +846,16 @@ def declarations(source, function, retail):
                  "doesn't declare one")
     return Declarations({retail.addresses[name]: count for name, count in counts.items()}, not returns_void, returns_long,
                         pointers, narrow_parameters, ranges, nonnull, disjoint, buffers, halves, scratch, runs,
-                        callbacks, rows, keeps)
+                        callbacks, rows, keeps, tables, fixed)
 
 
 def contract(source, function, symbols=None):
     """({argument's index: (low, high)}, the arguments never NULL, the buffers never overlapping, the buffers of their
     own, the halfwords in a range, its own scratch's physical ranges, the routines it runs into, the callbacks' argument
-    counts, the rows of words, the registers calls to a callee leave) of the function's EQUIV_RANGE, EQUIV_NONNULL,
-    EQUIV_DISJOINT, EQUIV_BUFFER, EQUIV_HALF, EQUIV_SCRATCH, EQUIV_RUNS, EQUIV_CALLBACK, EQUIV_WORDS and EQUIV_KEEPS
-    lines in its C file; a row's word may also name one of symbols, {name: address}, and a callee must be one"""
+    counts, the rows of words, the registers calls to a callee leave, (address, table) of the words pointing to a
+    table) of the function's EQUIV_RANGE, EQUIV_NONNULL, EQUIV_DISJOINT, EQUIV_BUFFER, EQUIV_HALF, EQUIV_SCRATCH,
+    EQUIV_RUNS, EQUIV_CALLBACK, EQUIV_WORDS, EQUIV_KEEPS and EQUIV_TABLE lines in its C file; a row's word may also name
+    one of symbols, {name: address}, and a callee or a table must be one"""
     text = source.read_text()
     defines = {name: int(value, 0) for name, value in NUMERIC_DEFINE.findall(text)}
 
@@ -867,6 +883,7 @@ def contract(source, function, symbols=None):
     callbacks = {}
     rows = {}
     keeps = {}
+    tables = []
     for found in CONTRACT_LINE.finditer(text):
         written = found.group(0).strip()
         in_range = ARGUMENT_RANGE.fullmatch(written)
@@ -879,14 +896,15 @@ def contract(source, function, symbols=None):
         called = CALLBACK_ARGUMENT.fullmatch(written)
         row = WORD_ROW.fullmatch(written)
         kept_by = CALLEE_KEEPS.fullmatch(written)
-        line = in_range or never_null or apart or sized or half or own or into or called or row or kept_by
+        pointed = POINTED_TABLE.fullmatch(written)
+        line = in_range or never_null or apart or sized or half or own or into or called or row or kept_by or pointed
         if line is None:
             sys.exit(f"{source}: `{written}` is none of EQUIV_RANGE(function, argument, low, high), "
                      "EQUIV_NONNULL(function, argument), EQUIV_DISJOINT(function, first, second, count, unit), "
                      "EQUIV_BUFFER(function, argument, bytes), EQUIV_HALF(function, argument, offset, low, high), "
                      "EQUIV_SCRATCH(function, address, bytes), EQUIV_RUNS(function, routine, ...), "
-                     "EQUIV_CALLBACK(function, argument, count), EQUIV_WORDS(function, argument, offset, word, ...) "
-                     "and EQUIV_KEEPS(function, callee, register, ...)")
+                     "EQUIV_CALLBACK(function, argument, count), EQUIV_WORDS(function, argument, offset, word, ...), "
+                     "EQUIV_KEEPS(function, callee, register, ...) and EQUIV_TABLE(function, address, table)")
         elif line.group(1) != function:
             continue
         elif called is not None:
@@ -911,6 +929,15 @@ def contract(source, function, symbols=None):
                 sys.exit(f"{source}: `{written}` keeps a register a call may not change anyway, or none of the CPU's")
             else:
                 keeps[symbols[callee]] = kept
+                continue
+        elif pointed is not None:
+            address, table = bound(pointed.group(2)) & WORD_MASK, pointed.group(3)
+            if symbols is None or table not in symbols:
+                sys.exit(f"{source}: `{written}` names a table the retail executable doesn't have")
+            elif address % WORD:
+                sys.exit(f"{source}: `{written}` needs a word-aligned address")
+            else:
+                tables.append((address, table))
                 continue
         elif into is not None:
             # group(2) starts with the comma after the function
@@ -968,7 +995,7 @@ def contract(source, function, symbols=None):
         else:
             ranges[index] = (low, high)
     return (ranges, frozenset(nonnull), tuple(disjoint), tuple(buffers), tuple(halves), tuple(scratch),
-            frozenset(runs), callbacks, {place: tuple(found) for place, found in rows.items()}, keeps)
+            frozenset(runs), callbacks, {place: tuple(found) for place, found in rows.items()}, keeps, tuple(tables))
 
 
 def retail_extent(retail, source, function, entry, size, runs_into):
@@ -1030,11 +1057,11 @@ def placed(values, buffers):
 def bounded(memory, fuzz):
     """The trial's memory with each halfword the contract bounds (EQUIV_HALF) moved into its range by its remainder,
     and one of each place's rows of words written there (EQUIV_WORDS): where the arguments point, repairs included,
-    unless that is NULL or outside the regions"""
-    if not fuzz.bounded_halves and not fuzz.word_rows:
+    unless that is NULL or outside the regions; and the words every trial holds (EQUIV_TABLE)"""
+    if not fuzz.bounded_halves and not fuzz.word_rows and not fuzz.fixed_words:
         return memory
     values = fuzz.arguments()
-    words = {}
+    words = dict(fuzz.fixed_words)
     for (index, offset), rows in sorted(fuzz.word_rows.items()):
         if values[index] == 0:
             continue
@@ -1102,7 +1129,7 @@ class Fuzz:
 
     def __init__(self, seed, trial, constants, pointer_parameters, narrow_parameters=(), argument_ranges=None,
                  nonnull_arguments=frozenset(), disjoint_arguments=(), callbacks=None, buffer_arguments=(),
-                 bounded_halves=(), word_rows=None, callee_kept=None):
+                 bounded_halves=(), word_rows=None, callee_kept=None, fixed_words=None):
         self.key = f"{seed}:{trial}"
         self.constants = constants
         self.pointer_parameters = pointer_parameters
@@ -1116,6 +1143,8 @@ class Fuzz:
         self.word_rows = word_rows or {}
         # {a callee's address: the registers a call to it leaves} (EQUIV_KEEPS)
         self.callee_kept = callee_kept or {}
+        # {physical address: word} the trial's memory holds (EQUIV_TABLE)
+        self.fixed_words = fixed_words or {}
         # {argument's index: (the arguments of the callback it holds, the registers a call to it leaves)} (EQUIV_CALLBACK)
         self.callbacks = callbacks or {}
         # {input word: its replacement}, by repair (MAX_REPAIRS); an input word is a Root
@@ -2091,7 +2120,8 @@ def main():
     retail_code = retail.kept[retail_start - retail.kept_start:retail_start - retail.kept_start + retail_size]
     if (declared.argument_ranges or declared.nonnull_arguments or declared.disjoint_arguments
             or declared.buffer_arguments or declared.bounded_halves or declared.scratch or declared.runs_into
-            or declared.callbacks or declared.word_rows or declared.callee_kept or candidate.assumes):
+            or declared.callbacks or declared.word_rows or declared.callee_kept or declared.fixed_words
+            or candidate.assumes):
         limits = [f"{argument_name(index)} in [{low:#x}, {high:#x}]"
                   for index, (low, high) in sorted(declared.argument_ranges.items())]
         limits += [f"{argument_name(index)} not NULL" for index in sorted(declared.nonnull_arguments)]
@@ -2112,6 +2142,8 @@ def main():
         limits += [f"a call to {names.get(address, hex(address))} leaving "
                    + ", ".join(f"${name}" for name in sorted(kept))
                    for address, kept in sorted(declared.callee_kept.items())]
+        limits += [f"the word at {shown(physical(address)):#010x} pointing to {table}, its words retail's"
+                   for address, table in declared.tables]
         limits += ["assumptions in its code (EQUIV_ASSUME)"] if candidate.assumes else []
         print(f"{CONTRACT} {', '.join(limits)}")
     else:
@@ -2139,7 +2171,7 @@ def main():
         fuzz = Fuzz(arguments.seed, trial, constants, declared.pointer_parameters, declared.narrow_parameters,
                     declared.argument_ranges, declared.nonnull_arguments, declared.disjoint_arguments,
                     declared.callbacks, declared.buffer_arguments, declared.bounded_halves, declared.word_rows,
-                    declared.callee_kept)
+                    declared.callee_kept, declared.fixed_words)
         base = Memory(fuzz, pool, retail, candidate)
         if machines is None:
             # The retail code's, the tracing one's, the candidate's

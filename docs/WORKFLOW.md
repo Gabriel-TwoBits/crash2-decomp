@@ -181,13 +181,15 @@ equivalent C may state the function's contract with its callers, lines of nothin
     EQUIV_CALLBACK(func_8003CD0C, 7, 2, t8, t9)          /* argument 7 a function of 2 arguments, writing neither */
     EQUIV_WORDS(func_80041E5C, 2, 0x10, func_8003DD0C, ...) /* the 5 words at $a2 + 0x10 one such row (a line each) */
     EQUIV_KEEPS(func_80041E5C, func_8003DD0C, v1)        /* a call to func_8003DD0C leaves $v1 */
+    EQUIV_TABLE(Gool_Interpret, GOOL_TABLE_ADDRESS, g_GoolOpcodeHandlers) /* the word there points to the table */
 
 equiv.py then keeps its trials to it (a value outside the range moved into it by its remainder, a NULL drawn for that
 pointer left out, the second buffer moved past the first, a buffer of its own that overlaps one declared before it moved
 past them all, the halfword moved into its range by its remainder wherever the argument points, the scratch left out
 of the memory compared, the routine run as part of the retail function, which still has other callers in the build, a call through the callback compared on
 its arguments only and leaving the registers named, which a call otherwise sets at random, one of the rows drawn and
-written there, a name standing for its retail address, and a call to the callee leaving the registers named), and
+written there, a name standing for its retail address, a call to the callee leaving the registers named, and the
+word pointing to the table, whose words keep their retail values), and
 prints it with the verdict, which
 `tools/match.py` records. The scratch is the handwritten code's save area, the scratchpad's first 16 words: every
 function that uses it writes it before reading it, and no compiled code touches it. Nothing a function reads lives

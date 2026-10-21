@@ -48,6 +48,8 @@ void Equiv_Reject(void);
 #define EQUIV_WORDS(function, argument, offset, words...)
 /* A call to CALLEE leaves the registers named as they were (its code never writes them) */
 #define EQUIV_KEEPS(function, callee, kept...)
+/* The word at ADDRESS points to TABLE, a symbol of the data, which holds its retail words, in every call */
+#define EQUIV_TABLE(function, address, table)
 
 /* The split's functions (asm/nonmatchings/) use macro.inc's labels */
 #define INCLUDE_ASM_USE_MACRO_INC 1
