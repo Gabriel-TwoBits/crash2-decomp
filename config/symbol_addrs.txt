@@ -564,10 +564,12 @@ func_8003E4FC = 0x8003E4FC; // type:func size:0x3E0
 func_8003EAD4 = 0x8003EAD4; // type:func size:0xF0
 // an object renderers' routine past func_8003EAD4's return and 15 nops, which the table at 0x8005B6EC holds
 func_8003EBC4 = 0x8003EBC4; // type:func size:0x150
-func_8003ED14 = 0x8003ED14; // type:func size:0x888
-D_8003F1C8 = 0x8003F1C8; // type:alabel
-D_8003F1D8 = 0x8003F1D8; // type:alabel
-D_8003F410 = 0x8003F410; // type:alabel
+// the morphing models' vertex reader with their drawer clipped at a level after it (reached from func_80040D14), and
+// their other drawers, which the table at 0x8005B70C holds
+func_8003ED14 = 0x8003ED14; // type:func size:0x4B4
+func_8003F1C8 = 0x8003F1C8; // type:func size:0x10
+func_8003F1D8 = 0x8003F1D8; // type:func size:0x238
+func_8003F410 = 0x8003F410; // type:func size:0x18C
 // the clipped models' pieces' colour mask and the colour routines after it (the table at 0x8005B6EC), and the lit
 // models' drawers (the table at 0x8005B708) with their colour routines
 func_8003FB24 = 0x8003FB24; // type:func size:0x60
