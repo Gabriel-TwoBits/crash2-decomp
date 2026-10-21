@@ -675,9 +675,27 @@ no caller. Each agrees on 2,000 of 2,000 trials on 2 seeds (`EQUIV_RUNS` for the
 schedules agree at every frame. The C is 644 bytes larger than the code it replaces: the executable has 3,056 bytes
 of the retail file's room left. 79 of 137 handwritten functions equivalent.
 
+The object renderers (docs/TARGET.md, "The object renderers"): `func_8003DB94` and the 81 routines its packets reach, in
+C as one group (`DrawPass`, `DrawScratch`, `DrawPacket`), their entries split into functions of their own first (172
+handwritten functions; configure.py's count of `%gp_rel` accesses follows splat's). The GTE model and the build gained
+NCLIP and DPCT. The random trials keep to the packets the game builds (`EQUIV_WORDS` rows from the tables at 0x8005B690
+to 0x8005B7AC; a sprite's steps assumed with the sprites' drawers, a model's with the models', compared by the retail
+addresses the rows hold) and to what never traps in the game (`EQUIV_ASSUME`: the retail code's `addi`, `add` and `neg`
+trap on overflow; a model's two frames align alike): 2,000 of 2,000 trials agree on 2 seeds. They reach the sprites and
+the steps; models only with their data built behind the packet, which a copy of equiv.py does (valid strips that end,
+cache and colour indices in the scratchpad, a camera and object in view, the scene's lamps near the object): the C
+agrees on 1,000 of 1,000 on 2 seeds, kind 5's sprites on as many, and a mutation in each drawer is caught. What the
+trials found: the packet's command read per triangle; records shifting only their coordinates; `$a2`, the texture's
+offset, left by the colour routines (the screen points and-ed, the facing) for the next call; the clipped pieces' first
+corner's colour the triangle's own in `func_800454A4`; the sine table read as `func_80043270` reads it; the unaligned
+vertex bytes read by words; and equiv.py's candidate code, a primitive's random address able to overwrite it, kept
+read-only. The four schedules agree at every frame; the C draws slower (the demo's 4,800 game frames by vsync 26,246,
+retail's by 14,130), so memory-card and demo run longer. The C is smaller than the code it replaces: the executable has
+7,184 bytes of the retail file's room left. 161 of 172 handwritten functions equivalent.
+
 Next: each batch checked in the game too, on the schedules that judge it (by groups that each agree, docs/WORKFLOW.md);
-the object renderers (`func_8003DED8`, `func_8003ED14` and the routines the table at 0x8005B650 holds), then the GOOL
-interpreter with its opcode table.
+the GOOL interpreter with its opcode table (`Gool_Interpret` and the 10 routines around it), the last of the
+handwritten code.
 
 ## 5. Readable C (in progress)
 

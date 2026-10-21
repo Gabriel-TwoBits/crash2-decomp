@@ -217,6 +217,34 @@ each: a setup the dispatcher calls once, a triangle and a quad projector, a tria
 The retail code keeps its state in the scratchpad between 0x60 and 0x230, over the GOOL opcode table's copy; the C
 keeps the same words (`WorldScratch`).
 
+## The object renderers
+
+`func_8003DB94` draws the frame's packet list (`Sys_MainLoop` calls it with the list `func_8001ABF8` builds in the
+frame, the frame and `D_80062A18`). What its code shows:
+
+- A packet holds the next packet, three steps the root calls in turn, the object, its matrix (`func_8004400C` and the
+  three builders after it, through the table at 0x8005B650, turn it by the object's angles and scale it) and what the
+  steps read. The first step (the table at 0x8005B690, by the object's kind) puts the object's rotation and
+  translation into the GTE: in the camera's view, facing the screen (its second row scaled by -0.625, its third
+  negated), on the screen's plane, lit (a light matrix from two vectors), fading past the scene's fog start. The second
+  (0x8005B75C) sets the level and colour shift and mask the drawers read, or how much the scene's two lamps light the
+  object. The third is the drawer (0x8005B708), the second and third paired by mode; morphing models (two frames
+  blended) take the next index's pair.
+- A sprite (kind 2) is a textured quad of 200 << its size about the object; kind 5 a list of quads per frame. A model
+  (kind 1) is triangle strips: a command word per vertex (from the scratchpad's cache, or read from the frame's
+  stream: three bytes, or delta fields of 1 to 8 bits as a table of widths gives them), its colour from the model's
+  table or the scratchpad's copy, its triangle's texture (an animation's frame by the clock), and whether the strip
+  turns about its first vertex. A visibility test (whether a corner of the frame's box is on the screen) and a far
+  colour step run first; each triangle goes through a colour routine (G3 or GT3 faded toward the far colour by DPCT,
+  translucent, culled off the screen's edges, glowing by depth, or a lit FT3 with a highlight from `D_8005C650`).
+- The drawers: whole; clipped at a level (the parts below and above at two depths of the ordering table, the cut
+  points interpolated, above's colours shifted and masked); reflected (the cut points white, the reflection darkened
+  and moved 3 pixels); one side kept; mirrored (each triangle again reflected in a level, its facing turned); lit (the
+  vertices turned by the object's rotation and cut in the world's axes, each piece projected).
+- The steps share registers and the scratchpad's words from 0 to 0x140 (and the vertex cache from 0x140), which the C
+  keeps (`DrawPass`, `DrawScratch`); a colour routine's leftover `$a2`, which the next call reads as the texture's
+  offset, too. The handwritten code's `$gp` is the object (its `%gp_rel` accesses are its fields).
+
 ## Addresses from the disc
 
 No address of the executable turned up in the disc's data, and none holds `.data` in place. What breaks the game when

@@ -29,11 +29,11 @@ typedef struct WorldRecord {
 } WorldRecord;
 
 /* A polygon on its way through the scene's mode, and the frame it goes into: its world, material and vertices' words,
-   the quad's fourth corner for its projector, the z each vertex was loaded with, the corners' colours, its depth and slot in the ordering table, the
-   frame's next primitive, the lowest slot linked so far and what a primitive linked there points to, the table, and
-   the textures' clock; the next entry and where its polygon is read to, which the projector does after its first
-   corner's colour, as the retail code does while the GTE projects (in random trials a record may share memory with the
-   frame's primitives, in the game never) */
+   the quad's fourth corner for its projector, the z each vertex was loaded with, the corners' colours, its depth and
+   slot in the ordering table, the frame's next primitive, the lowest slot linked so far and what a primitive linked
+   there points to, the table, and the textures' clock; the next entry and where its polygon is read to, which the
+   projector does after its first corner's colour, as the retail code does while the GTE projects (in random trials a
+   record may share memory with the frame's primitives, in the game never) */
 typedef struct WorldPass {
     WorldBlock *world;
     u32 material;
@@ -56,16 +56,18 @@ typedef struct WorldPass {
 
 typedef void (*WorldStep)(WorldPass *);
 
-/* D_80062A18 as the world renderer reads it: the camera's position (24.8), the mode's five entries (its setup,
-   triangle and quad projectors, triangle and quad drawers), and what the modes take: the sway's clock shift and size
-   (D_80062A48, D_80062A4C, the camera's property 0x1B8), the lamps' far colour (D_80062A50), the fog's depth or the
-   lamps' colour (D_80062A54), two lamps' positions (a VXY pair and z, D_80062A58 to D_80062A64), the player's position
-   from the camera and the light's height and shade maps (D_80062AA4 to D_80062AB0), the depth fog's colour, shift and
-   starting depth (D_80062AB4 to D_80062ABC, the camera's property 0x1DE), a tint's colour and depth (D_80062AC0,
-   D_80062AC4) and the light's grid (D_80062AC8) */
+/* D_80062A18 as the world renderer reads it: the camera's position (24.8) and matrix (its rotation's five words and
+   position, which the object renderers copy), the mode's five entries (its setup, triangle and quad projectors,
+   triangle and quad drawers), and what the modes take: the sway's clock shift and size (D_80062A48, D_80062A4C, the
+   camera's property 0x1B8), the lamps' far colour (D_80062A50), the fog's depth or the lamps' colour (D_80062A54), two
+   lamps' positions (a VXY pair and z, D_80062A58 to D_80062A64), the player's position from the camera and the light's
+   height and shade maps (D_80062AA4 to D_80062AB0), the depth fog's colour, shift and starting depth (D_80062AB4 to
+   D_80062ABC, the camera's property 0x1DE), a tint's colour and depth (D_80062AC0, D_80062AC4) and the light's grid
+   (D_80062AC8) */
 typedef struct WorldScene {
     s32 *camera;
-    u8 unk_04[0xC];
+    u8 unk_04[8];
+    u32 *camera_matrix;
     void (*setup)(struct WorldScene *);
     WorldStep project_triangle;
     WorldStep project_quad;
