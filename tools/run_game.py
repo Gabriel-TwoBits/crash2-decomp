@@ -9,13 +9,13 @@ equivalent track's, the same pad presses at the same frames for both, and compar
 By default frames are game frames, on the game clock (tools/run_game.lua): the game's time is pinned to its frames, each
 lasting two vsyncs for the game whatever the code's speed, so faster or slower equivalent C plays the same game. The
 schedule boots the disc, starts a new game from the title's menu, skips the intro, waits out Cortex's speech, walks into
-Turtle Woods from the first warp room and runs, jumps and spins there: 3,450 game frames, about a minute and a half to
-run on the emulator's interpreter, both runs at once. `--schedule turtle-woods` runs on into Turtle Woods blindly,
-jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames, the level's paced (each
-lasting 5 vsyncs) since its sound and disc reads go on in real time. `--schedule memory-card`
-picks Load Game from the title's menu and presses through the memory card's screens blindly, which save a game on the
-empty card, 3,500 game frames, the card's screens paced (each game frame lasting 10 vsyncs) since the card answers in
-real time. `--schedule demo` presses nothing instead: left at the title's menu, the game plays its attract demo, Turtle
+Turtle Woods from the first warp room and runs, jumps and spins there: 3,450 game frames, paced from the title's menu on
+(each lasting 5 vsyncs) since Cortex's lips follow his speech's sound, which plays in real time, as the level's sound and
+disc reads do; about three minutes to run on the emulator's interpreter, both runs at once. `--schedule turtle-woods`
+runs on into Turtle Woods blindly, jumping and spinning, through deaths and respawns until the lives run out, 6,000 game
+frames, paced as new-game from the title's menu on. `--schedule memory-card` picks Load Game from the title's menu and
+presses through the memory card's screens blindly, which save a game on the empty card, 3,500 game frames, paced from
+there on (each game frame lasting 10 vsyncs) since the card answers in real time. `--schedule demo` presses nothing instead: left at the title's menu, the game plays its attract demo, Turtle
 Woods then a river level, 4,800 game frames. `--real-time` keeps the game's own clock and counts vsyncs instead: 8,000
 of them (2 minutes 13 of the game), about 15 seconds on the emulator's recompiler, where a difference may be only
 timing. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a copy of the image
@@ -101,13 +101,16 @@ MENU_HOLD_FRAMES = 6
 MENU_CYCLE = ("RIGHT", "DOWN", "LEFT", "UP", "CROSS", "TRIANGLE", "DOWN", "DOWN", "CROSS")
 # The card's directory is read in real time: the game frames it takes depend on the code's speed unless paced. Its
 # screens' game frames last 1 to 6 vsyncs in both executables (more in one of the equivalent's), but those loading from
-# the disc; paced from Load Game's press to the last of the cycle's
-MENU_PACE = Pace(first=1100, last=MENU_END, vsyncs=10)
+# the disc; paced from Load Game's press to the schedule's end (the warp room after the save, game frame 3,339 on,
+# played otherwise unpaced with the world renderer in C)
+MENU_PACE = Pace(first=1100, last=3500, vsyncs=10)
 # In the level, the sound's and the disc's state goes on in real time too, and from game frame 3,666 the equivalent build,
-# slower, played otherwise; its game frames last 1 to 4 vsyncs in both executables, but those loading from the disc
-LEVEL_PACE = Pace(first=2900, last=6000, vsyncs=5)
+# slower, played otherwise; so do Cortex's lips, which follow his speech's sound (game frame 1,380 on, with the world
+# renderer in C taking 3 vsyncs a game frame where retail takes 2). Its game frames last 1 to 4 vsyncs in both
+# executables, but those loading from the disc
+LEVEL_PACE = Pace(first=1100, last=6000, vsyncs=5)
 GAME_SCHEDULES = {
-    # Retail reaches game frame 3,450 by vsync 8,695
+    # Retail reaches game frame 3,450 by vsync 15,549, paced from the title's menu on
     "new-game": GameSchedule(
         presses=INTO_TURTLE_WOODS + [
             (2950, 150, "UP"),
@@ -127,10 +130,10 @@ GAME_SCHEDULES = {
             (3440, "turtle_woods_end"),
         ],
         last=3450,
-        vsync_limit=12000,
-        pace=None,
+        vsync_limit=20000,
+        pace=LEVEL_PACE,
     ),
-    # Retail reaches game frame 6,000 by vsync 23,464, paced: deaths, respawns at the checkpoints, the level started again
+    # Retail reaches game frame 6,000 by vsync 28,299, paced: deaths, respawns at the checkpoints, the level started again
     "turtle-woods": GameSchedule(
         presses=INTO_TURTLE_WOODS + [(RUN_START, RUN_FRAMES, "UP")]
         + [(frame, GAME_TAP_FRAMES, "CROSS")
@@ -151,7 +154,7 @@ GAME_SCHEDULES = {
         vsync_limit=31000,
         pace=LEVEL_PACE,
     ),
-    # Retail reaches game frame 3,500 by vsync 25,203, paced
+    # Retail reaches game frame 3,500 by vsync 29,203, paced
     "memory-card": GameSchedule(
         presses=[
             (1050, GAME_TAP_FRAMES, "DOWN"),  # Load Game, on the title's menu

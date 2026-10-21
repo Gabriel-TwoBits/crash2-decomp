@@ -328,17 +328,20 @@ and writes into `build/` only:
    number: every game frame lasts two vsyncs for the game however long it took. Presses and checkpoints are keyed to
    game frames (`Gfx_EndFrame`'s calls from power-on), and a game frame's image is the one on the display when the next
    call starts: New Game from the title's menu, the intro, Cortex's speech, into Turtle Woods from the first warp room,
-   run, jump, spin; 3,450 game frames, about a minute. `--schedule turtle-woods` runs on into Turtle Woods blindly,
+   run, jump, spin; 3,450 game frames, about three minutes paced (below). `--schedule turtle-woods` runs on into Turtle Woods blindly,
    jumping and spinning, through deaths and respawns until the lives run out, 6,000 game frames. A renderer there reads
    code addresses' bytes (docs/TARGET.md, "Code addresses read as data"), so a build whose handwritten GOOL operations
    moved differs from game frame 3,524; and the level's sound and disc reads go on in real time, so a build of another
    speed played otherwise from game frame 3,666 until the schedule paced game frames 2,900 to 6,000 (5 vsyncs each,
-   as below). `--schedule memory-card` picks Load Game from the title's menu and presses through the memory card's
+   as below). Cortex's lips follow his speech's sound, which plays in real time too: with the world renderer in C,
+   which takes 3 vsyncs a game frame where retail takes 2, the equivalent build drew another mouth from game frame 1,380,
+   so new-game and turtle-woods are paced from game frame 1,100 on. `--schedule memory-card` picks Load Game from the title's menu and presses through the memory card's
    screens blindly, one button of a cycle every 30 game frames: on the empty card it goes through Load/Save, Save Game
    and Enter Name, saves, and comes back to the warp room, 3,500 game frames. The card answers in real time, so slower
    code reaches its screens in fewer game frames (`func_800186D8`'s equivalent, which draws the menu, takes 4 vsyncs a
    frame there where retail takes 3, and the equivalent build left the card's directory 50 game frames earlier); the
-   schedule paces game frames 1,100 to 3,000 instead: the SDK's `VSync(0)` that `Gfx_EndFrame` calls first is given 10,
+   schedule paces game frames 1,100 to 3,500 instead (to 3,000 until the world renderer in C made the warp room after
+   the save play otherwise from game frame 3,339): the SDK's `VSync(0)` that `Gfx_EndFrame` calls first is given 10,
    so each lasts 10 vsyncs in both runs. The saves still differ by 12 bytes, by design: the game steps `Rand_Below` in
    the loops that wait for the card's events (`Save_TestSwEvents`, `Save_TestHwEvents`) and names the save with the next
    number. `--schedule demo` presses nothing: left at the title's menu, the game plays its attract demo, Turtle Woods
