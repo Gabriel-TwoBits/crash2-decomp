@@ -9,7 +9,8 @@ FILE.c is compiled as the build compiles it, with NON_MATCHING defined, and FUNC
 every name the retail executable knows resolves to its retail address (the file's own .sdata and .sbss variables
 included), what has no retail name (jump tables, labels, literals) to the scratch copies. Calls out of the function are
 recorded and answered, not run. The GTE's instructions run on a model of it (tools/gte.py), its registers random on
-entry and compared after. A trial whose retail run faults on a memory access through a word of its inputs gets
+entry and compared after; the C's GTE commands are include/gte.h's model in C (GTE_MODEL defined), where the build has
+the GTE's own instructions. A trial whose retail run faults on a memory access through a word of its inputs gets
 that word replaced and starts over (MAX_REPAIRS), before the candidate runs from the same repaired state. Compared
 after each trial: how it ended, the return value, the callee-saved registers, each call's target and arguments, and
 every byte either side changed outside its own stack frame.
@@ -53,6 +54,9 @@ RETAIL_EXE = HERE / "orig" / "USA" / "SCUS_941.54"
 NONMATCHING_MACRO = "NON_MATCHING"
 # Defined for the candidate only: EQUIV_ASSUME's failing condition calls REJECT_FUNCTION (include/common.h)
 TRIAL_MACRO = "EQUIV_TRIAL"
+# Also the candidate's only: its GTE commands run on include/gte.h's model in C, which a native port keeps, where the
+# equivalent build gives the GTE's own instructions
+MODEL_MACRO = "GTE_MODEL"
 REJECT_FUNCTION = "Equiv_Reject"
 # The wrapper INCLUDE_ASM puts around a function left as assembly (include/include_asm.h)
 INCLUDE_ASM_WRAPPER = "__maspsx_include_asm_hack_"
@@ -532,11 +536,11 @@ class Candidate:
 
 
 def compile_candidate(source, function, retail):
-    """Compiles source with NON_MATCHING defined and relocates its sections at SCRATCH_BASE"""
+    """Compiles source with NON_MATCHING defined (and the trial's macros) and relocates its sections at SCRATCH_BASE"""
     with tempfile.TemporaryDirectory() as folder:
         obj = Path(folder) / "candidate.o"
         error = compile_c(compiler(DEFAULT_GCC), DEFAULT_ASPSX, source, DEFAULT_CFLAGS, obj,
-                          (NONMATCHING_MACRO, TRIAL_MACRO))
+                          (NONMATCHING_MACRO, TRIAL_MACRO, MODEL_MACRO))
         if error is not None:
             sys.exit(f"{source}: {error}")
         elf = Elf(obj)

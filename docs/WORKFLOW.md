@@ -207,18 +207,23 @@ The game's routines written with GTE instructions get equivalent C through `incl
 included under `NON_MATCHING` only (its functions are `static`, which equiv.py runs as the candidate's own code, and GCC
 2.7.2 emits them used or not). The C moves a register as the retail code does (`GTE_WRITE_DATA(GTE_VXY0, v)`,
 `GTE_READ_CONTROL(GTE_FLAG, flag)`, `GTE_STORE_DATA(GTE_SXY2, quad->xy2)`: one instruction each, the register's number
-part of it) and runs a command as a call (`Gte_Rtpt()`), which reads what the command needs into a `GteRegs`, computes it
-in C, and writes back what it changed. On the PlayStation the registers stay in the GTE, so the C runs among code that
-uses the real one; a native port keeps the commands' C and replaces the moves. It agrees with `tools/gte.py` on 6,000
-random register files and commands (checked while writing it); a command it lacks is added to both, from psx-spx.
-`tools/gte.py` also runs `mvmva` (the rotation, light and light colour matrices, the translation or background colour
-added or none), `nclip`, `dpcs` and `dpct`, the handwritten code's other commands; it refuses the garbage matrix and the
-far colour's wrongly added sum, which no code uses. The C has `Gte_MultiplyMatrix` (`mvmva` as the game encodes it:
-sf 1, nothing added), for a file that defines `GTE_MVMVA` before including the header, since GCC 2.7.2 emits every
-static function. Its cost is code room: about 1,800 bytes for each file including it. The handwritten code also puts
-a GTE instruction in a branch's delay slot (`func_8003D3CC`'s `ctc2`), where equiv.py's hook can't stop: it runs the
-instruction on the model as the branch starts, with the slot a `nop` meanwhile, when it moves no CPU register and the
-branch doesn't link into what it reads.
+part of it) and runs a command as `Gte_Rtpt()`. With `GTE_MODEL` defined, as equiv.py compiles the candidate and a
+native port would, that is a call to the model, which reads what the command needs into a `GteRegs`, computes it in C,
+and writes back what it changed; without it, in the equivalent build, it is the GTE's own instruction, two `nop`s after
+the last move as PsyQ's macros wait. equiv.py thus judges the C with the model against the retail code on
+`tools/gte.py`, and the build runs the same C with the commands the retail code gives. A projection is one instruction
+there and about 2,300 on the model: with `func_80044F54`'s streaks on the model, the equivalent build showed the
+opening's game frame 846 at vsync 11,994 (retail at 2,721), the schedule's end near; and the model's code
+cost the build about 1,800 bytes for each file including it. The model agrees with `tools/gte.py` on 6,000 random
+register files and commands (checked while writing it), and on every trial of the functions using it; a command it
+lacks is added to both, from psx-spx. `tools/gte.py` also runs `mvmva` (the rotation, light and light colour matrices,
+the translation or background colour added or none), `nclip`, `dpcs` and `dpct`, the handwritten code's other commands;
+it refuses the garbage matrix and the far colour's wrongly added sum, which no code uses. The C has
+`Gte_MultiplyMatrix` (`mvmva` as the game encodes it: sf 1, nothing added), for a file that defines `GTE_MVMVA` before
+including the header, since GCC 2.7.2 emits every static function. The handwritten code also puts a GTE instruction in
+a branch's delay slot (`func_8003D3CC`'s `ctc2`), where equiv.py's hook can't stop: it runs the instruction on the model
+as the branch starts, with the slot a `nop` meanwhile, when it moves no CPU register and the branch doesn't link into
+what it reads.
 
 ### The handwritten code
 

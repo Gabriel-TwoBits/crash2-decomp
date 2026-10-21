@@ -5,10 +5,11 @@
 
 /* A model of the GTE (coprocessor 2) in C, for the equivalent C of the routines the game wrote with its instructions.
    Written from psx-spx's GTE chapter (docs/REFERENCES.md); tools/gte.py models the same commands, and tools/equiv.py
-   runs the retail code on that model and the C on this one. On the PlayStation the registers stay in the GTE: the
-   GTE_READ and GTE_WRITE macros move one, and a command reads what it needs into a GteRegs, runs, and writes back what
-   it changed. Its functions are static, for equiv.py to run them as the candidate's own code: include it only under
-   NON_MATCHING */
+   runs the retail code on that model and the C on this one. The registers stay in the GTE: the GTE_READ and GTE_WRITE
+   macros move one. With GTE_MODEL (equiv.py's trials, a native port) a command reads what it needs into a GteRegs, runs
+   in C, and writes back what it changed; without it (the equivalent build) a command is the GTE's own instruction, a
+   projection one instruction there where the model takes about 2,300. The model's functions are static, for equiv.py
+   to run them as the candidate's own code: include it only under NON_MATCHING */
 
 #define GTE_REGISTERS 32
 
@@ -122,6 +123,17 @@ typedef struct GteRegs {
 #define GTE_SAVE_DATA(regs, reg) GTE_STORE_DATA(reg, (regs)->data[reg])
 #define GTE_SAVE_CONTROL(regs, reg) GTE_READ_CONTROL(reg, (regs)->control[reg])
 #define GTE_RESTORE_DATA(regs, reg) GTE_LOAD_DATA(reg, (regs)->data[reg])
+
+/* A command's 25 bits after the COP2 opcode, as the GTE takes them */
+#define GTE_RTPS_CODE 0x0180001
+#define GTE_RTPT_CODE 0x0280030
+/* MVMVA with sf = 1, nothing added and lm = 0; the matrix's field (rotation 0, light 1) and the vector's (V0 to V2, 3
+   for IR1-IR3) */
+#define GTE_MVMVA_CODE 0x0486012
+#define GTE_MVMVA_MATRIX_SHIFT 17
+#define GTE_MVMVA_VECTOR_SHIFT 15
+
+#ifdef GTE_MODEL
 
 /* What RTPS and RTPT read, into regs */
 static void Gte_Save(GteRegs *regs) {
@@ -330,6 +342,15 @@ static void Gte_Project(s32 vectors) {
 #define Gte_Rtps() Gte_Project(1)
 #define Gte_Rtpt() Gte_Project(GTE_RTPT_VECTORS)
 
+#else
+
+/* The GTE's own commands, two instructions after the last register move as it needs (PsyQ's macros wait as long) */
+#define GTE_COMMAND(code) __asm__ volatile("nop\n\tnop\n\tcop2 %0" : : "i"(code))
+#define Gte_Rtps() GTE_COMMAND(GTE_RTPS_CODE)
+#define Gte_Rtpt() GTE_COMMAND(GTE_RTPT_CODE)
+
+#endif /* GTE_MODEL */
+
 /* GCC 2.7.2 emits a static function used or not: a file defines GTE_MVMVA before including this to have MVMVA */
 #ifdef GTE_MVMVA
 
@@ -339,6 +360,8 @@ static void Gte_Project(s32 vectors) {
 #define GTE_MATRIX_LIGHT GTE_L11L12
 #define GTE_VECTOR_IR 3
 #define GTE_MATRIX_WORDS 5
+
+#ifdef GTE_MODEL
 
 /* Element (row+1)(column+1) of the matrix whose five words start at control register base */
 static inline s32 Gte_MatrixElement(GteRegs *regs, s32 base, s32 row, s32 column) {
@@ -415,6 +438,14 @@ static void Gte_MultiplyMatrix(s32 matrix, s32 vector) {
     GTE_RESTORE_DATA(&regs, GTE_MAC3);
     GTE_WRITE_CONTROL(GTE_FLAG, regs.control[GTE_FLAG]);
 }
+
+#else
+
+#define Gte_MultiplyMatrix(matrix, vector) \
+    GTE_COMMAND(GTE_MVMVA_CODE | (((matrix) == GTE_MATRIX_LIGHT) << GTE_MVMVA_MATRIX_SHIFT) | \
+                ((vector) << GTE_MVMVA_VECTOR_SHIFT))
+
+#endif /* GTE_MODEL */
 
 #endif /* GTE_MVMVA */
 
