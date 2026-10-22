@@ -995,6 +995,12 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
 - `OT_LINK(address)`: the 15 places where the GPU's ordering table or a primitive links to the next.
 - With no PS1 default: the GTE's six register moves (`include/gte.h` defines them unless the build has), and
   `GOOL_RUN_NATIVE`, operation 73's native code on a host's interpreter in place of the inline call.
+- `PASSED_ON(arguments...)`: a call's arguments that the PS1 code passes on in the registers they arrived in, unnamed.
+  `func_8002CB1C` calls `Zone_PlotWallEntry` with none, its own x and y left in `$a0` and `$a1`; a host names them.
+  Named there, GCC 2.7.2 writes other code. `func_8002BF58` called `Zone_FindAt` with the zone alone, and the point
+  passed the same way: there, naming it (`arg1`) gives the same bytes. A host's build ran into it, `Zone_FindAt`
+  reading the point from its stack. A scan of the preprocessed C finds no other call with fewer arguments than the
+  game's definition of the function takes.
 
 Both executables stay byte for byte the same with them, and equiv.py agrees on 300 trials of each function they touched
 that it tests (`Gool_ResolveRef`, `Gool_OpMisc`, `func_8001A4A4`, `Gfx_ResetOt`, `Gfx_DrawStreaks`). With a host's

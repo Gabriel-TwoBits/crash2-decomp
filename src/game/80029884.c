@@ -1227,7 +1227,7 @@ s32 func_8002BF58(GoolObject *arg0, void *arg1) {
     void *temp_a1;
     void *temp_s2;
 
-    temp_v0 = Zone_FindAt(g_CurrentZone);
+    temp_v0 = Zone_FindAt(g_CurrentZone, arg1);
     if (temp_v0 >= -0xFE) {
         temp_a1 = arg0->zone;
         temp_s2 = *(void **)((s8 *)temp_a1 + 0x14);
@@ -1548,9 +1548,9 @@ void func_8002CB1C(s32 arg0, s32 arg1) {
     if (((arg0 < 0) ? (-arg0) : (arg0)) < 0x20) {
         if (((arg1 < 0) ? (-arg1) : (arg1)) < 0x20) {
             if (arg0 || arg1) {
-                Zone_PlotWallEntry();
+                Zone_PlotWallEntry(PASSED_ON(arg0, arg1));
             } else {
-                Zone_PlotWallEntry();
+                Zone_PlotWallEntry(PASSED_ON(arg0, arg1));
             }
         }
     }

@@ -25,6 +25,12 @@
 #define OT_LINK(address) ((u32)(address) & 0xFFFFFF)
 #endif
 
+/* A call's arguments that the PlayStation's code passes on in the registers they arrived in, unnamed (the call has
+ * none there), and a host names */
+#ifndef PASSED_ON
+#define PASSED_ON(arguments...)
+#endif
+
 /* Defined by a host only, with no PlayStation default:
  * - GTE_READ_DATA and the GTE's five other register moves (include/gte.h), on registers in the host's memory;
  * - GOOL_RUN_NATIVE(object, state_pool, &pc, &sp, frame), which runs operation 73's native code (MIPS) on the host's

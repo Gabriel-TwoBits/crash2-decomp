@@ -340,7 +340,7 @@ void Sys_TimerHandler(void);
 s32 Math_SqrMagnitude2(s32, s32);
 s32 Zone_QueryOctree(s32 *, s32 *, void *, s32);
 void Zone_PlotQueryWalls(void *, void *, s32, s32, s32, s32, s32, s32);
-/* Takes x and y: func_8002CB1C calls it with none, passing its own arguments on in registers it leaves alone */
+/* Takes x and y: func_8002CB1C passes its own arguments on in registers it leaves alone (PASSED_ON) */
 void Zone_PlotWallEntry();
 s32 func_8003D040(void *, void *, void *, s32 *, s32, s32, s32, s32, s32);
 s32 Math_Sin(s32);
