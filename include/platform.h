@@ -37,6 +37,13 @@
 #define FRAME_HALF_RATE 1
 #endif
 
+/* A step of an object's through the world's collision, func_80029884 from func_8001D63C's motion: as the game takes
+ * it unless a host wraps it, to carry into the next game frame's step what the collision rounds off of this one's (a
+ * shorter frame's step loses more of itself to the rounding) */
+#ifndef OBJECT_MOVE
+#define OBJECT_MOVE(object, step, zone) func_80029884((object), (step), (zone))
+#endif
+
 /* A C symbol's name for the assembler: as it is on the PlayStation (MIPS ELF); a host whose C symbols take a prefix
  * (32-bit Windows' leading underscore) names them its way */
 #ifndef ASM_SYMBOL

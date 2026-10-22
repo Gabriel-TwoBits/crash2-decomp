@@ -373,7 +373,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
             OBJ(arg0)->event_received = ALPHA_OPAQUE;
             *SCRATCH_REG = g_GoolOpcodeHandlers;
             func_8002CAB8();
-            func_80029884((GoolObject *)arg0, (s32)sp18, (s32)D_80067FE4);
+            OBJECT_MOVE((GoolObject *)arg0, (s32)sp18, (s32)D_80067FE4);
             if (flagsA & A_STUCK) {
                 t = FIELD(arg0, OBJ_FLAGS_A);
                 if (!(t & A_GROUNDED) && (flagsA & A_GROUNDED)) {
