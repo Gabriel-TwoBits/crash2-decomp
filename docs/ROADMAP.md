@@ -952,8 +952,15 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   - The GPU's ordering table links keep an address's low 24 bits (`OT_LINK_MASK` and `PRIM_ADDRESS_MASK` in
     `80039D2C.c` and `800158E0.c`), as the GPU's DMA reads them.
   - `func_80014C48` computes the top of RAM from 0x80000000.
+  - A pointer tells itself from an error by its sign. The errors are small negative numbers (`SUCCESS` -0xFF, others
+    -0x10, -0x12), and a KSEG0 address is negative below them. So `Obj_Init` takes `Nsf_OpenEntry`'s entry for an error
+    unless it is below -0xFE (`RESULT_OK_LIMIT`). A grep finds 31 comparisons with -0xFE or -0xFF, or with constants
+    named for a limit or an error; sign tests written otherwise, such as the handwritten code's `bltz` on pointers,
+    escape it.
 
-  On a host, either the game's memory sits at those addresses, or each of these becomes a macro.
+  The last point decides: crash2-pc's build at 0x08000000 had `Obj_Init` leave an object without its state, and
+  `Obj_Update` read below its null stack; at 0x80000000 it went on. So the game's memory sits at those addresses,
+  where every one of these tests holds as written.
 - **The data.** The C reads 89 symbols of the split's `.data` and 380 of its `.bss`, and includes 19 blocks of
   `.rodata`: strings and constants, with no labels of code. splat's output there is directives only (`.word`, `.short`,
   `.byte`, `.asciz`, `.align`). A host's assembler takes it once `.word` means 4 bytes and `.align` a power of two. It
@@ -1003,6 +1010,8 @@ They belong to the port's repository. Each changes its design and is costly to r
    - A 32-bit build keeps every layout and runs the native code as it is.
    - A 64-bit build needs 32-bit slots wherever the disc's data or the native code holds a pointer.
 2. **Where the game's memory sits.**
-   - At retail's addresses: the KSEG0 tests and the 24-bit links hold as written.
-   - Anywhere: the tests and the links each become a macro.
+   - At retail's addresses: the KSEG0 tests, the 24-bit links and the pointers' sign hold as written.
+   - Anywhere: the tests and the links each become a macro, and so does every test of a pointer's sign.
+
+   crash2-pc took retail's addresses: the sign tests can't all be found (above).
 3. **The backends.** The renderer for the GPU's packets, and the mixer for libsnd's sequences and the SPU's voices.
