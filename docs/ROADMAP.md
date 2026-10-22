@@ -1006,6 +1006,10 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
 - `ASM_SYMBOL(name)`: a C symbol's name in the assembler's code, which `RETAIL_ADDRESS` (`80039D2C.c`) defines for
   the opcode table's retail addresses. As it is on the PS1; 32-bit Windows' C symbols take a leading underscore, which
   the port's Windows build adds.
+- `GOOL_HOST_OPERATION(object, word)`, with no PS1 default: what `Gool_Interpret` runs for an opcode the game's code
+  holds none of (past the 79 it has), the object's stack and frame stored as for the game's own operations. The port
+  patches the menus' GOOL code in memory with such words, each doing the replaced instruction's work besides its own
+  (an options screen in the game's menus). The equivalent build compiles the default case as before.
 
 Both executables stay byte for byte the same with them, and equiv.py agrees on 300 trials of each function they touched
 that it tests (`Gool_ResolveRef`, `Gool_OpMisc`, `func_8001A4A4`, `Gfx_ResetOt`, `Gfx_DrawStreaks`). With a host's
