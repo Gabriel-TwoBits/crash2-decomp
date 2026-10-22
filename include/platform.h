@@ -49,6 +49,9 @@
  *   interpreter, where the PlayStation's CPU runs it itself (80039D2C.c, gool_native);
  * - GOOL_HOST_OPERATION(object, word), the operation of an opcode the game's code holds none of, which the host's
  *   patches of that code run (80039D2C.c, Gool_Interpret): the object's stack and frame stored, its pc on the next
- *   instruction */
+ *   instruction;
+ * - GTE_PROJECTED(sxy, view, h, ofx, ofy), after the GTE model projects a vertex (include/gte.h, Gte_Perspective): the
+ *   screen position it pushed, the vertex's view coordinates before their rounding (three s64 with 12 fraction bits),
+ *   the projection's distance and offsets, for a host to keep the position's fraction and depth */
 
 #endif /* PLATFORM_H */

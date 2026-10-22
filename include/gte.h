@@ -300,6 +300,8 @@ static void Gte_Perspective(GteRegs *regs, s32 index, s32 last) {
     s32 screen[GTE_SCREEN_AXES];
     s32 axis;
 
+    s64 view[GTE_DIMENSION];
+
     xy = regs->data[GTE_VXY0 + index * GTE_VECTOR_REGISTERS];
     vector[0] = (s16)xy;
     vector[1] = (s16)(xy >> GTE_HALF_BITS);
@@ -309,6 +311,7 @@ static void Gte_Perspective(GteRegs *regs, s32 index, s32 last) {
         for (column = 0; column < GTE_DIMENSION; column++) {
             value = Gte_MacChecked(regs, row, value + Gte_Rotation(regs, row, column) * vector[column]);
         }
+        view[row] = value;
         mac = value >> GTE_FRACTION_BITS;
         regs->data[GTE_MAC1 + row] = mac;
         regs->data[GTE_IR1 + row] = Gte_Saturated(regs, mac, GTE_IR_MIN, GTE_IR_MAX, GTE_FLAG_IR1 >> row);
@@ -330,6 +333,10 @@ static void Gte_Perspective(GteRegs *regs, s32 index, s32 last) {
     regs->data[GTE_SXY0] = regs->data[GTE_SXY1];
     regs->data[GTE_SXY1] = regs->data[GTE_SXY2];
     regs->data[GTE_SXY2] = (screen[0] & GTE_HALF_MASK) | (screen[1] << GTE_HALF_BITS);
+#ifdef GTE_PROJECTED
+    GTE_PROJECTED(regs->data[GTE_SXY2], view, regs->control[GTE_H] & GTE_HALF_MASK, (s32)regs->control[GTE_OFX],
+                  (s32)regs->control[GTE_OFY]);
+#endif
     if (last) {
         value = Gte_Mac0Checked(regs, (s64)(s32)quotient * (s16)regs->control[GTE_DQA] + (s32)regs->control[GTE_DQB]);
         regs->data[GTE_MAC0] = value;
