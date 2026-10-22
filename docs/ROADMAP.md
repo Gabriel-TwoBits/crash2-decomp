@@ -995,6 +995,8 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
 - `OT_LINK(address)`: the 15 places where the GPU's ordering table or a primitive links to the next.
 - With no PS1 default: the GTE's six register moves (`include/gte.h` defines them unless the build has), and
   `GOOL_RUN_NATIVE`, operation 73's native code on a host's interpreter in place of the inline call.
+- `FRAME_ENDING()`: on entering `Gfx_EndFrame`, where `tools/run_game.lua` sets its game clock; a host keeps the same
+  clock there, for its frames to compare with the PS1's.
 - `PASSED_ON(arguments...)`: a call's arguments that the PS1 code passes on in the registers they arrived in, unnamed.
   `func_8002CB1C` calls `Zone_PlotWallEntry` with none, its own x and y left in `$a0` and `$a1`; a host names them.
   Named there, GCC 2.7.2 writes other code. `func_8002BF58` called `Zone_FindAt` with the zone alone, and the point

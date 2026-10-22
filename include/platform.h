@@ -25,6 +25,12 @@
 #define OT_LINK(address) ((u32)(address) & 0xFFFFFF)
 #endif
 
+/* On entering Gfx_EndFrame, which ends a game frame: where a host keeps a game clock, as tools/run_game.lua's
+ * breakpoint does there */
+#ifndef FRAME_ENDING
+#define FRAME_ENDING()
+#endif
+
 /* A call's arguments that the PlayStation's code passes on in the registers they arrived in, unnamed (the call has
  * none there), and a host names */
 #ifndef PASSED_ON

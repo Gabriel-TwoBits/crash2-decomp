@@ -626,6 +626,7 @@ int Gfx_EndFrame(void) {
     u8 *tmp;
     s32 fade;
 
+    FRAME_ENDING();
     g_FrameCount += 1;
     if ((g_Paused == 0) && (D_8006CB94 & FLAG_COUNT_FRAMES)) {
         D_80060944 += 1;
