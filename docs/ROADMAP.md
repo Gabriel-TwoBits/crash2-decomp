@@ -1003,6 +1003,9 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   passed the same way: there, naming it (`arg1`) gives the same bytes. A host's build ran into it, `Zone_FindAt`
   reading the point from its stack. A scan of the preprocessed C finds no other call with fewer arguments than the
   game's definition of the function takes.
+- `ASM_SYMBOL(name)`: a C symbol's name in the assembler's code, which `RETAIL_ADDRESS` (`80039D2C.c`) defines for
+  the opcode table's retail addresses. As it is on the PS1; 32-bit Windows' C symbols take a leading underscore, which
+  the port's Windows build adds.
 
 Both executables stay byte for byte the same with them, and equiv.py agrees on 300 trials of each function they touched
 that it tests (`Gool_ResolveRef`, `Gool_OpMisc`, `func_8001A4A4`, `Gfx_ResetOt`, `Gfx_DrawStreaks`). With a host's
