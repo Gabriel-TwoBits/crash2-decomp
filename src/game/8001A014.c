@@ -211,7 +211,7 @@ void func_8001A4A4(GoolObject *arg0, s32 *arg1) {
     a = arg0->anim;
     if (a != 0) {
         if (*a != 4) {
-            if (((s32)(a + 4) & 0xFF800003) != 0x80000000) {
+            if (!RAM_ADDRESS((s32)(a + 4))) {
                 return;
             }
             r = (s32)Nsf_OpenEntry(a + 4, 1, 0);

@@ -37,7 +37,7 @@ void func_8002FB84(s32 i) {
         if (v < 0) {
             v = -v;
         }
-        ((s8 *)0x1F800100)[i] = v;
+        ((s8 *)(SCRATCHPAD + 0x100))[i] = v;
         i++;
         p++;
     } while (i < 16);

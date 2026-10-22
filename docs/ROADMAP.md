@@ -211,12 +211,9 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **R7, the C made portable**: a macro at each point where a host needs something other than the PS1: the
-   scratchpad's base, the test for a pointer into RAM, the ordering table's link, the GTE's register moves (section 6,
-   "What is left for a host, by kind"). Each defaults to what the PS1 does, and both executables stay byte for byte
-   the same.
-2. **Readable C, R5 and R6**: the other subsystems' types and names, and the handwritten code's (section 5), where the
-   port needs them first.
+1. **Readable C, R5 and R6**: the other subsystems' types and names, and the handwritten code's (section 5), where the
+   port needs them first. The port itself goes on in its own repository (section 6, "Two repositories"), and what it
+   needs of the C comes back here.
 
 ## 4. The engine in C
 
@@ -872,8 +869,8 @@ Steps, in order:
   `Obj_Update` calls for each object (`Gfx_QueueObject`). `func_80045218`, the dots, changes no frame of new-game or
   demo emptied, and the game stops at game frame 4 without `func_8001AA80` (an object's matrix by the table at
   0x8005B650): both keep their addresses. 214 of 638 game functions named.
-- **R7, the C made portable (in progress)**: what a host's compiler makes of the C, what is left for a host, and the
-  macros the port redefines (section 6).
+- **R7, the C made portable (done)**: what a host's compiler makes of the C, what is left for a host, and the
+  macros the port redefines (section 6, "The macros").
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
 writes: docs/COMPILER.md, "Small data"), rewriting equivalent C for readability, the GOOL opcodes' names, the GTE
@@ -977,6 +974,26 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   - **Memory card:** events, and the BIOS's file calls on `bu00:` (`open`, `read`, `write`, `erase`, `format`,
     `firstfile`, `nextfile`).
   - **Pad:** `InitPAD`'s two buffers.
+
+### The macros
+
+`include/platform.h` holds them, each with the PS1's value unless the build defines it first:
+
+- `SCRATCHPAD`, the scratchpad's address. Every use of the scratchpad in compiled code goes through it, the GOOL
+  interpreter's words by their names in `include/game.h` (`SCRATCH_GOOL_IMMEDIATES`, `SCRATCH_GOOL_TABLE`,
+  `SCRATCH_GOOL_HANDLERS`). equiv.py's contracts keep their numbers (`SAVE_AREA`, `LIGHT_RETURN`, ...), since they
+  describe the retail code's own addresses.
+- `RAM_BASE` and `RAM_ADDRESS(value)`: the two tests for a pointer into RAM, and the top of RAM `func_80014C48`
+  computes.
+- `OT_LINK(address)`: the 15 places where the GPU's ordering table or a primitive links to the next.
+- With no PS1 default: the GTE's six register moves (`include/gte.h` defines them unless the build has), and
+  `GOOL_RUN_NATIVE`, operation 73's native code on a host's interpreter in place of the inline call.
+
+Both executables stay byte for byte the same with them, and equiv.py agrees on 300 trials of each function they touched
+that it tests (`Gool_ResolveRef`, `Gool_OpMisc`, `func_8001A4A4`, `Gfx_ResetOt`, `Gfx_DrawStreaks`). With a host's
+definitions of all of them, the 33 files of `src/game/` compile into 32-bit x86 objects with no error (GCC 14.2,
+`-m32 -std=gnu89 -O1 -DNON_MATCHING -DGTE_MODEL`). Their link then needs the split's data (470 symbols, the handwritten
+code's `g_TimerTicks` among them), the PsyQ functions they call, and the host's own definitions.
 
 ### The port's decisions
 

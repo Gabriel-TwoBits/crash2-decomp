@@ -520,15 +520,15 @@ void Gool_InitScratchpad(void) {
     u32 *p;
 
     n = g_DisplayBuffer[5];
-    *(s32 *)0x1F800050 = D_80060944;
-    p = (u32 *)0x1F800054;
+    *(s32 *)(SCRATCHPAD + 0x50) = D_80060944;
+    p = (u32 *)(SCRATCHPAD + 0x54);
     if (n >= 0x67) {
         n = 0x66;
     }
     *p = n;
-    *(char **)0x1F800058 = g_GoolGlobals;
-    Sys_Memcpy(g_GoolOpcodeHandlers, (void *)0x1F800060, (D_8005C650 - g_GoolOpcodeHandlers) / 2);
-    *(s32 *)0x1F80005C = 0x1F800060;
+    *(char **)(SCRATCHPAD + 0x58) = g_GoolGlobals;
+    Sys_Memcpy(g_GoolOpcodeHandlers, (void *)SCRATCH_GOOL_HANDLERS, (D_8005C650 - g_GoolOpcodeHandlers) / 2);
+    *(s32 *)SCRATCH_GOOL_TABLE = SCRATCH_GOOL_HANDLERS;
 }
 
 extern u8 D_8006CB30[];

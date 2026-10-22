@@ -2,7 +2,7 @@
 #include "sdk.h"
 #include "game.h"
 
-s32 D_8005F294 = 0x1F800040;
+s32 D_8005F294 = SCRATCH_GOOL_IMMEDIATES;
 s32 D_8005F298 = 0;
 s32 D_8005F29C[2] = { 0x3039, 0xBAEC2 };
 

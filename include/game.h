@@ -10,6 +10,12 @@
 /* What the game's functions return when they succeed; their errors are other negative values (-0x12, -0x10) */
 #define SUCCESS -0xFF
 
+/* The scratchpad's words the GOOL interpreter keeps: the two Gool_ResolveRef returns an immediate operand in, by
+ * turns, the word pointing to the opcode table and the copy Gool_InitScratchpad makes of it (docs/TARGET.md) */
+#define SCRATCH_GOOL_IMMEDIATES (SCRATCHPAD + 0x40)
+#define SCRATCH_GOOL_TABLE (SCRATCHPAD + 0x5C)
+#define SCRATCH_GOOL_HANDLERS (SCRATCHPAD + 0x60)
+
 /* The game's functions that C calls, declared once so every file calls them alike. A parameter whose structure is known
    only in one file is a void pointer here until the structure is shared */
 

@@ -408,7 +408,7 @@ s32 Gool_OpAcceptOrRejectEvent(GoolObject *arg0, u32 arg1, s32 arg2, s32 *arg3) 
     s32 n;
     s32 *sp;
 
-    *(s32 *)0x1F800048 = arg2;
+    *(s32 *)(SCRATCHPAD + 0x48) = arg2;
     if (!(arg2 & STATUS_READY)) {
         return ERR_NOT_READY;
     }
@@ -439,7 +439,7 @@ s32 Gool_OpAcceptOrRejectEvent(GoolObject *arg0, u32 arg1, s32 arg2, s32 *arg3) 
     arg2 |= STATUS_TAKEN;
     if (cond != 0) {
         arg3[1] = (arg1 >> 0x18) != OPCODE_SKIP;
-        *(s32 *)0x1F800048 = arg2;
+        *(s32 *)(SCRATCHPAD + 0x48) = arg2;
         if (action == ACTION_POP_CALL) {
             n = (arg1 >> 0xA) & 0xF;
             for (v = n - 1; v >= 0; v--) {

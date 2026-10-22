@@ -32,8 +32,6 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 #define PROP_C 8
 #define MISSING_SENTINEL 0x7FFFFFFF
 #define MIN_VALID (-0xFE)
-#define SCRIPT_HANDLE_MASK 0xFF800003
-#define SCRIPT_HANDLE_TAG 0x80000000
 #define SCRIPT_HANDLE_FLAGS 0x17
 #define CHAR_UPPER_S 0x53
 #define CHAR_LOWER_S 0x73
@@ -363,7 +361,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         return;
     case 14:
         v = (s32)SLOT(obj, arg1);
-        if (((u32)v & SCRIPT_HANDLE_MASK) != SCRIPT_HANDLE_TAG) {
+        if (!RAM_ADDRESS((u32)v)) {
             PUSH(0);
             return;
         }

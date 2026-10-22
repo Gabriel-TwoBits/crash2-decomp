@@ -122,13 +122,16 @@ typedef struct GteRegs {
 #define GTE_STRING(x) #x
 #define GTE_NUMBER(x) GTE_STRING(x)
 /* A register's number is part of the instruction: reg is one of the names above. mfc2 and cfc2 load with a delay;
-   swc2 and lwc2 move a data register to memory and back */
+   swc2 and lwc2 move a data register to memory and back. A host build defines all six first, on registers in its
+   memory (include/platform.h) */
+#ifndef GTE_READ_DATA
 #define GTE_READ_DATA(reg, out) __asm__ volatile("mfc2 %0, $" GTE_NUMBER(reg) "\n\tnop" : "=r"(out))
 #define GTE_READ_CONTROL(reg, out) __asm__ volatile("cfc2 %0, $" GTE_NUMBER(reg) "\n\tnop" : "=r"(out))
 #define GTE_WRITE_DATA(reg, value) __asm__ volatile("mtc2 %0, $" GTE_NUMBER(reg) : : "r"(value))
 #define GTE_WRITE_CONTROL(reg, value) __asm__ volatile("ctc2 %0, $" GTE_NUMBER(reg) : : "r"(value))
 #define GTE_STORE_DATA(reg, lvalue) __asm__ volatile("swc2 $" GTE_NUMBER(reg) ", %0" : "=m"(lvalue))
 #define GTE_LOAD_DATA(reg, lvalue) __asm__ volatile("lwc2 $" GTE_NUMBER(reg) ", %0" : : "m"(lvalue))
+#endif
 #define GTE_SAVE_DATA(regs, reg) GTE_STORE_DATA(reg, (regs)->data[reg])
 #define GTE_SAVE_CONTROL(regs, reg) GTE_READ_CONTROL(reg, (regs)->control[reg])
 #define GTE_RESTORE_DATA(regs, reg) GTE_LOAD_DATA(reg, (regs)->data[reg])

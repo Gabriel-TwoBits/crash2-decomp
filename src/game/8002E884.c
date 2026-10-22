@@ -310,7 +310,7 @@ void Sys_InitLevel(void) {
     }
     }
     func_8002F228(1);
-    *(s32 **)0x1F80005C = &g_GoolOpcodeHandlers;
+    *(s32 **)SCRATCH_GOOL_TABLE = &g_GoolOpcodeHandlers;
 }
 
 extern s32 D_8006CBB4;

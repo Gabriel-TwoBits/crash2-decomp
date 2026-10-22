@@ -1741,7 +1741,6 @@ typedef struct PolyFT4 {
 #define OT_DEPTH_BIAS 0x800
 /* The three vertices' Z summed, / 32 */
 #define SZ_SUM_SHIFT 5
-#define PRIM_ADDRESS_MASK 0xFFFFFF
 /* addPrim: a primitive's words after its tag, in the tag's top byte */
 #define FT4_TAG_LENGTH 0x09000000
 #define GT4_TAG_LENGTH 0x0C000000
@@ -1795,7 +1794,7 @@ void func_8001856C(s32 arg0, s32 depth, void *arg2, s32 *box, s32 arg4) {
         slot = &ot[index];
     }
     quad->tag = *slot | FT4_TAG_LENGTH;
-    *slot = (u32)quad & PRIM_ADDRESS_MASK;
+    *slot = OT_LINK(quad);
     corner = VERTEX_XY(box[BOX_X1], box[BOX_Y0]);
     GTE_STORE_DATA(GTE_SXY0, quad->xy0);
     GTE_WRITE_DATA(GTE_VXY0, corner);
@@ -1915,7 +1914,7 @@ void func_800186D8(void *arg0, void *arg1, s32 depth, void *arg3, s32 *box, s32 
         slot = &ot[index];
     }
     quad->tag = *slot | GT4_TAG_LENGTH;
-    *slot = (u32)quad & PRIM_ADDRESS_MASK;
+    *slot = OT_LINK(quad);
     corner = VERTEX_XY(box[BOX_X1], box[BOX_Y0]);
     GTE_STORE_DATA(GTE_SXY0, quad->xy0);
     GTE_WRITE_DATA(GTE_VXY0, corner);

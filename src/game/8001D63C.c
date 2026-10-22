@@ -113,7 +113,7 @@ s32 D_8005F1F0 = 0x80;
 #define RING_COUNT 7
 #define RING_PREV 0x48
 #define RING_NEXT 0x4C
-#define SCRATCH_REG ((void **)0x1F80005C)
+#define SCRATCH_REG ((void **)SCRATCH_GOOL_TABLE)
 
 /* Offsets of the parameter blocks (bytes from D_8005B7B0). */
 #define PARAMS_SPIN 0xC8

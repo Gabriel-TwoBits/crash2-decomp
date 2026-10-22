@@ -55,4 +55,6 @@ void Equiv_Reject(void);
 #define INCLUDE_ASM_USE_MACRO_INC 1
 #include "include_asm.h"
 
+#include "platform.h"
+
 #endif /* COMMON_H */

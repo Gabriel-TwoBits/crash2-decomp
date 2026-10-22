@@ -285,7 +285,7 @@ s32 main(void) {
 #ifdef NON_MATCHING
 /* CrashEdit's ControllerButtons: Start */
 #define BUTTON_START 0x800
-#define SCRATCH_ENTRY_BASE 0x1F800280
+#define SCRATCH_ENTRY_BASE (SCRATCHPAD + 0x280)
 #define SAVE_MAGIC 0x6396347F
 #define SAVE_FLAGS_MASK 0x20000001
 #define STATE_DEAD 0x3B

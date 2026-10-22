@@ -163,7 +163,7 @@ void Obj_UpdateAll(void *arg0) {
     if (g_Player != 0) {
         Obj_ForEachList(&func_80018CAC, &Obj_Update, arg0);
     }
-    *(u8 **)0x1F80005C = &g_GoolOpcodeHandlers;
+    *(u8 **)SCRATCH_GOOL_TABLE = &g_GoolOpcodeHandlers;
 }
 
 #ifdef NON_MATCHING

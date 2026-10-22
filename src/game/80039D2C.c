@@ -61,15 +61,15 @@ typedef struct {
 /* The scratchpad's grid Zone_PlotWallEntry marks: a bit per cell, two words a row (cells x -32 to -1 in the first, 0 to
  * 31 in the second) for rows y -32 to 31; where a cell is first marked, the rows from GRID_ROWS on get a shape of 32
  * words OR-ed in, shifted by x */
-#define GRID_CELLS 0x1F800180
-#define GRID_ROWS 0x1F800100
-#define GRID_SHAPE 0x1F800380
+#define GRID_CELLS (SCRATCHPAD + 0x180)
+#define GRID_ROWS (SCRATCHPAD + 0x100)
+#define GRID_SHAPE (SCRATCHPAD + 0x380)
 #define GRID_HALF 32
 #define GRID_ROW_WORDS 2
 /* Zone_PlotQueryWalls marks a box's edges every 8 cells; it keeps its flags and lower height in the scratchpad while it
  * does */
 #define GRID_EDGE_STEP 8
-#define GRID_KEPT 0x1F8000E0
+#define GRID_KEPT (SCRATCHPAD + 0xE0)
 /* A box's corner in cells: its distance from the grid's base, in 1/2048ths (<< 2 then >> 13, signed) */
 #define CELL_SCALE_SHIFT 2
 #define CELL_SHIFT 13
@@ -128,10 +128,10 @@ void func_8003BC34(u16 *from, u16 *to, s32 count) {
     }
 }
 
-/* An ordering table's slots, linked each to the next (a 24-bit address), in blocks of 64; the last holds the end mark */
+/* An ordering table's slots, linked each to the next (OT_LINK), in blocks of 64; the last holds the end mark */
 #define OT_BLOCK_SLOTS 64
 #define OT_BLOCK_SHIFT 6
-#define OT_LINK_MASK 0xFFFFFF
+#define OT_END 0xFFFFFF
 
 /* Every caller (Sys_MainLoop, Gfx_AllocFrameBuffers, Gfx_DrawWorlds) passes a frame's table of 0x800 slots; the retail
  * code links at least a block, a count under 64 sending it on without end */
@@ -141,7 +141,7 @@ EQUIV_RANGE(Gfx_ResetOt, 1, OT_BLOCK_SLOTS, OT_SLOTS)
 /* Resets an ordering table of SLOTS slots: each linked to the one after it, the last the end */
 void Gfx_ResetOt(u8 *ot, s32 slots) {
     u32 *slot = (u32 *)ot;
-    u32 next = (u32)ot & OT_LINK_MASK;
+    u32 next = OT_LINK(ot);
     u32 blocks = (u32)slots >> OT_BLOCK_SHIFT;
     u32 index;
 
@@ -149,7 +149,7 @@ void Gfx_ResetOt(u8 *ot, s32 slots) {
         next += sizeof(u32);
         slot[index] = next;
     }
-    slot[index - 1] = OT_LINK_MASK;
+    slot[index - 1] = OT_END;
 }
 
 extern u32 g_TimerTicks;
@@ -1157,9 +1157,9 @@ s32 func_8003D3CC(void *object, void *camera, s32 on_screen, s32 scale_shift, vo
 
 /* Zone_FindFloorY's words in the scratchpad: its arguments (the value for none, the callback, the output, the object),
  * the second sum, and 13 words it holds across each call (what its registers hold then, as its code saves them) */
-#define CALLED_KEPT 0x1F8000E0
-#define CALLED_SUM 0x1F8000F0
-#define CALLED_SAVED 0x1F800070
+#define CALLED_KEPT (SCRATCHPAD + 0xE0)
+#define CALLED_SUM (SCRATCHPAD + 0xF0)
+#define CALLED_SAVED (SCRATCHPAD + 0x70)
 /* The box kinds below this (2 * kind), with no subkind or one past 0x2F, go uncalled */
 #define CALLED_KIND_LIMIT 4
 #define CALLED_SUBKIND_MASK 0x3F0
@@ -1575,7 +1575,6 @@ void Gfx_DecodeSortListForward(void *delta, u16 *from, u16 *to) {
 #define LINE_G2_WORDS 5
 #define MODE_TAG_LENGTH 0x02000000
 #define MODE_WORDS 3
-#define PRIM_ADDRESS_MASK 0xFFFFFF
 
 /* The words of the frame being built Gfx_DrawStreaks uses: where the next primitive goes, and the ordering table */
 typedef struct {
@@ -1694,7 +1693,7 @@ void Gfx_DrawStreaks(s32 count, void *frame, void *scene) {
         }
         GTE_WRITE_DATA(GTE_VZ0, z_from - STREAK_Z_BIAS);
         GTE_WRITE_DATA(GTE_VZ1, z_to - STREAK_Z_BIAS);
-        address = (u32)line & PRIM_ADDRESS_MASK;
+        address = OT_LINK(line);
         Gte_Rtpt();
         head = *slot;
         line[1] = code;
@@ -1724,7 +1723,7 @@ void Gfx_DrawStreaks(s32 count, void *frame, void *scene) {
     line[2] = 0;
     head = *slot;
     line[0] = head | MODE_TAG_LENGTH;
-    *slot = (u32)line & PRIM_ADDRESS_MASK;
+    *slot = OT_LINK(line);
     line += MODE_WORDS;
     buffer->next = line;
 }
@@ -1804,7 +1803,7 @@ void func_80045218(s32 count, void *frame, void *scene) {
         x = dot_coordinate(x & GTE_HALF_MASK);
         y = (y + y_offset) >> (y_shift & SHIFT_COUNT_MASK);
         z = dot_coordinate(z);
-        address = (u32)tile & PRIM_ADDRESS_MASK;
+        address = OT_LINK(tile);
         GTE_WRITE_DATA(GTE_VXY0, ((u32)y << GTE_HALF_BITS) | x);
         GTE_WRITE_DATA(GTE_VZ0, z);
         grey = streak_random(&low, &high);
@@ -1834,7 +1833,7 @@ void func_80045218(s32 count, void *frame, void *scene) {
     tile[1] = DOTS_MODE;
     tile[2] = 0;
     tile[0] = *slot | MODE_TAG_LENGTH;
-    *slot = (u32)tile & PRIM_ADDRESS_MASK;
+    *slot = OT_LINK(tile);
     tile += MODE_WORDS;
     buffer->next = tile;
 }
@@ -1983,7 +1982,7 @@ SCRATCH_AT(screen_end, 0x21c);
 SCRATCH_AT(light_first_colour, 0x228);
 SCRATCH_AT(worlds, 0x280);
 
-#define WORLD_SCRATCH ((WorldScratch *)SAVE_AREA)
+#define WORLD_SCRATCH ((WorldScratch *)SCRATCHPAD)
 
 /* A sort list's entry: its world (8 a frame), the polygon's kind and its index there */
 #define ENTRY_WORLD_SHIFT 13
@@ -2022,7 +2021,6 @@ SCRATCH_AT(worlds, 0x280);
 /* The ordering table's slots (2,048) and the deepest a polygon goes; its slot from the sum of its last three depths */
 #define OT_SLOTS 0x800
 #define OT_LAST (OT_SLOTS - 1)
-#define OT_END 0xFFFFFF
 #define DEPTH_DEEPEST 0x770
 #define DEPTH_SUM_SHIFT 5
 #define DEPTH_SHIFT_STEP 6
@@ -2111,7 +2109,7 @@ static void depth_slot(WorldPass *pass) {
 
 /* The slots below lowest down to past (left out), each linked to the one above */
 static void link_down(u32 *lowest, u32 *past) {
-    u32 head = (u32)lowest & PRIM_ADDRESS_MASK;
+    u32 head = OT_LINK(lowest);
 
     for (lowest--; lowest != past; lowest--) {
         *lowest = head;
@@ -2129,7 +2127,7 @@ static void link_primitive(WorldPass *pass, s32 words) {
     u32 head = pass->head;
 
     if (slot < lowest) {
-        head = (u32)lowest & PRIM_ADDRESS_MASK;
+        head = OT_LINK(lowest);
         for (lowest--; lowest != slot; lowest--) {
             *lowest = head;
             head -= sizeof(u32);
@@ -2138,7 +2136,7 @@ static void link_primitive(WorldPass *pass, s32 words) {
         /* Into the lowest slot */
     }
     primitive[0] = head | ((u32)(words - 1) << TAG_LENGTH_SHIFT);
-    head = (u32)primitive & PRIM_ADDRESS_MASK;
+    head = OT_LINK(primitive);
     *lowest = head;
     pass->lowest = lowest;
     pass->head = head;
@@ -3406,7 +3404,7 @@ static void light_emit(WorldPass *pass, u32 *slot, s32 own_slot, s32 textured, u
     }
     if (own_slot && slot >= pass->lowest) {
         primitive[0] = *slot | ((u32)(words - 1) << TAG_LENGTH_SHIFT);
-        *slot = (u32)primitive & PRIM_ADDRESS_MASK;
+        *slot = OT_LINK(primitive);
         pass->next = primitive + words;
     } else {
         pass->slot = slot;
@@ -4010,7 +4008,7 @@ PACKET_AT(offset_y, 0x50);
 PACKET_AT(far_depths, 0x48);
 PACKET_AT(widths, 0x60);
 
-#define DRAW_SCRATCH ((DrawScratch *)SAVE_AREA)
+#define DRAW_SCRATCH ((DrawScratch *)SCRATCHPAD)
 
 /* An object's fields the placing steps read: its position (24.8) and angles; its depth bias */
 #define OBJECT_X 0x60
@@ -4667,7 +4665,7 @@ static u32 *sprite_quad(DrawPass *pass, u32 *record, u32 fourth, u32 *primitive)
     slot = depth_slot_of(pass, depth_sum);
     primitive[0] = POLY_FT4_TAG_LENGTH | *slot;
     primitive[5] = uv1;
-    *slot = (u32)primitive & PRIM_ADDRESS_MASK;
+    *slot = OT_LINK(primitive);
     primitive[7] = uv2;
     primitive[9] = uv2 >> CLUT_SHIFT;
     fade = packet->kind.sprite.fade & GTE_HALF_MASK;
@@ -6247,7 +6245,7 @@ static inline void shade_link(DrawPass *pass, u32 *slot, u32 tag, u32 words) {
     u32 *primitive = pass->next;
 
     primitive[0] = *slot | tag;
-    *slot = (u32)primitive & PRIM_ADDRESS_MASK;
+    *slot = OT_LINK(primitive);
     pass->next = primitive + words;
 }
 
@@ -6278,8 +6276,8 @@ static inline void shade_emit(DrawPass *pass, u32 *slot, s32 translucent) {
             mode = primitive + POLY_G3_WORDS;
             mode[1] = DRAW_MODE_WORD;
             mode[2] = 0;
-            mode[0] = DRAW_MODE_TAG_LENGTH | ((u32)primitive & PRIM_ADDRESS_MASK);
-            *slot = (u32)mode & PRIM_ADDRESS_MASK;
+            mode[0] = DRAW_MODE_TAG_LENGTH | OT_LINK(primitive);
+            *slot = OT_LINK(mode);
             pass->next = mode + DRAW_MODE_WORDS;
         } else {
             shade_link(pass, slot, POLY_G3_TAG_LENGTH, POLY_G3_WORDS);
@@ -6734,7 +6732,7 @@ typedef struct {
 /* The scratchpad's words the operations read (Gool_InitScratchpad sets the clock, the frame's length and the globals'
  * address each frame), and its words they use: two temporaries an immediate operand's address points to, and the
  * vector func_8001EAD8's operation copies there */
-#define GOOL_SCRATCH ((u8 *)SAVE_AREA)
+#define GOOL_SCRATCH ((u8 *)SCRATCHPAD)
 #define GOOL_CLOCK (*(s32 *)(GOOL_SCRATCH + 0x50))
 #define GOOL_FRAME_TIME (*(s32 *)(GOOL_SCRATCH + 0x54))
 #define GOOL_GLOBALS (*(s32 **)(GOOL_SCRATCH + 0x58))
@@ -7369,6 +7367,11 @@ static inline s32 gool_random(s32 a, s32 b) {
  * in $s5 (jalr $s5, $ra) or 0 to return (docs/TARGET.md) */
 #define NATIVE_SAVE_BYTES 8
 
+#ifdef GOOL_RUN_NATIVE
+static inline void gool_native(GoolVm *vm) {
+    GOOL_RUN_NATIVE(vm->object, vm->state_pool, &vm->pc, &vm->sp, vm->fp);
+}
+#else
 static inline void gool_native(GoolVm *vm) {
     register GoolObject *object __asm__("$16") = vm->object;
     register s32 *state_pool __asm__("$19") = vm->state_pool;
@@ -7388,6 +7391,7 @@ static inline void gool_native(GoolVm *vm) {
     vm->pc = pc;
     vm->sp = sp;
 }
+#endif
 
 /* The opcode table's entries (g_GoolOpcodeHandlers), the retail operations' addresses, as numbers: the world renderer
  * reads the scratchpad's copy of the table past its own as texture bits (docs/TARGET.md, "Code addresses read as

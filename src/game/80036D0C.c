@@ -9,7 +9,7 @@ s32 D_8005F290 = 0;
 #ifdef NON_MATCHING
 s32 *Gool_ResolveRef(GoolObject *a0, s32 arg1) {
     u8 *arg0 = (u8 *)a0;
-    s32 *scratch = (s32 *)0x1F800040;
+    s32 *scratch = (s32 *)SCRATCH_GOOL_IMMEDIATES;
     s32 *r;
     s32 t;
     u8 *p;
