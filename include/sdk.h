@@ -29,7 +29,12 @@ void bzero(unsigned char *buffer, int size);
 char *strcpy(char *destination, const char *source);
 void *memset(void *buffer, int value, int size);
 
-/* libcd */
+/* libcd: CdControl's commands, and the mode bit CdRead sets for double speed (psx-spx, "CDROM Controller Command
+   Summary" and Setmode) */
+#define CdlSetloc 0x02
+#define CdlStop 0x08
+#define CdlSeekL 0x15
+#define CdlModeSpeed 0x80
 int CdControl(unsigned char com, unsigned char *param, unsigned char *result);
 int CdDataSync(int mode);
 int CdReadSync(int mode, unsigned char *result);

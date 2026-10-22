@@ -45,10 +45,10 @@ s32 Cd_ReadFile(s32 *a0, s32 arg1, s32 arg2) {
     }
 loop:
     CdIntToPos(arg0[0] & 0x7FFFFF, sp18);
-    if (CdControl(2, sp18, sp10) == 0) {
+    if (CdControl(CdlSetloc, sp18, sp10) == 0) {
         goto loop;
     }
-    if (CdRead((u32)(((arg0[1] & 0x1FFFF) + 0x7FF) / 2048), arg1, 0x80) == 0 || Cd_SyncRead(1) == -0x10) {
+    if (CdRead((u32)(((arg0[1] & 0x1FFFF) + 0x7FF) / 2048), arg1, CdlModeSpeed) == 0 || Cd_SyncRead(1) == -0x10) {
         printf(D_8005F1A8);
         goto loop;
     }
@@ -420,7 +420,7 @@ void Nsf_SeekLevel(s32 arg0) {
         v = g_LevelFiles[v = arg0 * 3];
         v = 0x7FFFFF & v;
         CdIntToPos(v, sp10);
-        CdControlF(0x15, sp10);
+        CdControlF(CdlSeekL, sp10);
     }
 }
 
@@ -444,8 +444,6 @@ s32 Cd_SyncRead(s32 wait) {
 #ifdef NON_MATCHING
 #define SECTOR_TABLE_SHIFT 6
 #define SHIFT_2K 11
-#define CD_READ_SECTORS 0x80
-#define CD_CMD_SEEKL 2
 #define CD_SYNC_POLL 1
 #define CD_SYNC_BLOCK 0
 #define CD_STATUS_DISK_ERROR 5
@@ -480,10 +478,10 @@ s32 Nsf_ReadPages(NsfPageSlot *arg0, s32 arg1) {
         sector = g_NsfStartSector + D_800675A0->unk_418 + ((index >> 1) << NSF_PAGE_SECTOR_SHIFT);
     }
 
-    /* Seek, wait for the seek to finish and issue the read; any failure retries from the seek. */
+    /* Set the location, wait for the command to finish and issue the read; any failure retries from the start. */
     for (;;) {
         CdIntToPos(sector, pos);
-        if (CdControlF(CD_CMD_SEEKL, pos) == 0) {
+        if (CdControlF(CdlSetloc, pos) == 0) {
             continue;
         }
         poll = CdSync(CD_SYNC_POLL, 0);
@@ -495,7 +493,7 @@ s32 Nsf_ReadPages(NsfPageSlot *arg0, s32 arg1) {
         if (block == poll) {
             continue;
         }
-        if (CdRead(count, buf, CD_READ_SECTORS) != 0) {
+        if (CdRead(count, buf, CdlModeSpeed) != 0) {
             return LOAD_RESULT;
         }
     }

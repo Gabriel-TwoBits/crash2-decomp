@@ -99,7 +99,7 @@ s32 D_8005F3DC;
 
 s32 Sys_Shutdown(void) {
     if (g_UseCd != 0) {
-        CdControl(8, 0, 0);
+        CdControl(CdlStop, 0, 0);
         StopCallback();
     }
     Save_StopCard();
