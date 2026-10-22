@@ -44,7 +44,7 @@ Found by the matching runs (each run's notes are in `config/match/notes/<functio
   compiled C:
   - Its first functions (`0x80039D2C` to `0x80039F9C`) take the GOOL interpreter's registers as inputs (`$s0`, `$s3`,
     `$s4`, `$s6`, `$s7`, `$fp`), set by nobody they could be compiled with. The interpreter around `func_8003A014` keeps
-    its operand stack in `$s6` and has entries reached from its dispatch (`func_8003A680` pops operands off `$s6` and
+    its operand stack in `$s6` and has entries reached from its dispatch (`Gool_Seek` pops operands off `$s6` and
     branches back into `func_8003A014`).
   - From `0x80042FD0` on, GTE routines with their own conventions: inputs in `$t0`-`$t4` or `$v1`, returns through
     `jr $t8`, one falling through into the next (`func_80042FD0`, `func_800436C8`).

@@ -429,7 +429,7 @@ s32 func_8001F054(GoolObject *, u32, s32 *);
 #define F(o, off, T) (*(T *)((u8 *)(o) + (off)))
 #define REG(o, i) ((s32 *)((u8 *)(o) + (i) * REG_SIZE + REG_FILE_OFFSET))
 
-void func_8003817C(GoolObject *obj, u32 arg1) {
+void Gool_OpVector(GoolObject *obj, u32 arg1) {
     u8 *o = (u8 *)obj;
     s32 *dst = REG(o, (arg1 >> 12) & 7);
     s32 *src;
@@ -546,5 +546,5 @@ void func_8003817C(GoolObject *obj, u32 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80037698", func_8003817C);
+INCLUDE_ASM("asm/nonmatchings/game/80037698", Gool_OpVector);
 #endif

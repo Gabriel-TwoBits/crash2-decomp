@@ -6669,10 +6669,10 @@ void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
 /* ---- The GOOL interpreter (docs/TARGET.md, "The GOOL interpreter") ---- */
 
 /* The routines the interpreter's operations share, which the retail code keeps apart and only it reaches: the operands'
- * decoders (func_80039D2C, func_80039E10, func_80039E80, func_80039F74, func_80039F9C), the calls into the game's C
- * (func_80039FC4), three seeks (func_8003A680, func_8003A718, func_8003A7CC) and the sine (func_8003A9B8) */
-HANDWRITTEN_PARTS(Gool_Interpret, func_80039D2C, func_80039E10, func_80039E80, func_80039F74, func_80039F9C)
-HANDWRITTEN_PARTS(Gool_Interpret, func_80039FC4, func_8003A680, func_8003A718, func_8003A7CC, func_8003A9B8)
+ * decoders (Gool_TranslateInGop, Gool_TranslateOutGop, func_80039E80, func_80039F74, func_80039F9C), the calls into the game's C
+ * (func_80039FC4), three seeks (Gool_Seek, Gool_SeekAngle, Gool_Loop) and the sine (func_8003A9B8) */
+HANDWRITTEN_PARTS(Gool_Interpret, Gool_TranslateInGop, Gool_TranslateOutGop, func_80039E80, func_80039F74, func_80039F9C)
+HANDWRITTEN_PARTS(Gool_Interpret, func_80039FC4, Gool_Seek, Gool_SeekAngle, Gool_Loop, func_8003A9B8)
 
 /* The machine as the retail code keeps it in registers: the object ($s0), the run's mode and argument ($s1, $s2), the
  * constant pools of the object's code and of its state's ($s4, $s3), the pc, the stack and the frame ($s5 to $s7),
@@ -6785,16 +6785,16 @@ typedef struct {
 #define BRANCH_DROP_SHIFT 10
 #define BRANCH_DROP_MASK 0xF
 
-/* A linked object's halfword from 0x20: bits 12 to 14 the link, 15 to 20 the halfword */
-#define HALF_LINK_SHIFT 12
-#define HALF_INDEX_SHIFT 15
-#define HALF_INDEX_MASK 0x3F
+/* A linked object's colour (GoolObject.colors): bits 12 to 14 the link, 15 to 20 the colour */
+#define COLOR_LINK_SHIFT 12
+#define COLOR_INDEX_SHIFT 15
+#define COLOR_INDEX_MASK 0x3F
 
 /* The pad's bits Gool_OpTestPad tests */
 #define GOOL_PAD_MASK 0x1FFFFF
 
-/* The operations, by the instruction's top byte (the table at 0x8005C514, g_GoolOpcodeHandlers): those of no clear
- * purpose yet by their number */
+/* The operations, by the instruction's top byte (the table at 0x8005C514, g_GoolOpcodeHandlers), named by what each
+ * does or by CrashEdit's mnemonic; those of neither by their number */
 enum GoolOpcode {
     GOOL_ADD = 0,
     GOOL_SUBTRACT = 1,
@@ -6815,7 +6815,7 @@ enum GoolOpcode {
     GOOL_RANDOM = 16,
     GOOL_MOVE = 17,
     GOOL_NOT = 18,
-    GOOL_OP_19 = 19,
+    GOOL_LOOP = 19,
     GOOL_ADDRESS = 20,
     GOOL_SHIFT = 21,
     GOOL_PUSH_VALUES = 22,
@@ -6831,8 +6831,8 @@ enum GoolOpcode {
     GOOL_SET_GLOBAL = 32,
     GOOL_ANGLE_DIFFERENCE = 33,
     GOOL_SEEK = 34,
-    GOOL_LINKED_HALF = 35,
-    GOOL_SET_LINKED_HALF = 36,
+    GOOL_COLOR = 35,
+    GOOL_SET_COLOR = 36,
     GOOL_SEEK_ANGLE = 37,
     GOOL_PUSH_ADDRESSES = 38,
     GOOL_ANIMATION_ADDRESS = 39,
@@ -6844,7 +6844,7 @@ enum GoolOpcode {
     GOOL_ARCTANGENT = 45,
     GOOL_VECTOR_OP = 46,
     GOOL_NOP = 47,
-    GOOL_OP_48 = 48,
+    GOOL_DEBUG = 48,
     GOOL_RETURN = 49,
     GOOL_BRANCH = 50,
     GOOL_BRANCH_IF = 51,
@@ -6854,7 +6854,7 @@ enum GoolOpcode {
     GOOL_GO_TO_STATE_UNLESS = 55,
     GOOL_PLAY_ANIMATION = 56,
     GOOL_PLAY_FRAME = 57,
-    GOOL_OP_58 = 58,
+    GOOL_VEC = 58,
     GOOL_CALL = 59,
     GOOL_SEND_EVENT = 60,
     /* Gool_OpAcceptOrRejectEvent accepts but for 61 */
@@ -6867,8 +6867,8 @@ enum GoolOpcode {
     GOOL_COLLIDE = 67,
     GOOL_BROADCAST_EVENT = 68,
     GOOL_CASCADE_EVENT = 69,
-    /* Gool_OpSpawn too, Obj_Spawn's last argument set */
-    GOOL_OP_70 = 70,
+    /* Gool_OpSpawn too, Obj_Spawn's last argument set (CrashEdit's SPWF, "force spawn") */
+    GOOL_SPAWN_FORCED = 70,
     GOOL_CALL_INDIRECT = 71,
     GOOL_OP_72 = 72,
     GOOL_NATIVE = 73,
@@ -6881,8 +6881,8 @@ enum GoolOpcode {
 
 extern u32 D_8005F29C[];
 long ratan2(long y, long x);
-void func_80037440(void);
-void func_8003817C(GoolObject *, u32);
+void Gool_OpDebug(void);
+void Gool_OpVector(GoolObject *, u32);
 void func_80038E14(GoolObject *, u32);
 void func_80039A14(GoolObject *, s32);
 void func_80039AA4(GoolObject *, s32);
@@ -7016,7 +7016,7 @@ static s32 gool_value(GoolVm *vm, u32 field) {
     }
 }
 
-/* An operand's address (func_80039D2C): a value the instruction holds written to the scratchpad's TEMP first, and 0 or
+/* An operand's address (Gool_TranslateInGop): a value the instruction holds written to the scratchpad's TEMP first, and 0 or
  * 1 itself the address */
 static s32 *gool_reference(GoolVm *vm, u32 field, u32 temp) {
     s32 *slot = (s32 *)(GOOL_SCRATCH + temp);
@@ -7050,7 +7050,7 @@ static s32 *gool_reference(GoolVm *vm, u32 field, u32 temp) {
     }
 }
 
-/* The destination's address (func_80039E10) */
+/* The destination's address (Gool_TranslateOutGop) */
 static s32 *gool_destination(GoolVm *vm) {
     u32 field = vm->word;
 
@@ -7095,11 +7095,11 @@ static inline s32 tested(GoolVm *vm) {
     return *register_popped(vm, (vm->word >> REGISTER_TESTED_SHIFT) & REGISTER_OPERAND_MASK);
 }
 
-/* A linked object's halfword the instruction names */
-static inline s16 *linked_half(GoolVm *vm) {
-    GoolObject *link = vm->object->links[(vm->word >> HALF_LINK_SHIFT) & OPERAND_LINK_MASK];
+/* A linked object's colour the instruction names */
+static inline s16 *linked_color(GoolVm *vm) {
+    GoolObject *link = vm->object->links[(vm->word >> COLOR_LINK_SHIFT) & OPERAND_LINK_MASK];
 
-    return link->unk_20 + ((vm->word >> HALF_INDEX_SHIFT) & HALF_INDEX_MASK);
+    return link->colors + ((vm->word >> COLOR_INDEX_SHIFT) & COLOR_INDEX_MASK);
 }
 
 static inline NsfEntry *gool_entry(void *entry) {
@@ -7246,7 +7246,7 @@ static inline s32 seek_target(GoolVm *vm, s32 *speed) {
     }
 }
 
-/* B moved towards A by the speed's magnitude, A once within it (func_8003A680) */
+/* B moved towards A by the speed's magnitude, A once within it (Gool_Seek) */
 static inline s32 gool_seek(GoolVm *vm) {
     s32 speed;
     s32 target = seek_target(vm, &speed);
@@ -7272,7 +7272,7 @@ static inline s32 gool_seek(GoolVm *vm) {
 }
 
 /* An angle B moved towards A the short way by the speed times the frame's length (10 fraction bits), A once within it
- * (func_8003A718) */
+ * (Gool_SeekAngle) */
 #define ANGLE_SHIFT 20
 #define FRAME_TIME_SHIFT 10
 
@@ -7298,9 +7298,9 @@ static inline s32 gool_seek_angle(GoolVm *vm) {
     }
 }
 
-/* func_8003A7CC: the word at B's address moved by the speed the way A's sign points, back to twice the speed less A
+/* Gool_Loop: the word at B's address moved by the speed the way A's sign points, back to twice the speed less A
  * once it would pass A, and returned as a magnitude with A's sign */
-static inline s32 gool_op_19(GoolVm *vm) {
+static inline s32 gool_loop(GoolVm *vm) {
     s32 speed;
     s32 target = seek_target(vm, &speed);
     s32 *slot = gool_reference(vm, vm->word, GOOL_TEMP_B);
@@ -7614,12 +7614,12 @@ s32 Gool_Interpret(void *self, s32 mode, s32 argument) {
             slot = (s32 *)operand_b(&vm) + ((u32)a >> INDEX_SHIFT);
             *slot = *gool_pop(&vm);
             break;
-        case GOOL_LINKED_HALF:
-            gool_push(&vm, *linked_half(&vm));
+        case GOOL_COLOR:
+            gool_push(&vm, *linked_color(&vm));
             break;
-        case GOOL_SET_LINKED_HALF:
+        case GOOL_SET_COLOR:
             b = operand_b(&vm);
-            *linked_half(&vm) = b;
+            *linked_color(&vm) = b;
             break;
         case GOOL_MOVE:
             a = operand_a(&vm);
@@ -7702,8 +7702,8 @@ s32 Gool_Interpret(void *self, s32 mode, s32 argument) {
         case GOOL_SEEK_ANGLE:
             gool_push(&vm, gool_seek_angle(&vm));
             break;
-        case GOOL_OP_19:
-            gool_push(&vm, gool_op_19(&vm));
+        case GOOL_LOOP:
+            gool_push(&vm, gool_loop(&vm));
             break;
         case GOOL_ARCTANGENT:
             /* Of the word at B's address over A */
@@ -7736,17 +7736,17 @@ s32 Gool_Interpret(void *self, s32 mode, s32 argument) {
         case GOOL_ENTITY_FIELD_VALUE:
             gool_operation(&vm, Gool_OpEntityFieldValue);
             break;
-        case GOOL_OP_48:
-            gool_operation(&vm, func_80037440);
+        case GOOL_DEBUG:
+            gool_operation(&vm, Gool_OpDebug);
             break;
-        case GOOL_OP_58:
-            gool_operation(&vm, func_8003817C);
+        case GOOL_VEC:
+            gool_operation(&vm, Gool_OpVector);
             break;
         case GOOL_COLLIDE:
             gool_operation(&vm, Gool_OpCollide);
             break;
         case GOOL_SPAWN:
-        case GOOL_OP_70:
+        case GOOL_SPAWN_FORCED:
             gool_operation(&vm, Gool_OpSpawn);
             break;
         case GOOL_PLAY_SOUND:

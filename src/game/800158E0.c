@@ -1841,7 +1841,7 @@ typedef struct PolyGT4 {
 
 /* A component of a glyph's colour scaled by the object's shade for a vertex */
 #define SHADED(glyph, obj, vertex, component) \
-    (((glyph)->colour.c[component] * (obj)->unk_20[SHADE_FIRST + (vertex) * SHADE_COMPONENTS + (component)]) >> SHADE_SHIFT)
+    (((glyph)->colour.c[component] * (obj)->colors[SHADE_FIRST + (vertex) * SHADE_COMPONENTS + (component)]) >> SHADE_SHIFT)
 
 /* A box's quad in front of the camera, textured from a glyph, shaded per vertex by the object when shade is set, sorted
    into the ordering table by its depth; nothing when the GTE flags an error projecting the first three corners */

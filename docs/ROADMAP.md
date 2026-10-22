@@ -242,7 +242,7 @@ The equivalent executable moves what follows a function of another size; 194 wor
 (pointers to the libraries' strings, entries into the handwritten code from dispatch tables) kept their retail values.
 They have symbols now (`config/symbol_addrs.txt`) and `configure.py` stops on any such word: with a function and a
 string added under `NON_MATCHING`, all 194 follow their targets, where before they all kept the retail value. The
-handwritten code's 21 `lui`/`ori` pairs loading the addresses of 20 of the game's functions (`func_80037440` to
+handwritten code's 21 `lui`/`ori` pairs loading the addresses of 20 of the game's functions (`Gool_OpDebug` to
 `func_80039C08`), which no relocation writes, become `lui`/`addiu` pairs of their symbols in the equivalent build only:
 with 0xC00 bytes of code added under `NON_MATCHING` before them, all 21 load their function's linked address, across a
 low half's sign (`func_80037448` at 0x80038008).
@@ -828,7 +828,15 @@ Steps, in order:
   (`Input_LoadDemo`, `Input_StartPlayback`, the records from 0x1090 of `g_DemoBlock`), the game's and the level's init,
   `g_LevelRequest` (the "dead" state), `g_Paused` and `g_Quit`. `tools/progress.py`: 195 of 564 game functions and 56 of
   1,112 data symbols named. Next: the same tables' remaining uses, and the drawing (the handwritten renderers' C
-  callers).
+  callers). A sixth batch, now that the interpreter is C: CrashEdit's GOOL instruction list names the opcodes the C
+  numbered and their routines, the opcode table's entries giving each its routine: 19 LOOP (`Gool_Loop`), 34 SEEK and
+  37 DSEK (`Gool_Seek`, `Gool_SeekAngle`), 48 DBG, "print A and B" (`Gool_OpDebug`, empty in the release), 58 VEC
+  (`Gool_OpVector`) and 70 SPWF, "force spawn" (`Gool_OpSpawn`'s flag to `Obj_Spawn`); its object colours
+  (`ObjectColors2`: mod1 to mod3, modfinal, a red, green and blue per vertex for 3, a final one) name `GoolObject`'s 16
+  halfwords at 0x20, `colors`, which COLR and COLW (35, 36) reach and func_800186D8 reads from the fifth as a glyph's
+  corners' scales. The Crash 1 catalog's GoolTranslateInGop and GoolTranslateOutGop (an operand's and a destination's
+  address) name the interpreter's two decoders. Opcodes 72 and 74 to 77 CrashEdit doesn't know. `tools/progress.py`:
+  221 of 638 game functions named.
 - **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
   docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
   same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy

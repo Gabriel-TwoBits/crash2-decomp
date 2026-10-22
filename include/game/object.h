@@ -41,7 +41,9 @@ typedef struct GoolObject {
        g_CurrentZone for the player (Cam_MoveAlongPath); Zone_KillObjects kills by it. An error code in func_8002BF58 */
     /* 0x18 */ NsfEntry *zone;
     /* 0x1C */ s32 state; /* the state's index, Gool_ChangeState */
-    /* 0x20 */ s16 unk_20[0x10]; /* halfwords, the block passed by address (obj + 0x20) */
+    /* CrashEdit's object colours (ObjectColors2): mod1 to mod3, modfinal, then a red, green and blue per vertex for 3
+       and a final one; func_800186D8 scales a glyph's corners by the second group, GOOL's COLR and COLW reach them */
+    /* 0x20 */ s16 colors[0x10];
     /* Indexed by 3 bits (Gool_ResolveRef), GoolLink */
     /* 0x40 */ struct GoolObject *links[GOOL_LINK_COUNT];
     /* Six vectors: 0x60 and 0x90 read as x, y, z (func_8001CEDC), 0x6C and 0x78 passed by address (func_8001AA80),

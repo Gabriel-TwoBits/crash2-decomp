@@ -208,7 +208,7 @@ s32 Gool_OpTestPad(u32 arg0, s32 arg1) {
 INCLUDE_ASM("asm/nonmatchings/game/80036E30", Gool_OpTestPad);
 #endif
 
-void func_80037440(void) {
+void Gool_OpDebug(void) {
 }
 
 #ifdef NON_MATCHING

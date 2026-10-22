@@ -508,11 +508,14 @@ D_8003A5E8 = 0x8003A5E8; // type:alabel
 D_8003A618 = 0x8003A618; // type:alabel
 D_8003A640 = 0x8003A640; // type:alabel
 D_8003A66C = 0x8003A66C; // type:alabel
-func_8003A680 = 0x8003A680; // type:func size:0x98
+// Gool_Interpret's routine for GOOL opcode 34 (its table entry calls it and pushes its result): B moved towards A by a speed (0x100, or the stack's top for the operand 0xBF0); CrashEdit's GOOL instruction list names opcode 34 SEEK
+Gool_Seek = 0x8003A680; // type:func size:0x98
 D_8003A704 = 0x8003A704; // type:alabel
-func_8003A718 = 0x8003A718; // type:func size:0xB4
+// Gool_Interpret's routine for GOOL opcode 37: an angle (12 bits) moved towards another the short way by a speed times the frame's length; CrashEdit's GOOL instruction list names opcode 37 DSEK
+Gool_SeekAngle = 0x8003A718; // type:func size:0xB4
 D_8003A7B8 = 0x8003A7B8; // type:alabel
-func_8003A7CC = 0x8003A7CC; // type:func size:0x1EC
+// Gool_Interpret's routine for GOOL opcode 19: the word at B's address moved by a speed, back by twice the speed less A past A; CrashEdit's GOOL instruction list names opcode 19 LOOP, loop(L, R, 0x100)
+Gool_Loop = 0x8003A7CC; // type:func size:0x1EC
 D_8003A870 = 0x8003A870; // type:alabel
 D_8003A89C = 0x8003A89C; // type:alabel
 D_8003A8C8 = 0x8003A8C8; // type:alabel
@@ -1430,3 +1433,15 @@ Gfx_DrawStreaks = 0x80044F54; // type:func
 
 // appends an object's draw packet (its steps from the renderers' tables between 0x8005B6D0 and 0x8005B770, by its kind) to the frame's packet list at the build buffer's 0x2088, which Gfx_DrawObjects draws; Obj_Update calls it for each object drawn; tools/run_game.py with its equivalent C emptied: Crash and Cortex's head gone from the new-game schedule's warp room, the scenery left, as with Gfx_DrawObjects emptied
 Gfx_QueueObject = 0x8001ABF8; // type:func
+
+// the C operation of GOOL opcode 48 (the opcode table's entry 48 loads its address for func_80039FC4), empty: CrashEdit's GOOL instruction list names opcode 48 DBG, "print A and B", a debug print the release left out
+Gool_OpDebug = 0x80037440; // type:func
+
+// the C operation of GOOL opcode 58 (the opcode table's entry 58 loads its address for func_80039FC4); CrashEdit's GOOL instruction list names opcode 58 VEC, its operand T choosing how many words it pops
+Gool_OpVector = 0x8003817C; // type:func
+
+// Gool_Interpret's operand decoder returning an operand's address (a constant pool's word, a frame's word, a register of the object or a linked one, an immediate written to the scratchpad); the Crash 1 decomp's catalog (docs/names.md, after c1's gool.c)'s GoolTranslateInGop, "convert an input GOOL operand to an absolute pointer to data"
+Gool_TranslateInGop = 0x80039D2C; // type:func
+
+// Gool_Interpret's decoder of an instruction's destination (a frame's word, a register of the object or a linked one, the stack's next word); the Crash 1 decomp's catalog's GoolTranslateOutGop, "convert an output GOOL operand to an absolute pointer to data"
+Gool_TranslateOutGop = 0x80039E10; // type:func
