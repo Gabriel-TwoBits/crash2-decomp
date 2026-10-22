@@ -717,7 +717,8 @@ int Gfx_EndFrame(void) {
         g_BuildBuffer[0] = (Unk80063458 *)tmp;
     }
     VSync(0);
-    if ((u32)(g_TimerTicks - FRAME_FIELD(g_DisplayBuffer, FRAME_TIME_OFFSET, s32)) < FRAME_TIME_LIMIT) {
+    if (FRAME_HALF_RATE &&
+        (u32)(g_TimerTicks - FRAME_FIELD(g_DisplayBuffer, FRAME_TIME_OFFSET, s32)) < FRAME_TIME_LIMIT) {
         VSync(0);
     }
     if (D_8006CB94 & FLAG_RCNT_STOP) {

@@ -31,6 +31,12 @@
 #define FRAME_ENDING()
 #endif
 
+/* Whether Gfx_EndFrame waits a second vertical blank for a game frame shorter than it (30 frames a second, the
+ * PlayStation's); a host may run each at a blank's end, the game measuring its frames' length in blanks */
+#ifndef FRAME_HALF_RATE
+#define FRAME_HALF_RATE 1
+#endif
+
 /* A C symbol's name for the assembler: as it is on the PlayStation (MIPS ELF); a host whose C symbols take a prefix
  * (32-bit Windows' leading underscore) names them its way */
 #ifndef ASM_SYMBOL
