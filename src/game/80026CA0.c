@@ -244,6 +244,8 @@ s32 func_800271D8(void *object, s32 arg1) {
     return result;
 }
 
+u8 *func_80027420(u8 *src, u8 *dst, s32 mode, s32 *outLen, s32 noCopy, s32 arg5);
+
 #ifdef NON_MATCHING
 #define KIND_SHIFT 6
 #define KIND_COPY_A 1
