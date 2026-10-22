@@ -44,6 +44,19 @@
 #define OBJECT_MOVE(object, step, zone) func_80029884((object), (step), (zone))
 #endif
 
+/* The sort list of the world's polygons Gfx_DrawWorlds draws: the camera's own (Cam_MoveAlongPath's), unless a host
+ * draws more of the world than the camera's view at a time (a wider picture) */
+#ifndef WORLD_SORT_LIST
+#define WORLD_SORT_LIST(list) (list)
+#endif
+
+/* A frame's buffer of primitives (Gfx_AllocFrameBuffers, Gfx_FreeFrameBuffers), from the heap unless a host gives a
+ * larger one of its own, for more of the world drawn */
+#ifndef FRAME_PRIMITIVES_ALLOC
+#define FRAME_PRIMITIVES_ALLOC(bytes) Heap_Alloc(bytes)
+#define FRAME_PRIMITIVES_FREE(buffer) Heap_Free(buffer)
+#endif
+
 /* A C symbol's name for the assembler: as it is on the PlayStation (MIPS ELF); a host whose C symbols take a prefix
  * (32-bit Windows' leading underscore) names them its way */
 #ifndef ASM_SYMBOL

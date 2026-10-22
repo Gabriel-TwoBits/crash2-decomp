@@ -464,7 +464,7 @@ s32 Gfx_AllocFrameBuffers(void) {
             if (D_8005F3EC == RETAIL_STATE_PAL) {
                 size = ENTRY_BUF_BYTES_PAL;
             }
-            buf = Heap_Alloc(size);
+            buf = FRAME_PRIMITIVES_ALLOC(size);
             *(s32 *)(entry + ENTRY_BUF_OFFSET) = buf;
             if (buf == 0) {
                 exit(ALLOC_FAIL_EXIT_CODE);
@@ -496,7 +496,7 @@ s32 Gfx_FreeFrameBuffers(void) {
     Heap_Free(D_800654E8);
     if (g_FrameBuffers.count > 0) {
         do {
-            Heap_Free(g_FrameBuffers.e[i].pad4[0]);
+            FRAME_PRIMITIVES_FREE(g_FrameBuffers.e[i].pad4[0]);
             i++;
         } while (i < g_FrameBuffers.count);
     }
@@ -1651,7 +1651,7 @@ extern s32 D_80062A18;
 void Gfx_DrawWorlds(s32, Unk80063458 *, void *, s32);
 
 void func_80018434(void) {
-    Gfx_DrawWorlds(D_8005F390, g_BuildBuffer[0], &D_80062A18, D_80060944);
+    Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer[0], &D_80062A18, D_80060944);
 }
 
 #ifdef NON_MATCHING

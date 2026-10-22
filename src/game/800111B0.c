@@ -463,7 +463,7 @@ void Sys_MainLoop(s32 arg0) {
                 /* empty list */
             }
             func_8002FB84(0);
-            D_8006CCB8 = Gfx_DrawWorlds(D_8005F390, g_BuildBuffer, D_80062A18, D_80060944);
+            D_8006CCB8 = Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer, D_80062A18, D_80060944);
         } else {
             Gfx_ResetOt((u8 *)g_BuildBuffer + PAUSE_BUF_OFFSET, PAUSE_BUF_SIZE);
         }
