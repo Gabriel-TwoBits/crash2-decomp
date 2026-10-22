@@ -627,12 +627,23 @@ int Gfx_EndFrame(void) {
     s32 fade;
 
     FRAME_ENDING();
-    g_FrameCount += 1;
-    if ((g_Paused == 0) && (D_8006CB94 & FLAG_COUNT_FRAMES)) {
-        D_80060944 += 1;
+    if (!FRAME_BETWEEN) {
+        g_FrameCount += 1;
+        if ((g_Paused == 0) && (D_8006CB94 & FLAG_COUNT_FRAMES)) {
+            D_80060944 += 1;
+        }
     }
     fade = D_8006CD18;
-    if (fade != 0) {
+    if (fade != 0 && FRAME_BETWEEN) {
+        /* A frame between: the fade drawn as it stands */
+        if (fade > 0) {
+            Gfx_DrawFade(fade);
+        } else if (fade >= FADE_STEP_MIN) {
+            Gfx_DrawFade(FADE_BASE);
+        } else {
+            Gfx_DrawFade(fade + FADE_BASE);
+        }
+    } else if (fade != 0) {
         if (fade > 0) {
             D_8006CD18 = fade - D_8006CD1C;
             if (D_8006CD18 < 0) {
@@ -702,6 +713,11 @@ int Gfx_EndFrame(void) {
             break;
         }
     }
+    if (FRAME_BETWEEN) {
+        /* The host shows it, drawn into the buffer being built */
+        FRAME_BETWEEN_SHOWN();
+        return D_8006CB94;
+    }
     Snd_Update();
     FRAME_FIELD(g_DrawBuffer, FRAME_END_TIME_OFFSET, s32) = g_TimerTicks;
     DrawSync(0);
@@ -759,6 +775,7 @@ int Gfx_EndFrame(void) {
     }
     func_800163C4((s32 *)g_BuildBuffer[0]);
     D_8006CB94 = D_8006CB80;
+    FRAME_ENDED();
     return D_8006CB80;
 }
 #else

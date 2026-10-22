@@ -57,6 +57,16 @@
 #define FRAME_PRIMITIVES_FREE(buffer) Heap_Free(buffer)
 #endif
 
+/* A frame of the picture alone, which a host draws between two of the game's to show twice as many: Sys_MainLoop then
+ * runs none of the game's logic (Obj_Update none of an object's, nor reads the pad), and Gfx_EndFrame steps none of its
+ * clocks and has the host show the frame, drawn into the buffer being built (FRAME_BETWEEN_SHOWN). FRAME_ENDED, at a
+ * game frame's end, where the host readies its next. The PlayStation draws none */
+#ifndef FRAME_BETWEEN
+#define FRAME_BETWEEN 0
+#define FRAME_BETWEEN_SHOWN()
+#define FRAME_ENDED()
+#endif
+
 /* A C symbol's name for the assembler: as it is on the PlayStation (MIPS ELF); a host whose C symbols take a prefix
  * (32-bit Windows' leading underscore) names them its way */
 #ifndef ASM_SYMBOL

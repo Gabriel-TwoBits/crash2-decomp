@@ -404,7 +404,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
     if (OBJ(obj)->unk_4 != OBJ_STATE_ACTIVE) {
         return RESULT_NOT_ACTIVE;
     }
-    if (obj == (u8 *)g_Player) {
+    if (obj == (u8 *)g_Player && !FRAME_BETWEEN) {
         Input_Update();
     } else {
     }
@@ -434,7 +434,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
         }
     } else {
     }
-    if (flag != 0 && hit != 0) {
+    if (flag != 0 && hit != 0 && !FRAME_BETWEEN) {
         if ((FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_COUNTDOWN) && OBJ(obj)->unk_E4 != 0) {
             s32 n = OBJ(obj)->unk_E4 - 1;
             OBJ(obj)->unk_E4 = n;

@@ -355,84 +355,90 @@ void Sys_MainLoop(s32 arg0) {
     Nsf_OpenLevel(&D_80067588, arg0);
     Sys_InitLevel();
     do {
-        if (((D_80069944 & BUTTON_START) || ((g_Paused == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) && (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
-            g_Paused = g_Paused == 0;
-            if (g_Paused != 0) {
-                if (CD14(-0x174) == 0) {
-                    CD14(-0x174) = Obj_Spawn(g_PlaybackState - 0x1C4, 4, 4, 0, 0, 0);
-                    if (CD14(-0x174) >= -0xFE) {
-                        g_Paused = 0;
-                        CD14(-0x174) = 0;
-                        D_8005F18C = 0;
+        if (!FRAME_BETWEEN) {
+            if (((D_80069944 & BUTTON_START) || ((g_Paused == 1) && (D_8006CBA0 == 0))) && (CD14(0) == 0) &&
+                (CD14(4) == 0) && (CD14(-0x7C) != 0)) {
+                g_Paused = g_Paused == 0;
+                if (g_Paused != 0) {
+                    if (CD14(-0x174) == 0) {
+                        CD14(-0x174) = Obj_Spawn(g_PlaybackState - 0x1C4, 4, 4, 0, 0, 0);
+                        if (CD14(-0x174) >= -0xFE) {
+                            g_Paused = 0;
+                            CD14(-0x174) = 0;
+                            D_8005F18C = 0;
+                        } else {
+                            D_8005F18C = 1;
+                            D_8005F2C4 = g_TimerTicks;
+                            D_8005F2C8 = *(s32 *)((char *)g_DrawBuffer + 0xC);
+                        }
                     } else {
-                        D_8005F18C = 1;
-                        D_8005F2C4 = g_TimerTicks;
-                        D_8005F2C8 = *(s32 *)((char *)g_DrawBuffer + 0xC);
+                        /* flag state kept; nothing to do */
                     }
+                } else if (CD14(-0x174) != 0) {
+                    spC0 = 0;
+                    Gool_SendEvent(0, CD14(-0x174), PAUSE_BUF_ID, 1, &spC0);
+                    g_Paused = 1;
                 } else {
-                    /* flag state kept; nothing to do */
+                    D_8005F18C = -1;
+                    g_TimerTicks = D_8005F2C4;
+                    *(s32 *)((char *)g_DrawBuffer + 0xC) = D_8005F2C8;
                 }
-            } else if (CD14(-0x174) != 0) {
-                spC0 = 0;
-                Gool_SendEvent(0, CD14(-0x174), PAUSE_BUF_ID, 1, &spC0);
-                g_Paused = 1;
             } else {
-                D_8005F18C = -1;
-                g_TimerTicks = D_8005F2C4;
-                *(s32 *)((char *)g_DrawBuffer + 0xC) = D_8005F2C8;
+                D_8005F18C = 0;
             }
-        } else {
-            D_8005F18C = 0;
-        }
-        func_80011E80();
-        if ((g_Player != 0) && (g_DemoEid != SAVE_MAGIC)) {
-            Input_LoadDemo(&g_DemoEid);
-        }
-        if (g_LevelRequest == STATE_NONE) {
-            if ((*(s32 *)((char *)D_8006759C + 8) != 2) && ((D_8006CBB4 == LEVEL_A) || (D_8006CBB4 == LEVEL_B) || (D_8006CBB4 == LEVEL_C))) {
-                printf(D_8005F190);
-                g_LevelRequest = STATE_DEAD;
-                D_8006CD7C = 0;
-            } else {
-                /* no death transition */
+            func_80011E80();
+            if ((g_Player != 0) && (g_DemoEid != SAVE_MAGIC)) {
+                Input_LoadDemo(&g_DemoEid);
             }
-        } else {
-            /* a state change is pending */
-        }
-        if (g_LevelRequest != STATE_NONE) {
-            state = g_LevelRequest;
-            Gool_BroadcastEvent(0, 0x2900, 0, 0, 0);
-            pending = 0;
-            if (g_LevelRequest == STATE_PENDING) {
-                state = D_80060988;
-                pending = 1;
-                D_8005F1F4 = 1;
+            if (g_LevelRequest == STATE_NONE) {
+                if ((*(s32 *)((char *)D_8006759C + 8) != 2) &&
+                    ((D_8006CBB4 == LEVEL_A) || (D_8006CBB4 == LEVEL_B) || (D_8006CBB4 == LEVEL_C))) {
+                    printf(D_8005F190);
+                    g_LevelRequest = STATE_DEAD;
+                    D_8006CD7C = 0;
+                } else {
+                    /* no death transition */
+                }
             } else {
+                /* a state change is pending */
+            }
+            if (g_LevelRequest != STATE_NONE) {
+                state = g_LevelRequest;
+                Gool_BroadcastEvent(0, 0x2900, 0, 0, 0);
+                pending = 0;
+                if (g_LevelRequest == STATE_PENDING) {
+                    state = D_80060988;
+                    pending = 1;
+                    D_8005F1F4 = 1;
+                } else {
+                    D_8005F1F4 = 0;
+                }
+                D_80067588.unk_24 = 2;
+                Nsf_CloseLevel(&D_80067588);
+                g_Paused = 0;
+                g_EntityQueueCount = 0;
+                if ((state == 2) || ((u32)(state - STATE_DEAD) < 2U)) {
+                    D_8006CB98 = D_8006CBB4;
+                } else {
+                    /* other states keep the saved level */
+                }
+                Nsf_OpenLevel(&D_80067588, state);
+                Sys_InitLevel();
+                if (pending != 0) {
+                    g_LevelRequest = STATE_NONE;
+                    Sys_LoadCheckpoint(D_80060958);
+                } else {
+                    /* nothing to clear */
+                }
                 D_8005F1F4 = 0;
-            }
-            D_80067588.unk_24 = 2;
-            Nsf_CloseLevel(&D_80067588);
-            g_Paused = 0;
-            g_EntityQueueCount = 0;
-            if ((state == 2) || ((u32)(state - STATE_DEAD) < 2U)) {
-                D_8006CB98 = D_8006CBB4;
             } else {
-                /* other states keep the saved level */
+                /* no pending state */
             }
-            Nsf_OpenLevel(&D_80067588, state);
-            Sys_InitLevel();
-            if (pending != 0) {
-                g_LevelRequest = STATE_NONE;
-                Sys_LoadCheckpoint(D_80060958);
-            } else {
-                /* nothing to clear */
-            }
-            D_8005F1F4 = 0;
+            Nsf_UpdatePaging(-1);
         } else {
-            /* no pending state */
+            /* A frame of the picture alone: none of the game's logic */
         }
-        Nsf_UpdatePaging(-1);
-        if (g_Paused == 0) {
+        if (g_Paused == 0 && !FRAME_BETWEEN) {
             Cam_Update();
         } else {
             /* paused */
