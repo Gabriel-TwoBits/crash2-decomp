@@ -1010,6 +1010,16 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   holds none of (past the 79 it has), the object's stack and frame stored as for the game's own operations. The port
   patches the menus' GOOL code in memory with such words, each doing the replaced instruction's work besides its own
   (an options screen in the game's menus). The equivalent build compiles the default case as before.
+- With no PS1 default, in the GTE model (`include/gte.h`): `GTE_PROJECTED(sxy, view, h, ofx, ofy)`, a vertex's
+  projection before its rounding (the port's steady polygons), and `GTE_HORIZONTAL(offset)`, a projection's offset
+  across, the port narrowing it for a 16:9 picture.
+- `WORLD_SORT_LIST(list)`, the sort list `Gfx_DrawWorlds` draws (the camera's), and `FRAME_PRIMITIVES_ALLOC(bytes)` and
+  `FRAME_PRIMITIVES_FREE(buffer)`, a frame buffer's primitives from the heap: the port draws more of the world at 16:9
+  into larger buffers of its own.
+- `FRAME_BETWEEN`, 0 on the PS1: a frame of the picture alone, `Sys_MainLoop` running none of the game's logic,
+  `Obj_Update` none of an object's, `Gfx_EndFrame` stepping none of its clocks and handing the frame to
+  `FRAME_BETWEEN_SHOWN()`; `FRAME_ENDED()` at a game frame's end. The port draws one between each two of the game's
+  for 60 frames a second, the game's logic at 30.
 
 Both executables stay byte for byte the same with them, and equiv.py agrees on 300 trials of each function they touched
 that it tests (`Gool_ResolveRef`, `Gool_OpMisc`, `func_8001A4A4`, `Gfx_ResetOt`, `Gfx_DrawStreaks`). With a host's
