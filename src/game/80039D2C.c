@@ -7868,8 +7868,12 @@ s32 Gool_Interpret(void *self, s32 mode, s32 argument) {
         case GOOL_NOP:
             break;
         default:
+#ifdef GOOL_HOST_OPERATION
+            gool_operation(&vm, GOOL_HOST_OPERATION);
+#else
             /* The game's code holds no other operation: random trials' does */
             EQUIV_ASSUME(0);
+#endif
             break;
         }
     }

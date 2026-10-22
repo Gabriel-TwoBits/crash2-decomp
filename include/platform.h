@@ -46,6 +46,9 @@
 /* Defined by a host only, with no PlayStation default:
  * - GTE_READ_DATA and the GTE's five other register moves (include/gte.h), on registers in the host's memory;
  * - GOOL_RUN_NATIVE(object, state_pool, &pc, &sp, frame), which runs operation 73's native code (MIPS) on the host's
- *   interpreter, where the PlayStation's CPU runs it itself (80039D2C.c, gool_native) */
+ *   interpreter, where the PlayStation's CPU runs it itself (80039D2C.c, gool_native);
+ * - GOOL_HOST_OPERATION(object, word), the operation of an opcode the game's code holds none of, which the host's
+ *   patches of that code run (80039D2C.c, Gool_Interpret): the object's stack and frame stored, its pc on the next
+ *   instruction */
 
 #endif /* PLATFORM_H */
