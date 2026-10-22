@@ -6668,11 +6668,13 @@ void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
 
 /* ---- The GOOL interpreter (docs/TARGET.md, "The GOOL interpreter") ---- */
 
-/* The routines the interpreter's operations share, which the retail code keeps apart and only it reaches: the operands'
- * decoders (Gool_TranslateInGop, Gool_TranslateOutGop, func_80039E80, func_80039F74, func_80039F9C), the calls into the game's C
- * (func_80039FC4), three seeks (Gool_Seek, Gool_SeekAngle, Gool_Loop) and the sine (func_8003A9B8) */
-HANDWRITTEN_PARTS(Gool_Interpret, Gool_TranslateInGop, Gool_TranslateOutGop, func_80039E80, func_80039F74, func_80039F9C)
-HANDWRITTEN_PARTS(Gool_Interpret, func_80039FC4, Gool_Seek, Gool_SeekAngle, Gool_Loop, func_8003A9B8)
+/* The routines the interpreter's operations share, which the retail code keeps apart and only it reaches: the
+ * operands' decoders (Gool_TranslateInGop, Gool_TranslateOutGop, func_80039E80, func_80039F74, func_80039F9C), the
+ * calls into the game's C (func_80039FC4), three seeks (Gool_Seek, Gool_SeekAngle, Gool_Loop) and the sine
+ * (func_8003A9B8) */
+HANDWRITTEN_PARTS(Gool_Interpret, Gool_TranslateInGop, Gool_TranslateOutGop, func_80039E80)
+HANDWRITTEN_PARTS(Gool_Interpret, func_80039F74, func_80039F9C, func_80039FC4)
+HANDWRITTEN_PARTS(Gool_Interpret, Gool_Seek, Gool_SeekAngle, Gool_Loop, func_8003A9B8)
 
 /* The machine as the retail code keeps it in registers: the object ($s0), the run's mode and argument ($s1, $s2), the
  * constant pools of the object's code and of its state's ($s4, $s3), the pc, the stack and the frame ($s5 to $s7),
@@ -7016,8 +7018,8 @@ static s32 gool_value(GoolVm *vm, u32 field) {
     }
 }
 
-/* An operand's address (Gool_TranslateInGop): a value the instruction holds written to the scratchpad's TEMP first, and 0 or
- * 1 itself the address */
+/* An operand's address (Gool_TranslateInGop): a value the instruction holds written to the scratchpad's TEMP first,
+ * and 0 or 1 itself the address */
 static s32 *gool_reference(GoolVm *vm, u32 field, u32 temp) {
     s32 *slot = (s32 *)(GOOL_SCRATCH + temp);
 
