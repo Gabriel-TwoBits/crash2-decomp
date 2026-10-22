@@ -50,6 +50,8 @@
  * - GOOL_HOST_OPERATION(object, word), the operation of an opcode the game's code holds none of, which the host's
  *   patches of that code run (80039D2C.c, Gool_Interpret): the object's stack and frame stored, its pc on the next
  *   instruction;
+ * - GTE_HORIZONTAL(offset), in the GTE model's projection (include/gte.h, which defaults it to the offset as it is):
+ *   a vertex's horizontal offset from the screen's centre, which a host narrows to show more of the world across;
  * - GTE_PROJECTED(sxy, view, h, ofx, ofy), after the GTE model projects a vertex (include/gte.h, Gte_Perspective): the
  *   screen position it pushed, the vertex's view coordinates before their rounding (three s64 with 12 fraction bits),
  *   the projection's distance and offsets, for a host to keep the position's fraction and depth */

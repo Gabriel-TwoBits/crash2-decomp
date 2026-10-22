@@ -13,6 +13,12 @@
 
 #define GTE_REGISTERS 32
 
+/* A projection's horizontal offset from the screen's centre (16 fraction bits), as the GTE leaves it unless a host
+   narrows it for a wider picture (include/platform.h) */
+#ifndef GTE_HORIZONTAL
+#define GTE_HORIZONTAL(offset) (offset)
+#endif
+
 /* Data registers */
 #define GTE_VXY0 0
 #define GTE_VZ0 1
@@ -324,8 +330,13 @@ static void Gte_Perspective(GteRegs *regs, s32 index, s32 last) {
     regs->data[GTE_SZ3] = sz3;
     quotient = Gte_Divide(regs, regs->control[GTE_H] & GTE_HALF_MASK, sz3);
     for (axis = 0; axis < GTE_SCREEN_AXES; axis++) {
-        value = Gte_Mac0Checked(regs, (s64)(s32)quotient * (s16)regs->data[GTE_IR1 + axis]
-                                          + (s32)regs->control[GTE_OFX + axis]);
+        value = (s64)(s32)quotient * (s16)regs->data[GTE_IR1 + axis];
+        if (axis == 0) {
+            value = GTE_HORIZONTAL(value);
+        } else {
+            /* The vertical as the GTE projects it */
+        }
+        value = Gte_Mac0Checked(regs, value + (s32)regs->control[GTE_OFX + axis]);
         regs->data[GTE_MAC0] = value;
         screen[axis] = Gte_Saturated(regs, value >> GTE_HALF_BITS, GTE_SCREEN_MIN, GTE_SCREEN_MAX,
                                      GTE_FLAG_SX2 >> axis);
