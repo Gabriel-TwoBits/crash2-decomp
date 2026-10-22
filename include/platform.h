@@ -31,6 +31,12 @@
 #define FRAME_ENDING()
 #endif
 
+/* A C symbol's name for the assembler: as it is on the PlayStation (MIPS ELF); a host whose C symbols take a prefix
+ * (32-bit Windows' leading underscore) names them its way */
+#ifndef ASM_SYMBOL
+#define ASM_SYMBOL(name) #name
+#endif
+
 /* A call's arguments that the PlayStation's code passes on in the registers they arrived in, unnamed (the call has
  * none there), and a host names */
 #ifndef PASSED_ON

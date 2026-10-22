@@ -7396,7 +7396,7 @@ static inline void gool_native(GoolVm *vm) {
 /* The opcode table's entries (g_GoolOpcodeHandlers), the retail operations' addresses, as numbers: the world renderer
  * reads the scratchpad's copy of the table past its own as texture bits (docs/TARGET.md, "Code addresses read as
  * data"), and Gool_Interpret runs each opcode's operation without the table */
-#define RETAIL_ADDRESS(name, address) __asm__(".globl " #name "\n" #name " = " #address);
+#define RETAIL_ADDRESS(name, address) __asm__(".globl " ASM_SYMBOL(name) "\n" ASM_SYMBOL(name) " = " #address);
 RETAIL_ADDRESS(D_8003A06C, 0x8003A06C)
 RETAIL_ADDRESS(D_8003A0D4, 0x8003A0D4)
 RETAIL_ADDRESS(D_8003A0F8, 0x8003A0F8)
