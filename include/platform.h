@@ -31,19 +31,6 @@
 #define FRAME_ENDING()
 #endif
 
-/* Whether Gfx_EndFrame waits a second vertical blank for a game frame shorter than it (30 frames a second, the
- * PlayStation's); a host may run each at a blank's end, the game measuring its frames' length in blanks */
-#ifndef FRAME_HALF_RATE
-#define FRAME_HALF_RATE 1
-#endif
-
-/* A step of an object's through the world's collision, func_80029884 from func_8001D63C's motion: as the game takes
- * it unless a host wraps it, to carry into the next game frame's step what the collision rounds off of this one's (a
- * shorter frame's step loses more of itself to the rounding) */
-#ifndef OBJECT_MOVE
-#define OBJECT_MOVE(object, step, zone) func_80029884((object), (step), (zone))
-#endif
-
 /* The sort list of the world's polygons Gfx_DrawWorlds draws: the camera's own (Cam_MoveAlongPath's), unless a host
  * draws more of the world than the camera's view at a time (a wider picture) */
 #ifndef WORLD_SORT_LIST
