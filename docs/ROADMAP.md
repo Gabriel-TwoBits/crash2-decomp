@@ -211,8 +211,9 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **R7, the port's decisions**: the pointers' width, where the game's memory sits, and the backends (section 6,
-   "Decisions before port code"). Then a host build of the C against stubs of the libraries.
+1. **R7, the C made portable**: a macro at each point where a host needs something other than the PS1: the
+   scratchpad's base, the test for a pointer into RAM, the ordering table's link, the GTE's register moves (section 6,
+   "What is left for a host, by kind"). Each defaults to what the PS1 does, and both executables stay byte for byte the same.
 2. **Readable C, R5 and R6**: the other subsystems' types and names, and the handwritten code's (section 5), where the
    port needs them first.
 
@@ -870,8 +871,8 @@ Steps, in order:
   `Obj_Update` calls for each object (`Gfx_QueueObject`). `func_80045218`, the dots, changes no frame of new-game or
   demo emptied, and the game stops at game frame 4 without `func_8001AA80` (an object's matrix by the table at
   0x8005B650): both keep their addresses. 214 of 638 game functions named.
-- **R7, the port's preparation (in progress)**: what a host's compiler makes of the C, and what is left for a host
-  (section 6).
+- **R7, the C made portable (in progress)**: what a host's compiler makes of the C, what is left for a host, and the
+  macros the port redefines (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
 writes: docs/COMPILER.md, "Small data"), rewriting equivalent C for readability, the GOOL opcodes' names, the GTE
@@ -884,6 +885,25 @@ code is.
 
 The equivalent build is the whole game in C: every game function is matched or equivalent, and so are the handwritten
 code's 172. What stays assembly is PsyQ 4.0's libraries and the split's data.
+
+### Two repositories
+
+The port lives in a repository of its own, which takes this one as a git submodule pinned at a commit. Each repository
+keeps its own promise:
+
+- **This repository** keeps the PS1 executable byte for byte, and is the only source of the game's C. Everything the
+  port needs from the C lands here under that rule: a macro the port redefines, with the PS1's value by default. The
+  PS1 build stays the reference a port's behaviour is compared against.
+- **The port's repository** holds the platform:
+  - the window, input and audio;
+  - the renderer of the GPU's packets;
+  - the SPU and libsnd's sequencer;
+  - the CD read from the player's disc image, and the memory card in files;
+  - the PsyQ functions the game calls, written for the host;
+  - the interpreter of the native code;
+  - the build that compiles this repository's `src/` for the host.
+
+  It holds no copy of the C, so the two never diverge.
 
 ### What a host's compiler makes of the C
 
@@ -957,9 +977,9 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
     `firstfile`, `nextfile`).
   - **Pad:** `InitPAD`'s two buffers.
 
-### Decisions before port code
+### The port's decisions
 
-Each changes the port's design and is costly to reverse:
+They belong to the port's repository. Each changes its design and is costly to reverse:
 
 1. **The pointers' width.**
    - A 32-bit build keeps every layout and runs the native code as it is.
