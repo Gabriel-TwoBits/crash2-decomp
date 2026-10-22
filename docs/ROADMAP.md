@@ -211,7 +211,10 @@ register on and leaves the delay slot empty. `MIN_SIZE` stays: no game function 
 
 In order; each is a session's worth of work, and its result goes back here:
 
-1. **Readable C, R5 and R6**: the other subsystems' types and names, and the handwritten code's (section 5).
+1. **R7, the port's decisions**: the pointers' width, where the game's memory sits, and the backends (section 6,
+   "Decisions before port code"). Then a host build of the C against stubs of the libraries.
+2. **Readable C, R5 and R6**: the other subsystems' types and names, and the handwritten code's (section 5), where the
+   port needs them first.
 
 ## 4. The engine in C
 
@@ -867,7 +870,8 @@ Steps, in order:
   `Obj_Update` calls for each object (`Gfx_QueueObject`). `func_80045218`, the dots, changes no frame of new-game or
   demo emptied, and the game stops at game frame 4 without `func_8001AA80` (an object's matrix by the table at
   0x8005B650): both keep their addresses. 214 of 638 game functions named.
-- **R7**: the port's preparation (section 6).
+- **R7, the port's preparation (in progress)**: what a host's compiler makes of the C, and what is left for a host
+  (section 6).
 
 Left for later: renaming the source files, grouping neighbouring globals into structures (it changes the code GCC
 writes: docs/COMPILER.md, "Small data"), rewriting equivalent C for readability, the GOOL opcodes' names, the GTE
@@ -877,3 +881,90 @@ routines.
 
 With the game in C, a native port (the way Crash Twinsanity's PS2 decomp got its PC port) becomes possible. Not before the
 code is.
+
+The equivalent build is the whole game in C: every game function is matched or equivalent, and so are the handwritten
+code's 172. What stays assembly is PsyQ 4.0's libraries and the split's data.
+
+### What a host's compiler makes of the C
+
+Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
+`gcc -m32 -std=gnu89 -fsyntax-only -DNON_MATCHING -DGTE_MODEL -Iinclude`, and the same with `-m64`.
+
+- **32-bit.** All 33 files compile with no error once `func_80027420` is declared before its first call.
+  - 18 functions are used before their declaration and declared otherwise later in the same file.
+  - `bzero` and `bcopy` are declared otherwise than GCC's built-ins.
+  - 54 warnings are about function pointers: a function stored in a pointer of another type (40), or called
+    through one (14).
+  - `80039D2C.c`'s layout checks are constant only to GCC's folding.
+- **64-bit.** The build has 736 casts between a pointer and an integer of another size, 396 to a pointer and 340 from
+  one, in 28 files. 50 of `80039D2C.c`'s scratchpad layout checks fail, because its structures hold pointers.
+- **Data from the disc.** Beyond the casts, the disc's data holds 32-bit slots the game overwrites with pointers:
+  - `Nsf_RelocatePage` turns a page's and an entry's offsets into pointers in place (`NsfPage.entries`,
+    `NsfEntry.items`).
+  - `Nsf_OpenLevel` does the same with the NSD's buckets.
+  - The GOOL entries' native code reads the object at fixed offsets.
+
+  A 32-bit build keeps every one of these layouts; a 64-bit one needs 32-bit addresses wherever such a slot is read.
+
+### What is left for a host, by kind
+
+- **The GTE.**
+  - `include/gte.h` models in C, under `GTE_MODEL`, the commands the C uses: RTPS, RTPT, MVMVA, DPCS, DPCL, DPCT and
+    NCLIP.
+  - The register moves stay MIPS instructions even there: `mfc2`, `mtc2`, `cfc2`, `ctc2`, `lwc2` and `swc2`, 590 uses in
+    `800158E0.c` and `80039D2C.c`, which equiv.py runs on its emulator. A host needs them on a `GteRegs` in memory.
+  - The 14 libgte functions the game calls remain: `InitGeom`, `MulMatrix`, `RotTrans`, `RotTransPers`, `ScaleMatrix`,
+    `TransMatrix`, `SetRotMatrix`, `SetTransMatrix`, `SetColorMatrix`, `SetFarColor`, `SetGeomOffset`,
+    `SetGeomScreen`, `ReadSZfifo3` and `ratan2`.
+- **Other inline assembly, all in `80039D2C.c`:**
+  - operation 73's call into native code (`gool_native`);
+  - the `RETAIL_ADDRESS` absolute symbols;
+  - a compiler barrier.
+- **The native code.** Operation 73 runs the disc's MIPS blocks. They use 32 integer instructions, reach memory only
+  through registers, and build no address of the executable (docs/TARGET.md). An interpreter of those 32 runs them on a
+  32-bit host's pointers as they are.
+- **The scratchpad.** Preprocessed, the C names the 1 KB at 0x1F800000 by number 142 times, in 12 files, under macros
+  of their own (`WORLD_SCRATCH`, `DRAW_SCRATCH`, `GOOL_SCRATCH`, `SCRATCH_REG`, ...) and as literals (0x1F800040 in
+  `Gool_ResolveRef`). The world renderer reads past its table into the copy of the opcode table there (docs/TARGET.md,
+  "Code addresses read as data"). So a host's scratchpad has retail's layout, at an address the C would take from one
+  place.
+- **Addresses as values.**
+  - Two tests take a value for a pointer only in KSEG0's first 8 MB (`& 0xFF800003` equal to 0x80000000): an
+    animation's entry in `func_8001A4A4`, and a GOOL reference in `Gool_OpMisc`.
+  - The GPU's ordering table links keep an address's low 24 bits (`OT_LINK_MASK` and `PRIM_ADDRESS_MASK` in
+    `80039D2C.c` and `800158E0.c`), as the GPU's DMA reads them.
+  - `func_80014C48` computes the top of RAM from 0x80000000.
+
+  On a host, either the game's memory sits at those addresses, or each of these becomes a macro.
+- **The data.** The C reads 89 symbols of the split's `.data` and 380 of its `.bss`, and includes 19 blocks of
+  `.rodata`: strings and constants, with no labels of code. splat's output there is directives only (`.word`, `.short`,
+  `.byte`, `.asciz`, `.align`). A host's assembler takes it once `.word` means 4 bytes and `.align` a power of two. It
+  stays generated from the player's executable, never committed.
+- **The libraries.** The C calls 126 functions of PsyQ 4.0:
+  - libapi 23, libgpu 20, libgte 14, libsnd 15, libc 13, libcd 9, libcard 9, libetc 4, libspu 3, libsn 1;
+  - 15 more that splat left unnamed, in libsnd's and libspu's objects. `func_80051078`, called with an on/off flag and a
+    voice's bit, has `SpuSetKey`'s arguments.
+
+  What the game asks of them:
+  - **CD:** data only. Reads at double speed (`CdlSetloc`, `CdlSeekL`, `CdlStop`, `CdRead`) from the sectors the
+    level table and the NSD give; no XA and no CD audio among the calls.
+  - **Video:** the game builds the GPU's packets itself and `DrawOTag` sends them; textures go to VRAM by `LoadImage`,
+    `MoveImage` and `StoreImage`. A host interprets GP0 packets into a 1024×512 VRAM.
+  - **Sound:** libsnd's SEQ player (`SsSep*`) on the VABs the game hands it (`SsVabFakeHead`, `SsVabFakeBody`), and
+    libspu's reverb.
+  - **Timing:** `Sys_TimerHandler` on root counter 2's interrupt (target 0x1000), plus `VSync` waits.
+  - **Memory card:** events, and the BIOS's file calls on `bu00:` (`open`, `read`, `write`, `erase`, `format`,
+    `firstfile`, `nextfile`).
+  - **Pad:** `InitPAD`'s two buffers.
+
+### Decisions before port code
+
+Each changes the port's design and is costly to reverse:
+
+1. **The pointers' width.**
+   - A 32-bit build keeps every layout and runs the native code as it is.
+   - A 64-bit build needs 32-bit slots wherever the disc's data or the native code holds a pointer.
+2. **Where the game's memory sits.**
+   - At retail's addresses: the KSEG0 tests and the 24-bit links hold as written.
+   - Anywhere: the tests and the links each become a macro.
+3. **The backends.** The renderer for the GPU's packets, and the mixer for libsnd's sequences and the SPU's voices.

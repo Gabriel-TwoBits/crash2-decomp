@@ -271,6 +271,11 @@ frame, the frame and `D_80062A18`). What its code shows:
   they read only `$s0`, `$s3`, `$s6`, `$s7`, `$fp` (the scratchpad's 0x50 to 0x58) and `$ra`, write the stack, `$s5`
   and temporaries, call nothing, and return with the address to go on from in `$s5` (`jalr $s5, $ra`, 7,226 of them) or
   0 to return (`jr $ra`, `ori $s5, $zero, 0` in its delay slot, 1,346). The C calls them with those registers set.
+  Over the 91 distinct code items among the 453 GOOL entries (1,406 blocks, in 44 of them), the blocks use 32
+  instructions besides `nop`, all of the integer set: `lw`, `sw`, `lh`, `sh`, the ALU's operations on registers and
+  immediates, `lui`, the shifts, `mult`, `div`, `mfhi`, `mflo`, `beq`, `bne`, `bgez`, `jr` and `jalr`. None is a
+  coprocessor's, a byte access or a call, and no `lui` builds an address of the executable or the scratchpad: the
+  halves 0x1F and 0x8000 build 0x1F4000, 0x80000010 and 0x80000001. Memory is reached only through registers.
 - Division is the CPU's: by 0 a quotient of -1 (1 for a negative dividend) and the dividend left over, where GCC's
   code traps (`break 7`), so the C computes those results itself. equiv.py's emulator divides by 0 otherwise (the
   dividend as the quotient, a remainder of 0), so its trials leave a zero divisor out.
