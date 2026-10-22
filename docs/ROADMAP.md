@@ -213,7 +213,8 @@ In order; each is a session's worth of work, and its result goes back here:
 
 1. **R7, the C made portable**: a macro at each point where a host needs something other than the PS1: the
    scratchpad's base, the test for a pointer into RAM, the ordering table's link, the GTE's register moves (section 6,
-   "What is left for a host, by kind"). Each defaults to what the PS1 does, and both executables stay byte for byte the same.
+   "What is left for a host, by kind"). Each defaults to what the PS1 does, and both executables stay byte for byte
+   the same.
 2. **Readable C, R5 and R6**: the other subsystems' types and names, and the handwritten code's (section 5), where the
    port needs them first.
 
