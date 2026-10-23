@@ -2,6 +2,10 @@
 #include "sdk.h"
 #include "game.h"
 
+typedef struct { char b[4]; } V4;
+typedef struct { char p[0x1C]; s32 f1c; char p2[4]; V4 f24; V4 f28; V4 f2c; } S;
+void func_80020998(S *arg0, s32 arg1);
+
 #ifdef NON_MATCHING
 #define FLAG_ANY_RELOAD 0x7
 #define FLAG_OBJECT 0x1
@@ -276,8 +280,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800200A8", Cam_MoveAlongPath);
 #endif
 
 #ifdef NON_MATCHING
-typedef struct { char b[4]; } V4;
-typedef struct { char p[0x1C]; s32 f1c; char p2[4]; V4 f24; V4 f28; V4 f2c; } S;
 extern s32 g_TimerTicks;
 extern V4 D_80060948;
 extern V4 D_8006094C;

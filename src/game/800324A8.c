@@ -2,6 +2,9 @@
 #include "sdk.h"
 #include "game.h"
 
+void func_80051078(s32 arg0, s32 arg1);
+extern void SsSetMVol(s32, s32);
+
 s32 D_8005F244 = 0x1E;
 s32 g_SndOpen = 0;
 s32 D_8005F24C = 0;
@@ -694,7 +697,6 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_SetSoundParam);
 #endif
 
 void Nsf_DropPageRef(void *arg0);
-void func_80051078(s32 arg0, s32 arg1);
 
 void func_80033448(void *arg0) {
     do { func_80051078(0, 1 << ((u16 *)arg0)[3]); } while (0);
@@ -803,7 +805,6 @@ typedef struct Unk800334A0Res {
 } Unk800334A0Res;
 
 
-extern void SsSetMVol(s32, s32);
 extern void func_8005182C(u8 *);
 extern void func_800518B8(s32 *);
 extern s32 D_8005F18C;

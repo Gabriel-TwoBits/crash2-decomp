@@ -119,6 +119,7 @@ s32 func_80034810(void) {
 }
 
 typedef struct { char b[0x28]; } Unk80035D48;
+void Save_SortDirectory(Unk80035D48 *arg0, s32 arg1);
 extern char g_SaveDevice[];
 s32 _card_load(s32);
 

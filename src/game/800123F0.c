@@ -2,6 +2,8 @@
 #include "sdk.h"
 #include "game.h"
 
+extern s32 func_80051328(s32);
+
 INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100D0);
 INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100F0);
 INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_80010110);
@@ -1851,7 +1853,6 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_OpenLevel);
 #endif
 
-extern void func_80051328(int);
 typedef struct { void (*fn)(); char pad[24]; } Entry;
 extern Entry D_8005B1F0[];
 extern int D_80067FB4[];
