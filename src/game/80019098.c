@@ -61,7 +61,7 @@ extern s32 D_8006CD7C;
 extern s32 *D_8006CDF0;
 extern s32 D_8006CDF4;
 extern s32 D_8006CDF8;
-extern char Obj_HasStateFlags[];
+extern void *Obj_HasStateFlags(void *, s32);
 
 #define PROP(o, id) Ent_GetPropertyValue(o, id, 0, 0, 0, ENT_ROW_INDEX, 0)
 #define LOOKUP(o, id, out) Ent_GetProperty(o, id, 0, 0, out, ENT_ROW_INDEX, PTR_NONE, 0, 0)
@@ -247,7 +247,7 @@ extern s32 g_ObjFreeList[];
 extern s32 D_8006CB5C;
 extern s32 D_8006CBA4;
 extern u8 g_ObjLists;
-extern char Obj_HasStateFlags[];
+extern void *Obj_HasStateFlags(void *, s32);
 
 s32 Obj_Spawn(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 *slot;
@@ -534,7 +534,7 @@ void Gool_InitScratchpad(void) {
 }
 
 extern u8 D_8006CB30[];
-extern u8 Obj_HasId[];
+extern void *Obj_HasId(void *, s32);
 
 s32 Obj_FindById(s32 arg0) {
     u8 *p;

@@ -70,7 +70,7 @@ extern u32 g_EntityFlags[];
 extern u8 g_ObjLists[];
 extern u8 D_8006CB30[];
 extern u8 D_8006CB38[];
-extern u8 Obj_HasId[];
+extern void *Obj_HasId(void *, s32);
 
 /* Appends to the object's value stack; a macro so no extra call is emitted. */
 #define PUSH(value) \

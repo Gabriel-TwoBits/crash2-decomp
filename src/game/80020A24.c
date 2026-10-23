@@ -83,7 +83,7 @@ extern s32 D_8006CD94;
 extern s32 *D_8006CDAC;
 extern u32 D_8006CDB0;
 extern s32 D_8006CDC4;
-extern u8 func_8003DD0C[];
+extern void func_8003DD0C(void);
 
 /* Offsets from D_80062A18 (which holds &g_CameraX) to the other table pointers. */
 #define TABLE_A_OFFSET (-0x21F4)

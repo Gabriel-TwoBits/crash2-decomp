@@ -152,7 +152,7 @@ extern s32 D_80060944;
 extern u32 *g_DrawBuffer;
 extern u32 D_8006CB64;
 extern s32 D_8006CCAC;
-extern u8 func_80018CAC;
+extern s32 func_80018CAC(void *, void *, void *);
 /* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
 
 void Obj_UpdateAll(void *arg0) {
