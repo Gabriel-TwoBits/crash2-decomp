@@ -950,6 +950,9 @@ def contract(source, function, symbols=None):
             else:
                 scratch.append(range(physical(address), physical(address) + length))
                 continue
+        else:
+            # A line on an argument, by its index: read below
+            pass
         index = int(line.group(2))
         if apart is not None:
             first, second, count, unit = (int(apart.group(number)) for number in range(2, 6))
@@ -987,6 +990,9 @@ def contract(source, function, symbols=None):
             else:
                 halves.append((index, offset, low, high))
                 continue
+        else:
+            # EQUIV_RANGE, the one left: read below
+            pass
         low, high = bound(in_range.group(3)), bound(in_range.group(4))
         if index in ranges:
             sys.exit(f"{source}: two EQUIV_RANGE lines for {function}'s argument {index}")
@@ -1777,6 +1783,9 @@ class Machine:
             # A part of the group the candidate defines, reached at its retail address: its own code
             uc.reg_write(mips.UC_MIPS_REG_PC, self.redirects[address])
             return
+        else:
+            # A call out of the function: recorded and answered below
+            pass
         if len(outcome.calls) == MAX_CALLS:
             outcome.status = LIMIT
             uc.emu_stop()
