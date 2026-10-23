@@ -2381,7 +2381,7 @@ typedef struct {
 extern u8 D_80067FE4[];
 extern s32 D_80068FE8;
 
-s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
+s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3 PASSED_ON(, u16 caller_s1)) {
     s32 a[3];
     s32 b[3];
     s32 d[3];
@@ -2394,15 +2394,15 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
     Ent *e;
     u16 m1, m2;
     s32 v;
-    /* Whether a header row set d, fp, s7 and s6, and a row s1: before, the retail code reads what its callers left */
+    /* Whether a header row set d, fp, s7 and s6: before, the retail code reads what its callers left */
     s32 header_seen;
-    s32 s1_set;
 
     sp40 = arg0;
     i = 0;
     cnt = 0;
     header_seen = 0;
-    s1_set = 0;
+    /* The first row's s1 is the caller's $s1 */
+    PASSED_ON(s1 = caller_s1;)
     if (D_80068FE8 > 0) {
         do {
             e = (Ent *)D_80067FE4 + i;
@@ -2438,10 +2438,10 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
                     default:
                         break;
                     }
-                    if (!header_seen || !s1_set) {
+                    if (!header_seen) {
                         CALLER_LEFT(func_8002DFA8);
                     } else {
-                        /* Both from earlier rows */
+                        /* From an earlier header row */
                     }
                     m1 = s7;
                     a[1] = TBL_FIELD(TBL_Y_OFFSET) + (s16)e->w[2] * 16 - arg2[1];
@@ -2464,7 +2464,6 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
                     a[0] = TBL_FIELD(TBL_X_OFFSET) + (s16)e->w[1] * 16 - arg2[0];
                     a[2] = TBL_FIELD(TBL_Z_OFFSET) + (s16)e->w[3] * 16 - arg2[2];
                     s1 = e->w[0] & 7;
-                    s1_set = 1;
                     m1 = fp;
                     if (s1 < m1) m1 = s1;
                     m2 = s6;
@@ -2583,8 +2582,9 @@ s32 func_8002E280(s32 *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4, void *arg
 
         if (depth < DEPTH_LIMIT && !has_special_state(arg5)) {
             FIELD(arg5, s32, 0xA8) |= FLAG_RETRY;
-            if (func_8002DFA8(0, 0, arg0, arg5) != 0) {
-                func_8002DFA8(1, 1, arg0, arg5);
+            /* $s1 holds the search's last ny for both */
+            if (func_8002DFA8(0, 0, arg0, arg5 PASSED_ON(, ny)) != 0) {
+                func_8002DFA8(1, 1, arg0, arg5 PASSED_ON(, ny));
                 func_8002D6E4(arg0, arg0, arg5, D_80067FE4, 0);
             }
             return func_8002E280(arg0, x, y, arg3, arg4, arg5, DEPTH_LIMIT);

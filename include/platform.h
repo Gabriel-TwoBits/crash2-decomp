@@ -60,8 +60,8 @@
 #define ASM_SYMBOL(name) #name
 #endif
 
-/* A call's arguments that the PlayStation's code passes on in the registers they arrived in, unnamed (the call has
- * none there), and a host names */
+/* A call's arguments that the PlayStation's code passes on in registers, unnamed (the call has none there), and a host
+ * names: the call's arguments, the function's parameters, and what the function takes from them */
 #ifndef PASSED_ON
 #define PASSED_ON(arguments...)
 #endif

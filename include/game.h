@@ -209,7 +209,8 @@ s32 func_8002CC50(void *, s32 *, s32 *, s32);
 void func_8002D6E4(s32 *, s32 *, void *, void *, s32);
 void func_8002DE08(s32 *, s32 *, GoolObject *, void *);
 s32 func_8002DF68(u32, u32);
-s32 func_8002DFA8(s32, s32, s32 *, void *);
+/* Its first row compares with $s1 as func_8002E280 leaves it (PASSED_ON) */
+s32 func_8002DFA8(s32, s32, s32 *, void * PASSED_ON(, u16));
 s32 func_8002E280(s32 *, s32, s32, s32 *, s32 *, void *, s32);
 void func_8002E6E0(s32 *, s32 *, s32, s32, s32, s32);
 void func_8002E884(s32 *, s32 *, s32, s32);
