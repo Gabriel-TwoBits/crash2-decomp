@@ -864,7 +864,7 @@ void func_800224A0(s32 *arg0) {
     s32 d;
 
     if (Ent_GetProperty(D_800608D8[0], 0x252, g_CameraProgress, 0, 0, 0, 0, 0, 0) != 0) {
-        p = (s16 *)Ent_GetProperty(D_800608D8[0], 0x254, g_CameraProgress, 0, 0, 3, sp28, 0, 0);
+        p = (s16 *)Ent_GetProperty(D_800608D8[0], 0x254, g_CameraProgress, 0, 0, ENT_ROW_INTERPOLATED, sp28, 0, 0);
         if (p != 0) {
             lo = p[0] << 8;
             hi = p[1];

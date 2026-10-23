@@ -137,7 +137,7 @@ s32 func_80023DC4(void) {
     s32 a0;
     s32 a1;
 
-    v = Ent_GetProperty(D_800608DC, 0x16E, g_CameraProgress, 0, 0, 3, sp28, 0, 0);
+    v = Ent_GetProperty(D_800608DC, 0x16E, g_CameraProgress, 0, 0, ENT_ROW_INTERPOLATED, sp28, 0, 0);
     if (v == 0) {
         return 0;
     }
