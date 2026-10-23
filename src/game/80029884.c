@@ -2394,10 +2394,15 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
     Ent *e;
     u16 m1, m2;
     s32 v;
+    /* Whether a header row set d, fp, s7 and s6, and a row s1: before, the retail code reads what its callers left */
+    s32 header_seen;
+    s32 s1_set;
 
     sp40 = arg0;
     i = 0;
     cnt = 0;
+    header_seen = 0;
+    s1_set = 0;
     if (D_80068FE8 > 0) {
         do {
             e = (Ent *)D_80067FE4 + i;
@@ -2410,6 +2415,7 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
                 fp = e->w[1];
                 s7 = e->w[2];
                 s6 = e->w[3];
+                header_seen = 1;
             } else {
                 t = (e->w[0] >> 2) | 1;
                 if (t != 0) {
@@ -2432,6 +2438,11 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
                     default:
                         break;
                     }
+                    if (!header_seen || !s1_set) {
+                        CALLER_LEFT(func_8002DFA8);
+                    } else {
+                        /* Both from earlier rows */
+                    }
                     m1 = s7;
                     a[1] = TBL_FIELD(TBL_Y_OFFSET) + (s16)e->w[2] * 16 - arg2[1];
                     if (s1 < m1) {
@@ -2453,6 +2464,7 @@ s32 func_8002DFA8(s32 arg0, s32 arg1, s32 *arg2, void *arg3) {
                     a[0] = TBL_FIELD(TBL_X_OFFSET) + (s16)e->w[1] * 16 - arg2[0];
                     a[2] = TBL_FIELD(TBL_Z_OFFSET) + (s16)e->w[3] * 16 - arg2[2];
                     s1 = e->w[0] & 7;
+                    s1_set = 1;
                     m1 = fp;
                     if (s1 < m1) m1 = s1;
                     m2 = s6;

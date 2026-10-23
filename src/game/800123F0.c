@@ -583,6 +583,11 @@ NsfPageSlot *func_800130A0(NsfPageSlot *arg0) {
         last = p;
         p--;
     }
+    if (count <= 0) {
+        CALLER_LEFT(func_800130A0);
+    } else {
+        /* last is the loop's */
+    }
     return last;
 }
 

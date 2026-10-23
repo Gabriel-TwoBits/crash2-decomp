@@ -1121,6 +1121,8 @@ void func_80017380(s32 mode, u8 *base, s32 arg2, u16 *out) {
         p = base + (arg2 >> 8) * STRIDE_A + OFFSET_A;
     } else if (base[0] == TYPE_B) {
         p = base + (arg2 >> 8) * STRIDE_B + OFFSET_B;
+    } else {
+        CALLER_LEFT(func_80017380);
     }
     func_80018474(p + 4, base + 4);
     flags = *(u16 *)(p + 0xA);

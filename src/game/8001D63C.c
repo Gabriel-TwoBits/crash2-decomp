@@ -1009,6 +1009,8 @@ s32 func_8001F054(GoolObject *arg0, u32 arg1, s32 *out) {
     if (info->unk_08 == NODE_TYPE_SHIFTED) {
         base = info->unk_14;
         shift = NODE_SHIFT_SHIFTED;
+    } else {
+        CALLER_LEFT(func_8001F054);
     }
     count = Ent_GetPropertyRowLength((s32)node, PATH_KIND, 0, PATH_ARG_SHIFT);
     while (1) {

@@ -66,6 +66,12 @@
 #define PASSED_ON(arguments...)
 #endif
 
+/* A path of equivalent C on which the PlayStation's code reads a register or a stack slot its callers left, which the
+ * C has no value for: a host notes the path, where its own value is a leftover of its stack */
+#ifndef CALLER_LEFT
+#define CALLER_LEFT(function)
+#endif
+
 /* Defined by a host only, with no PlayStation default:
  * - GTE_READ_DATA and the GTE's five other register moves (include/gte.h), on registers in the host's memory;
  * - GOOL_RUN_NATIVE(object, state_pool, &pc, &sp, frame), which runs operation 73's native code (MIPS) on the host's
