@@ -888,10 +888,11 @@ void func_800224A0(s32 *arg0) {
 }
 
 #ifdef NON_MATCHING
+/* The path's state takes two slots of 4 words (func_80024658 writes the second): in the retail frame the second sits
+ * where the C has no variable, in any other frame it must be the array's own */
 void func_800225C0(s32 *arg0, s32 arg1) {
     s32 sp18[4];
-    s32 sp28[4];
-    s32 pad[4];
+    s32 sp28[8];
     s32 sp48[4];
     s32 p[4];
     s32 r;
