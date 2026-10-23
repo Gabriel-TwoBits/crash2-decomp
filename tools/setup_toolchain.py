@@ -56,7 +56,7 @@ PCSX_REDUX_BINARY = PCSX_REDUX / "usr" / "bin" / "pcsx-redux"
 # The folder an AppImage extracts itself into, in the working directory
 APPIMAGE_EXTRACTED = "squashfs-root"
 BINUTILS_PREFIX = "mipsel-linux-gnu-"
-BINUTILS_TOOLS = ("as", "ld", "objcopy", "objdump")
+BINUTILS_TOOLS = ("as", "ld", "nm", "objcopy", "objdump")
 # distrib.app refuses Python's default User-Agent
 USER_AGENT = "crash2-decomp-setup"
 # rwxr-xr-x: the downloaded programs run
@@ -64,17 +64,26 @@ EXECUTABLE_MODE = 0o755
 
 
 def download(url, target, sha256):
-    if not target.exists():
+    """The file at url as target, which only a download of that SHA-256 becomes"""
+    if target.exists():
+        checked = target
+    else:
         print(f"downloading {url}", flush=True)
         target.parent.mkdir(parents=True, exist_ok=True)
-        partial = target.with_suffix(target.suffix + ".part")
+        checked = target.with_suffix(target.suffix + ".part")
         request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(request) as response, open(partial, "wb") as out:
+        with urllib.request.urlopen(request) as response, open(checked, "wb") as out:
             shutil.copyfileobj(response, out)
-        partial.rename(target)
-    actual = hashlib.sha256(target.read_bytes()).hexdigest()
+    actual = hashlib.sha256(checked.read_bytes()).hexdigest()
     if actual != sha256:
-        sys.exit(f"{target}'s SHA-256 is {actual}, not {sha256}")
+        if checked != target:
+            checked.unlink()
+        sys.exit(f"{url}'s SHA-256 is {actual}, not {sha256}")
+    elif checked != target:
+        checked.rename(target)
+    else:
+        # Downloaded before, and still the same
+        pass
 
 
 def old_gcc(version, sha256):
@@ -83,9 +92,16 @@ def old_gcc(version, sha256):
         return
     archive = TOOLCHAIN / "downloads" / f"gcc-{version}-psx.tar.gz"
     download(OLD_GCC_URL.format(release=OLD_GCC_RELEASE, version=version), archive, sha256)
-    folder.mkdir(parents=True, exist_ok=True)
+    # Extracted aside and moved in whole: a folder with cc1 is a complete one
+    work = TOOLCHAIN / f"gcc-{version}-psx.part"
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
     with tarfile.open(archive) as tar:
-        tar.extractall(folder, filter="data")
+        tar.extractall(work, filter="data")
+    if folder.exists():
+        shutil.rmtree(folder)
+    work.rename(folder)
 
 
 def repository(name, url, commit):
