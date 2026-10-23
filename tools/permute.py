@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Runs decomp-permuter on one function: build/permuter/<FUNCTION>/ gets the C (base.c, preprocessed), the retail function
-assembled from the split (target.o), a compile.sh calling tools/psx_cc.py, and settings.toml. The permuter writes each better
+"""Runs decomp-permuter on one function: a folder of its own, build/permuter/<FUNCTION>-<random>/, so that runs at the same
+time keep apart, gets the C (base.c, preprocessed), the retail function assembled from the split (target.o), a compile.sh
+calling tools/psx_cc.py, and settings.toml. The permuter writes each better
 candidate there as output-<score>-<n>/. The permuter's score leaves out nops, which matter on the R3000 (the ones ASPSX puts
 after mflo/mfhi), so every candidate is scored again with tools/probe_compiler.py's count, and that count is what is
 reported.
@@ -10,10 +11,10 @@ reported.
 import argparse
 import os
 import shlex
-import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from probe_compiler import compiled_words, retail_assembly, retail_words, score
@@ -43,10 +44,8 @@ def main():
     arguments = parser.parse_args()
     source = Path(arguments.source).resolve()
 
-    folder = OUT / arguments.function
-    if folder.exists():
-        shutil.rmtree(folder)
-    folder.mkdir(parents=True)
+    OUT.mkdir(parents=True, exist_ok=True)
+    folder = Path(tempfile.mkdtemp(prefix=f"{arguments.function}-", dir=OUT))
     # The permuter parses base.c with pycparser: the includes resolved here, the macros kept to what the code uses
     preprocessed = subprocess.run(["cpp", "-P", "-nostdinc", f"-I{HERE / 'include'}", f"-I{source.parent}", str(source)],
                                   capture_output=True, text=True)
