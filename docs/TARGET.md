@@ -294,12 +294,14 @@ structure.
   `S0/S000003C.NSF`: 21 identical frames hold it 48 bytes in, past the frame's 0x18-byte header, in its vertex data.
   The `.NSD` files hold none.
 - **The handwritten `$gp`.** From `0x8003A014` on, the code loads `$gp` from the stack, a structure or the scratchpad,
-  computes with it, and reads through it at offsets from 0x0 to 0x118. splat writes 23 of those 43 accesses as
-  `%gp_rel` of the small variable the offset would reach from the retail `_gp` (`g_RandSeed`, `D_8005F1DC` to
-  `D_8005F1F0`), and leaves 20 as numbers. The bytes are the same at the retail layout; with `.data` moved and `_gp` at
-  its retail value, the linker moves those 23 offsets with the variables and the code reads its structures off by the
-  shift. At `0x80043788`, `sw $t9, %gp_rel(g_RandSeed)($gp)` writes into the heap, `$gp` 0x8009F8DC.
-- **Evidence** (`tools/run_game.py`'s schedule in PCSX-Redux, the default build's C, the RAM dumped from the emulator):
+  computes with it, and reads through it at offsets from 0x0 to 0x118. splat wrote 23 of those 43 accesses (32 since the
+  handwritten code's split by function, `GP_RELATIVE_ACCESSES` in configure.py) as `%gp_rel` of the small variable the
+  offset would reach from the retail `_gp` (`g_RandSeed`, `D_8005F1DC` to `D_8005F1F0`), and left 20 as numbers. The
+  bytes are the same at the retail layout; with `.data` moved and `_gp` at its retail value, the linker moves those
+  offsets with the variables and the code reads its structures off by the shift. At `0x80043788`,
+  `sw $t9, %gp_rel(g_RandSeed)($gp)` writes into the heap, `$gp` 0x8009F8DC.
+- **Evidence** (`tools/run_game.py`'s schedule in PCSX-Redux, the default build's C, the RAM dumped from the emulator;
+  the split of the time, 23 accesses):
   - In a retail run, no handwritten instruction reads 0x8005F17C to 0x8005F2A4 through `$gp` over the 8,000 frames (a
     read watch: its two handwritten readers load through `$at`).
   - `.data` 8 bytes later, the 23 accesses as they are: the display differs from frame 1,390 and the game stops between
@@ -316,7 +318,7 @@ structure.
   The retail image's data ends at `0x8005F2A4`, 1,372 bytes before the file's end; `tools/patch_disc.py` refuses a
   larger executable (12 KB more was refused).
 
-The equivalent build writes the 23 offsets as numbers and lets its data follow its code (docs/WORKFLOW.md, "The
+The equivalent build writes those offsets as numbers and lets its data follow its code (docs/WORKFLOW.md, "The
 equivalent track").
 
 ## Code addresses read as data

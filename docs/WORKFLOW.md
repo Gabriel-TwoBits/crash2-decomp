@@ -79,14 +79,15 @@ relocation writes: the equivalent build assembles a copy, `build/nonmatching/asm
 pairs is a `lui`/`addiu` of the function's symbol (found by address in splat's `.splat/splat_symbols.csv`), and
 `configure.py` stops unless it finds all 21 and leaves no such number.
 
-The data follows the code. The handwritten code reads its structures through `$gp` at offsets splat writes as
-`%gp_rel` of small data, which the linker would move with `.data` (docs/TARGET.md, "Addresses from the disc"): with no
-equivalent function, `.data` moved by 8 bytes so displays otherwise from frame 1,390 of `tools/run_game.py` and crashes
-in the first warp room. The equivalent build's copy writes those 23 offsets as the numbers their instructions hold, and
-`configure.py` stops unless it finds all 23 and leaves no `%gp_rel`. `ninja nonmatching` prints the room left in the
-retail file's 327,680 bytes, or how far past them the executable runs: `tools/patch_disc.py` then writes it after the
-image's last sector, and the heap, which runs from the end of `.bss` to the stack, is that much smaller. It stops past
-64 KB over (`MAX_GROWTH`), a limit to raise once a build that long has played every schedule.
+The data follows the code. The handwritten code reads its structures through `$gp` at offsets splat writes as `%gp_rel`
+of small data, which the linker would move with `.data` (docs/TARGET.md, "Addresses from the disc"): with no equivalent
+function, `.data` moved by 8 bytes so displays otherwise from frame 1,390 of `tools/run_game.py` and crashes in the
+first warp room. The equivalent build's copy writes those offsets (32 since the split by function,
+`GP_RELATIVE_ACCESSES`) as the numbers their instructions hold, and `configure.py` stops unless it finds them all and
+leaves no `%gp_rel`. `ninja nonmatching` prints the room left in the retail file's 327,680 bytes, or how far past them
+the executable runs: `tools/patch_disc.py` then writes it after the image's last sector, and the heap, which runs from
+the end of `.bss` to the stack, is that much smaller. It stops past 64 KB over (`MAX_GROWTH`), a limit to raise once a
+build that long has played every schedule.
 
 A function is called equivalent only once `tools/equiv.py`, a differential tester against the retail function, agrees on
 every trial.
@@ -253,13 +254,14 @@ into, go with it: `HANDWRITTEN_PARTS(Sys_Memcpy, Sys_Memcpy1, ...)` in the file 
 part of the retail function. `configure.py` (through `tools/handwritten.py`) stops on a function the handwritten code
 doesn't have.
 
-About 28 of its 98 functions are called from compiled code with the usual convention; the other 70 or so take values
-in registers the convention leaves alone (`$s3`, `$t5`, `$v1`) and call one another, through tables too. A function
-goes into C with every routine it alone calls, once nothing handwritten depends on registers its retail code leaves
-untouched (`grep` the handwritten code for its name and its address), `$v0` included: `Gfx_DrawWorlds` never sets it
-and returns what its last call left, `Gfx_ResetOt`'s caller's value, so `Gfx_ResetOt` waits for it. A routine several
-share stays assembly until its last caller is C. Each function is tested as any equivalent one (equiv.py, 2 seeds of
-2,000 trials, then `tools/run_game.py` on every schedule), and `tools/progress.py` counts them apart.
+All 172 of its functions have equivalent C (`tools/progress.py`). Some are called from compiled code with the usual
+convention; the others take values in registers the convention leaves alone (`$s3`, `$t5`, `$v1`) and call one another,
+through tables too. A function went into C with every routine it alone calls, once nothing handwritten depended on
+registers its retail code leaves untouched (`grep` the handwritten code for its name and its address), `$v0` included:
+`Gfx_DrawWorlds` never sets it and returns what its last call left, `Gfx_ResetOt`'s caller's value, so `Gfx_ResetOt`
+waited for it. A routine several shared stayed assembly until its last caller was C. Each function is tested as any
+equivalent one (equiv.py, 2 seeds of 2,000 trials, then `tools/run_game.py` on every schedule), and `tools/progress.py`
+counts them apart.
 
 ### Landing an equivalent function
 
