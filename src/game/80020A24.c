@@ -855,7 +855,7 @@ extern s32 g_CameraProgress;
 extern s32 D_8006CD98;
 
 void func_800224A0(s32 *arg0) {
-    s32 sp28;
+    s32 sp28[ENT_ROW_BUFFER_WORDS];
     s16 *p;
     s32 new_var;
     s32 lo;
@@ -864,7 +864,7 @@ void func_800224A0(s32 *arg0) {
     s32 d;
 
     if (Ent_GetProperty(D_800608D8[0], 0x252, g_CameraProgress, 0, 0, 0, 0, 0, 0) != 0) {
-        p = (s16 *)Ent_GetProperty(D_800608D8[0], 0x254, g_CameraProgress, 0, 0, 3, &sp28, 0, 0);
+        p = (s16 *)Ent_GetProperty(D_800608D8[0], 0x254, g_CameraProgress, 0, 0, 3, sp28, 0, 0);
         if (p != 0) {
             lo = p[0] << 8;
             hi = p[1];

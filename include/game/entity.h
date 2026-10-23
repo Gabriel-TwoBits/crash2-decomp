@@ -32,6 +32,9 @@
 #define ENT_ROW_EXACT 1
 #define ENT_ROW_INDEX 2
 #define ENT_ROW_INTERPOLATED 3
+/* The callers' buffer for an interpolated row, in words: Ent_GetProperty writes the whole row there (its value count by
+   its element size), and the retail frames hold 8 bytes for it */
+#define ENT_ROW_BUFFER_WORDS 2
 
 /* Properties by CrashEdit's names */
 #define ENT_PROP_POSITIONS 0x4B

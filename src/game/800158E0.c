@@ -617,7 +617,7 @@ extern s32 D_8005F1D4;
 extern s32 D_8005F1D8;
 
 int Gfx_EndFrame(void) {
-    s32 sp28;
+    s32 sp28[ENT_ROW_BUFFER_WORDS];
     s32 *res;
     s32 mode;
     s32 y;
@@ -678,7 +678,7 @@ int Gfx_EndFrame(void) {
                 color = res[1];
                 if (mode == BAND_MODE_SPLIT) {
                     color2 = res[2];
-                    res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_B, g_CameraProgress, 0, 0, ARG_SLOT_SHORT, &sp28, 0, 0);
+                    res = (s32 *)Ent_GetProperty(D_800608D8, BAND_KEY_B, g_CameraProgress, 0, 0, ARG_SLOT_SHORT, sp28, 0, 0);
                     y = 0;
                     if (res != 0) {
                         y = *(s16 *)res;

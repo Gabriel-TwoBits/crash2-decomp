@@ -38,7 +38,7 @@ extern s32 D_8005BA28[];
 #define ENTRY_FALLBACK_OFFSET 0x14
 
 void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
-    s32 sp28;
+    s32 sp28[ENT_ROW_BUFFER_WORDS];
     s32 key;
     s32 *tbl;
     s32 idx;
@@ -63,7 +63,7 @@ void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
     if (key == 0) {
         tbl = D_8005BA28 + ALT_TABLE_WORDS;
     }
-    p = (s16 *)Ent_GetProperty(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, &sp28, 0, 0);
+    p = (s16 *)Ent_GetProperty(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, sp28, 0, 0);
     if (p == 0) {
         if (arg0->unk4 == g_CameraPath[0]) {
             arg = D_800608D8;
@@ -71,7 +71,7 @@ void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2) {
             obj = (u8 *)arg0->unk0;
             arg = *(s32 *)(obj + (idx * ENTRY_WORDS_PER_IDX + *(s32 *)(*(s32 *)(obj + OBJ_CTX_OFFSET) + CTX_BASE_OFFSET)) * 4 + ENTRY_FALLBACK_OFFSET);
         }
-        p = (s16 *)Ent_GetProperty(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, &sp28, 0, 0);
+        p = (s16 *)Ent_GetProperty(arg, LOOKUP_ID, unk8, 0, 0, LOOKUP_FLAGS, sp28, 0, 0);
     }
     switch (key) {
     case 0:
@@ -132,12 +132,12 @@ extern s32 D_800608DC;
 extern s32 g_CameraProgress;
 
 s32 func_80023DC4(void) {
-    s32 sp28;
+    s32 sp28[ENT_ROW_BUFFER_WORDS];
     s32 v;
     s32 a0;
     s32 a1;
 
-    v = Ent_GetProperty(D_800608DC, 0x16E, g_CameraProgress, 0, 0, 3, &sp28, 0, 0);
+    v = Ent_GetProperty(D_800608DC, 0x16E, g_CameraProgress, 0, 0, 3, sp28, 0, 0);
     if (v == 0) {
         return 0;
     }
