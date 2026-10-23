@@ -1014,8 +1014,8 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   projection before its rounding (the port's steady polygons), and `GTE_HORIZONTAL(offset)`, a projection's offset
   across, the port narrowing it for a 16:9 picture.
 - `WORLD_SORT_LIST(list)`, the sort list `Gfx_DrawWorlds` draws (the camera's), and `FRAME_PRIMITIVES_ALLOC(bytes)` and
-  `FRAME_PRIMITIVES_FREE(buffer)`, a frame buffer's primitives from the heap: the port draws more of the world at 16:9
-  into larger buffers of its own.
+  `FRAME_PRIMITIVES_FREE(buffer)`, a frame buffer's primitives from the heap: a host may draw more of the world into
+  larger buffers of its own (the port tried it at 16:9 and dropped it: crash2-pc's docs/ROADMAP.md, milestone 12).
 - `FRAME_BETWEEN`, 0 on the PS1: a frame of the picture alone, `Sys_MainLoop` running none of the game's logic,
   `Obj_Update` none of an object's, `Gfx_EndFrame` stepping none of its clocks and handing the frame to
   `FRAME_BETWEEN_SHOWN()`; `FRAME_ENDED()` at a game frame's end. The port draws one between each two of the game's
