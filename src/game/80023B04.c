@@ -119,8 +119,10 @@ INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023B04);
 extern s32 g_CameraPath[];
 extern s32 g_CameraProgress;
 
-void func_80023D7C(void) {
-    Ent_GetPropertyValue(*g_CameraPath, UNK_ARG1, g_CameraProgress, 0, 0, 3, UNK_ARG6);
+/* The camera's projection distance at its path's progress: the retail code returns Ent_GetPropertyValue's value, which
+ * its callers read */
+s32 func_80023D7C(void) {
+    return Ent_GetPropertyValue(*g_CameraPath, UNK_ARG1, g_CameraProgress, 0, 0, 3, UNK_ARG6);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/80023B04", func_80023D7C);
