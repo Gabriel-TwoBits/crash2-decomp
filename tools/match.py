@@ -1128,6 +1128,9 @@ def commit(message):
     path = machine_path(staged)
     if path is not None:
         sys.exit(f"the staged changes hold {path}: not committed (git diff --cached)")
+    else:
+        # Nothing of this machine's
+        pass
     subprocess.run(["git", "commit", "-q", "-m", message], cwd=HERE, check=True)
 
 

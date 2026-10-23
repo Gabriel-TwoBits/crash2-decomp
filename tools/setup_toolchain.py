@@ -78,6 +78,9 @@ def download(url, target, sha256):
     if actual != sha256:
         if checked != target:
             checked.unlink()
+        else:
+            # Downloaded before: left for a look at what changed
+            pass
         sys.exit(f"{url}'s SHA-256 is {actual}, not {sha256}")
     elif checked != target:
         checked.rename(target)
@@ -96,11 +99,17 @@ def old_gcc(version, sha256):
     work = TOOLCHAIN / f"gcc-{version}-psx.part"
     if work.exists():
         shutil.rmtree(work)
+    else:
+        # No extraction cut short before
+        pass
     work.mkdir(parents=True)
     with tarfile.open(archive) as tar:
         tar.extractall(work, filter="data")
     if folder.exists():
         shutil.rmtree(folder)
+    else:
+        # The first extraction
+        pass
     work.rename(folder)
 
 
