@@ -34,6 +34,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -48,6 +49,8 @@ SCRATCH = HERE / "build" / "match"
 RECORDS = HERE / "config" / "match"
 LEDGER = RECORDS / "ledger.json"
 NOTES = RECORDS / "notes"
+# A folder tempfile makes, such as psx_cc.py's, which the assembler's errors name
+TEMPORARY_FOLDER = re.compile(re.escape(tempfile.gettempdir()) + r"/tmp\w+/")
 SKIP = RECORDS / "skip.txt"
 TEMPLATE = HERE / "tools" / "match" / "CLAUDE.md"
 EQUIVALENT_TEMPLATE = HERE / "tools" / "match" / "EQUIVALENT.md"
@@ -178,8 +181,23 @@ def load_ledger():
 
 
 def portable(text):
-    """Text with this checkout's absolute path taken out: the records are in git, and paths of a machine mean nothing there"""
-    return text.replace(f"{HERE}/", "").replace(str(HERE), ".")
+    """Text with this machine's paths taken out (the checkout's, the compiler's temporary folders', the home folder's): the
+    records are in git, and paths of a machine mean nothing there"""
+    text = text.replace(f"{HERE}/", "").replace(str(HERE), ".")
+    return TEMPORARY_FOLDER.sub("", text).replace(str(Path.home()), "~")
+
+
+def machine_path(text):
+    """The first path of this machine the text holds, None if it holds none"""
+    temporary = TEMPORARY_FOLDER.search(text)
+    if str(HERE) in text:
+        return str(HERE)
+    elif str(Path.home()) in text:
+        return str(Path.home())
+    elif temporary is not None:
+        return temporary.group(0)
+    else:
+        return None
 
 
 def record(name, outcome, **details):
@@ -1105,10 +1123,11 @@ def land(name, equivalent=False):
 
 
 def commit(message):
-    """A commit of what is staged, refused if any of it holds this checkout's absolute path"""
+    """A commit of what is staged, refused if any of it holds a path of this machine"""
     staged = subprocess.run(["git", "diff", "--cached"], cwd=HERE, capture_output=True, text=True, check=True).stdout
-    if str(HERE) in staged:
-        sys.exit(f"the staged changes hold {HERE}: not committed (git diff --cached)")
+    path = machine_path(staged)
+    if path is not None:
+        sys.exit(f"the staged changes hold {path}: not committed (git diff --cached)")
     subprocess.run(["git", "commit", "-q", "-m", message], cwd=HERE, check=True)
 
 
