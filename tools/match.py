@@ -1056,32 +1056,41 @@ def land(name, equivalent=False):
         # The file has this C already: nothing to build, record or commit
         print(f"{name}: {source.relative_to(HERE)} has this C already")
         return True
-    source.write_text(updated)
-    GAME_H.write_text(updated_header)
 
-    ninja = str(HERE / ".venv" / "bin" / "ninja")
-    steps = [[sys.executable, "configure.py"], [ninja]]
-    if equivalent:
-        steps.append([ninja, "nonmatching"])
-    error = build(steps)
-    summary = None
-    if error is None and equivalent:
-        # The landed file, not the candidate: its own definitions and include/game.h's prototypes compile the function
-        for seed in LANDING_SEEDS:
-            agrees, compared, summary = equivalence(source, name, LANDING_TRIALS, seed)
-            if not agrees:
-                error = summary
-                break
-            elif compared < MIN_COMPARED_SHARE * LANDING_TRIALS:
-                error = f"{summary}: fewer than {MIN_COMPARED_SHARE:.0%} of the trials compared"
-                break
-            else:
-                # Every trial of this seed agrees, enough of them compared
-                continue
-    if error is not None:
+    def restore():
         source.write_text(original)
         GAME_H.write_text(header)
         subprocess.run([sys.executable, "configure.py"], cwd=HERE, capture_output=True)
+
+    source.write_text(updated)
+    GAME_H.write_text(updated_header)
+    # Interrupted or failed, the files go back as they were: the next landing commits them whole
+    try:
+        ninja = str(HERE / ".venv" / "bin" / "ninja")
+        steps = [[sys.executable, "configure.py"], [ninja]]
+        if equivalent:
+            steps.append([ninja, "nonmatching"])
+        error = build(steps)
+        summary = None
+        if error is None and equivalent:
+            # The landed file, not the candidate: its own definitions and include/game.h's prototypes compile the
+            # function
+            for seed in LANDING_SEEDS:
+                agrees, compared, summary = equivalence(source, name, LANDING_TRIALS, seed)
+                if not agrees:
+                    error = summary
+                    break
+                elif compared < MIN_COMPARED_SHARE * LANDING_TRIALS:
+                    error = f"{summary}: fewer than {MIN_COMPARED_SHARE:.0%} of the trials compared"
+                    break
+                else:
+                    # Every trial of this seed agrees, enough of them compared
+                    continue
+    except BaseException:
+        restore()
+        raise
+    if error is not None:
+        restore()
         record(name, refused, reason=error)
         return False
     if equivalent:
