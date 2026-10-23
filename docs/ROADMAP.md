@@ -981,6 +981,13 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   - **Memory card:** events, and the BIOS's file calls on `bu00:` (`open`, `read`, `write`, `erase`, `format`,
     `firstfile`, `nextfile`).
   - **Pad:** `InitPAD`'s two buffers.
+- **Calls a host checks.** A host whose calls check their signatures (wasm32, which the port's 64-bit build goes
+  through) needs each call's declaration to be its callee's. Done: the 17 functions called before their declaration
+  declared first, `func_80051328`'s value read through an `s32` declaration, `func_80023D7C` returning the value its
+  callers read, the 4 functions declared as data for their addresses declared as functions (the default build's SHA-1
+  and the equivalent executable the same byte for byte). Left to such a host: calls whose arguments differ from the
+  definition's (`RotTrans`'s fourth, `func_8002CA1C`'s `$a0`) and pointers to functions of other signatures called
+  through one type (`D_8005B1E0`'s handlers as `void (*)(void)`).
 
 ### The macros
 
