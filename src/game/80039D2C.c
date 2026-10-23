@@ -6627,7 +6627,6 @@ void func_80040948(DrawPass *pass) {
 }
 
 /* Draws the frame's packet list, each packet through its three steps, into the frame's ordering table and primitives */
-#define CAMERA_WORDS (MATRIX_WORDS + 3)
 
 void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
     DrawScratch *scratch = DRAW_SCRATCH;
@@ -6644,8 +6643,12 @@ void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
     scratch->fog_start = scene->depth_fog_start;
     camera = scene->camera_matrix;
     scratch->camera = scene->camera;
-    for (word = 0; word < CAMERA_WORDS; word++) {
+    /* The scene's camera: its rotation, then its position */
+    for (word = 0; word < MATRIX_WORDS; word++) {
         scratch->camera_matrix[word] = camera[word];
+    }
+    for (word = 0; word < AXES; word++) {
+        scratch->camera_position[word] = camera[MATRIX_WORDS + word];
     }
     pass.frame = frame;
     while ((pass.packet = scratch->packet) != 0) {
