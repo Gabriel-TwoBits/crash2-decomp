@@ -1576,14 +1576,6 @@ void Gfx_DecodeSortListForward(void *delta, u16 *from, u16 *to) {
 #define MODE_TAG_LENGTH 0x02000000
 #define MODE_WORDS 3
 
-/* The words of the frame being built Gfx_DrawStreaks uses: where the next primitive goes, and the ordering table */
-typedef struct {
-    u8 unk_00[8];
-    u32 *next;
-    u8 unk_0C[0xC];
-    u32 ot[1];
-} FrameBuffer;
-
 /* D_80062A18's scene: the view matrix (its translation at 0x14, as a MATRIX), the streaks' VXY pair and z from the
  * view's last position and from the current one, both lines' colours (the first with its code), the closing mode's
  * word, the box's y offset and the streaks' slot in the ordering table */
@@ -1633,9 +1625,9 @@ EQUIV_NONNULL(Gfx_DrawStreaks, 2)
 /* Draws COUNT + 1 streaks of the scene's box into the frame being built, all in one slot of its ordering table, then
  * the draw mode they close with; with the rotation the caller set and no translation */
 void Gfx_DrawStreaks(s32 count, void *frame, void *scene) {
-    FrameBuffer *buffer = frame;
+    GfxFrame *buffer = frame;
     StreakScene *streaks = scene;
-    u32 *line = buffer->next;
+    u32 *line = (u32 *)buffer->next_primitive;
     u32 *slot;
     u32 low = STREAK_SEED_LOW;
     u32 high = STREAK_SEED_HIGH;
@@ -1725,7 +1717,7 @@ void Gfx_DrawStreaks(s32 count, void *frame, void *scene) {
     line[0] = head | MODE_TAG_LENGTH;
     *slot = OT_LINK(line);
     line += MODE_WORDS;
-    buffer->next = line;
+    buffer->next_primitive = (u8 *)line;
 }
 
 /* func_80045218's dots: the streaks' generator, its bytes as signed 16ths. A dot's x and z keep 0x70 from the middle
@@ -1780,9 +1772,9 @@ EQUIV_NONNULL(func_80045218, 2)
 /* Draws COUNT + 1 dots into the frame being built, all in one slot of its ordering table, then the draw mode they
  * close with; with the rotation the caller set and no translation */
 void func_80045218(s32 count, void *frame, void *scene) {
-    FrameBuffer *buffer = frame;
+    GfxFrame *buffer = frame;
     DotScene *dots = scene;
-    u32 *tile = buffer->next;
+    u32 *tile = (u32 *)buffer->next_primitive;
     u32 *slot;
     u32 low = STREAK_SEED_LOW;
     u32 high = STREAK_SEED_HIGH;
@@ -1835,7 +1827,7 @@ void func_80045218(s32 count, void *frame, void *scene) {
     tile[0] = *slot | MODE_TAG_LENGTH;
     *slot = OT_LINK(tile);
     tile += MODE_WORDS;
-    buffer->next = tile;
+    buffer->next_primitive = (u8 *)tile;
 }
 
 /* The world renderer: Gfx_DrawWorlds walks the zone's sort list and draws each polygon with the scene's mode
@@ -2019,7 +2011,7 @@ SCRATCH_AT(worlds, 0x280);
 #define COLOUR_LOW_SHIFT 6
 #define COLOUR_LOW_MASK 0x3C0
 /* The ordering table's slots (2,048) and the deepest a polygon goes; its slot from the sum of its last three depths */
-#define OT_SLOTS 0x800
+#define OT_SLOTS GFX_OT_LENGTH
 #define OT_LAST (OT_SLOTS - 1)
 #define DEPTH_DEEPEST 0x770
 #define DEPTH_SUM_SHIFT 5
@@ -3718,7 +3710,7 @@ void func_80045F40(WorldPass *pass) {
 #define FRAME_BYTES 0x2018
 #define WORLD_SCENE_BYTES 0xB4
 typedef char check_world_scene[(sizeof(WorldScene) == WORLD_SCENE_BYTES) ? 1 : -1];
-typedef char check_frame[((u32)&((FrameBuffer *)0)->ot[OT_SLOTS] == FRAME_BYTES) ? 1 : -1];
+typedef char check_frame[((u32)&((GfxFrame *)0)->ot[OT_SLOTS] == FRAME_BYTES) ? 1 : -1];
 
 /* Every caller (Sys_MainLoop, func_80018434) passes the zone's sort list, the frame being built, D_80062A18 and
  * D_80060944, the textures' clock: a heap buffer of Gfx_AllocSortLists's, one of Gfx_AllocFrameBuffers's and a global,
@@ -3774,7 +3766,7 @@ EQUIV_RUNS(Gfx_DrawWorlds, func_8004380C)
 
 /* Draws the zone's world polygons in the sort list's order (its last entry first) into the frame's ordering table,
  * through the scene's mode; a list of one entry draws nothing and leaves the table empty */
-void Gfx_DrawWorlds(u16 *list, FrameBuffer *frame, WorldScene *scene, s32 clock) {
+void Gfx_DrawWorlds(u16 *list, GfxFrame *frame, WorldScene *scene, s32 clock) {
     WorldScratch *scratch = WORLD_SCRATCH;
     WorldPass pass;
     WorldRecord polygon, next;
@@ -3804,7 +3796,7 @@ void Gfx_DrawWorlds(u16 *list, FrameBuffer *frame, WorldScene *scene, s32 clock)
     for (word = 0; word < (s32)(sizeof(scratch->depth_shifts) / sizeof(u32)); word++) {
         ((u32 *)scratch->depth_shifts)[word] = ((u32 *)D_8005C724)[word];
     }
-    pass.next = frame->next;
+    pass.next = (u32 *)frame->next_primitive;
     pass.ot = frame->ot;
     pass.clock = clock;
     scratch->vertex_mask = VERTEX_MASK;
@@ -3830,7 +3822,7 @@ void Gfx_DrawWorlds(u16 *list, FrameBuffer *frame, WorldScene *scene, s32 clock)
     } else {
         /* Every slot linked */
     }
-    frame->next = pass.next;
+    frame->next_primitive = (u8 *)pass.next;
 }
 
 /* ---- The object renderers (docs/TARGET.md, "The object renderers") ---- */
@@ -3891,7 +3883,7 @@ typedef struct DrawPacket {
 typedef struct DrawPass {
     DrawPacket *packet;
     u8 *object;
-    FrameBuffer *frame;
+    GfxFrame *frame;
     WorldScene *scene;
     u32 rotation[MATRIX_WORDS];
     s32 depth;
@@ -6628,7 +6620,7 @@ void func_80040948(DrawPass *pass) {
 
 /* Draws the frame's packet list, each packet through its three steps, into the frame's ordering table and primitives */
 
-void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
+void Gfx_DrawObjects(DrawPacket *list, GfxFrame *frame, WorldScene *scene) {
     DrawScratch *scratch = DRAW_SCRATCH;
     DrawPass pass;
     DrawStep place, draw;
@@ -6637,7 +6629,7 @@ void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
 
     scratch->packet = list;
     scratch->scene = scene;
-    scratch->next = frame->next;
+    scratch->next = (u32 *)frame->next_primitive;
     scratch->fog_far = scene->depth_fog_shift;
     scratch->fog_shift = scene->depth_fog_shift;
     scratch->fog_start = scene->depth_fog_start;
@@ -6664,7 +6656,7 @@ void Gfx_DrawObjects(DrawPacket *list, FrameBuffer *frame, WorldScene *scene) {
         pass.packet->prepare(&pass);
         draw(&pass);
     }
-    frame->next = scratch->next;
+    frame->next_primitive = (u8 *)scratch->next;
 }
 
 /* ---- The GOOL interpreter (docs/TARGET.md, "The GOOL interpreter") ---- */
