@@ -838,7 +838,22 @@ Steps, in order:
   halfwords at 0x20, `colors`, which COLR and COLW (35, 36) reach and func_800186D8 reads from the fifth as a glyph's
   corners' scales. The Crash 1 catalog's GoolTranslateInGop and GoolTranslateOutGop (an operand's and a destination's
   address) name the interpreter's two decoders. Opcodes 72 and 74 to 77 CrashEdit doesn't know. `tools/progress.py`:
-  221 of 638 game functions named.
+  221 of 638 game functions named. A seventh batch, what the port reaches first: the heap and the frame buffers.
+  libsn's start-up (`__SN_ENTRY_POINT`) calls the game's allocator's init just before `main`, where PsyQ's calls
+  `InitHeap`, with the heap's base and size it stores (`Heap_Init`, `g_HeapBase`, `g_HeapSize`) and computes from
+  `g_RamSize` (the stack's top, less 8) and `g_StackSize`; the init gives the allocator's state its names (`g_HeapEnd`,
+  `g_HeapBreak`, `g_HeapStarted`). `include/game/gfx.h` types the frame buffer, `GfxFrame`, in place of three local
+  structures and the raw offsets of ten files: its index, primitives and their cursor, its timing in `g_TimerTicks`
+  (the shown time, rounded to vertical blanks, is what the objects' motion scales by), the ordering table DrawOTag
+  takes, the `DISPENV` and `DRAWENV` (now in `include/sdk.h`) PutDispEnv and PutDrawEnv take, and the object packets'
+  queue that `Gfx_QueueObject` fills and `Gfx_DrawObjects` draws; `GfxFrameBuffers` is `g_FrameBuffers`. The two
+  functions resetting a frame take their names from it (`Gfx_ResetFrame`, `Gfx_ClearObjectQueue`). Three accesses stay
+  raw, the member moving GCC 2.7.2's scheduling (`GFX_FRAME_START_TICKS`, `GFX_FRAME_SHOWN_TICKS`,
+  `GFX_FRAME_QUEUE_BUFFER`). The SHA-1 holds and the equivalent executable is byte for byte as before; the 33 files
+  still compile for 32-bit x86. Left: `D_800675AC` (the frames before the game draws again, inside the level state
+  at 0x80067588) and `D_8006CB94`, the flags `Gfx_EndFrame` takes from `D_8006CB80` each frame, whose bits serve the
+  pads, the collision and the memory card's screens alike. `tools/progress.py`: 224 of 638 game functions and 63 of
+  1,075 data symbols named, 144 structures in `src/game/`, 14 in `include/game/`, 118 fields read at a raw offset.
 - **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
   docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
   same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy
