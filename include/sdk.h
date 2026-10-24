@@ -3,32 +3,7 @@
 
 /* PsyQ 4.0's library functions the game calls (config/symbol_addrs.txt has their addresses), and their types */
 
-/* libgpu: an area of VRAM */
-typedef struct {
-    short x, y;
-    short w, h;
-} RECT;
-
-/* libgpu: the display environment PutDispEnv takes (0x14 bytes) */
-typedef struct {
-    RECT disp;
-    RECT screen;
-    unsigned char isinter, isrgb24;
-    unsigned char pad0, pad1;
-} DISPENV;
-
-/* libgpu: the drawing environment PutDrawEnv takes (0x5C bytes), the GPU packet it builds from the rest last (PsyQ's
-   DR_ENV, 16 words) */
-typedef struct {
-    RECT clip;
-    short ofs[2];
-    RECT tw;
-    unsigned short tpage;
-    unsigned char dtd, dfe;
-    unsigned char isbg;
-    unsigned char r0, g0, b0;
-    unsigned int dr_env[16];
-} DRAWENV;
+#include "libgpu_types.h"
 
 /* libapi */
 long StopRCnt(unsigned long spec);

@@ -2,7 +2,7 @@
 #define GAME_GFX_H
 
 #include "common.h"
-#include "sdk.h"
+#include "libgpu_types.h"
 
 /* The frame buffers: Gfx_Init sets up two, Gfx_EndFrame turns them over each frame (the one built becomes the one
    drawn, the one drawn the one shown) */
