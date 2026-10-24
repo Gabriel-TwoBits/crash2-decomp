@@ -1445,3 +1445,33 @@ Gool_TranslateInGop = 0x80039D2C; // type:func
 
 // Gool_Interpret's decoder of an instruction's destination (a frame's word, a register of the object or a linked one, the stack's next word); the Crash 1 decomp's catalog's GoolTranslateOutGop, "convert an output GOOL operand to an absolute pointer to data"
 Gool_TranslateOutGop = 0x80039E10; // type:func
+
+// libsn's start-up (__SN_ENTRY_POINT) calls it just before main with the heap's base (the image's end, 4 bytes in) and size, where PsyQ's start-up calls InitHeap; it sets the heap's cursor, end and the flag Heap_Alloc tests on its first call
+Heap_Init = 0x8001144C; // type:func
+
+// __SN_ENTRY_POINT stores the heap's base there (the image's end at 0x8006F1F0, as a KSEG0 address) before passing it to Heap_Init
+g_HeapBase = 0x8005CB28;
+
+// __SN_ENTRY_POINT stores the heap's size there (the stack's top less g_StackSize and the heap's base) before passing it to Heap_Init
+g_HeapSize = 0x8005CB2C;
+
+// __SN_ENTRY_POINT sets the stack pointer to it less 8, as a KSEG0 address; 0x200000, the PlayStation's 2 MB of RAM; func_80014C48 reads it as the top of RAM
+g_RamSize = 0x8005F188;
+
+// __SN_ENTRY_POINT takes it from the stack's top for the heap's size; 0x1000
+g_StackSize = 0x8005F184;
+
+// Heap_Init sets it to the heap's start plus its size; Heap_Alloc and func_800111B0 claim no chunk past it
+g_HeapEnd = 0x8005F2B4;
+
+// Heap_Init sets it to the heap's start; func_800111B0 moves it past each chunk it claims, Heap_Alloc writes the end mark (-2) at it on its first call
+g_HeapBreak = 0x8005F2A4;
+
+// Heap_Init clears it; Heap_Alloc claims the first chunk when it is 0, then sets it to 1
+g_HeapStarted = 0x8005F2BC;
+
+// Gfx_AllocFrameBuffers calls it on each frame buffer once FRAME_PRIMITIVES_ALLOC gave it its primitives (at 0x4), Gfx_EndFrame on the buffer it builds next: the primitives' cursor at 0x8, from which Gfx_AddFillRect takes the fill it links with AddPrim, back to the buffer, and Gfx_ClearObjectQueue
+Gfx_ResetFrame = 0x800163C4; // type:func
+
+// empties the frame buffer's packet list at 0x2088, which Gfx_QueueObject appends to and Gfx_DrawObjects draws, and sets its allocation cursor (0x2090) back to its buffer (0x208C); Gfx_FreeFrameBuffers, Gfx_ResetFrame and Sys_LoadCheckpoint call it
+Gfx_ClearObjectQueue = 0x800163B4; // type:func

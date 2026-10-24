@@ -469,7 +469,7 @@ s32 Gfx_AllocFrameBuffers(void) {
             if (buf == 0) {
                 exit(ALLOC_FAIL_EXIT_CODE);
             }
-            func_800163C4((s32 *)entry);
+            Gfx_ResetFrame((s32 *)entry);
             i++;
             entry += sizeof(*g_FrameBuffers.e);
         } while (i < g_FrameBuffers.count);
@@ -491,7 +491,7 @@ s32 Gfx_FreeFrameBuffers(void) {
     s32 i;
 
     i = 0;
-    func_800163B4(g_BuildBuffer[0]);
+    Gfx_ClearObjectQueue(g_BuildBuffer[0]);
     DrawSync(0);
     Heap_Free(D_800654E8);
     if (g_FrameBuffers.count > 0) {
@@ -509,16 +509,16 @@ s32 Gfx_FreeFrameBuffers(void) {
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_FreeFrameBuffers);
 #endif
 
-void func_800163B4(void *arg0) {
+void Gfx_ClearObjectQueue(void *arg0) {
     Unk80063458 *p = arg0;
 
     p->unk2088 = 0;
     p->unk2090 = p->unk208C;
 }
 
-void func_800163C4(s32 *arg0) {
+void Gfx_ResetFrame(s32 *arg0) {
     arg0[2] = arg0[1];
-    func_800163B4(arg0);
+    Gfx_ClearObjectQueue(arg0);
 }
 
 
@@ -772,7 +772,7 @@ int Gfx_EndFrame(void) {
         }
         DrawOTag(g_DrawBuffer + FRAME_OT_OFFSET);
     }
-    func_800163C4((s32 *)g_BuildBuffer[0]);
+    Gfx_ResetFrame((s32 *)g_BuildBuffer[0]);
     D_8006CB94 = D_8006CB80;
     FRAME_ENDED();
     return D_8006CB80;

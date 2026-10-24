@@ -4,15 +4,15 @@
 
 s32 D_8005F17C = 0;
 s32 g_Paused = 0;
-s32 D_8005F184 = 0x1000;
-s32 D_8005F188 = 0x200000;
+s32 g_StackSize = 0x1000;
+s32 g_RamSize = 0x200000;
 s32 D_8005F18C = 0;
 char D_8005F190[] = "dead\n";
 
 #ifdef NON_MATCHING
-extern s32 *D_8005F2A4;
+extern s32 *g_HeapBreak;
 extern s32 D_8005F2AC;
-extern s32 *D_8005F2B4;
+extern s32 *g_HeapEnd;
 
 s32 func_800111B0(u32 n) {
     s32 lim;
@@ -27,7 +27,7 @@ s32 func_800111B0(u32 n) {
         } else {
             hi = D_8005F2AC;
         }
-        lim = ((((char *)D_8005F2B4 - (char *)D_8005F2A4) >> 2) * 4) - 8;
+        lim = ((((char *)g_HeapEnd - (char *)g_HeapBreak) >> 2) * 4) - 8;
         if (lim >= hi) {
             n = hi;
         } else if (lim >= lo) {
@@ -37,13 +37,13 @@ s32 func_800111B0(u32 n) {
         }
     } else {
         n = 0;
-        if ((u32)D_8005F2A4 >= (u32)D_8005F2B4) {
+        if ((u32)g_HeapBreak >= (u32)g_HeapEnd) {
             return -1;
         }
     }
-    D_8005F2A4[(s32)n / 4] = -2;
-    D_8005F2A4[-1] = n | 1;
-    D_8005F2A4 = &D_8005F2A4[((s32)n + 4) / 4];
+    g_HeapBreak[(s32)n / 4] = -2;
+    g_HeapBreak[-1] = n | 1;
+    g_HeapBreak = &g_HeapBreak[((s32)n + 4) / 4];
     return 0;
 }
 #else
@@ -86,13 +86,13 @@ s32 func_800112A4(s32 arg0, s32 arg1) {
             cur = blk + 1;
             if (next == (u32)HEAP_END_MARK) {
                 gap = need - acc;
-                if ((u32)(((s32)((u8 *)D_8005F2B4 - (u8 *)cur) >> WORD_SHIFT) - HEAP_RESERVE_WORDS) < gap) {
+                if ((u32)(((s32)((u8 *)g_HeapEnd - (u8 *)cur) >> WORD_SHIFT) - HEAP_RESERVE_WORDS) < gap) {
                     break;
                 }
                 blk[1] = gap | HEAP_FREE_BIT;
-                D_8005F2A4 = (s32 *)((u8 *)cur + (gap & HEAP_SIZE_MASK));
-                *D_8005F2A4 = HEAP_END_MARK;
-                D_8005F2A4 = (s32 *)((u8 *)D_8005F2A4 + WORD_SIZE);
+                g_HeapBreak = (s32 *)((u8 *)cur + (gap & HEAP_SIZE_MASK));
+                *g_HeapBreak = HEAP_END_MARK;
+                g_HeapBreak = (s32 *)((u8 *)g_HeapBreak + WORD_SIZE);
             } else if (!(next & HEAP_FREE_BIT)) {
                 break;
             } else {
@@ -123,16 +123,16 @@ s32 func_800112A4(s32 arg0, s32 arg1) {
 INCLUDE_ASM("asm/nonmatchings/game/800111B0", func_800112A4);
 #endif
 
-extern s32 *D_8005F2A4;
+extern s32 *g_HeapBreak;
 extern s32 D_8005F2AC;
-extern s32 *D_8005F2B4;
-extern s32 D_8005F2BC;
+extern s32 *g_HeapEnd;
+extern s32 g_HeapStarted;
 
-void func_8001144C(s32 *arg0, u32 arg1) {
-    D_8005F2A4 = arg0;
-    do { *arg0 = 0; D_8005F2B4 = &arg0[arg1 >> 2] + 1; } while (0);
+void Heap_Init(s32 *arg0, u32 arg1) {
+    g_HeapBreak = arg0;
+    do { *arg0 = 0; g_HeapEnd = &arg0[arg1 >> 2] + 1; } while (0);
     D_8005F2AC = arg1 - 4;
-    D_8005F2BC = 0;
+    g_HeapStarted = 0;
 }
 
 #ifdef NON_MATCHING
@@ -161,17 +161,17 @@ s32 Heap_Alloc(s32 arg0) {
     size = (arg0 + 3) & HEAP_ALIGN_MASK;
     want = size | HEAP_USED_BIT;
 
-    if (D_8005F2BC == 0) {
-        if (!((u32) D_8005F2A4 < (u32) D_8005F2B4)) {
+    if (g_HeapStarted == 0) {
+        if (!((u32) g_HeapBreak < (u32) g_HeapEnd)) {
             return 0;
         }
-        *D_8005F2A4 = HEAP_FREE_END;
-        D_8006074C = D_8005F2A4;
-        D_8005F2A4 = HEAP_AT(D_8005F2A4, HEAP_HEADER_SIZE);
+        *g_HeapBreak = HEAP_FREE_END;
+        D_8006074C = g_HeapBreak;
+        g_HeapBreak = HEAP_AT(g_HeapBreak, HEAP_HEADER_SIZE);
         if (func_800111B0(size) != 0) {
             return 0;
         }
-        D_8005F2BC = 1;
+        g_HeapStarted = 1;
         D_80062BAC = D_8006074C;
     }
     D_8006074C = D_80062BAC;
@@ -205,7 +205,7 @@ s32 Heap_Alloc(s32 arg0) {
                 nextHdr = *next;
                 if (nextHdr == HEAP_FREE_END) {
                     *D_8006074C = nextHdr;
-                    D_8005F2A4 = HEAP_AT(D_8006074C, HEAP_HEADER_SIZE);
+                    g_HeapBreak = HEAP_AT(D_8006074C, HEAP_HEADER_SIZE);
                 } else if (nextHdr & HEAP_USED_BIT) {
                     *D_8006074C = cur + HEAP_HEADER_SIZE + (nextHdr & ~HEAP_USED_BIT);
                 } else {

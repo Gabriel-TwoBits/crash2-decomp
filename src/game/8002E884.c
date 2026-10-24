@@ -699,7 +699,7 @@ void Sys_LoadCheckpoint(u8 *arg0) {
             }
         }
         func_80014790((u32 *)(arg0 + 0x1040));
-        func_800163B4(g_BuildBuffer);
+        Gfx_ClearObjectQueue(g_BuildBuffer);
     }
     g_CurrentZone = 0;
     g_CameraPath = 0;

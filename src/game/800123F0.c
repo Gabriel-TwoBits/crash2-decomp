@@ -1604,12 +1604,12 @@ s32 func_80014C08(void) {
     return temp_v0;
 }
 
-extern s32 D_8005F184;
-extern s32 D_8005F188;
+extern s32 g_StackSize;
+extern s32 g_RamSize;
 
 s32 func_80014C48(void) {
-    s32 a = D_8005F184;
-    s32 b = D_8005F188;
+    s32 a = g_StackSize;
+    s32 b = g_RamSize;
 
     /* The loop notes keep the scheduler from hoisting `lui 0x8000` above the loads. */
     do {
