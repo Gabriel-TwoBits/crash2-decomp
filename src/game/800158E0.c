@@ -74,7 +74,6 @@ typedef struct Unk80069920 {
 #define STREAM_END_OFFSET 0x1090
 #define STREAM_COUNT_SCALE 8
 #define STREAM_RESTART_OFFSET 0x108C
-#define STREAM_RESTART_DST 0x14
 #define STREAM_RECORD_SIZE 8
 #define STREAM_RECORD_BTN 4
 #define FLAGS_80_CLEAR 0xFFFF6FF5
@@ -88,7 +87,7 @@ extern s32 g_Paused;
 extern s32 *D_8005F374;
 extern u8 *g_DemoBlock;
 extern s32 *g_CurrentZone;
-extern u8 *g_DisplayBuffer;
+extern GfxFrame *g_DisplayBuffer;
 extern s32 D_8006CB80;
 extern s32 D_8006CB94;
 extern s32 D_8006CCA0;
@@ -224,7 +223,7 @@ void Input_Update(void) {
                 p->unk_40 = DIR_NEUTRAL;
                 sel = p->unk_28;
                 if ((u8 *)D_8005F374 == g_DemoBlock + STREAM_END_OFFSET) {
-                    *(s32 *)(g_DisplayBuffer + STREAM_RESTART_DST) = *(s32 *)(g_DemoBlock + STREAM_RESTART_OFFSET);
+                    g_DisplayBuffer->shown_ticks = *(s32 *)(g_DemoBlock + STREAM_RESTART_OFFSET);
                 } else {
                     /* not at the first record */
                 }
@@ -349,26 +348,7 @@ void Gfx_ClearVram(void) {
     DrawPrim(&f);
 }
 
-typedef struct {
-    s32 idx;
-    s32 pad4[2];
-    s32 f0C;
-    s32 pad10;
-    s32 f14;
-    u8 pad18[0x2018 - 0x18];
-    u8 disp[0x14];
-    u8 draw[0x2094 - 0x202C];
-} Unk800160B0Entry;
-
-typedef struct {
-    s32 count;
-    Unk800160B0Entry *cur;
-    Unk800160B0Entry *other;
-    Unk800160B0Entry *first;
-    Unk800160B0Entry e[1];
-} Unk800160B0Gfx;
-
-extern Unk800160B0Gfx g_FrameBuffers;
+extern GfxFrameBuffers g_FrameBuffers;
 extern s32 g_TimerTicks;
 extern s32 D_8006CCDC;
 extern s32 D_80060944;
@@ -379,99 +359,84 @@ void SetGraphDebug(s32 level);
 
 void Gfx_Init(void) {
     s32 i;
-    Unk800160B0Entry *e;
+    GfxFrame *e;
     D_80060944 = 0;
     ResetGraph(0);
     SetGraphDebug(0);
     Gfx_ClearVram();
-    g_FrameBuffers.count = 2;
+    g_FrameBuffers.count = GFX_FRAME_COUNT;
     for (i = 0; i < g_FrameBuffers.count; i++) {
-        e = &g_FrameBuffers.e[i];
-        e->idx = i;
-        e->f0C = 0;
-        SetDefDispEnv(e->disp, i << 9, 0, 0x200, 0xF0);
+        e = &g_FrameBuffers.frames[i];
+        e->index = i;
+        e->start_ticks = 0;
+        SetDefDispEnv(&e->disp, i << 9, 0, 0x200, 0xF0);
         D_8006CCDC = 0;
-        *(s16 *)(e->disp + 8) = 0;
-        SetDefDrawEnv(e->draw, i << 9, 0xC, 0x200, 0xD8);
-        *(s16 *)(e->draw + 8) = i << 9;
-        *(s16 *)(e->draw + 10) = 0xC;
-        e->draw[0x16] = 1;
-        e->draw[0x17] = 0;
+        e->disp.screen.x = 0;
+        SetDefDrawEnv(&e->draw, i << 9, 0xC, 0x200, 0xD8);
+        e->draw.ofs[0] = i << 9;
+        e->draw.ofs[1] = 0xC;
+        e->draw.dtd = 1;
+        e->draw.dfe = 0;
         if (i == 0) {
-            g_FrameBuffers.first = e;
-            g_FrameBuffers.cur = e;
+            g_FrameBuffers.build = e;
+            g_FrameBuffers.display = e;
         }
         if (i == 1) {
-            g_FrameBuffers.other = e;
+            g_FrameBuffers.draw = e;
         }
-        e->f14 = 0x22;
-        e->f0C = g_TimerTicks;
+        e->shown_ticks = 0x22;
+        e->start_ticks = g_TimerTicks;
     }
-    PutDispEnv(g_FrameBuffers.cur->disp);
-    PutDrawEnv(g_FrameBuffers.other->draw);
+    PutDispEnv(&g_FrameBuffers.display->disp);
+    PutDrawEnv(&g_FrameBuffers.draw->draw);
     SetDispMask(1);
 }
 
-typedef struct {
-    u8 pad0[0x8];
-    s32 unk8;
-    u8 padC[0x202C - 0xC];
-    u16 unk202C;
-    u16 unk202E;
-    u8 pad2030[0x2088 - 0x2030];
-    void *unk2088;
-    char *unk208C;
-    char *unk2090;
-} Unk80063458;
-
 #ifdef NON_MATCHING
-extern Unk80063458 *g_BuildBuffer[];
+extern GfxFrame *g_BuildBuffer[];
 #define RETAIL_STATE_LOAD 2
 #define RETAIL_STATE_PAL 0x28
-#define CLEAR_OFFSET 0x18
-#define CLEAR_BYTES 0x800
 #define SHARED_BUF_BYTES 0x1770
 #define ENTRY_BUF_BYTES 0x16400
 #define ENTRY_BUF_BYTES_PAL 0x2C800
-#define ENTRY_BUF_OFFSET 4
-#define ENTRY_SHARED_OFFSET 0x208C
 #define ALLOC_FAIL_EXIT_CODE -0xF
 #define RETURN_VALUE -0xFF
 
 extern void exit(s32);
 extern s32 D_8005F3EC;
-extern u8 *g_DrawBuffer;
+extern GfxFrame *g_DrawBuffer;
 
 s32 Gfx_AllocFrameBuffers(void) {
     s32 i;
     s32 shared;
     s32 buf;
     s32 size;
-    u8 *entry;
+    GfxFrame *entry;
 
     if (D_8005F3EC == RETAIL_STATE_LOAD) {
         func_80036368();
     }
-    Gfx_ResetOt((u8 *)g_BuildBuffer[0] + CLEAR_OFFSET, CLEAR_BYTES);
-    Gfx_ResetOt(g_DrawBuffer + CLEAR_OFFSET, CLEAR_BYTES);
+    Gfx_ResetOt(g_BuildBuffer[0]->ot, GFX_OT_LENGTH);
+    Gfx_ResetOt(g_DrawBuffer->ot, GFX_OT_LENGTH);
     i = 0;
     shared = Heap_Alloc(SHARED_BUF_BYTES);
     if (g_FrameBuffers.count > 0) {
-        entry = (u8 *)g_FrameBuffers.e;
+        entry = g_FrameBuffers.frames;
         do {
             size = ENTRY_BUF_BYTES;
-            *(s32 *)(entry + ENTRY_SHARED_OFFSET) = shared;
+            /* Raw: through the member GCC 2.7.2 schedules the store after the read of D_8005F3EC */
+            *(s32 *)((u8 *)entry + GFX_FRAME_QUEUE_BUFFER) = shared;
             if (D_8005F3EC == RETAIL_STATE_PAL) {
                 size = ENTRY_BUF_BYTES_PAL;
             }
             buf = FRAME_PRIMITIVES_ALLOC(size);
-            *(s32 *)(entry + ENTRY_BUF_OFFSET) = buf;
+            entry->primitives = (u8 *)buf;
             if (buf == 0) {
                 exit(ALLOC_FAIL_EXIT_CODE);
             }
-            Gfx_ResetFrame((s32 *)entry);
+            Gfx_ResetFrame(entry);
             i++;
-            entry += sizeof(*g_FrameBuffers.e);
+            entry++;
         } while (i < g_FrameBuffers.count);
     }
     return RETURN_VALUE;
@@ -496,7 +461,7 @@ s32 Gfx_FreeFrameBuffers(void) {
     Heap_Free(D_800654E8);
     if (g_FrameBuffers.count > 0) {
         do {
-            FRAME_PRIMITIVES_FREE(g_FrameBuffers.e[i].pad4[0]);
+            FRAME_PRIMITIVES_FREE(g_FrameBuffers.frames[i].primitives);
             i++;
         } while (i < g_FrameBuffers.count);
     }
@@ -509,44 +474,42 @@ s32 Gfx_FreeFrameBuffers(void) {
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_FreeFrameBuffers);
 #endif
 
-void Gfx_ClearObjectQueue(void *arg0) {
-    Unk80063458 *p = arg0;
-
-    p->unk2088 = 0;
-    p->unk2090 = p->unk208C;
+void Gfx_ClearObjectQueue(GfxFrame *frame) {
+    frame->object_queue = 0;
+    frame->next_queue_packet = frame->queue_buffer;
 }
 
-void Gfx_ResetFrame(s32 *arg0) {
-    arg0[2] = arg0[1];
-    Gfx_ClearObjectQueue(arg0);
+void Gfx_ResetFrame(GfxFrame *frame) {
+    frame->next_primitive = frame->primitives;
+    Gfx_ClearObjectQueue(frame);
 }
 
 
-extern Unk80063458 *g_BuildBuffer[];
+extern GfxFrame *g_BuildBuffer[];
 
 void func_800163E8(s32 arg0) {
     s32 sum;
 
-    sum = g_BuildBuffer[0]->unk8 + arg0;
+    sum = (s32)g_BuildBuffer[0]->next_primitive + arg0;
     /* Both branches store the same value; the branch is what puts the sum in $a0. */
-    if (g_BuildBuffer[0]->unk8) {
-        g_BuildBuffer[0]->unk8 = sum;
+    if (g_BuildBuffer[0]->next_primitive) {
+        g_BuildBuffer[0]->next_primitive = (u8 *)sum;
     } else {
-        g_BuildBuffer[0]->unk8 = sum;
+        g_BuildBuffer[0]->next_primitive = (u8 *)sum;
     }
 }
 
 s32 *func_80016408(void) {
-    return &g_BuildBuffer[0]->unk8;
+    return (s32 *)&g_BuildBuffer[0]->next_primitive;
 }
 
 void *func_80016418(s32 arg0) {
     void **temp;
 
-    temp = (void **)g_BuildBuffer[0]->unk2090;
-    g_BuildBuffer[0]->unk2090 = (char *)temp + arg0;
-    *temp = g_BuildBuffer[0]->unk2088;
-    g_BuildBuffer[0]->unk2088 = temp;
+    temp = (void **)g_BuildBuffer[0]->next_queue_packet;
+    g_BuildBuffer[0]->next_queue_packet = (u8 *)temp + arg0;
+    *temp = g_BuildBuffer[0]->object_queue;
+    g_BuildBuffer[0]->object_queue = temp;
     return temp;
 }
 
@@ -557,14 +520,6 @@ typedef struct {
 } Unk80060884;
 
 #ifdef NON_MATCHING
-#define FRAME_FIELD(p, off, type) (*(type *)((u8 *)(p) + (off)))
-#define FRAME_TIME_OFFSET 0xC
-#define FRAME_END_TIME_OFFSET 0x10
-#define FRAME_DURATION_OFFSET 0x14
-#define FRAME_OT_OFFSET 0x18
-#define FRAME_DISP_ENV_OFFSET 0x2018
-#define FRAME_DISP_FLAG_OFFSET 0x2020
-#define FRAME_DRAW_ENV_OFFSET 0x202C
 
 #define FADE_STEP_MIN -2
 #define FADE_BASE 0x100
@@ -603,7 +558,7 @@ extern s32 *D_8005F374;
 extern s32 *g_CurrentZone;
 extern s32 D_800608D8;
 extern s32 g_CameraProgress;
-extern u8 *g_DisplayBuffer;
+extern GfxFrame *g_DisplayBuffer;
 extern s32 D_800675AC;
 extern s32 D_8006CB80;
 extern s32 D_8006CB94;
@@ -623,7 +578,7 @@ int Gfx_EndFrame(void) {
     s32 y;
     u32 color;
     u32 color2;
-    u8 *tmp;
+    GfxFrame *tmp;
     s32 fade;
 
     FRAME_ENDING();
@@ -719,21 +674,21 @@ int Gfx_EndFrame(void) {
         return D_8006CB94;
     }
     Snd_Update();
-    FRAME_FIELD(g_DrawBuffer, FRAME_END_TIME_OFFSET, s32) = g_TimerTicks;
+    g_DrawBuffer->end_ticks = g_TimerTicks;
     DrawSync(0);
     if (g_PlaybackState == 0) {
-        D_8006CC1C = g_TimerTicks - FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32);
+        D_8006CC1C = g_TimerTicks - g_DrawBuffer->start_ticks;
     } else {
         D_8006CC1C = FRAME_TIME_DEFAULT;
     }
     if (D_800675AC == 0) {
         tmp = g_DrawBuffer;
         g_DisplayBuffer = tmp;
-        g_DrawBuffer = (u8 *)g_BuildBuffer[0];
-        g_BuildBuffer[0] = (Unk80063458 *)tmp;
+        g_DrawBuffer = g_BuildBuffer[0];
+        g_BuildBuffer[0] = tmp;
     }
     VSync(0);
-    if ((u32)(g_TimerTicks - FRAME_FIELD(g_DisplayBuffer, FRAME_TIME_OFFSET, s32)) < FRAME_TIME_LIMIT) {
+    if ((u32)(g_TimerTicks - g_DisplayBuffer->start_ticks) < FRAME_TIME_LIMIT) {
         VSync(0);
     }
     if (D_8006CB94 & FLAG_RCNT_STOP) {
@@ -757,12 +712,13 @@ int Gfx_EndFrame(void) {
     if (g_PlaybackState == 2) {
         g_TimerTicks = *D_8005F374;
     }
-    FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32) = g_TimerTicks;
+    g_DrawBuffer->start_ticks = g_TimerTicks;
     ExitCriticalSection();
-    FRAME_FIELD(g_DisplayBuffer, FRAME_DURATION_OFFSET, s32) = func_80016F04(FRAME_FIELD(g_DrawBuffer, FRAME_TIME_OFFSET, s32) - FRAME_FIELD(g_DisplayBuffer, FRAME_TIME_OFFSET, s32));
-    FRAME_FIELD(g_DisplayBuffer, FRAME_DISP_FLAG_OFFSET, s16) = (s16)D_8006CCDC;
-    PutDispEnv(g_DisplayBuffer + FRAME_DISP_ENV_OFFSET);
-    PutDrawEnv(g_DrawBuffer + FRAME_DRAW_ENV_OFFSET);
+    /* Raw: through the member GCC 2.7.2 reads D_8006CCDC before the store */
+    *(s32 *)((u8 *)g_DisplayBuffer + GFX_FRAME_SHOWN_TICKS) = func_80016F04(g_DrawBuffer->start_ticks - g_DisplayBuffer->start_ticks);
+    g_DisplayBuffer->disp.screen.x = (s16)D_8006CCDC;
+    PutDispEnv(&g_DisplayBuffer->disp);
+    PutDrawEnv(&g_DrawBuffer->draw);
     if (D_800675AC > 0) {
         D_800675AC -= 1;
     }
@@ -770,9 +726,9 @@ int Gfx_EndFrame(void) {
         if (D_8006CB94 & FLAG_PRE_DRAW) {
             func_8002706C();
         }
-        DrawOTag(g_DrawBuffer + FRAME_OT_OFFSET);
+        DrawOTag(g_DrawBuffer->ot);
     }
-    Gfx_ResetFrame((s32 *)g_BuildBuffer[0]);
+    Gfx_ResetFrame(g_BuildBuffer[0]);
     D_8006CB94 = D_8006CB80;
     FRAME_ENDED();
     return D_8006CB80;
@@ -794,8 +750,8 @@ typedef struct {
 void Gfx_AddFillRect(s32 arg0, s32 arg1, s16 arg2, s16 arg3, u8 arg4, u8 arg5, u8 arg6) {
     Unk80016A60 *p;
 
-    p = (Unk80016A60 *)g_BuildBuffer[0]->unk8;
-    g_BuildBuffer[0]->unk8 = (s32)((u8 *)p + 0x10);
+    p = (Unk80016A60 *)g_BuildBuffer[0]->next_primitive;
+    g_BuildBuffer[0]->next_primitive = (u8 *)p + 0x10;
     p->len = 3;
     p->code = 2;
     p->w = arg2;
@@ -803,9 +759,9 @@ void Gfx_AddFillRect(s32 arg0, s32 arg1, s16 arg2, s16 arg3, u8 arg4, u8 arg5, u
     p->r = arg4;
     p->g = arg5;
     p->b = arg6;
-    p->x = g_BuildBuffer[0]->unk202C + arg0;
-    p->y = g_BuildBuffer[0]->unk202E + arg1;
-    AddPrim(&g_BuildBuffer[0]->padC[0xC], p);
+    p->x = g_BuildBuffer[0]->draw.clip.x + arg0;
+    p->y = g_BuildBuffer[0]->draw.clip.y + arg1;
+    AddPrim(&g_BuildBuffer[0]->ot[0], p);
 }
 
 #ifdef NON_MATCHING
@@ -823,10 +779,10 @@ void Gfx_DrawFade(u32 arg0) {
     s32 lo;
     s32 hi;
 
-    q = (u8 *)g_BuildBuffer[0]->unk8;
-    g_BuildBuffer[0]->unk8 = (s32)(q + 0xC);
-    p = (u8 *)g_BuildBuffer[0]->unk8;
-    g_BuildBuffer[0]->unk8 = (s32)(p + 0x18);
+    q = g_BuildBuffer[0]->next_primitive;
+    g_BuildBuffer[0]->next_primitive = q + 0xC;
+    p = g_BuildBuffer[0]->next_primitive;
+    g_BuildBuffer[0]->next_primitive = p + 0x18;
     if (arg0 != 0) {
         t = D_8005B500 + (arg0 >> 4);
         lo = t[0];
@@ -845,9 +801,9 @@ void Gfx_DrawFade(u32 arg0) {
         p[6] = arg0;
         SetPolyF4(p);
         SetSemiTrans(p, 1);
-        AddPrim(&g_BuildBuffer[0]->padC[0x2008], p);
+        AddPrim(&g_BuildBuffer[0]->ot[GFX_OT_LENGTH - 1], p);
         SetDrawMode(q, 1, 0, GetTPage(0, (D_8006CB94 & 0x800000) ? 1 : 2, 0, 0) & 0xFFFF, 0);
-        AddPrim(&g_BuildBuffer[0]->padC[0x2008], q);
+        AddPrim(&g_BuildBuffer[0]->ot[GFX_OT_LENGTH - 1], q);
     }
 }
 #else
@@ -866,10 +822,7 @@ extern Unk80060884 D_80060884;
 void SetGeomScreen(s32);
 
 #define SCREEN_MODE_ALT 1
-#define SCREEN_X_OFFSET 0x2034
-#define SCREEN_Y_OFFSET 0x2036
 #define PRIM_SIZE 0x18
-#define OT_OFFSET 0x2008
 #define SCREEN_CENTER_X 0x200
 #define BAR_TOP -0xC
 #define BAR_BOTTOM 0xE4
@@ -882,16 +835,16 @@ void func_80016C58(s32 arg0, s32 arg1) {
     s16 right, left, top, bot, mid;
     s32 ret;
 
-    p = (PolyF4 *)g_BuildBuffer[0]->unk8;
+    p = (PolyF4 *)g_BuildBuffer[0]->next_primitive;
     w = arg0 * 25;
     x = (u32)(arg0 * 100) >> 3;
-    g_BuildBuffer[0]->unk8 += PRIM_SIZE;
-    if (*(s32 *)g_DrawBuffer == SCREEN_MODE_ALT) {
-        *(s16 *)(g_DrawBuffer + SCREEN_X_OFFSET) = SCREEN_CENTER_X - x;
+    g_BuildBuffer[0]->next_primitive += PRIM_SIZE;
+    if (g_DrawBuffer->index == SCREEN_MODE_ALT) {
+        g_DrawBuffer->draw.ofs[0] = SCREEN_CENTER_X - x;
     } else {
-        *(s16 *)(g_DrawBuffer + SCREEN_X_OFFSET) = -x;
+        g_DrawBuffer->draw.ofs[0] = -x;
     }
-    *(s16 *)(g_DrawBuffer + SCREEN_Y_OFFSET) =0xC - ((u32)(arg0 * 60) >> 3);
+    g_DrawBuffer->draw.ofs[1] =0xC - ((u32)(arg0 * 60) >> 3);
     if (arg0 != 0) {
         if (arg1 == 0) {
             y = 0;
@@ -908,24 +861,24 @@ void func_80016C58(s32 arg0, s32 arg1) {
         p->x2 = left; p->y2 = bot; p->x3 = right; p->y3 = bot;
         p->r = 0; p->g = 0; p->b = 0;
         SetPolyF4(p);
-        AddPrim(&g_BuildBuffer[0]->padC[OT_OFFSET], p);
-        p = (PolyF4 *)g_BuildBuffer[0]->unk8;
-        g_BuildBuffer[0]->unk8 += PRIM_SIZE;
+        AddPrim(&g_BuildBuffer[0]->ot[GFX_OT_LENGTH - 1], p);
+        p = (PolyF4 *)g_BuildBuffer[0]->next_primitive;
+        g_BuildBuffer[0]->next_primitive += PRIM_SIZE;
         mid = bot - arg0 * 15;
         p->x0 = x; p->y0 = mid; p->x1 = left; p->y1 = mid;
         p->x2 = x; p->y2 = bot; p->x3 = left; p->y3 = bot;
         p->r = 0; p->g = 0; p->b = 0;
         SetPolyF4(p);
-        AddPrim(&g_BuildBuffer[0]->padC[OT_OFFSET], p);
-        p = (PolyF4 *)g_BuildBuffer[0]->unk8;
+        AddPrim(&g_BuildBuffer[0]->ot[GFX_OT_LENGTH - 1], p);
+        p = (PolyF4 *)g_BuildBuffer[0]->next_primitive;
         w = (u32)(arg0 * 9) >> 3;
-        g_BuildBuffer[0]->unk8 += PRIM_SIZE;
+        g_BuildBuffer[0]->next_primitive += PRIM_SIZE;
         right = x + w;
         p->x0 = x; p->y0 = top; p->x1 = right; p->y1 = top;
         p->x2 = x; p->y2 = bot; p->x3 = right; p->y3 = bot;
         p->r = 0; p->g = 0; p->b = 0;
         SetPolyF4(p);
-        AddPrim(&g_BuildBuffer[0]->padC[OT_OFFSET], p);
+        AddPrim(&g_BuildBuffer[0]->ot[GFX_OT_LENGTH - 1], p);
     }
     ret = ((s32 (*)(void))func_80023D7C)();
     ret = ret - (ret / 24) * arg0;
@@ -1666,7 +1619,7 @@ extern s32 D_8005F390;
 extern s32 D_80060944;
 extern s32 D_80062A18;
 
-void Gfx_DrawWorlds(s32, Unk80063458 *, void *, s32);
+void Gfx_DrawWorlds(s32, GfxFrame *, void *, s32);
 
 void func_80018434(void) {
     Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer[0], &D_80062A18, D_80060944);
@@ -1797,8 +1750,8 @@ void func_8001856C(s32 arg0, s32 depth, void *arg2, s32 *box, s32 arg4) {
     } else {
         /* Projected */
     }
-    quad = (PolyFT4 *)g_BuildBuffer[0]->unk8;
-    g_BuildBuffer[0]->unk8 = (s32)(quad + 1);
+    quad = (PolyFT4 *)g_BuildBuffer[0]->next_primitive;
+    g_BuildBuffer[0]->next_primitive = (u8 *)(quad + 1);
     quad->colour.word = texture->colour.word;
     GTE_READ_DATA(GTE_SZ1, sz1);
     GTE_READ_DATA(GTE_SZ2, sz2);
@@ -1897,8 +1850,8 @@ void func_800186D8(void *arg0, void *arg1, s32 depth, void *arg3, s32 *box, s32 
     } else {
         /* Projected */
     }
-    quad = (PolyGT4 *)g_BuildBuffer[0]->unk8;
-    g_BuildBuffer[0]->unk8 = (s32)(quad + 1);
+    quad = (PolyGT4 *)g_BuildBuffer[0]->next_primitive;
+    g_BuildBuffer[0]->next_primitive = (u8 *)(quad + 1);
     if (shade != 0) {
         quad->colour0.c[0] = SHADED(glyph, obj, 0, 0);
         quad->colour0.c[1] = SHADED(glyph, obj, 0, 1);

@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "game/entity.h"
+#include "game/gfx.h"
 #include "game/nsf.h"
 #include "game/object.h"
 #include "game/world.h"
@@ -75,8 +76,8 @@ void Input_Update(void);
 void Gfx_Init(void);
 s32 Gfx_AllocFrameBuffers(void);
 s32 Gfx_FreeFrameBuffers(void);
-void Gfx_ClearObjectQueue(void *);
-void Gfx_ResetFrame(s32 *);
+void Gfx_ClearObjectQueue(GfxFrame *);
+void Gfx_ResetFrame(GfxFrame *);
 s32 *func_80016408(void);
 int Gfx_EndFrame(void);
 void Gfx_AddFillRect(s32, s32, s16, s16, u8, u8, u8);
