@@ -355,6 +355,109 @@ StartCARD2 = 0x8005B0F8; // type:func
 StopCARD2 = 0x8005B108; // type:func
 _ExitCard = 0x8005B118; // type:func
 
+// PsyQ's library functions in the parts tools/find_psyq.py leaves unknown_ (objects of other versions than 4.0's),
+// found function by function against every version's signatures
+// LIBSPU.LIB SPU.OBJ's _spu_FiDMA, every byte but the relocated ones (PsyQ 4.1's)
+_spu_FiDMA = 0x8004F738; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_Fr_, every byte but the relocated ones (PsyQ 4.1's)
+_spu_Fr_ = 0x8004F7F4; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_t, every byte but the relocated ones (PsyQ 4.1's)
+_spu_t = 0x8004F89C; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_Fw, every byte but the relocated ones (PsyQ 4.1's)
+_spu_Fw = 0x8004FB1C; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_Fr, every byte but the relocated ones (PsyQ 4.1's)
+_spu_Fr = 0x8004FBA0; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_FsetRXX, every byte but the relocated ones (PsyQ 4.1's)
+_spu_FsetRXX = 0x8004FC04; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_FsetRXXa, every byte but the relocated ones (PsyQ 4.1's)
+_spu_FsetRXXa = 0x8004FC48; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_FgetRXXa, every byte but the relocated ones (PsyQ 3.3's)
+_spu_FgetRXXa = 0x8004FCEC; // type:func
+// LIBSPU.LIB SPU.OBJ's _spu_Fw1ts, every byte but the relocated ones (PsyQ 4.1's)
+_spu_Fw1ts = 0x8004FDD0; // type:func
+// LIBSPU.LIB S_SR.OBJ's SpuSetReverb, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetReverb = 0x8004FE38; // type:func
+// LIBSPU.LIB S_INI.OBJ's _SpuInit, every byte but the relocated ones (PsyQ 4.1's)
+_SpuInit = 0x8004FF08; // type:func
+// LIBSPU.LIB S_INI.OBJ's SpuStart, every byte but the relocated ones (PsyQ 4.1's)
+SpuStart = 0x8004FFF0; // type:func
+// LIBSPU.LIB S_SRMP.OBJ's SpuSetReverbModeParam, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetReverbModeParam = 0x800501A8; // type:func
+// LIBSPU.LIB S_SAV.OBJ's _SpuSetAnyVoice, every byte but the relocated ones (PsyQ 4.1's)
+_SpuSetAnyVoice = 0x80050C08; // type:func
+// LIBSPU.LIB S_CRWA.OBJ's SpuClearReverbWorkArea, every byte but the relocated ones (PsyQ 4.1's)
+SpuClearReverbWorkArea = 0x80050EC8; // type:func
+// LIBSPU.LIB S_SK.OBJ's SpuSetKey, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetKey = 0x80051078; // type:func
+// LIBSPU.LIB S_W.OBJ's SpuWrite, every byte but the relocated ones (PsyQ 4.1's), which S_R.OBJ's SpuRead shares: it calls _spu_Fw, and the game calls it to put the sound pages' data into the SPU's memory
+SpuWrite = 0x80051238; // type:func
+// LIBSPU.LIB S_STSA.OBJ's SpuSetTransferStartAddr, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetTransferStartAddr = 0x80051298; // type:func
+// LIBSPU.LIB S_STM.OBJ's SpuSetTransferMode, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetTransferMode = 0x800512F8; // type:func
+// LIBSPU.LIB S_ITC.OBJ's SpuIsTransferCompleted, every byte but the relocated ones (PsyQ 4.1's)
+SpuIsTransferCompleted = 0x80051328; // type:func
+// LIBSPU.LIB S_SCA.OBJ's SpuSetCommonAttr, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetCommonAttr = 0x800513D8; // type:func
+// LIBSPU.LIB SR_GAKS.OBJ's SpuRGetAllKeysStatus, every byte but the relocated ones (PsyQ 4.1's)
+SpuRGetAllKeysStatus = 0x80051758; // type:func
+// LIBSPU.LIB SR_GAKS.OBJ's SpuGetAllKeysStatus, every byte but the relocated ones (PsyQ 3.7's)
+SpuGetAllKeysStatus = 0x8005182C; // type:func
+// LIBSPU.LIB S_SVA.OBJ's SpuSetVoiceAttr, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetVoiceAttr = 0x800518B8; // type:func
+// LIBSPU.LIB S_N2P.OBJ's _spu_2pitch, every byte but the relocated ones (PsyQ 4.1's)
+_spu_2pitch = 0x80051EB8; // type:func
+// LIBSPU.LIB S_N2P.OBJ's _spu_note2pitch, every byte but the relocated ones (PsyQ 4.1's)
+_spu_note2pitch = 0x80051F44; // type:func
+// LIBSPU.LIB S_N2P.OBJ's _spu_pitch2note, every byte but the relocated ones (PsyQ 4.0's)
+_spu_pitch2note = 0x8005207C; // type:func
+// LIBSPU.LIB S_GVA.OBJ's SpuGetVoiceAttr, every byte but the relocated ones (PsyQ 4.1's)
+SpuGetVoiceAttr = 0x800521A8; // type:func
+// LIBSND.LIB SSCRES.OBJ's three functions in its order (_SsSndSetCres, SsSeqSetCrescendo, SsSepSetCrescendo): 78% of the object's bytes those of 4.1's SSCRES, 42% of SSDECRES's; the wrappers' bytes are both's
+_SsSndSetCres = 0x8005275C; // type:func
+SsSeqSetCrescendo = 0x80052890; // type:func
+SsSepSetCrescendo = 0x800528C4; // type:func
+// LIBSND.LIB SSDECRES.OBJ's three functions in its order (_SsSndSetDecres, SsSeqSetDecrescendo, SsSepSetDecrescendo): 78% of the object's bytes those of 4.1's SSDECRES, 41% of SSCRES's
+_SsSndSetDecres = 0x800529F0; // type:func
+SsSeqSetDecrescendo = 0x80052B18; // type:func
+SsSepSetDecrescendo = 0x80052B4C; // type:func
+// LIBSND.LIB MIDIREAD.OBJ's _SsSeqPlay, every byte but the relocated ones (PsyQ 4.0's)
+_SsSeqPlay = 0x8005590C; // type:func
+// LIBSND.LIB MIDIREAD.OBJ's _SsSeqGetEof, every byte but the relocated ones (PsyQ 4.0's)
+_SsSeqGetEof = 0x80055A14; // type:func
+// LIBSND.LIB MIDIREAD.OBJ's third function, at 0x34C from _SsSeqPlay as in 4.0's
+_SsGetSeqData = 0x80055C58; // type:func
+// LIBSND.LIB SSSTOP.OBJ's three functions in its order (_SsSndStop, SsSeqStop, SsSepStop), the worker 4 bytes longer than 4.1's: the wrappers' bytes are those of SSSTOP's, which share them with SSPAUSE's and SSREPLAY's, whose functions are named elsewhere (SsSepPause, SsSepReplay)
+_SsSndStop = 0x80056158; // type:func
+SsSeqStop = 0x800562DC; // type:func
+SsSepStop = 0x80056304; // type:func
+// LIBSND.LIB SSVOL.OBJ's four functions in its order (_SsSndSetVol, SsSeqSetVol, SsSepSetVol, SsSeqGetVol), the last one's bytes SsSeqGetVol's; SsSepSetVol stores its two volumes in the sequence's record, which Snd_ControlSequence's volume command passes it
+_SsSndSetVol = 0x80056674; // type:func
+SsSeqSetVol = 0x80056700; // type:func
+SsSepSetVol = 0x80056760; // type:func
+// LIBSND.LIB SSVOL.OBJ's SsSeqGetVol, every byte but the relocated ones (PsyQ 3.5's)
+SsSeqGetVol = 0x800567EC; // type:func
+// LIBSND.LIB VM_KEY.OBJ's _SsVmSeKeyOn, every byte but the relocated ones (PsyQ 3.7's)
+_SsVmSeKeyOn = 0x80057EE4; // type:func
+// LIBSND.LIB VM_KEY.OBJ's _SsVmSeKeyOff, every byte but the relocated ones (PsyQ 3.7's)
+_SsVmSeKeyOff = 0x80057FD0; // type:func
+// LIBSPU.LIB S_SNC.OBJ's SpuSetNoiseClock, every byte but the relocated ones (PsyQ 4.1's)
+SpuSetNoiseClock = 0x80058B44; // type:func
+// LIBSND.LIB VM_PB.OBJ's _SsVmPitchBend, every byte but the relocated ones (PsyQ 3.7's and 4.0's; 3.3's VMANAGER.OBJ calls it SpuVmPitchBend)
+_SsVmPitchBend = 0x80059388; // type:func
+// LIBSND.LIB VM_SEQ.OBJ's _SsVmGetSeqVol, every byte but the relocated ones (PsyQ 4.0's)
+_SsVmGetSeqVol = 0x80059B44; // type:func
+// LIBSND.LIB VM_SEQ.OBJ's _SsVmGetSeqLVol, every byte but the relocated ones (PsyQ 4.0's)
+_SsVmGetSeqLVol = 0x80059BA8; // type:func
+// LIBSND.LIB VM_SEQ.OBJ's _SsVmGetSeqRVol, every byte but the relocated ones (PsyQ 4.0's)
+_SsVmGetSeqRVol = 0x80059BF0; // type:func
+// LIBSPU.LIB S_M_F.OBJ's SpuFree, every byte but the relocated ones (PsyQ 4.1's)
+SpuFree = 0x8005A47C; // type:func
+// LIBSPU.LIB S_M_INT.OBJ's _spu_gcSPU, every byte but the relocated ones (PsyQ 4.1's)
+_spu_gcSPU = 0x8005A4FC; // type:func
+// LIBSPU.LIB S_M_M.OBJ's SpuMalloc, every byte but the relocated ones (PsyQ 4.1's)
+SpuMalloc = 0x8005ACD8; // type:func
+
 // Small data read at an offset (a RECT's y, the third character of "..", the fifth of "EMPTY"): with a size, splat writes
 // the access as symbol + offset, so the C definition is the only symbol
 D_8005F1B0 = 0x8005F1B0; // size:0x8

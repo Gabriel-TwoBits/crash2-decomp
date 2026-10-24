@@ -2,7 +2,7 @@
 #include "sdk.h"
 #include "game.h"
 
-extern s32 func_80051328(s32);
+extern s32 SpuIsTransferCompleted(s32);
 
 INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100D0);
 INCLUDE_RODATA("asm/nonmatchings/game/800123F0", D_800100F0);
@@ -617,8 +617,8 @@ NsfPageSlot *func_800130A0(NsfPageSlot *arg0) {
 #define CD_SYNC_NOT_BUSY 2
 
 extern NsfPageSlot D_80062BB4[];
-s32 func_80051238(u8 *, s32);
-s32 func_80051298(s32, s32);
+s32 SpuWrite(u8 *, s32);
+s32 SpuSetTransferStartAddr(s32, s32);
 extern char D_800100D0[];
 extern char D_800100F0[];
 extern s32 D_80067FC0;
@@ -726,7 +726,7 @@ play_queue:
     if (D_80067FBC[0] != 0) {
         return;
     }
-    if (func_80051328(0) == 0) {
+    if (SpuIsTransferCompleted(0) == 0) {
         return;
     }
     page = s0->page;
@@ -754,13 +754,13 @@ play_queue:
     slot->ref_count = 0;
     slot->unk_E = 0;
     slot->unk_18 = key;
-    func_80051298(slot->unk_1C, STATE_PLAYING);
+    SpuSetTransferStartAddr(slot->unk_1C, STATE_PLAYING);
     page = s0->page;
     kind = page->type;
     if (kind == KIND_INDIRECT) {
         ent = page->entries[0];
         ent2 = ent->items[0];
-        func_80051238(ent->items[1], *(s32 *)(ent2 + 4));
+        SpuWrite(ent->items[1], *(s32 *)(ent2 + 4));
     } else if (kind == KIND_TABLE) {
         count = page->entry_count;
         if (count != 0) {
@@ -772,11 +772,11 @@ play_queue:
             }
             if (i < count) {
                 a1 = func_800123BC(ent, 0);
-                func_80051238(s0->page->entries[i]->items[0], a1);
+                SpuWrite(s0->page->entries[i]->items[0], a1);
             }
         }
     } else if (kind == KIND_FIRST) {
-        func_80051238((u8 *)page, 1 << NSF_PAGE_SHIFT);
+        SpuWrite((u8 *)page, 1 << NSF_PAGE_SHIFT);
     } else {
         /* other kinds start nothing */
     }
@@ -785,7 +785,7 @@ playing:
     if (D_80067FBC[0] != (int)s0) {
         return;
     }
-    if (func_80051328(0) == 0) {
+    if (SpuIsTransferCompleted(0) == 0) {
         return;
     }
     if (s0->page->type == KIND_TABLE) {
@@ -1865,7 +1865,7 @@ s32 Nsf_CloseLevel(NsfLevel *p) {
     char buf[8];
     if (p->is_open == 1) {
         if (g_UseCd != 0 && D_80067FB4[0] != 0) Cd_SyncRead(1);
-        if (D_80067FBC[0] != 0) func_80051328(1);
+        if (D_80067FBC[0] != 0) SpuIsTransferCompleted(1);
         i = 0;
         Snd_ShutdownSequencer();
         off = 0;

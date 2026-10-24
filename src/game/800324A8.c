@@ -2,7 +2,7 @@
 #include "sdk.h"
 #include "game.h"
 
-void func_80051078(s32 arg0, s32 arg1);
+void SpuSetKey(s32 arg0, s32 arg1);
 extern void SsSetMVol(s32, s32);
 
 s32 D_8005F244 = 0x1E;
@@ -50,8 +50,8 @@ void Snd_Init(void) {
     cfg.mode = 3;
     cfg.left = vol;
     cfg.right = vol;
-    func_800513D8(&cfg);
-    func_800512F8(0);
+    SpuSetCommonAttr(&cfg);
+    SpuSetTransferMode(0);
     func_800323AC();
     Snd_SetSfxVolume((g_SfxVolume * 0x3FFF00) >> 16);
     D_8005F2FC = vol;
@@ -69,8 +69,8 @@ typedef struct {
     s32 f;
 } Unk80032588;
 
-extern void func_8004FE38(s32);
-extern void func_800501A8(Unk80032588 *);
+extern void SpuSetReverb(s32);
+extern void SpuSetReverbModeParam(Unk80032588 *);
 
 void Snd_Shutdown(void) {
     Unk80032588 s;
@@ -80,8 +80,8 @@ void Snd_Shutdown(void) {
         s.b = 0;
         s.c = 0;
         s.d = 0;
-        func_800501A8(&s);
-        func_8004FE38(0);
+        SpuSetReverbModeParam(&s);
+        SpuSetReverb(0);
         g_SndOpen = 0;
     }
 }
@@ -105,9 +105,9 @@ s32 Snd_SetReverb(s32 arg0, s16 arg1, s16 arg2, s32 arg3, s32 arg4) {
         s.e = arg3;
         s.f = arg4;
     }
-    func_800501A8(&s);
+    SpuSetReverbModeParam(&s);
     SpuSetReverbDepth(&s);
-    func_8004FE38(arg0 != 0);
+    SpuSetReverb(arg0 != 0);
     return 0;
 }
 
@@ -221,11 +221,11 @@ typedef struct {
     s32 pad4;
     s16 x;
     s16 y;
-    /* func_800521A8 fills 0x40 bytes, up to offset 0x3E */
+    /* SpuGetVoiceAttr fills 0x40 bytes, up to offset 0x3E */
     u8 pad[0x34];
 } Out;
 extern u8 D_8005FC9D;
-extern void func_800521A8(Out *);
+extern void SpuGetVoiceAttr(Out *);
 
 s32 Snd_AllocVoice(void) {
     Out o;
@@ -257,7 +257,7 @@ s32 Snd_AllocVoice(void) {
         for (; j < 0x18; j++, p++) {
             if (p->b == min) {
                 o.mask = 1 << j;
-                func_800521A8(&o);
+                SpuGetVoiceAttr(&o);
                 ax = o.x;
                 if (ax < 0) {
                     ax = -ax;
@@ -359,7 +359,7 @@ extern s32 D_8005FC84;
 extern s32 D_8006CB94;
 extern s32 D_8006CD2C;
 void SpuSetReverbVoice(s32, s32);
-void func_800518B8(s32 *);
+void SpuSetVoiceAttr(s32 *);
 
 #define ENT_W(e, off) (*(s32 *)((u8 *)(e) + (off)))
 #define ENT_H(e, off) (*(s16 *)((u8 *)(e) + (off)))
@@ -457,10 +457,10 @@ s32 Snd_PlaySound(GoolObject *arg0, s32 arg1, s32 arg2) {
     ((s16 *)cmd)[26] = 0;
     ((s16 *)cmd)[27] = 0;
     ((s16 *)cmd)[28] = 0xF;
-    func_800518B8(cmd);
+    SpuSetVoiceAttr(cmd);
     SpuSetReverbVoice((e->flags >> 10) & 1, cmd[0]);
     if (!(e->flags & FLAG_SPU_IDLE_MASK)) {
-        func_80051078(1, cmd[0]);
+        SpuSetKey(1, cmd[0]);
     }
     v = D_8005F2E0 + 1;
     e->a = v;
@@ -508,7 +508,7 @@ typedef struct Unk80032F18Raw4 {
     s32 w;
 } __attribute__((packed)) Unk80032F18Raw4;
 
-/* Argument block of func_800518B8, built on the stack. */
+/* Argument block of SpuSetVoiceAttr, built on the stack. */
 typedef struct Unk80032F18Update {
     s32 mask;
     s32 dirty;
@@ -684,7 +684,7 @@ s32 Snd_SetSoundParam(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
         }
         if (upd.dirty != 0) {
             upd.mask = 1 << slot;
-            func_800518B8(&upd.mask);
+            SpuSetVoiceAttr(&upd.mask);
         }
         if (arg0 >= 0) {
             return 0;
@@ -699,7 +699,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_SetSoundParam);
 void Nsf_DropPageRef(void *arg0);
 
 void func_80033448(void *arg0) {
-    do { func_80051078(0, 1 << ((u16 *)arg0)[3]); } while (0);
+    do { SpuSetKey(0, 1 << ((u16 *)arg0)[3]); } while (0);
     ((s32 *)arg0)[1] &= ~8;
     if (((void **)arg0)[6] != 0) {
         Nsf_DropPageRef(((void **)arg0)[6]);
@@ -805,8 +805,8 @@ typedef struct Unk800334A0Res {
 } Unk800334A0Res;
 
 
-extern void func_8005182C(u8 *);
-extern void func_800518B8(s32 *);
+extern void SpuGetAllKeysStatus(u8 *);
+extern void SpuSetVoiceAttr(s32 *);
 extern s32 D_8005F18C;
 extern u8 D_8005FC6C[];
 extern void *g_CurrentZone;
@@ -876,7 +876,7 @@ void Snd_Update(void) {
             Snd_ControlSequence((Unk80033DE0 *)&D_8005FCE4, MIX_CMD_FADE_IN, 0);
         }
     }
-    func_8005182C(D_8005FC6C);
+    SpuGetAllKeysStatus(D_8005FC6C);
     i = D_8005F304;
     if (i >= MIX_VOICES) {
         return;
@@ -937,7 +937,7 @@ start_voice:
         cmd[CMD_ADDR_IDX] = addr;
         cmd[CMD_MASK_IDX] = CMD_M_ADDR;
         cmd[CMD_VOICE] = voiceBit;
-        func_800518B8(cmd);
+        SpuSetVoiceAttr(cmd);
         flags = e->flags & ~EF_SRC_BITS;
         e->flags = flags & ~EF_BUSY;
         if (!(flags & EF_STARTED) || e->timer == 0) {
@@ -955,13 +955,13 @@ after:
                 continue;
             }
             e->flags = e->flags & ~EF_STARTED;
-            func_80051078(1, voiceBit);
+            SpuSetKey(1, voiceBit);
             *status = 1;
         }
         if (*status == MIX_SEQ_PLAYING) {
             if (e->repeat >= 2) {
                 e->repeat = e->repeat - 1;
-                func_80051078(1, voiceBit);
+                SpuSetKey(1, voiceBit);
                 *status = 1;
             } else if (e->tag != MIX_NO_RESOURCE) {
                 if (e->res != 0) {
@@ -975,8 +975,8 @@ after:
                 cmd2[CMD_ADDR_IDX] = addr;
                 cmd2[CMD_MASK_IDX] = CMD_M_ADDR;
                 cmd2[CMD_VOICE] = voiceBit;
-                func_800518B8(cmd2);
-                func_80051078(1, voiceBit);
+                SpuSetVoiceAttr(cmd2);
+                SpuSetKey(1, voiceBit);
                 *status = 1;
                 goto after;
             } else {
@@ -1038,7 +1038,7 @@ after:
         cmd[CMD_MASK_IDX] = mask;
         if (mask != 0) {
             cmd[CMD_VOICE] = voiceBit;
-            func_800518B8(cmd);
+            SpuSetVoiceAttr(cmd);
         }
 tail:
         if ((e->flags & EF_STOP) || (busy == 0 && (e->flags & EF_STOP_IDLE))) {
@@ -1057,7 +1057,7 @@ extern s32 D_8005F39C;
 extern s16 g_SndSepAccess;
 extern Unk80033DE0 D_8005FCD0[];
 
-void func_80056760(s16, s16, s16, s16);
+void SsSepSetVol(s16, s16, s16, s16);
 
 #define SEQ_MODE_ACTIVE 3
 #define VOLUME_SHIFT 7
@@ -1070,7 +1070,7 @@ void Snd_SetMusicVolume(s32 arg0) {
     if (D_8005F39C == SEQ_MODE_ACTIVE) {
         vol = ((s16)arg0) >> VOLUME_SHIFT;
         for (i = 0; i < D_8005F2F8; i++) {
-            func_80056760(g_SndSepAccess, D_8005FCD0[i].seq, vol, vol);
+            SsSepSetVol(g_SndSepAccess, D_8005FCD0[i].seq, vol, vol);
         }
     } else {
         /* other modes: only the store above */
@@ -1122,8 +1122,8 @@ void Snd_FadeOut(void) {
 }
 
 s32 Snd_ControlSequence(Unk80033DE0 *, s32, s32);
-void func_80056304(s16, s16);
-void func_80056760(s16, s16, s16, s16);
+void SsSepStop(s16, s16);
+void SsSepSetVol(s16, s16, s16, s16);
 extern Unk80033DE0 D_8005FCD0[];
 extern s16 D_8005FCE4;
 extern s32 g_MusicVolume;
@@ -1151,7 +1151,7 @@ void Snd_SelectMusic(s32 arg0) {
                 Snd_ControlSequence(p, 2, 0);
                 Snd_ControlSequence(p + 1, 0, 1);
             }
-            func_80056760(g_SndSepAccess, D_8005FCE4, D_8005F308, D_8005F308);
+            SsSepSetVol(g_SndSepAccess, D_8005FCE4, D_8005F308, D_8005F308);
         }
     }
 }
@@ -1183,7 +1183,7 @@ typedef struct Unk800343CC {
 } Unk800343CC;
 
 void func_800343CC(Unk800343CC *, s32, s32);
-void func_800528C4(s16, s16, s32, s32);
+void SsSepSetCrescendo(s16, s16, s32, s32);
 u16 D_8005F2EC;
 extern s32 D_80067FB8;
 
@@ -1266,7 +1266,7 @@ s32 Snd_LoadSequence(s32 addr) {
         } else {
             func_800343CC((Unk800343CC *)&D_8005FCD0[i], 0, i);
             v = (s16)D_8005F2EC >> 7;
-            func_800528C4(g_SndSepAccess, D_8005FCD0[i].seq, v, 0x1E);
+            SsSepSetCrescendo(g_SndSepAccess, D_8005FCD0[i].seq, v, 0x1E);
         }
     }
     Snd_ControlSequence(D_8005FCD0, 0, 0);
@@ -1293,7 +1293,7 @@ void func_80034238(void *arg0, s32 arg1, void *arg2, void *arg3) {
 #define FIELD_SHIFT 23
 #define NO_ENTRY -1
 
-void func_80052B4C(s16, s16, s32, s32);
+void SsSepSetDecrescendo(s16, s16, s32, s32);
 
 extern u16 D_8005F2EC;
 extern s16 D_8005F250;
@@ -1333,7 +1333,7 @@ void func_80034254(s32 arg0) {
             key = *(s32 *)(word + 4);
         }
         if (D_8005F2F4 != key && D_8005F308 == 0 && D_8005F3E0 != NO_ENTRY && D_8005F254 == 0) {
-            func_80052B4C(g_SndSepAccess, D_8005FCD0->seq,
+            SsSepSetDecrescendo(g_SndSepAccess, D_8005FCD0->seq,
                           (s32)(D_8005F2EC << U16_TO_S32_SHIFT) >> FIELD_SHIFT, WAIT_FRAMES);
             D_8005F250 = WAIT_FRAMES;
             D_8005F254 = arg0;
@@ -1382,7 +1382,7 @@ void func_800343CC(Unk800343CC *arg0, s32 arg1, s32 arg2) {
     }
     arg0->unk_0 = arg2;
     arg0->unk_4 = SEQ_NO_NEXT;
-    func_80056760(g_SndSepAccess, arg2, arg0->unk_10, arg0->unk_12);
+    SsSepSetVol(g_SndSepAccess, arg2, arg0->unk_10, arg0->unk_12);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800343CC);
@@ -1413,7 +1413,7 @@ s32 Snd_ControlSequence(Unk80033DE0 *obj, s32 cmd, s32 vol) {
             break;
         case 1:
             obj->state = 2;
-            func_80056304(g_SndSepAccess, obj->seq);
+            SsSepStop(g_SndSepAccess, obj->seq);
             break;
         case 2:
             obj->state = 0;
@@ -1430,7 +1430,7 @@ s32 Snd_ControlSequence(Unk80033DE0 *obj, s32 cmd, s32 vol) {
             if (D_8005F2F8 > 0) {
                 do {
                     i++;
-                    func_80056760(g_SndSepAccess, obj->seq, obj->volL, obj->volR);
+                    SsSepSetVol(g_SndSepAccess, obj->seq, obj->volL, obj->volR);
                 } while (i < D_8005F2F8);
             }
             break;

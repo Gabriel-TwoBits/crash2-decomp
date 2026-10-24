@@ -854,6 +854,15 @@ Steps, in order:
   at 0x80067588) and `D_8006CB94`, the flags `Gfx_EndFrame` takes from `D_8006CB80` each frame, whose bits serve the
   pads, the collision and the memory card's screens alike. `tools/progress.py`: 224 of 638 game functions and 63 of
   1,075 data symbols named, 144 structures in `src/game/`, 14 in `include/game/`, 118 fields read at a raw offset.
+  An eighth batch, the SDK the port reimplements: the 91 functions in the parts of PsyQ's libraries that 4.0's
+  signatures leave unknown, compared one by one with every version's (`tools/find_psyq.py`'s signatures, split at their
+  functions). 39 have every byte but the relocated ones equal to one function of a later or earlier version alone, from
+  12 to 382 words (libspu from 4.1 on: `SpuSetKey`, `SpuSetVoiceAttr`, `SpuSetCommonAttr`, the transfers, the reverb,
+  `SpuMalloc`; libsnd's `_SsVm*` from 3.7 and 4.0); 15 more take their object's order where that object's bytes are
+  the closest version's (`SSSTOP`, `SSCRES`, `SSDECRES`, `SSVOL`, `MIDIREAD`), or the use that splits a tie
+  (`SpuWrite` from `SpuRead`: it calls `_spu_Fw`, and the game writes its sound pages with it). The game's libspu and
+  libsnd are thus later than the rest of its 4.0 SDK. Left: 37 functions without such a match, among them the 8 to 11
+  word wrappers that several objects share.
 - **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
   docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
   same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy
@@ -985,8 +994,8 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   stays generated from the player's executable, never committed.
 - **The libraries.** The C calls 126 functions of PsyQ 4.0:
   - libapi 23, libgpu 20, libgte 14, libsnd 15, libc 13, libcd 9, libcard 9, libetc 4, libspu 3, libsn 1;
-  - 15 more that splat left unnamed, in libsnd's and libspu's objects. `func_80051078`, called with an on/off flag and a
-    voice's bit, has `SpuSetKey`'s arguments.
+  - 15 more in libsnd's and libspu's objects that 4.0's signatures don't find: by later versions' (`SpuSetKey`,
+    `SpuSetVoiceAttr`, `SpuWrite`, `SsSepStop`, `SsSepSetVol`, ... in `config/symbol_addrs.txt`).
 
   What the game asks of them:
   - **CD:** data only. Reads at double speed (`CdlSetloc`, `CdlSeekL`, `CdlStop`, `CdRead`) from the sectors the
@@ -1001,7 +1010,7 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   - **Pad:** `InitPAD`'s two buffers.
 - **Calls a host checks.** A host whose calls check their signatures (wasm32, which the port's 64-bit build goes
   through) needs each call's declaration to be its callee's. Done: the 17 functions called before their declaration
-  declared first, `func_80051328`'s value read through an `s32` declaration, `func_80023D7C` returning the value its
+  declared first, `SpuIsTransferCompleted`'s value read through an `s32` declaration, `func_80023D7C` returning the value its
   callers read, the 4 functions declared as data for their addresses declared as functions (the default build's SHA-1
   and the equivalent executable the same byte for byte). Left to such a host: calls whose arguments differ from the
   definition's (`RotTrans`'s fourth, `func_8002CA1C`'s `$a0`) and pointers to functions of other signatures called
