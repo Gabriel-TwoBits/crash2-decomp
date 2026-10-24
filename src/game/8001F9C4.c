@@ -213,7 +213,7 @@ typedef struct Node {
 
 typedef struct Unk8001FDDC {
     u8 pad[0x10];
-    Node *items[1];
+    Node *items[0];
 } Unk8001FDDC;
 
 void func_8001FFCC(Unk8001FDDC *);

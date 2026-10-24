@@ -929,6 +929,9 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   - 54 warnings are about function pointers: a function stored in a pointer of another type (40), or called
     through one (14).
   - `80039D2C.c`'s layout checks are constant only to GCC's folding.
+  - A structure's trailing array of one element, read past it, let GCC at `-O2` assume a loop over an extern table
+    runs once (`Gfx_Init`'s frame buffers, the page slots, `D_8006CB6C`'s items). Done: such arrays are `[0]`, the
+    page slots' table its larger length (docs/COMPILER.md, "A zero-length array"), `g_FrameBuffers` its two frames.
 - **64-bit.** The build has 736 casts between a pointer and an integer of another size, 396 to a pointer and 340 from
   one, in 28 files. 50 of `80039D2C.c`'s scratchpad layout checks fail, because its structures hold pointers.
 - **Data from the disc.** Beyond the casts, the disc's data holds 32-bit slots the game overwrites with pointers:

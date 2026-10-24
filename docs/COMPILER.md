@@ -112,6 +112,9 @@ How C spells an address moves GCC 2.7.2's code even where the value is the same:
   second leaves the equivalent executable as it was (`Nsf_OpenLevel`, `func_800170B4`). A member read straight from an
   array element (`arg0->page_slots[i].unk_4`) folds both offsets into the load's, as the raw offset does; through a
   temporary pointer to the element it costs an `addiu` (`func_800155E0`).
+- **A zero-length array**: a structure's trailing array of `[0]` compiles as one of `[1]` in 13 structures, but in
+  `func_80013BD8` `&D_80067950.e[i]` then keeps the table's address in another register and fails the build's SHA-1;
+  there the array has its larger table's length, which gives `[1]`'s code.
 
 ## Loading zero
 

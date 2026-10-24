@@ -377,7 +377,7 @@ void func_8002A3B0(void *arg0, void *arg1, void *arg2, void *arg3, s32 arg4, s32
 INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002A3B0);
 #endif
 
-typedef struct { s32 n; u8 pad[0x28C]; s32 *p[1]; } Unk8006CB6C;
+typedef struct { s32 n; u8 pad[0x28C]; s32 *p[0]; } Unk8006CB6C;
 
 #ifdef NON_MATCHING
 #define NO_HIT 0xC4653601 /* func_8002A8D0's "nothing hit" result */
@@ -396,7 +396,7 @@ typedef struct {
 typedef struct {
     s32 unk0;
     GoolObject *unk4;
-    u8 unk8[1];
+    u8 unk8[0];
 } Unk8002A554_Entry;
 
 /* What GoolObject.unk_8 points to, as this function reads it */

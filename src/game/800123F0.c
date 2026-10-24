@@ -315,10 +315,11 @@ loop:
 INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_PageOut);
 #endif
 
-/* A count and its slots: NsfLevel's page_slot_count and page_slots (D_800675B0), unk_3C8 and unk_3CC (D_80067950) */
+/* A count and its slots: NsfLevel's page_slot_count and page_slots (D_800675B0), unk_3C8 and unk_3CC (D_80067950).
+   Sized for the larger table: as a zero-length array GCC 2.7.2 addresses D_80067950's slots otherwise */
 typedef struct Unk80013BD8Table {
     s32 count;
-    NsfPageSlot e[1];
+    NsfPageSlot e[NSF_LEVEL_UNK_SLOTS];
 } Unk80013BD8Table;
 
 #ifdef NON_MATCHING

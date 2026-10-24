@@ -84,7 +84,7 @@ typedef struct Unk8002FCF8Block {
     /* 0x1070 */ s32 unk_1070;
     /* 0x1074 */ s32 unk_1074[6];
     /* 0x108C */ char unk_108C[4];
-    /* 0x1090 */ char unk_1090[1];
+    /* 0x1090 */ char unk_1090[0];
 } Unk8002FCF8Block;
 
 extern void *D_8005F374;

@@ -5,7 +5,7 @@
 typedef struct {
     u8 pad[0x190];
     s32 count;
-    s32 items[1];
+    s32 items[0];
 } Unk19E5C;
 typedef struct {
     u8 pad[0x10];

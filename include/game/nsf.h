@@ -40,7 +40,7 @@ typedef struct NsfEntry {
     /* 0x0C */ s32 item_count; /* Nsf_RelocatePage's bound over items */
     /* item_count + 1 offsets from the entry, pointers once Nsf_RelocatePage ran; an item ends where the next starts
        (func_800123BC) */
-    /* 0x10 */ u8 *items[1];
+    /* 0x10 */ u8 *items[0];
 } NsfEntry;
 
 /* A page, as Nsf_ReadPages reads it into a page slot's buffer */
@@ -51,7 +51,7 @@ typedef struct NsfPage {
     /* 0x08 */ s32 entry_count; /* Nsf_RelocatePage's bound over entries */
     /* 0x0C */ u32 unk_C;
     /* entry_count + 1 offsets from the page, pointers once Nsf_RelocatePage ran (the last one too) */
-    /* 0x10 */ NsfEntry *entries[1];
+    /* 0x10 */ NsfEntry *entries[0];
 } NsfPage;
 
 /* One record per entry of the level, from the NSD's 0x520 */
@@ -75,7 +75,7 @@ typedef struct Nsd {
     /* 0x41C */ s32 unk_41C; /* only the pages below it may be read at unk_420's sectors (func_800130A0) */
     /* By page: a sector offset in bits 6 and up (Nsf_ReadPages), a value in bits 0 to 5 (func_800130A0) */
     /* 0x420 */ u32 unk_420[0x40];
-    /* 0x520 */ NsdRecord records[1];
+    /* 0x520 */ NsdRecord records[0];
 } Nsd;
 
 /* The 0x2C-byte slot a page is read into and tracked by: NsfLevel's, and the 10 at 0x80062BB4 and the 16 after them

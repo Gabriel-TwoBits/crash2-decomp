@@ -206,7 +206,7 @@ typedef struct Unk800271D8List {
     s32 pad4;
     s32 pad8;
     s32 count;
-    s32 *items[1];
+    s32 *items[0];
 } Unk800271D8List;
 
 typedef struct Unk800271D8 {
@@ -442,7 +442,7 @@ void func_80027600(void *arg0, s32 arg1, s32 arg2, s32 arg3) {
 typedef struct Unk80027664List {
     /* 0x00 */ u8 unk_00[0xC];
     /* 0x0C */ s32 count;
-    /* 0x10 */ u8 *ent[1];
+    /* 0x10 */ u8 *ent[0];
 } Unk80027664List;
 
 s32 func_80027664(s32 *arg0) {
@@ -1555,7 +1555,7 @@ typedef struct {
 typedef struct { char pad[0x40]; s32 unk_40; } Unk80029538Sub;
 /* What GoolObject.unk_8 points to, as this function reads it */
 #define SUB(o) ((Unk80029538Sub *)(o)->unk_8)
-typedef struct { char pad[0x190]; s32 n; void *slot[1]; } Unk80029538Lst;
+typedef struct { char pad[0x190]; s32 n; void *slot[0]; } Unk80029538Lst;
 
 
 void func_80029538(s32 arg0, s32 arg1, s32 arg2) {

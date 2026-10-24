@@ -3966,7 +3966,7 @@ typedef struct {
     u32 colour_shift;
     u32 colour_mask;
     u8 unk_134[0xC];
-    u32 copied[1];
+    u32 copied[0];
 } DrawScratch;
 
 #define DRAW_AT(field, offset) typedef char check_draw_##field[((u32)&((DrawScratch *)0)->field == (offset)) ? 1 : -1]

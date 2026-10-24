@@ -1174,7 +1174,7 @@ typedef struct Unk80022E74Inner {
 typedef struct Unk80022E74 {
     char pad0[UNK_FIELD_OFFSET];
     Unk80022E74Inner *unk_10;
-    s32 unk_14[1];
+    s32 unk_14[0];
 } Unk80022E74;
 
 extern s8 g_CameraMode;
