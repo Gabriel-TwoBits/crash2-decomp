@@ -3,7 +3,7 @@
 equivalent track's, the same pad presses at the same frames for both, and compares what each displays frame by frame.
 
     python tools/run_game.py "path/to/Crash Bandicoot 2 - Cortex Strikes Back (USA).cue" [--against retail]
-                             [--baseline EXE] [--schedule {new-game,turtle-woods,memory-card,demo}]
+                             [--baseline EXE] [--schedule {new-game,turtle-woods,memory-card,demo,demo-paced}]
                              [--real-time]
 
 By default frames are game frames, on the game clock (tools/run_game.lua): the game's time is pinned to its frames, each
@@ -16,7 +16,9 @@ runs on into Turtle Woods blindly, jumping and spinning, through deaths and resp
 frames, paced as new-game from the title's menu on. `--schedule memory-card` picks Load Game from the title's menu and
 presses through the memory card's screens blindly, which save a game on the empty card, 3,500 game frames, paced from
 there on (each game frame lasting 10 vsyncs) since the card answers in real time. `--schedule demo` presses nothing instead: left at the title's menu, the game plays its attract demo, Turtle
-Woods then a river level, 4,800 game frames. `--real-time` keeps the game's own clock and counts vsyncs instead: 8,000
+Woods then a river level, 4,800 game frames; `--schedule demo-paced` plays it with each game frame lasting at least 5
+vsyncs from power-on, so the disc's reads end at the same game frame whatever the code's speed. `--real-time` keeps
+the game's own clock and counts vsyncs instead: 8,000
 of them (2 minutes 13 of the game), about 15 seconds on the emulator's recompiler, where a difference may be only
 timing. The equivalent executable (build/nonmatching/SCUS_941.54.exe, `ninja nonmatching`) goes into a copy of the image
 first (tools/patch_disc.py). `--against retail` runs the retail image twice instead: the emulator is deterministic when
@@ -195,6 +197,11 @@ GAME_SCHEDULES = {
         pace=None,
     ),
 }
+# The attract demo with each game frame lasting at least 5 vsyncs from power-on, so the disc's reads, which go on in
+# real time, end at the same game frame on hardware of any speed (a port reading the disc as it plays). Retail reaches
+# game frame 4,800 by vsync 26,543, short of the vsyncs a run can last, which bound it
+DEMO_PACE = Pace(first=0, last=4800, vsyncs=5)
+GAME_SCHEDULES["demo-paced"] = GAME_SCHEDULES["demo"]._replace(vsync_limit=VSYNC_EVENT_LIMIT, pace=DEMO_PACE)
 # The executables' symbols, for the game clock: the default build's ELF holds retail's bytes
 RETAIL_ELF = HERE / "build" / "SCUS_941.54.elf"
 NONMATCHING_ELF = DEFAULT_EXE.with_suffix(".elf")

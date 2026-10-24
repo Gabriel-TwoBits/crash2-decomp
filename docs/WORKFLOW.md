@@ -348,7 +348,10 @@ and writes into `build/` only:
    so each lasts 10 vsyncs in both runs. The saves still differ by 12 bytes, by design: the game steps `Rand_Below` in
    the loops that wait for the card's events (`Save_TestSwEvents`, `Save_TestHwEvents`) and names the save with the next
    number. `--schedule demo` presses nothing: left at the title's menu, the game plays its attract demo, Turtle Woods
-   then a river level, 4,800 game frames, about two minutes. The three symbols' addresses come from each executable's
+   then a river level, 4,800 game frames, about two minutes. `--schedule demo-paced` plays it paced from power-on
+   (each game frame lasting at least 5 vsyncs, retail at game frame 4,800 by vsync 26,543), so the disc's reads, which
+   go on in real time, end at the same game frame on hardware of any speed: what a port reading the disc as it plays
+   compares against. The three symbols' addresses come from each executable's
    ELF (the default build's for retail); the breakpoints need the emulator's interpreter and debugger. At every vsync
    the script also records a hash of the displayed image, the program counter and the last exception's code, for the
    run's health. `--real-time` keeps the game's own clock instead and counts vsyncs: presses at fixed vsyncs, 8,000 of
