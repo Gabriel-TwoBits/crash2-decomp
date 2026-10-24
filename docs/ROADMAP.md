@@ -1028,6 +1028,12 @@ Each file of `src/game/` was compiled for x86 with the host's GCC 14.2:
   passed the same way: there, naming it (`arg1`) gives the same bytes. A host's build ran into it, `Zone_FindAt`
   reading the point from its stack. A scan of the preprocessed C finds no other call with fewer arguments than the
   game's definition of the function takes.
+- `CALLER_LEFT(function)`, `CALLER_LEFT_VALUE(variable, value)` and `LEFT_RETURN(value)`: a path on which the PS1
+  code reads what a register was left holding, empty on the PS1. A host notes the path, gives the variable a value
+  of its own (four functions: `Heap_Realloc`, `func_80017380`, `Obj_SpawnEntity`, `func_8001F054`) and returns where
+  the C has no return statement (`Obj_SetParent` the 2 retail's `$v0` holds, `Snd_ControlSequence`, whose callers
+  read none, 0). With them, clang 23 at `-O2` (wasm32) finds no read without a value (`-Wsometimes-uninitialized`)
+  and no missing return (`-Wreturn-type`) in `src/game/`.
 - `ASM_SYMBOL(name)`: a C symbol's name in the assembler's code, which `RETAIL_ADDRESS` (`80039D2C.c`) defines for
   the opcode table's retail addresses. As it is on the PS1; 32-bit Windows' C symbols take a leading underscore, which
   the port's Windows build adds.

@@ -237,6 +237,8 @@ s32 Heap_Realloc(s32 arg0, s32 arg1) {
         if (arg1 == 0) {
             Heap_Free(arg0);
             CALLER_LEFT(Heap_Realloc);
+            /* The block is freed: none to return */
+            CALLER_LEFT_VALUE(r, 0);
         } else {
             r = func_800112A4(arg0, arg1);
             if (r == 0) {

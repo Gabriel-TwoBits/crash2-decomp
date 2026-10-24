@@ -72,6 +72,18 @@
 #define CALLER_LEFT(function)
 #endif
 
+/* On such a path, a value of the host's own for the variable the C leaves unset (a compiler that optimizes may drop
+ * what a read of it computes); on the PlayStation the variable stays unset, as the code leaves the register */
+#ifndef CALLER_LEFT_VALUE
+#define CALLER_LEFT_VALUE(variable, value)
+#endif
+
+/* The end of a function whose C has no return statement there, the PlayStation's code returning what its $v0 was left
+ * holding: a host returns value, what retail's $v0 holds there where it is known */
+#ifndef LEFT_RETURN
+#define LEFT_RETURN(value)
+#endif
+
 /* Defined by a host only, with no PlayStation default:
  * - GTE_READ_DATA and the GTE's five other register moves (include/gte.h), on registers in the host's memory;
  * - GOOL_RUN_NATIVE(object, state_pool, &pc, &sp, frame), which runs operation 73's native code (MIPS) on the host's

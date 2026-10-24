@@ -95,6 +95,7 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
         obj = AT(arg0, 0x10 + (arg1 + AT(e, 0x184, s32) + AT(e, 0x188, s32)) * 4, s32);
     } else {
         CALLER_LEFT(Obj_SpawnEntity);
+        CALLER_LEFT_VALUE(obj, 0);
     }
     if (PROP(obj, ENT_PROP_TYPE) == 0 || (PROP(obj, ENT_PROP_ID) > INDEX_MIN_EXCL && PROP(obj, ENT_PROP_ID) < INDEX_MAX_EXCL)) {
         if (g_Player != 0) {

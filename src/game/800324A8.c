@@ -1438,4 +1438,6 @@ s32 Snd_ControlSequence(Unk80033DE0 *obj, s32 cmd, s32 vol) {
             break;
         }
     }
+    /* Its $v0 is whatever its path left; its callers read none */
+    LEFT_RETURN(0);
 }

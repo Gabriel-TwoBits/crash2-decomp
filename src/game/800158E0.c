@@ -1076,6 +1076,7 @@ void func_80017380(s32 mode, u8 *base, s32 arg2, u16 *out) {
         p = base + (arg2 >> 8) * STRIDE_B + OFFSET_B;
     } else {
         CALLER_LEFT(func_80017380);
+        CALLER_LEFT_VALUE(p, base + OFFSET_A);
     }
     func_80018474(p + 4, base + 4);
     flags = *(u16 *)(p + 0xA);
@@ -1941,6 +1942,7 @@ s32 Obj_SetParent(Node *node, Node *parent) {
     node->parent = parent;
     node->next = parent->unk0 == 2 ? parent->children4 : parent->children;
     *(parent->unk0 == 2 ? &parent->children4 : &parent->children) = node;
+    LEFT_RETURN(2);
 }
 
 typedef struct Unk80018AA8 {
