@@ -69,11 +69,6 @@ void func_8002FCF0(void) {
 #define STATE_LOADING 2
 #define NO_ENTRY -1
 
-typedef struct Unk8002FCF8Cam {
-    /* 0x00 */ s32 unk_00[3];
-    /* 0x0C */ s32 unk_0C;
-} Unk8002FCF8Cam;
-
 /* What GoolObject.unk_8 points to, as Input_StartPlayback reads it */
 typedef struct Unk8002FCF8Dst {
     /* 0x00 */ char unk_00[0x30];
@@ -96,7 +91,7 @@ extern void *D_8005F374;
 extern GoolObject *g_Player;
 #define BLOCK ((Unk8002FCF8Block *)g_DemoBlock)
 extern s32 D_80060944;
-extern Unk8002FCF8Cam *g_DrawBuffer;
+extern GfxFrame *g_DrawBuffer;
 extern s32 D_8006CBF0;
 extern s32 D_8006CC00;
 extern s32 D_8006CC84;
@@ -113,7 +108,7 @@ void Input_StartPlayback(void) {
     block = BLOCK;
     D_80060944 = block->unk_000C;
     holder = g_Player;
-    g_DrawBuffer->unk_0C = block->unk_1070;
+    g_DrawBuffer->start_ticks = block->unk_1070;
     dst = holder->unk_8;
     w0 = block->unk_1074[0];
     w1 = block->unk_1074[1];

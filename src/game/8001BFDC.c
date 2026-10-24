@@ -149,14 +149,14 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", func_8001BFDC);
 extern u8 g_GoolOpcodeHandlers;
 extern s32 g_Player;
 extern s32 D_80060944;
-extern u32 *g_DrawBuffer;
+extern GfxFrame *g_DrawBuffer;
 extern u32 D_8006CB64;
 extern s32 D_8006CCAC;
 extern s32 func_80018CAC(void *, void *, void *);
 /* Without a prototype: its equivalent C under NON_MATCHING defines the parameters' types */
 
 void Obj_UpdateAll(void *arg0) {
-    D_8006CB64 = g_DrawBuffer[3] / 34;
+    D_8006CB64 = (u32)g_DrawBuffer->start_ticks / 34;
     func_8002CA98();
     D_8006CCAC = D_80060944;
     Gool_InitScratchpad();

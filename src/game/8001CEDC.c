@@ -176,7 +176,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001CEDC", func_8001D22C);
 #ifdef NON_MATCHING
 int abs(int);
 extern s32 D_80060914;
-extern s32 *g_DisplayBuffer;
+extern GfxFrame *g_DisplayBuffer;
 extern s32 D_80069958;
 extern s32 D_8006995C;
 extern s32 D_80069960;
@@ -221,7 +221,7 @@ void func_8001D2C4(GoolObject *arg0, s32 *arg1, s32 *arg2) {
             }
         }
     }
-    frames = g_DisplayBuffer[0x14 / 4];
+    frames = g_DisplayBuffer->shown_ticks;
     if (frames >= 0x67) {
         frames = 0x66;
     }

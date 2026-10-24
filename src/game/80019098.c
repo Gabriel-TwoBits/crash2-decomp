@@ -514,14 +514,14 @@ void Zone_KillOutsideObjects(void) {
 extern char g_GoolOpcodeHandlers[];
 extern char D_8005C650[];
 extern s32 D_80060944;
-extern u32 *g_DisplayBuffer;
+extern GfxFrame *g_DisplayBuffer;
 extern char g_GoolGlobals[];
 
 void Gool_InitScratchpad(void) {
     u32 n;
     u32 *p;
 
-    n = g_DisplayBuffer[5];
+    n = g_DisplayBuffer->shown_ticks;
     *(s32 *)(SCRATCHPAD + 0x50) = D_80060944;
     p = (u32 *)(SCRATCHPAD + 0x54);
     if (n >= 0x67) {

@@ -299,9 +299,6 @@ s32 main(void) {
 #define FLAG_16 0x10
 #define FLAG_400000 0x400000
 #define PAUSE_BUF_ID 0xC00
-#define PAUSE_BUF_SIZE 0x800
-#define PAUSE_BUF_OFFSET 0x18
-#define BUF_FIELD_2088 0x2088
 #define CD14(off) (*(s32 *)(g_PlaybackState + (off)))
 
 extern s32 g_TimerTicks;
@@ -326,8 +323,8 @@ extern char D_80062A18[];
 extern s32 D_80062A90;
 extern s32 D_80062AA0;
 extern s32 D_80062AD8;
-extern void *g_DrawBuffer;
-extern void *g_BuildBuffer;
+extern GfxFrame *g_DrawBuffer;
+extern GfxFrame *g_BuildBuffer;
 extern NsfLevel D_80067588;
 extern void *D_8006759C;
 extern s32 D_80069944;
@@ -370,7 +367,8 @@ void Sys_MainLoop(s32 arg0) {
                         } else {
                             D_8005F18C = 1;
                             D_8005F2C4 = g_TimerTicks;
-                            D_8005F2C8 = *(s32 *)((char *)g_DrawBuffer + 0xC);
+                            /* Raw: through the member GCC 2.7.2 reads it before the store to D_8005F2C4 */
+                            D_8005F2C8 = *(s32 *)((u8 *)g_DrawBuffer + GFX_FRAME_START_TICKS);
                         }
                     } else {
                         /* flag state kept; nothing to do */
@@ -382,7 +380,7 @@ void Sys_MainLoop(s32 arg0) {
                 } else {
                     D_8005F18C = -1;
                     g_TimerTicks = D_8005F2C4;
-                    *(s32 *)((char *)g_DrawBuffer + 0xC) = D_8005F2C8;
+                    g_DrawBuffer->start_ticks = D_8005F2C8;
                 }
             } else {
                 D_8005F18C = 0;
@@ -472,7 +470,7 @@ void Sys_MainLoop(s32 arg0) {
             func_8002FB84(0);
             D_8006CCB8 = Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer, D_80062A18, D_80060944);
         } else {
-            Gfx_ResetOt((u8 *)g_BuildBuffer + PAUSE_BUF_OFFSET, PAUSE_BUF_SIZE);
+            Gfx_ResetOt((u8 *)g_BuildBuffer->ot, GFX_OT_LENGTH);
         }
         if (D_8006CB94 & SAVE_FLAGS_MASK) {
             if ((D_80062A90 != 0) && (D_80062AD8 & FLAG_16)) {
@@ -490,7 +488,7 @@ void Sys_MainLoop(s32 arg0) {
         }
         Obj_UpdateAll((void *)(g_Paused == 0));
         func_80011E88();
-        Gfx_DrawObjects(*(s32 *)((char *)g_BuildBuffer + BUF_FIELD_2088), g_BuildBuffer, D_80062A18);
+        Gfx_DrawObjects(g_BuildBuffer->object_queue, g_BuildBuffer, D_80062A18);
         Gfx_EndFrame();
         func_80011E90();
     } while (g_Quit == 0);

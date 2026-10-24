@@ -37,6 +37,7 @@ typedef struct GfxFrame {
 
 /* Members the C reaches at their raw offsets where the member would move GCC 2.7.2's code (docs/COMPILER.md,
    "Structure members and plain pointers") */
+#define GFX_FRAME_START_TICKS 0xC
 #define GFX_FRAME_SHOWN_TICKS 0x14
 #define GFX_FRAME_QUEUE_BUFFER 0x208C
 

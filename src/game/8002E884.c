@@ -650,7 +650,7 @@ extern s32 D_8005F3B4;
 extern s32 D_80060884;
 extern s32 D_800608D0;
 extern s32 D_80060944;
-extern void *g_BuildBuffer;
+extern GfxFrame *g_BuildBuffer;
 extern s32 D_8006CB78;
 extern s32 D_8006CB80;
 extern s32 D_8006CC60;

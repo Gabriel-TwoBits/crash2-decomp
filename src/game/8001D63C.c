@@ -43,7 +43,6 @@ s32 D_8005F1F0 = 0x80;
 #define OBJ_FRAME_STAMP 0x16C
 #define PARENT_ANGLE 0x94
 #define ANIM_FRAME_PTR 0x10
-#define GLOBAL_TICK 0x14
 
 /* Mask bits of FLAGS_A (offset 0xA8). */
 #define A_GROUNDED 0x1
@@ -125,7 +124,7 @@ s32 D_8005F1F0 = 0x80;
 #define PARAMS_LOCKED_EXTRA 0x50
 #define PARAMS_FAST_SLIDE_EXTRA 0x78
 
-extern s32 *g_DisplayBuffer;
+extern GfxFrame *g_DisplayBuffer;
 extern s32 g_Player;
 extern u8 D_8005B7B0[];
 extern u8 D_8005B7D8[];
@@ -151,7 +150,7 @@ s32 func_8001F054(GoolObject *, u32, s32 *);
 static inline u32 tick_step(void) {
     u32 n;
 
-    n = FIELD_U(g_DisplayBuffer, GLOBAL_TICK);
+    n = g_DisplayBuffer->shown_ticks;
     if (n >= TICK_CAP + 1) {
         n = TICK_CAP;
     }
@@ -462,7 +461,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
 INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001D63C);
 #endif
 
-extern s32 *g_DisplayBuffer;
+extern GfxFrame *g_DisplayBuffer;
 
 s32 func_8001E3DC(s32 arg0, s32 arg1, s32 arg2, s32 *arg3) {
     u32 n;
@@ -472,7 +471,7 @@ s32 func_8001E3DC(s32 arg0, s32 arg1, s32 arg2, s32 *arg3) {
     s32 dist;
     s32 res;
 
-    n = g_DisplayBuffer[5];
+    n = g_DisplayBuffer->shown_ticks;
     if (n >= 0x67) {
         n = 0x66;
     }
@@ -527,7 +526,6 @@ s32 func_8001E3DC(s32 arg0, s32 arg1, s32 arg2, s32 *arg3) {
 #define ANGLE_MASK 0xFFF
 #define ANGLE_SIGN_SHIFT 20
 #define FLAG_REACHED 0x800
-#define SCALE_OFFSET 0x14
 #define FLAGS_OFFSET 0xA8
 
 s32 func_8001E544(s32 arg0, s32 arg1, s32 arg2, void *arg3) {
@@ -538,7 +536,7 @@ s32 func_8001E544(s32 arg0, s32 arg1, s32 arg2, void *arg3) {
     s32 dist;
     s32 snap;
 
-    scale = *(u32 *)((u8 *)g_DisplayBuffer + SCALE_OFFSET);
+    scale = g_DisplayBuffer->shown_ticks;
     if (scale > SCALE_CAP) {
         scale = SCALE_CAP;
     }

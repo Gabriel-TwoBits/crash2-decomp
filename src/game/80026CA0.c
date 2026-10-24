@@ -135,7 +135,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026EF4);
 
 extern u8 *D_80069358;
 
-extern u8 *g_DrawBuffer;
+extern GfxFrame *g_DrawBuffer;
 
 void func_8002706C(void) {
     RECT rect;
@@ -149,7 +149,7 @@ void func_8002706C(void) {
         w = *(s32 *)(p + 0x18);
         rect.h = 0xF0;
         rect.w = w;
-        MoveImage(&rect, *(s16 *)(g_DrawBuffer + 0x202C), 0);
+        MoveImage(&rect, g_DrawBuffer->draw.clip.x, 0);
     }
 }
 
