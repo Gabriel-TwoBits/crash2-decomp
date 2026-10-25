@@ -400,7 +400,8 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     OBJ(arg0)->anim = 0;
     OBJ(arg0)->unk_D0 = 0;
     OBJ(arg0)->links[GOOL_LINK_PLAYER] = (struct GoolObject *)g_PlayerSlot[0];
-    frame = ((u16 *)OBJ(arg0)->exe->items[GOOL_ITEM_STATE_MAP])[*(s32 *)(OBJ(arg0)->exe->items[GOOL_ITEM_HEADER] + 0x10) + OBJ(arg0)->subtype];
+    frame = ((u16 *)OBJ(arg0)->exe->items[GOOL_ITEM_STATE_MAP])
+        [*(s32 *)(OBJ(arg0)->exe->items[GOOL_ITEM_HEADER] + 0x10) + OBJ(arg0)->subtype];
     if (frame == FRAME_NONE) {
         return RESULT_NO_FRAME;
     }
