@@ -364,7 +364,7 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     W(arg0, 0x120) = 0;
     if (parent[0] == OBJ_STATE_ACTIVE) {
         parent = (s32 *)OBJ(arg0)->links[GOOL_LINK_PARENT];
-        OBJ(arg0)->zone = (NsfEntry *)parent[0x18 / 4];
+        OBJ(arg0)->zone = OBJ(parent)->zone;
         for (i = 0; i < COPY_BLOCK_WORDS; i++) {
             arg0[BLOCK_OFFSET_WORDS + i] = parent[BLOCK_OFFSET_WORDS + i];
         }
