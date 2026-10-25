@@ -896,6 +896,14 @@ Steps, in order:
   numbered only; the world renderer's mode families (Crash2Recomp's notes tie them to the flags' bits, fog per vertex
   and per batch, darkness), which `tools/run_game.py` could show; `D_800675AC` and `D_8006CB94`, read by the port.
   `tools/progress.py`: 283 of 638 game functions and 66 of 1,075 data symbols named.
+  Then the two words the port reads, by two runs of `tools/run_game.py`'s demo schedule. With `Gfx_EndFrame`
+  ignoring `D_800675AC` (an equivalent build of the experiment only, against the equivalent build), the displays
+  differ from game frame 1,827 to 3,719 and in 4,600 and 4,601 alone; retail's RAM dumped at 17 game frames holds -1
+  at 1,826 and 3,719 (a demo picked, `Input_PickDemo`, until it starts), 2, 1 and 0 at 4,599, 4,600 and 4,602 (a
+  level changed, `Sys_MainLoop`), 0 elsewhere: the frames the display holds, `g_DisplayHold`, `NsfLevel`'s
+  `display_hold`. The same dumps show `D_8006CB94`, GOOL global 9, 0x2C01FFFE at the title and 0x0C01FFFF in the
+  demos' levels a frame after `D_8006CB80`, global 4, takes those values, which no C writes but 0x0C01FFFF: the GOOL
+  code's switches for the frame (`g_FrameFlags`, `g_NextFrameFlags`). Other names that need such runs stay numbered.
 - **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
   docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
   same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy
@@ -926,6 +934,13 @@ Steps, in order:
   `Obj_Update` calls for each object (`Gfx_QueueObject`). `func_80045218`, the dots, changes no frame of new-game or
   demo emptied, and the game stops at game frame 4 without `func_8001AA80` (an object's matrix by the table at
   0x8005B650): both keep their addresses. 214 of 638 game functions named.
+- **R8, the equivalent C made readable (in progress).** The C under `NON_MATCHING` written for its reader: fields by
+  their names where it read offsets, the shared types where it had local ones, starting with what the port uses. A
+  change is kept when `ninja` keeps the retail SHA-1 and `ninja nonmatching` the equivalent executable byte for byte
+  (or, where the bytes change, `tools/equiv.py` agrees); the 33 files still compile for 32-bit x86. Done: the objects'
+  physics (`Obj_UpdatePhysics`), update (`func_8001BFDC`), init (`Obj_Init`), entity spawn and the GOOL operations'
+  linked objects (`80037698.c`) read `GoolObject` by name; offsets whose member moves GCC 2.7.2's code stay, named
+  after the member (`OBJ_VEL_X`, `OBJ_STATUS_A`, `Obj_Kill`'s links).
 - **R7, the C made portable (done)**: what a host's compiler makes of the C, what is left for a host, and the
   macros the port redefines (section 6, "The macros").
 
