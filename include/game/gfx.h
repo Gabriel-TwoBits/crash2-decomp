@@ -30,7 +30,7 @@ typedef struct GfxFrame {
     /* 0x202C */ DRAWENV draw;
     /* The object packets' list, and the buffer both frames take them from (Gfx_AllocFrameBuffers' shared allocation)
        with its next free byte; Gfx_ClearObjectQueue empties them */
-    /* 0x2088 */ void *object_queue;
+    /* 0x2088 */ struct DrawPacket *object_queue;
     /* 0x208C */ u8 *queue_buffer;
     /* 0x2090 */ u8 *next_queue_packet;
 } GfxFrame;
@@ -50,5 +50,56 @@ typedef struct GfxFrameBuffers {
     GfxFrame *build;
     GfxFrame frames[GFX_FRAME_COUNT];
 } GfxFrameBuffers;
+
+/* A draw packet, as Gfx_QueueObject builds them in the frame's packet list: the next packet, its three steps (the
+   GTE's rotation and translation for the object, a light or scene setup, the drawer), the object, its matrix (a
+   rotation's five words, then the scale), and what the steps read; a model's packet (kind 1) holds them all, a sprite's
+   (kind 2) to 0x2C, kind 5's to 0x30 */
+struct DrawPass;
+typedef void (*DrawStep)(struct DrawPass *);
+
+typedef s32 (*DrawTest)(struct DrawPass *);
+
+typedef struct DrawPacket {
+    struct DrawPacket *next;
+    DrawStep place;
+    DrawStep prepare;
+    DrawStep draw;
+    u8 *object;
+    u32 *matrix;
+    u32 clock;
+    union {
+        /* A sprite's record (its colour and code, then a corner's texture words; kind 5's list of them), fade, size,
+         * far colour, and kind 5's frame */
+        struct {
+            u32 *record;
+            s16 fade;
+            s16 unk_22;
+            u32 size_shift;
+            u32 far_colour;
+            u32 frame;
+        } sprite;
+        /* A model's visibility test, far colour step, colour routine, and its frame (two to blend) */
+        struct {
+            DrawTest visible;
+            DrawStep far_setup;
+            DrawStep shade;
+            u32 *frames[2];
+        } model;
+    } kind;
+    u32 *strips;
+    u32 *colours;
+    u8 *textures;
+    u32 *animations;
+    s16 model_fade;
+    s16 model_fade_high;
+    u32 model_far_colour;
+    u32 far_depths[2];
+    s32 offset_y;
+    s32 level;
+    u32 colour_shift;
+    u32 colour_mask;
+    u32 *widths;
+} DrawPacket;
 
 #endif /* GAME_GFX_H */
