@@ -24,8 +24,8 @@ void Save_Update(void) {
     s32 v;
     s32 *new_var;
 
-    if (D_8005F26C != func_80036150()) {
-        D_8005F26C = func_80036150();
+    if (D_8005F26C != Save_GetFlags()) {
+        D_8005F26C = Save_GetFlags();
         func_80035A6C();
     }
     if (D_8005F270 != Save_GetState()) {
@@ -58,7 +58,7 @@ void Save_Update(void) {
         break;
     }
 
-    v = func_80036150();
+    v = Save_GetFlags();
     D_8006CC5C = v;
     new_var = &g_SaveState[2];
     D_8006CC64 = *new_var;
@@ -73,27 +73,27 @@ void Save_CheckCard(void) {
     }
     switch (Save_TestSwEvents()) {
     case 1:
-        func_800360CC(0);
-        func_80036084(2);
+        Save_SetState(0);
+        Save_SetFlags(2);
         return;
     case 0:
-        if (!(func_80036150() & 4)) {
-            func_800360CC(0);
+        if (!(Save_GetFlags() & 4)) {
+            Save_SetState(0);
             return;
         }
     case 3:
         Save_ClearHwEvents();
         _card_clear(0);
-        if (func_80035C40() == 0) {
-            func_800360AC(6);
-            func_80036084(0x18);
-            func_800360CC(4);
+        if (Save_WaitHwEvents() == 0) {
+            Save_ClearFlags(6);
+            Save_SetFlags(0x18);
+            Save_SetState(4);
             func_80035A7C(0x96);
         } else {
     case 2:
-            func_800360CC(0);
-            func_80036084(4);
-            func_800360AC(8);
+            Save_SetState(0);
+            Save_SetFlags(4);
+            Save_ClearFlags(8);
         }
         func_80036028(0);
         return;
@@ -103,16 +103,16 @@ void Save_CheckCard(void) {
 s32 func_80034810(void) {
     g_SaveState[6] = 0;
     if (Save_IsCardFormatted(0) == 1) {
-        func_800360AC(0xA);
-        func_800360CC(0);
+        Save_ClearFlags(0xA);
+        Save_SetState(0);
         func_80035FD8();
         return 1;
     }
     if (func_80035A94() != 0) {
         func_80036028(0);
-        func_800360AC(6);
-        func_80036084(8);
-        func_800360CC(0);
+        Save_ClearFlags(6);
+        Save_SetFlags(8);
+        Save_SetState(0);
         return 1;
     }
     return 0;
@@ -139,14 +139,14 @@ void Save_LoadDirectory(void) {
         if (r <= 0) {
             g_SaveState[7]++;
             if (g_SaveState[7] < 11) {
-                func_800360CC(1);
+                Save_SetState(1);
                 return;
             }
         }
-        func_800360AC(2);
+        Save_ClearFlags(2);
         func_80036050();
         func_80036850();
-        func_800360CC(5);
+        Save_SetState(5);
         func_80035A7C(0x20);
         g_SaveState[2] = 0;
         g_SaveState[8] = r;
@@ -168,7 +168,7 @@ block_15:
             a0 = 1;
         }
 block_16:
-        func_800360CC(a0);
+        Save_SetState(a0);
         break;
     default:
         break;
@@ -194,13 +194,13 @@ void Save_AbortRead(s32 *arg0) {
 
     if (func_80035A94() != 0) {
         g_SaveState[2] = 0;
-        func_80036084(2);
-        func_800360CC(0);
+        Save_SetFlags(2);
+        Save_SetState(0);
         p = (Unk80034A2C *)g_SaveState;
         p += arg0[1];
         if (p->f28 != 0) {
-            func_80036084(0x80);
-            func_800368C0();
+            Save_SetFlags(0x80);
+            Save_InitSlots();
             func_80036850();
         }
     }
@@ -224,11 +224,11 @@ void Save_AbortWrite(Unk80034AC4 *arg0) {
 
     if (*arg0->fC != 0) {
         *arg0->fC = 0;
-        func_800369F4();
+        Save_CheckData();
     }
     if (func_80035A94() != 0) {
-        func_80036084(2);
-        func_800360CC(0);
+        Save_SetFlags(2);
+        Save_SetState(0);
     }
     Save_CloseFile(arg0->f0);
     if (*arg0->f8 != 0) {
@@ -311,9 +311,9 @@ void Save_ReadFileHeader(void) {
     failed = 0;
     fd = -1;
     if (entry >= g_SaveState[W_ENTRY_COUNT]) {
-        func_800360AC(ERR_FULL);
-        func_80035E7C();
-        func_800360CC(0);
+        Save_ClearFlags(ERR_FULL);
+        Save_CheckCardFull();
+        Save_SetState(0);
         return;
     } else {
         entryName = (char *)g_SaveState + entry * NAME_ENTRY_STRIDE + NAME_TABLE_OFFSET;
@@ -372,7 +372,7 @@ void Save_ReadFileHeader(void) {
     if (failed == 0) {
         s->unk_34[0] = 0;
         if (header[HEADER_NAME] >= NAME_TOO_LONG) {
-            func_8003516C(header);
+            Save_TitleFromShiftJis(header);
         } else {
         }
         header[HEADER_NAME_END] = 0;
@@ -423,7 +423,7 @@ void Save_ReadFileHeader(void) {
                 }
                 extra += SAVE_BLOCK_SIZE;
             } while ((u32)i < EXTRA_BLOCK_COUNT);
-            if (func_800369F4() != 0) {
+            if (Save_CheckData() != 0) {
                 failed = 1;
                 if (g_SaveState[W_LIMIT_HI] < g_SaveState[W_LIMIT_LO]) {
                     Save_AbortRead((s32 *)ctx);
@@ -440,8 +440,8 @@ void Save_ReadFileHeader(void) {
     Save_CloseFile(&fd);
     if (failed != 0) {
         if (((Unk80034BB8 *)g_SaveState + slot)->unk_28 != 0) {
-            func_80036084(UNK_STATE_80);
-            func_800368C0();
+            Save_SetFlags(UNK_STATE_80);
+            Save_InitSlots();
             func_80036850();
         } else {
         }
@@ -465,7 +465,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_ReadFileHeader);
 extern u8 D_8005C4B4[];
 extern u8 D_8005C4B5[];
 
-void func_8003516C(u8 *arg0) {
+void Save_TitleFromShiftJis(u8 *arg0) {
     s32 var_a1;
     s32 var_t1;
     s32 var_v0;
@@ -552,7 +552,7 @@ loop_8:
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_8003516C);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_TitleFromShiftJis);
 #endif
 
 #ifdef NON_MATCHING
@@ -699,7 +699,7 @@ void Save_WriteFile(s32 arg0) {
                 }
             } while (tries < MAX_TRIES);
             if (Save_CheckRetries(tries, MAX_TRIES, (void (*)(s32))Save_AbortWrite, (s32)ctx) == 0) {
-                func_800360CC(MODE_CREATE);
+                Save_SetState(MODE_CREATE);
             }
             return;
         } else {
@@ -707,7 +707,7 @@ void Save_WriteFile(s32 arg0) {
         }
     } else {
         if (mode == MODE_ERASE) {
-            func_800360CC(MODE_CREATE);
+            Save_SetState(MODE_CREATE);
             mode = MODE_CREATE;
         }
     }
@@ -752,14 +752,14 @@ void Save_WriteFile(s32 arg0) {
             printf(D_800106AC, fd);
             Save_CloseFile(&fd);
             D_8005F314 = 1;
-            func_800360CC(8);
+            Save_SetState(8);
         } else {
             /* open failed; handler ran */
         }
         return;
     } else {
         if (!noEntry && mode == MODE_CREATE) {
-            func_800360CC(8);
+            Save_SetState(8);
         } else {
             /* no state change */
         }
@@ -825,7 +825,7 @@ void Save_WriteFile(s32 arg0) {
         }
     }
 
-    func_80036978();
+    Save_SealData();
     D_8005F318 = 1;
     for (k = 0; k < SAVE_DATA_BLOCKS; k++) {
         tries = 0;
@@ -843,13 +843,13 @@ void Save_WriteFile(s32 arg0) {
             /* block written */
         }
     }
-    func_800369F4();
+    Save_CheckData();
     D_8005F318 = 0;
     Save_CloseFile(&fd);
-    func_800360AC(2);
-    func_800360CC(0);
+    Save_ClearFlags(2);
+    Save_SetState(0);
     func_80035FD8();
-    func_800360AC(0x10);
+    Save_ClearFlags(0x10);
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_WriteFile);
@@ -865,12 +865,12 @@ void Save_FormatCard(void) {
     r = format(g_SaveDevice);
     g_TimerTicks;
     if (r == 1) {
-        func_800360AC(2);
-        func_80036084(4);
-        func_800360CC(0);
+        Save_ClearFlags(2);
+        Save_SetFlags(4);
+        Save_SetState(0);
     } else if (func_80035A94() != 0) {
-        func_80036084(2);
-        func_800360CC(0);
+        Save_SetFlags(2);
+        Save_SetState(0);
     }
 }
 
@@ -915,11 +915,11 @@ s32 Save_TestSwEvents(void) {
     if (TestEvent(D_8005F3AC) != 1) {
         return -1;
     }
-    func_80036084(0x10);
+    Save_SetFlags(0x10);
     return 3;
 }
 
-s32 func_80035B3C(void) {
+s32 Save_WaitSwEvents(void) {
     s32 result;
 
     do {
@@ -958,7 +958,7 @@ s32 Save_TestHwEvents(void) {
     return -1;
 }
 
-s32 func_80035C40(void) {
+s32 Save_WaitHwEvents(void) {
     s32 result;
 
     do {
@@ -1040,7 +1040,7 @@ void Save_SortDirectory(Unk80035D48 *arg0, s32 arg1) {
     }
 }
 
-void func_80035E7C(void) {
+void Save_CheckCardFull(void) {
     s32 i;
     s32 n;
 
@@ -1051,7 +1051,7 @@ void func_80035E7C(void) {
                 return;
             }
         }
-        func_80036084(0x40);
+        Save_SetFlags(0x40);
     }
 }
 
@@ -1091,9 +1091,9 @@ void func_80035F9C(u8 *arg0) {
 }
 
 s32 func_80035FD8(void) {
-    if (!(func_80036150() & 0xD)) {
-        func_800368C0();
-        func_800360CC(1);
+    if (!(Save_GetFlags() & 0xD)) {
+        Save_InitSlots();
+        Save_SetState(1);
         func_80035A7C(0x40);
         g_SaveState[7] = 0;
         return 0;
@@ -1106,7 +1106,7 @@ s32 func_80036028(s32 arg0) {
 
     p[2] = 0;
     p[5] = 0;
-    func_80036084(arg0);
+    Save_SetFlags(arg0);
     return 0;
 }
 
@@ -1124,7 +1124,7 @@ void func_80036050(void) {
 
 extern s32 D_8006CC5C;
 
-s32 func_80036084(s32 a0) {
+s32 Save_SetFlags(s32 a0) {
     s32 *p = g_SaveState;
     s32 v = p[1] | a0;
     p[1] = v;
@@ -1132,12 +1132,12 @@ s32 func_80036084(s32 a0) {
     return 0;
 }
 
-s32 func_800360AC(s32 arg0) {
+s32 Save_ClearFlags(s32 arg0) {
     g_SaveState[1] &= ~arg0;
     return 0;
 }
 
-s32 func_800360CC(s32 arg0) {
+s32 Save_SetState(s32 arg0) {
     s32 *p = g_SaveState;
     *p = arg0;
     if (arg0 >= 0) {
@@ -1145,12 +1145,12 @@ s32 func_800360CC(s32 arg0) {
             p[6] = 1;
         }
         if (*g_SaveState == 0) {
-            func_800360AC(1);
+            Save_ClearFlags(1);
         } else {
-            func_80036084(1);
+            Save_SetFlags(1);
         }
     } else {
-        func_80036084(1);
+        Save_SetFlags(1);
     }
     return 0;
 }
@@ -1159,7 +1159,7 @@ s32 Save_GetState(void) {
     return g_SaveState[0];
 }
 
-s32 func_80036150(void) {
+s32 Save_GetFlags(void) {
     return g_SaveState[1];
 }
 
@@ -1204,31 +1204,31 @@ s32 Save_StopCard(void) {
 
 void func_80036324(s32 arg0) {
     func_80036028(0);
-    func_800360CC(0);
-    func_800360AC(0xDF);
-    func_80036084(arg0);
+    Save_SetState(0);
+    Save_ClearFlags(0xDF);
+    Save_SetFlags(arg0);
 }
 
 extern s32 *D_8006CCE8;
 
-s32 func_80036368(void) {
+s32 Save_AllocState(void) {
     s32 *p;
 
     p = Heap_AllocZeroed(1, 0x11F4);
     g_SaveState = p;
     D_8006CCE8 = p + 0x1BD;
     if (D_8005F268 != 0) {
-        func_80036084(0x10);
+        Save_SetFlags(0x10);
     } else {
-        func_800360AC(0x10);
+        Save_ClearFlags(0x10);
     }
     func_80036324(4);
-    func_800368C0();
+    Save_InitSlots();
     return 0;
 }
 
-s32 func_800363D0(void) {
-    u32 v = func_80036150();
+s32 Save_FreeState(void) {
+    u32 v = Save_GetFlags();
     int has_ptr;
     do { } while (0); has_ptr = g_SaveState != 0;
     D_8005F268 = (v >> 4) & 1;
@@ -1249,7 +1249,7 @@ s32 Save_IsCardFormatted(s32 arg0) {
     Save_ClearHwEvents();
     _new_card();
     _card_read(arg0, 0, buf);
-    if (func_80035C40() == 0) {
+    if (Save_WaitHwEvents() == 0) {
         if (buf[0] == 0x4D) {
             return buf[1] == 0x43;
         } else {
@@ -1267,8 +1267,8 @@ s32 func_8003649C(s32 arg0) {
     s32 i;
     s32 *p;
 
-    if (func_80036150() & 0xD) {
-        func_80036084(2);
+    if (Save_GetFlags() & 0xD) {
+        Save_SetFlags(2);
         return 1;
     }
     i = 0;
@@ -1281,7 +1281,7 @@ loop:
         }
         i = p[2];
     }
-    func_800360CC(6);
+    Save_SetState(6);
     func_80035A7C(0x20);
     g_SaveState[3] = i;
     return 0;
@@ -1290,14 +1290,14 @@ loop:
 s32 func_8003653C(void) {
     s32 v;
     if (g_SaveState != 0) {
-        v = func_80036150() & 0x10;
+        v = Save_GetFlags() & 0x10;
     } else {
         v = D_8005F268;
     }
     if (v == 0) {
         Save_ClearSwEvents();
         _card_info(0);
-        return func_80035B3C() != 0;
+        return Save_WaitSwEvents() != 0;
     }
     return 1;
 }
@@ -1317,7 +1317,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_IsSlotNamed);
 s32 func_800365E4(void) {
     Save_ClearSwEvents();
     _card_info(0);
-    if (func_80035B3C() == 2) {
+    if (Save_WaitSwEvents() == 2) {
         return 1;
     }
     return 0;
@@ -1328,10 +1328,10 @@ INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800365E4);
 
 s32 func_80036628(void) {
     if (Save_GetState() != 0) {
-        func_80036084(2);
+        Save_SetFlags(2);
         return 1;
     }
-    func_800360CC(3);
+    Save_SetState(3);
     func_80035A7C(3);
     return 0;
 }
@@ -1339,7 +1339,7 @@ s32 func_80036628(void) {
 s32 func_80036674(void) {
     s32 ret;
     if (g_SaveState != 0) {
-        func_80036324((func_80036150() & 0x10) | 4);
+        func_80036324((Save_GetFlags() & 0x10) | 4);
         ret = 0;
     } else {
         ret = 1;
@@ -1356,13 +1356,13 @@ s32 Save_UnformatCard(void) {
     Save_ClearHwEvents();
     _new_card();
     _card_write(0, 0, buf);
-    return -(func_80035C40() != 0);
+    return -(Save_WaitHwEvents() != 0);
 }
 
 s32 Save_RunCommand(u32 arg0, s32 arg1) {
     switch (arg0) {
     case 2:
-        func_800360AC(0x80);
+        Save_ClearFlags(0x80);
         return 1;
     case 3:
         return func_8003649C(arg1);
@@ -1377,7 +1377,7 @@ s32 Save_RunCommand(u32 arg0, s32 arg1) {
     case 12:
         return Save_UnformatCard();
     case 13:
-        return func_80036AC8(arg1);
+        return Save_StoreSlot(arg1);
     case 14:
         return Save_LoadSlot(arg1);
     case 15:
@@ -1411,7 +1411,7 @@ void func_80036850(void) {
     }
 }
 
-void func_800368C0(void) {
+void Save_InitSlots(void) {
     s32 i;
     s32 offset;
 
@@ -1464,7 +1464,7 @@ void Save_InitSlot(void *p)
 
 typedef void (*Unk80036A84Fn)(s32 *, s32, s32, s32);
 
-void func_80036978(void) {
+void Save_SealData(void) {
     s32 *p = g_SaveState;
     s32 n;
 
@@ -1474,7 +1474,7 @@ void func_80036978(void) {
     n = Rand_Below(0xF423F);
     p[0x954 / 4] = n;
     p[0x718 / 4] = 0;
-    p[0x718 / 4] = func_80036A8C(p + 0x6F4 / 4, 0x2A4);
+    p[0x718 / 4] = Save_Checksum(p + 0x6F4 / 4, 0x2A4);
     /* game.h declares func_80036A84 as void(void); the assembly passes four arguments. */
     ((Unk80036A84Fn)func_80036A84)(p + 0x6F4 / 4, 0x2A4, n, 1);
 }
@@ -1492,7 +1492,7 @@ void func_80036978(void) {
 typedef void (*Func80036A84)(s32 *, s32, s32, s32);
 
 
-s32 func_800369F4(void) {
+s32 Save_CheckData(void) {
     s32 *base = g_SaveState;
     s32 *state = base + OFF_STATE / 4;
     s32 saved;
@@ -1501,7 +1501,7 @@ s32 func_800369F4(void) {
     ((Func80036A84)func_80036A84)(state, STATE_SIZE, base[OFF_ARG / 4], 0);
     saved = base[OFF_SAVED / 4];
     base[OFF_SAVED / 4] = 0;
-    if (saved == func_80036A8C(state, STATE_SIZE)) {
+    if (saved == Save_Checksum(state, STATE_SIZE)) {
         if (base[OFF_STATE / 4] == STATE_IDLE) {
             return RESULT_OK;
         } else {
@@ -1510,17 +1510,17 @@ s32 func_800369F4(void) {
     } else {
         ret = RESULT_MISMATCH;
     }
-    func_800368C0();
+    Save_InitSlots();
     return ret;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_800369F4);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_CheckData);
 #endif
 
 void func_80036A84(void) {
 }
 
-s32 func_80036A8C(s32 *arg0, s32 arg1) {
+s32 Save_Checksum(s32 *arg0, s32 arg1) {
     s32 sum;
     s32 i;
     s32 pad[2];
@@ -1538,7 +1538,7 @@ s32 func_80036A8C(s32 *arg0, s32 arg1) {
 
 extern s32 D_80069718[];
 
-s32 func_80036AC8(s32 arg0) {
+s32 Save_StoreSlot(s32 arg0) {
     s32 *a1;
     s32 *a2;
     s32 *v1;

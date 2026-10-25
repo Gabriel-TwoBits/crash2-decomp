@@ -414,7 +414,7 @@ s32 Gfx_AllocFrameBuffers(void) {
     GfxFrame *entry;
 
     if (D_8005F3EC == RETAIL_STATE_LOAD) {
-        func_80036368();
+        Save_AllocState();
     }
     Gfx_ResetOt((u8 *)g_BuildBuffer[0]->ot, GFX_OT_LENGTH);
     Gfx_ResetOt((u8 *)g_DrawBuffer->ot, GFX_OT_LENGTH);
@@ -466,7 +466,7 @@ s32 Gfx_FreeFrameBuffers(void) {
         } while (i < g_FrameBuffers.count);
     }
     if (D_8005F3EC == STATE_FLUSH) {
-        func_800363D0();
+        Save_FreeState();
     }
     return RESULT_DONE;
 }

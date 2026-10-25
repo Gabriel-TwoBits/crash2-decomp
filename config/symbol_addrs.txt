@@ -1617,3 +1617,48 @@ Gfx_TransferAnimFrame = 0x800176DC; // type:func
 
 // the VRAM rectangle of an animation's frame (arg2 >> 8, kinds 2 and 5): mode 1 its texture's bounds from its corners, mode 2 its palette; Gfx_TransferAnimFrame passes both to LoadImage and StoreImage
 Gfx_GetAnimFrameRect = 0x80017380; // type:func
+
+// calls Save_TestSwEvents until it returns other than -1 (none of the four SwCARD events fired) and returns which fired; the slot commands 7 and 8 call it after _card_info
+Save_WaitSwEvents = 0x80035B3C; // type:func
+
+// calls Save_TestHwEvents until it returns other than -1 (none of the four HwCARD events fired) and returns which fired; Save_IsCardFormatted calls it after _card_read
+Save_WaitHwEvents = 0x80035C40; // type:func
+
+// turns a memory card header's full-width Shift-JIS title (from offset 4, 64 bytes) back into ASCII in place, the inverse of Save_TitleToShiftJis: lead byte 0x82 letters and digits, 0x81 symbols through the same table at 0x8005C4B4, '?' otherwise; Save_ReadFileHeader calls it on each header read
+Save_TitleFromShiftJis = 0x8003516C; // type:func
+
+// 0x12345678 plus the sum of a block's words; func_80036978 stores it in the save data's word at 0x24 zeroed first, func_800369F4 compares it there after the data is read, the slots reset on a mismatch
+Save_Checksum = 0x80036A8C; // type:func
+
+// before Save_WriteFile writes the save data: its first word 8, its id from Rand_Below(999999) (the number "%s%s%02d%06d" names the file with), and Save_Checksum over its 0x2A4 bytes into its word at 0x24
+Save_SealData = 0x80036978; // type:func
+
+// after the save data is read: Save_Checksum over its 0x2A4 bytes against the word at 0x24 (zeroed for the sum), 0 when equal and its first word idle, else func_800368C0 resets the slots
+Save_CheckData = 0x800369F4; // type:func
+
+// Save_InitSlot on each of the four 0x2A4-byte slot records in g_SaveState from 0x6F4
+Save_InitSlots = 0x800368C0; // type:func
+
+// Save_RunCommand's command 13, Save_LoadSlot's inverse: copies D_80069718's 128 words into the slot's record from 0x60 in g_SaveState, its word at 4 cleared
+Save_StoreSlot = 0x80036AC8; // type:func
+
+// Heap_AllocZeroed of the memory card state's 0x11F4 bytes into g_SaveState, its flags set, then Save_InitSlots; Gfx_AllocFrameBuffers calls it in the memory card's mode (D_8005F3EC 2)
+Save_AllocState = 0x80036368; // type:func
+
+// Heap_Free of the memory card state g_SaveState holds, after keeping its flags' bit 0x10 in D_8005F268; Gfx_FreeFrameBuffers calls it in the memory card's mode (D_8005F3EC 2)
+Save_FreeState = 0x800363D0; // type:func
+
+// returns the memory card state's second word, the flags func_80036084 sets and func_800360AC clears, beside the state Save_GetState returns
+Save_GetFlags = 0x80036150; // type:func
+
+// sets bits in the memory card state's second word (Save_GetFlags'), a copy in D_8006CC5C
+Save_SetFlags = 0x80036084; // type:func
+
+// clears bits in the memory card state's second word (Save_GetFlags')
+Save_ClearFlags = 0x800360AC; // type:func
+
+// stores the memory card state Save_GetState returns and Save_Update switches on (g_SaveState's first word), flag 1 set unless it is 0
+Save_SetState = 0x800360CC; // type:func
+
+// with 15 files on the card (its 15 blocks) and none the game's (Save_IsGameFile), sets the flags' 0x40; Save_ReadFileHeader calls it
+Save_CheckCardFull = 0x80035E7C; // type:func
