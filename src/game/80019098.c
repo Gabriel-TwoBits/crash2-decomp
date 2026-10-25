@@ -333,54 +333,54 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     u16 frame;
     s32 i;
 
-    parent = (s32 *)W(arg0, 0x44);
-    W(arg0, 0x138) = NO_ANIM;
-    W(arg0, 0xB8) = 0;
-    W(arg0, 0xF0) = 0;
-    W(arg0, 0xF4) = 0;
-    W(arg0, 0xF8) = 0;
-    W(arg0, 0) = 1;
-    W(arg0, 0x84) = 0;
-    W(arg0, 0x88) = 0;
-    W(arg0, 0x8C) = 0;
-    W(arg0, 0x90) = 0;
-    W(arg0, 0x94) = 0;
-    W(arg0, 0x98) = 0;
-    W(arg0, 0x9C) = 0;
-    W(arg0, 0xA0) = 0;
-    W(arg0, 0xA4) = 0;
-    W(arg0, 0x104) = 0;
-    W(arg0, 0xEC) = 0;
-    W(arg0, 0xD8) = 0;
-    W(arg0, 0x94) = 0;
-    W(arg0, 0xA8) = 0;
-    W(arg0, 0xB0) = 0;
-    W(arg0, 0xAC) = 0;
-    W(arg0, 0x108) = 0;
-    W(arg0, 0x118) = 0;
-    W(arg0, 0x110) = 0;
-    W(arg0, 0x128) = 0;
-    W(arg0, 0x12C) = -2;
+    parent = (s32 *)OBJ(arg0)->links[GOOL_LINK_PARENT];
+    OBJ(arg0)->unk_138 = NO_ANIM;
+    OBJ(arg0)->entity_id = 0;
+    OBJ(arg0)->entity = 0;
+    OBJ(arg0)->unk_F4 = 0;
+    OBJ(arg0)->path_length = 0;
+    OBJ(arg0)->unk_0 = 1;
+    OBJ(arg0)->vel[0] = 0;
+    OBJ(arg0)->vel[1] = 0;
+    OBJ(arg0)->vel[2] = 0;
+    OBJ(arg0)->target_rot[0] = 0;
+    OBJ(arg0)->target_rot[1] = 0;
+    OBJ(arg0)->target_rot[2] = 0;
+    OBJ(arg0)->unk_9C[0] = 0;
+    OBJ(arg0)->unk_9C[1] = 0;
+    OBJ(arg0)->unk_9C[2] = 0;
+    OBJ(arg0)->unk_104 = 0;
+    OBJ(arg0)->anim_frame = 0;
+    OBJ(arg0)->unk_D8 = 0;
+    OBJ(arg0)->target_rot[1] = 0;
+    OBJ(arg0)->status_a = 0;
+    OBJ(arg0)->block_flags = 0;
+    OBJ(arg0)->status_b = 0;
+    OBJ(arg0)->display_mode = 0;
+    OBJ(arg0)->unk_118 = 0;
+    OBJ(arg0)->unk_110 = 0;
+    OBJ(arg0)->unk_128 = 0;
+    OBJ(arg0)->voice = -2;
     W(arg0, 0x120) = 0;
     if (parent[0] == OBJ_STATE_ACTIVE) {
-        parent = (s32 *)W(arg0, 0x44);
-        W(arg0, 0x18) = parent[0x18 / 4];
+        parent = (s32 *)OBJ(arg0)->links[GOOL_LINK_PARENT];
+        OBJ(arg0)->zone = (NsfEntry *)parent[0x18 / 4];
         for (i = 0; i < COPY_BLOCK_WORDS; i++) {
             arg0[BLOCK_OFFSET_WORDS + i] = parent[BLOCK_OFFSET_WORDS + i];
         }
     } else {
-        W(arg0, 0x18) = 0;
-        W(arg0, 0x6C) = 0;
-        W(arg0, 0x70) = 0;
-        W(arg0, 0x74) = 0;
-        W(arg0, 0x78) = SCALE_ONE;
-        W(arg0, 0x7C) = SCALE_ONE;
-        W(arg0, 0x80) = SCALE_ONE;
+        OBJ(arg0)->zone = 0;
+        OBJ(arg0)->rot[0] = 0;
+        OBJ(arg0)->rot[1] = 0;
+        OBJ(arg0)->rot[2] = 0;
+        OBJ(arg0)->scale[0] = SCALE_ONE;
+        OBJ(arg0)->scale[1] = SCALE_ONE;
+        OBJ(arg0)->scale[2] = SCALE_ONE;
     }
     if (arg1 >= ANIM_FIRST && (arg1 < ANIM_LAST_EXCL || arg1 == ANIM_EXTRA)) {
-        W(arg0, 0x18) = 0;
+        OBJ(arg0)->zone = 0;
     }
-    if (W(arg0, 4) != OBJ_MODE_LOADED) {
+    if (OBJ(arg0)->unk_4 != OBJ_MODE_LOADED) {
         return RESULT_BAD_ENTRY;
     }
     entry = (s32 *)(D_8006759C + arg1 * 4 + ENTRY_TABLE_OFFSET);
@@ -388,21 +388,21 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
         return RESULT_BAD_ENTRY;
     }
     res = Nsf_OpenEntry(entry, 1, 0);
-    W(arg0, 0xC) = (s32)res;
-    W(arg0, 0x10) = (s32)res;
-    if (W(arg0, 0xC) >= RESULT_OK_LIMIT) {
+    OBJ(arg0)->exe = res;
+    OBJ(arg0)->unk_10 = res;
+    if ((s32)OBJ(arg0)->exe >= RESULT_OK_LIMIT) {
         return RESULT_BAD_ENTRY;
     }
-    W(arg0, 0x40) = (s32)arg0;
-    W(arg0, 0x58) = 0;
-    W(arg0, 0x50) = 0;
-    W(arg0, 0x5C) = 0;
-    table = (s32 *)W(arg0, 0xC);
-    W(arg0, 0xB4) = arg2;
-    W(arg0, 0xE8) = 0;
-    W(arg0, 0xD0) = 0;
-    W(arg0, 0x54) = (s32)g_PlayerSlot[0];
-    frame = *(u16 *)(W(table, 0x1C) + (W((s32 *)W(table, 0x10), 0x10) + W(arg0, 0xB4)) * 2);
+    OBJ(arg0)->links[GOOL_LINK_SELF] = (struct GoolObject *)arg0;
+    OBJ(arg0)->links[GOOL_LINK_COLLIDER] = 0;
+    OBJ(arg0)->links[GOOL_LINK_CREATOR] = 0;
+    OBJ(arg0)->links[GOOL_LINK_INTERRUPTER] = 0;
+    table = (s32 *)OBJ(arg0)->exe;
+    OBJ(arg0)->subtype = arg2;
+    OBJ(arg0)->anim = 0;
+    OBJ(arg0)->unk_D0 = 0;
+    OBJ(arg0)->links[GOOL_LINK_PLAYER] = (struct GoolObject *)g_PlayerSlot[0];
+    frame = *(u16 *)(W(table, 0x1C) + (W((s32 *)W(table, 0x10), 0x10) + OBJ(arg0)->subtype) * 2);
     if (frame == FRAME_NONE) {
         return RESULT_NO_FRAME;
     }
