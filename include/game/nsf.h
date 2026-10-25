@@ -88,7 +88,7 @@ typedef struct NsfPageSlot {
     /* 0x08 */ s16 unk_8;
     /* 0x0A */ s16 unk_A;
     /* 0x0C */ s16 unk_C; /* the slot's index (Nsf_OpenLevel) */
-    /* The part of ref_count taken with flag 4 (the load lists', func_80021900); func_80013EB0 drops it whole */
+    /* The part of ref_count taken with flag 4 (the load lists', Nsf_ApplyEntryList); Nsf_DropLoadListRefs drops it whole */
     /* 0x0E */ s8 unk_E;
     /* 0x0F */ s8 ref_count; /* Nsf_OpenEntry adds to it, Nsf_DropPageRef frees the slot at zero */
     /* 0x10 */ u16 *unk_10;

@@ -1107,7 +1107,7 @@ void func_80013E7C(NsfPageSlot *arg0) {
     }
 }
 
-void func_80013EB0(NsfPageSlot *arg0) {
+void Nsf_DropLoadListRefs(NsfPageSlot *arg0) {
     s8 d = arg0->unk_E;
 
     if (d != 0) {
@@ -1339,7 +1339,7 @@ s32 Nsf_CloseEntry(void *a, s32 arg1) {
 }
 
 #ifdef NON_MATCHING
-void func_80013EB0(NsfPageSlot *arg0);
+void Nsf_DropLoadListRefs(NsfPageSlot *arg0);
 extern Unk80013BD8Table D_800675B0;
 extern NsfPageSlot D_80062D40;
 extern NsfPageSlot D_80063000;
@@ -1359,7 +1359,7 @@ void func_80014420(void) {
         do {
             p = q;
             if (p->state != 1) {
-                func_80013EB0(p);
+                Nsf_DropLoadListRefs(p);
             }
             i++;
             q = p + 1;
@@ -1370,7 +1370,7 @@ void func_80014420(void) {
         p = e = D_800675B0.e;
         do {
             if (p->state != 1) {
-                func_80013EB0(p);
+                Nsf_DropLoadListRefs(p);
             }
             i++;
             p++;
@@ -1378,12 +1378,12 @@ void func_80014420(void) {
     }
     for (i = 15, p = &D_80063000; i >= 0; i--, p--) {
         if ((u16)(*(u16 *)&p->state - 0x14) < 2) {
-            func_80013EB0(p);
+            Nsf_DropLoadListRefs(p);
         }
     }
     for (i = 9, p = &D_80062D40; i >= 0; i--, p--) {
         if ((u16)(*(u16 *)&p->state - 0x14) < 2) {
-            func_80013EB0(p);
+            Nsf_DropLoadListRefs(p);
         }
     }
 }
@@ -1418,7 +1418,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_CountFreePages);
 
 extern Unk80013BD8Table D_800675B0;
 
-void func_80014638(u32 *arg0) {
+void Nsf_MarkPagesInUse(u32 *arg0) {
     s32 i;
     s32 bit;
     NsfPageSlot *p;
@@ -1445,7 +1445,7 @@ void func_80014638(u32 *arg0) {
     }
 }
 
-void func_80014790(u32 *arg0) {
+void Nsf_DropUnmarkedPages(u32 *arg0) {
     u32 word0;
     u32 word;
     s32 i;
@@ -1457,7 +1457,7 @@ void func_80014790(u32 *arg0) {
             bit = p->unk_14 >> 1;
             word0 = arg0[bit / 32];
             if (!(word0 & (1 << (bit % 32)))) {
-                func_80013EB0(p);
+                Nsf_DropLoadListRefs(p);
             }
         }
     }
@@ -1467,7 +1467,7 @@ void func_80014790(u32 *arg0) {
             bit = p->unk_14 >> 1;
             word = arg0[bit / 32];
             if (!(word & (1 << (bit % 32)))) {
-                func_80013EB0(p);
+                Nsf_DropLoadListRefs(p);
             }
         }
     }

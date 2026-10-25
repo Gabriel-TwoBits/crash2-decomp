@@ -397,7 +397,7 @@ void Zone_ApplyLoadLists(s32 arg0, s32 arg1, s32 arg2) {
     }
     p = Ent_GetProperty(arg0, type, offset, 0, &count, 1, 0, 0, 0);
     if ((p != 0) && (count != 0)) {
-        func_80021900(count, (u32 *)p, FLAGS_FIRST, 1);
+        Nsf_ApplyEntryList(count, (u32 *)p, FLAGS_FIRST, 1);
     }
 
     if (arg2 == SIDE_SELECT) {
@@ -407,7 +407,7 @@ void Zone_ApplyLoadLists(s32 arg0, s32 arg1, s32 arg2) {
     }
     p = Ent_GetProperty(arg0, type, arg1, 0, &count, 1, 0, 0, 0);
     if ((p != 0) && (count != 0)) {
-        func_80021900(count, (u32 *)p, FLAGS_SECOND, 1);
+        Nsf_ApplyEntryList(count, (u32 *)p, FLAGS_SECOND, 1);
     }
 }
 #else
@@ -416,7 +416,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", Zone_ApplyLoadLists);
 
 extern NsdRecord **D_80067590;
 
-void func_80021900(s32 count, u32 *p, s32 flags, s32 arg3) {
+void Nsf_ApplyEntryList(s32 count, u32 *p, s32 flags, s32 arg3) {
     NsdRecord *cur;
     u32 v;
     NsdRecord *e;

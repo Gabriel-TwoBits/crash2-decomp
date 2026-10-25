@@ -604,7 +604,7 @@ void Sys_SaveCheckpoint(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
                 D_8006CDB4 = *(s32 *)(arg1 + 0x38);
             }
         }
-        func_80014638((u32 *)(arg1 + CALLEE_OFFSET));
+        Nsf_MarkPagesInUse((u32 *)(arg1 + CALLEE_OFFSET));
     }
     if (arg3 == MODE_MERGE) {
         *(s32 *)(arg1 + TAIL_OFFSET) += D_8006CC68;
@@ -698,7 +698,7 @@ void Sys_LoadCheckpoint(u8 *arg0) {
                 func_8002001C(Nsf_OpenEntry(slot, 1, 0));
             }
         }
-        func_80014790((u32 *)(arg0 + 0x1040));
+        Nsf_DropUnmarkedPages((u32 *)(arg0 + 0x1040));
         Gfx_ClearObjectQueue(g_BuildBuffer);
     }
     g_CurrentZone = 0;

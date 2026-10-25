@@ -1677,3 +1677,15 @@ Gfx_DrawGlyph = 0x800186D8; // type:func
 
 // Gfx_DrawText calls it once the text is drawn, with the bounds it gathered over the glyphs and the font's glyph at 0x80: a textured quad over that box in front of the camera, linked into the ordering table at the text's depth less a bias
 Gfx_DrawTextBox = 0x8001856C; // type:func
+
+// for each EID of a list (found through the NSD's buckets) or record pointer: Nsf_OpenEntry with flag 8, else Nsf_CloseRecord (its count negated with flag 4); Zone_ApplyLoadLists passes it the load lists (properties 0x208, 0x209) with flags 0x14 and 0xC, flag 4 marking the references a page slot keeps apart
+Nsf_ApplyEntryList = 0x80021900; // type:func
+
+// takes a page slot's references counted apart (unk_E, those taken with flag 4 by Nsf_ApplyEntryList for the load lists) off its count, freeing it (Nsf_FreePageSlot) at zero; func_80014790 calls it
+Nsf_DropLoadListRefs = 0x80013EB0; // type:func
+
+// a bitmap of the pages (by the slots' page reference >> 1) whose slots are taken and referenced, in both slot tables; Sys_SaveCheckpoint stores it with the continue point
+Nsf_MarkPagesInUse = 0x80014638; // type:func
+
+// Nsf_DropLoadListRefs on every taken, referenced page slot whose page the bitmap Nsf_MarkPagesInUse made doesn't hold; Sys_LoadCheckpoint calls it with the continue point's bitmap
+Nsf_DropUnmarkedPages = 0x80014790; // type:func
