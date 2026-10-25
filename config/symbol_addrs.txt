@@ -1578,3 +1578,15 @@ Gfx_ResetFrame = 0x800163C4; // type:func
 
 // empties the frame buffer's packet list at 0x2088, which Gfx_QueueObject appends to and Gfx_DrawObjects draws, and sets its allocation cursor (0x2090) back to its buffer (0x208C); Gfx_FreeFrameBuffers, Gfx_ResetFrame and Sys_LoadCheckpoint call it
 Gfx_ClearObjectQueue = 0x800163B4; // type:func
+
+// sets a sequence record's number and left and right volumes (the flat volume D_8005F308 for sequence 1 of a SEP of 2 or more) and passes them to SsSepSetVol; Snd_LoadSequence calls it for each sequence of the SEP it opened with SsSepOpen, before Snd_ControlSequence plays the first
+Snd_InitSequence = 0x800343CC; // type:func
+
+// Snd_Update calls it each frame with the current zone's sequence entry (the zone header's 0x2A4): when it differs from the one open (D_8005F2F4), fades that one out with SsSepSetDecrescendo and waits the fade's frames, then Snd_LoadSequence loads the new one
+Snd_UpdateSequence = 0x80034254; // type:func
+
+// Gfx_EndFrame calls it before DrawOTag when the frame's flags hold 0x40000: MoveImage of 0xF0 rows from VRAM's (0, 0x108), as wide as the video open in D_80069358 (one of the regions Gfx_OpenVideo clears), to the drawn frame's x
+Gfx_CopyVideoFrame = 0x8002706C; // type:func
+
+// func_80027664 calls it on the video it opens into D_80069358: each frame (func_800270C4) expanded from 8-bit indices to 16-bit pixels by the video's palette, then LoadImage at y 0x100 on, one frame's height below the last, with DrawSync after each
+Gfx_LoadVideoFrames = 0x80026EF4; // type:func

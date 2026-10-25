@@ -724,7 +724,7 @@ int Gfx_EndFrame(void) {
     }
     if (D_800675AC == 0) {
         if (D_8006CB94 & FLAG_PRE_DRAW) {
-            func_8002706C();
+            Gfx_CopyVideoFrame();
         }
         DrawOTag(g_DrawBuffer->ot);
     }

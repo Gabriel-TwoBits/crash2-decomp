@@ -849,7 +849,7 @@ void Snd_Update(void) {
         Snd_SetMusicVolume((g_MusicVolume * MIX_SCALE_MUL) >> MIX_SCALE_SHIFT);
     }
     if (g_CurrentZone != 0) {
-        func_80034254(*(s32 *)((u8 *)g_CurrentZone + 0x10) + 0x2A4);
+        Snd_UpdateSequence(*(s32 *)((u8 *)g_CurrentZone + 0x10) + 0x2A4);
     }
     if (D_8005F300 != 0) {
         if (D_8005F300 < 0 && D_8005F2FC < -D_8005F300) {
@@ -1182,7 +1182,7 @@ typedef struct Unk800343CC {
     s16 unk_12;
 } Unk800343CC;
 
-void func_800343CC(Unk800343CC *, s32, s32);
+void Snd_InitSequence(Unk800343CC *, s32, s32);
 void SsSepSetCrescendo(s16, s16, s32, s32);
 u16 D_8005F2EC;
 extern s32 D_80067FB8;
@@ -1262,9 +1262,9 @@ s32 Snd_LoadSequence(s32 addr) {
     for (i = 0; i < D_8005F2F8; i++) {
         if (fresh) {
             v = (s16)D_8005F2EC >> 7;
-            func_800343CC((Unk800343CC *)&D_8005FCD0[i], (v << 16) | v, i);
+            Snd_InitSequence((Unk800343CC *)&D_8005FCD0[i], (v << 16) | v, i);
         } else {
-            func_800343CC((Unk800343CC *)&D_8005FCD0[i], 0, i);
+            Snd_InitSequence((Unk800343CC *)&D_8005FCD0[i], 0, i);
             v = (s16)D_8005F2EC >> 7;
             SsSepSetCrescendo(g_SndSepAccess, D_8005FCD0[i].seq, v, 0x1E);
         }
@@ -1304,7 +1304,7 @@ extern s32 D_8005F39C;
 extern s16 g_SndSepAccess;
 extern s16 D_8005F3E0;
 
-void func_80034254(s32 arg0) {
+void Snd_UpdateSequence(s32 arg0) {
     s32 word;
     s32 key;
 
@@ -1348,7 +1348,7 @@ void func_80034254(s32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_80034254);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_UpdateSequence);
 #endif
 
 void Snd_CloseSequence(s16 a, s32 b);
@@ -1372,7 +1372,7 @@ extern s16 D_8005F2F8;
 extern s32 D_8005F308;
 extern s16 g_SndSepAccess;
 
-void func_800343CC(Unk800343CC *arg0, s32 arg1, s32 arg2) {
+void Snd_InitSequence(Unk800343CC *arg0, s32 arg1, s32 arg2) {
     if (D_8005F2F8 >= SOUND_REVERB_THRESHOLD && arg2 == SEQ_FORCE_FLAT_VOLUME) {
         arg0->unk_12 = D_8005F308;
         arg0->unk_10 = D_8005F308;
@@ -1385,7 +1385,7 @@ void func_800343CC(Unk800343CC *arg0, s32 arg1, s32 arg2) {
     SsSepSetVol(g_SndSepAccess, arg2, arg0->unk_10, arg0->unk_12);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800324A8", func_800343CC);
+INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_InitSequence);
 #endif
 
 void SsSepClose(s16);

@@ -91,7 +91,7 @@ s32 Cam_Update(void) {
 extern s32 DrawSync(s32);
 extern s32 LoadImage(s16 *, void *);
 
-void func_80026EF4(s32 *arg0) {
+void Gfx_LoadVideoFrames(s32 *arg0) {
     s16 rect[4];
     s32 y, w, h, rows, n, area;
     u16 *lut;
@@ -130,14 +130,14 @@ void func_80026EF4(s32 *arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80026EF4);
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", Gfx_LoadVideoFrames);
 #endif
 
 extern u8 *D_80069358;
 
 extern GfxFrame *g_DrawBuffer;
 
-void func_8002706C(void) {
+void Gfx_CopyVideoFrame(void) {
     RECT rect;
     u8 *p;
     s32 w;
@@ -484,7 +484,7 @@ s32 func_80027664(s32 *arg0) {
     out[0x4C / 4] = *arg0;
     if (flag != 0) {
         D_80069358 = (u8 *)out;
-        func_80026EF4(out);
+        Gfx_LoadVideoFrames(out);
     } else {
         /* no global registration */
     }

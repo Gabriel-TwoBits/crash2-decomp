@@ -406,7 +406,7 @@ void func_80012DC0(void) {
     D_80067FC8 = 1;
     while (*D_80067FB0 != 0) {
         if (g_CurrentZone != 0 && D_8005F3E0 != -1) {
-            func_80034254((s32)g_CurrentZone->items[0] + 0x2A4);
+            Snd_UpdateSequence((s32)g_CurrentZone->items[0] + 0x2A4);
         }
         Nsf_UpdatePaging(-1);
     }
