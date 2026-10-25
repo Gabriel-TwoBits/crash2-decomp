@@ -874,6 +874,28 @@ Steps, in order:
   `LoadImage` and `StoreImage`, an animation frame's transfer to and from VRAM (`Gfx_TransferAnimFrame`, with which
   `Save_WriteFile` reads the save's icons) and the rectangles it takes (`Gfx_GetAnimFrameRect`). `tools/progress.py`:
   236 of 638 game functions and 64 of 1,075 data symbols named.
+  A tenth batch, the memory card's and the objects' remaining helpers, the videos, the scene: the card's event waits
+  (`Save_WaitSwEvents`, `Save_WaitHwEvents`), its state and flags (`Save_SetState`, `Save_GetFlags`, `Save_SetFlags`,
+  `Save_ClearFlags`, `Save_AllocState`, `Save_FreeState`), the slots' (`Save_InitSlots`, `Save_StoreSlot`), the save
+  data's checksum (`Save_Checksum`: 0x12345678 plus its words, `Save_SealData` before the write with
+  `Rand_Below(999999)`, the file name's number, `Save_CheckData` after the read), the title's way back from Shift-JIS
+  (`Save_TitleFromShiftJis`, the same table) and the full card (`Save_CheckCardFull`, its 15 blocks); the sound
+  voice's stop (`Snd_StopVoice`, `SpuSetKey` off); the text drawers by `sprintf` and their "~" commands read with
+  `atoi` (`Gfx_DrawObjectText`, `Gfx_DrawText`, `Gfx_DrawGlyph`, `Gfx_DrawTextBox`); the load lists' references
+  (`Nsf_ApplyEntryList`, `Nsf_DropLoadListRefs`, `NsfPageSlot.load_list_refs`) and the continue point's page set
+  (`Nsf_MarkPagesInUse`, `Nsf_DropUnmarkedPages`); `Nsf_LevelEidChar`, `Nsf_ItemSize`, `Nsf_ReserveTextureSlot`.
+  The videos, in the region VIDO's level-open handler sets up: `Gfx_AllocVideo` (VRAM's depths and palettes),
+  `Gfx_FreeVideo`, `Gfx_LoadVideo`, `Gfx_UnloadVideo`, `Gfx_SeekVideo`, `Gfx_ShowVideoFrame`, which GOOL's opcodes 74
+  to 77 run (`Gool_OpLoadVideo`, ...), opcode 72 queueing a camera message (`Gool_OpCameraMessage`); the opcodes'
+  enum takes those names. The world renderer's scene (`g_Scene`), its flags (`g_SceneFlags`, the camera entity's
+  property 0x185, whose bits CrashEdit's CrashHacks scripts for fog, darkness and water set) and its setup
+  (`Gfx_SetupScene`, `Gfx_SetDefaultSceneMode`). With Crash2Recomp's notes, which the code confirms: the frame time's
+  rounding to vertical blanks (`Gfx_RoundShownTicks`), the world's view (`Gfx_SetWorldView`, the aspect's -5/8), the
+  bounded EID lookup (`Nsf_LookupEidBounded`) and the objects' physics, the only reader of the frame's time besides
+  the GOOL scratchpad (`Obj_UpdatePhysics`). Left: the camera's handlers by path kind and the collision's by mode,
+  numbered only; the world renderer's mode families (Crash2Recomp's notes tie them to the flags' bits, fog per vertex
+  and per batch, darkness), which `tools/run_game.py` could show; `D_800675AC` and `D_8006CB94`, read by the port.
+  `tools/progress.py`: 283 of 638 game functions and 66 of 1,075 data symbols named.
 - **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
   docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
   same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy
