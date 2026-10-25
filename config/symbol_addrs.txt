@@ -1675,5 +1675,5 @@ Gfx_DrawObjectText = 0x8001BD84; // type:func
 // Gfx_DrawText's one call per character: a textured quad from the glyph's corners in front of the camera, shaded by the object's colours when asked, linked into the ordering table at the depth given
 Gfx_DrawGlyph = 0x800186D8; // type:func
 
-// Gfx_DrawText calls it once the text is drawn, with the bounds it gathered over the glyphs and the font's glyph at 0x80: a textured quad over that box in front of the camera, linked into the ordering table behind the text
+// Gfx_DrawText calls it once the text is drawn, with the bounds it gathered over the glyphs and the font's glyph at 0x80: a textured quad over that box in front of the camera, linked into the ordering table at the text's depth less a bias
 Gfx_DrawTextBox = 0x8001856C; // type:func
