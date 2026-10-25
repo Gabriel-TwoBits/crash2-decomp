@@ -226,7 +226,7 @@ void Gool_OpSetAudio(GoolObject *obj, u32 op) {
     obj->misc = Snd_SetSoundParam(val, flags, dst, obj);
 }
 
-void func_80038E14(GoolObject *obj, u32 arg1) {
+void Gool_OpCameraMessage(GoolObject *obj, u32 arg1) {
     s32 *a;
     s32 *b;
     a = operand_address(obj, (arg1 >> 12) & 0xFFF);

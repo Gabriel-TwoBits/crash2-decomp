@@ -1698,3 +1698,36 @@ Nsf_ItemSize = 0x800123BC; // type:func
 
 // with its flag set, Nsf_ReleaseTextureSlot on a texture page slot (of those at 0x80062D70) and state 0x1E, which keeps it out of use; without, back to free (1) from 0x1E; Gfx_LoadVideoFrames reserves slots 8, 9, 12 and 13 before loading a video's frames into VRAM
 Nsf_ReserveTextureSlot = 0x80013A54; // type:func
+
+// a video's state and image buffers from the region Gfx_OpenVideo (VIDO's level-open handler) set up at 0x80069338: the image's row bytes by its depth (4, 8, 16 or 24 bits, VRAM's formats) and a palette of 16 or 256 colours (32 or 512 bytes) for 4 and 8 bits
+Gfx_AllocVideo = 0x800277A8; // type:func
+
+// gives a video's buffers back to the region Gfx_OpenVideo set up at 0x80069334 (its used and free byte counts); Gfx_UnloadVideo calls it
+Gfx_FreeVideo = 0x80027980; // type:func
+
+// opens a video entry (Nsf_OpenEntry), counts its frames (items tagged 2) and finds its header (tag 1), Gfx_AllocVideo of its size and depth, and Gfx_LoadVideoFrames when the header asks to load them into VRAM (D_80069358); GOOL's opcode 74 pushes what it returns
+Gfx_LoadVideo = 0x80027664; // type:func
+
+// closes a video's entry (Nsf_CloseEntry), frees the texture slots Gfx_LoadVideoFrames reserved (Nsf_ReserveTextureSlot 8, 9, 12, 13 released) and its buffers (Gfx_FreeVideo); GOOL's opcode 75
+Gfx_UnloadVideo = 0x800278F8; // type:func
+
+// decodes a video's items up to the frame asked (arg1 >> 8), clamped to its frame count, starting over (func_8002719C) when behind; Gfx_LoadVideoFrames steps through every frame with it, GOOL's opcode 76 stores its result in the object's misc
+Gfx_SeekVideo = 0x800270C4; // type:func
+
+// Gfx_TransferAnimFrame (LoadImage) of a video's decoded palette and image (its 0x34 and 0x38, as the flags 0x100 and 0x200 ask) at an animation frame's rectangles; GOOL's opcode 77
+Gfx_ShowVideoFrame = 0x80027600; // type:func
+
+// the handler of GOOL's opcode 74 (the opcode table at 0x8005C514): Gfx_LoadVideo of its operand, pushed on the object's stack
+Gool_OpLoadVideo = 0x80039A14; // type:func
+
+// the handler of GOOL's opcode 75: Gfx_UnloadVideo of its operand
+Gool_OpUnloadVideo = 0x80039AA4; // type:func
+
+// the handler of GOOL's opcode 76: Gfx_SeekVideo of its two operands, the result in the object's misc
+Gool_OpSeekVideo = 0x80039B14; // type:func
+
+// the handler of GOOL's opcode 77: Gfx_ShowVideoFrame of the video on the stack at the animation frame below it
+Gool_OpShowVideoFrame = 0x80039C08; // type:func
+
+// the handler of GOOL's opcode 72: Cam_QueueMessage of its two operands
+Gool_OpCameraMessage = 0x80038E14; // type:func

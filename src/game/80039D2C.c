@@ -6865,12 +6865,12 @@ enum GoolOpcode {
     /* Gool_OpSpawn too, Obj_Spawn's last argument set (CrashEdit's SPWF, "force spawn") */
     GOOL_SPAWN_FORCED = 70,
     GOOL_CALL_INDIRECT = 71,
-    GOOL_OP_72 = 72,
+    GOOL_CAMERA_MESSAGE = 72,
     GOOL_NATIVE = 73,
-    GOOL_OP_74 = 74,
-    GOOL_OP_75 = 75,
-    GOOL_OP_76 = 76,
-    GOOL_OP_77 = 77,
+    GOOL_LOAD_VIDEO = 74,
+    GOOL_UNLOAD_VIDEO = 75,
+    GOOL_SEEK_VIDEO = 76,
+    GOOL_SHOW_VIDEO_FRAME = 77,
     GOOL_SET_INDEXED = 78
 };
 
@@ -6878,11 +6878,11 @@ extern u32 D_8005F29C[];
 long ratan2(long y, long x);
 void Gool_OpDebug(void);
 void Gool_OpVector(GoolObject *, u32);
-void func_80038E14(GoolObject *, u32);
-void func_80039A14(GoolObject *, s32);
-void func_80039AA4(GoolObject *, s32);
-void func_80039B14(GoolObject *, u32);
-void func_80039C08(GoolObject *, u32);
+void Gool_OpCameraMessage(GoolObject *, u32);
+void Gool_OpLoadVideo(GoolObject *, s32);
+void Gool_OpUnloadVideo(GoolObject *, s32);
+void Gool_OpSeekVideo(GoolObject *, u32);
+void Gool_OpShowVideoFrame(GoolObject *, u32);
 void Gool_OpEntityFieldRow(GoolObject *, u32);
 void Gool_OpSpawn(GoolObject *, u32);
 void Gool_OpPlaySound(GoolObject *, u32);
@@ -7756,23 +7756,23 @@ s32 Gool_Interpret(void *self, s32 mode, s32 argument) {
         case GOOL_SET_AUDIO:
             gool_operation(&vm, Gool_OpSetAudio);
             break;
-        case GOOL_OP_72:
-            gool_operation(&vm, func_80038E14);
+        case GOOL_CAMERA_MESSAGE:
+            gool_operation(&vm, Gool_OpCameraMessage);
             break;
         case GOOL_CHUNK:
             gool_operation(&vm, Gool_OpChunk);
             break;
-        case GOOL_OP_74:
-            gool_operation(&vm, func_80039A14);
+        case GOOL_LOAD_VIDEO:
+            gool_operation(&vm, Gool_OpLoadVideo);
             break;
-        case GOOL_OP_75:
-            gool_operation(&vm, func_80039AA4);
+        case GOOL_UNLOAD_VIDEO:
+            gool_operation(&vm, Gool_OpUnloadVideo);
             break;
-        case GOOL_OP_76:
-            gool_operation(&vm, func_80039B14);
+        case GOOL_SEEK_VIDEO:
+            gool_operation(&vm, Gool_OpSeekVideo);
             break;
-        case GOOL_OP_77:
-            gool_operation(&vm, func_80039C08);
+        case GOOL_SHOW_VIDEO_FRAME:
+            gool_operation(&vm, Gool_OpShowVideoFrame);
             break;
         case GOOL_GO_TO_STATE:
             result = gool_ending(&vm, Gool_OpGoToState);

@@ -113,7 +113,7 @@ void Gfx_LoadVideoFrames(s32 *arg0) {
     rows = arg0[1];
     lut = (u16 *)arg0[0xE];
     for (y = 0; y < rows; y += 0x100) {
-        func_800270C4(arg0, y);
+        Gfx_SeekVideo(arg0, y);
         src = (u32 *)arg0[0xD];
         dst = (u32 *)arg0[0x12];
         for (n = area >> 2; n > 0; n--) {
@@ -155,7 +155,7 @@ void Gfx_CopyVideoFrame(void) {
 
 s32 func_8002719C(s32 *arg0);
 
-s32 func_800270C4(s32 *arg0, s32 arg1) {
+s32 Gfx_SeekVideo(s32 *arg0, s32 arg1) {
     s32 pos;
     s32 end;
     s32 limit;
@@ -410,7 +410,7 @@ void func_80027500(u8 *src, u8 *mask, u8 *dst, s32 n, s32 mode, s32 w, s32 strid
     }
 }
 
-void func_80027600(void *arg0, s32 arg1, s32 arg2, s32 arg3) {
+void Gfx_ShowVideoFrame(void *arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 var_t0;
     s32 var_v1;
 
@@ -445,7 +445,7 @@ typedef struct Unk80027664List {
     /* 0x10 */ u8 *ent[0];
 } Unk80027664List;
 
-s32 func_80027664(s32 *arg0) {
+s32 Gfx_LoadVideo(s32 *arg0) {
     Unk80027664List *list;
     u8 *hdr;
     s32 i;
@@ -471,7 +471,7 @@ s32 func_80027664(s32 *arg0) {
         return 0;
     }
     flag = hdr[0] & HEADER_FLAG_MASK;
-    out = func_800277A8((hdr[1] << BYTE_BITS) | hdr[2],
+    out = Gfx_AllocVideo((hdr[1] << BYTE_BITS) | hdr[2],
                         ((hdr[3] & HEIGHT_HI_MASK) << BYTE_BITS) | hdr[4],
                         (hdr[3] & DEPTH_MASK) >> DEPTH_SHIFT, flag);
     if (out == 0) {
@@ -491,7 +491,7 @@ s32 func_80027664(s32 *arg0) {
     return (s32)out;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027664);
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", Gfx_LoadVideo);
 #endif
 
 #ifdef NON_MATCHING
@@ -517,7 +517,7 @@ typedef struct Pool80027 {
 
 extern s32 D_80069338;
 
-void *func_800277A8(s32 w, s32 h, s32 bpp, s32 arg3) {
+void *Gfx_AllocVideo(s32 w, s32 h, s32 bpp, s32 arg3) {
     Pool80027 *pool;
     Slot80027 *s;
     s32 stride, bytes, extra, i, a;
@@ -570,11 +570,11 @@ loop:
     return s;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_800277A8);
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", Gfx_AllocVideo);
 #endif
 
 
-void func_800278F8(s32 arg0) {
+void Gfx_UnloadVideo(s32 arg0) {
     if (*(s32 *)(arg0 + 0xC) != 1) {
         Nsf_CloseEntry((void *)(arg0 + 0x4C), 1);
         if (*(s32 *)(arg0 + 0x24) != 0) {
@@ -584,7 +584,7 @@ void func_800278F8(s32 arg0) {
             Nsf_ReserveTextureSlot(0xD, 0);
             D_80069358 = 0;
         }
-        func_80027980(arg0);
+        Gfx_FreeVideo(arg0);
     }
 }
 
@@ -601,7 +601,7 @@ void func_800278F8(s32 arg0) {
 
 extern s32 D_80069334;
 
-void func_80027980(s32 arg0) {
+void Gfx_FreeVideo(s32 arg0) {
     s32 *owner = (s32 *)arg0;
     s32 *pool = &D_80069334;
     s32 i;
@@ -629,7 +629,7 @@ void func_80027980(s32 arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80026CA0", func_80027980);
+INCLUDE_ASM("asm/nonmatchings/game/80026CA0", Gfx_FreeVideo);
 #endif
 
 #ifdef NON_MATCHING

@@ -475,7 +475,7 @@ s32 Gool_OpAcceptOrRejectEvent(GoolObject *arg0, u32 arg1, s32 arg2, s32 *arg3) 
 INCLUDE_ASM("asm/nonmatchings/game/80038F00", Gool_OpAcceptOrRejectEvent);
 #endif
 
-void func_80039A14(GoolObject *arg0, s32 arg1) {
+void Gool_OpLoadVideo(GoolObject *arg0, s32 arg1) {
     s32 idx = arg1 & 0xFFF;
     s32 idx2 = idx;
     s32 *var_v0;
@@ -492,13 +492,13 @@ void func_80039A14(GoolObject *arg0, s32 arg1) {
     } else {
         var_v0 = Gool_ResolveRef(arg0, idx2);
     }
-    temp_v0 = func_80027664(var_v0);
+    temp_v0 = Gfx_LoadVideo(var_v0);
     sp = arg0->sp;
     arg0->sp = sp + 1;
     *sp = temp_v0;
 }
 
-void func_80039AA4(GoolObject *arg0, s32 arg1) {
+void Gool_OpUnloadVideo(GoolObject *arg0, s32 arg1) {
     s32 *var_v0;
     s32 temp_a2;
     s32 a3;
@@ -515,11 +515,11 @@ void func_80039AA4(GoolObject *arg0, s32 arg1) {
     } else {
         var_v0 = Gool_ResolveRef(arg0, a3);
     }
-    func_800278F8(*var_v0);
+    Gfx_UnloadVideo(*var_v0);
 }
 
 #ifdef NON_MATCHING
-void func_80039B14(GoolObject *arg0, u32 arg1) {
+void Gool_OpSeekVideo(GoolObject *arg0, u32 arg1) {
     s32 *var_s1;
     s32 *var_v0;
     s32 temp_a0_2;
@@ -549,10 +549,10 @@ void func_80039B14(GoolObject *arg0, u32 arg1) {
     } else {
         var_v0 = Gool_ResolveRef(arg0, temp_a0_2);
     }
-    arg0->misc = func_800270C4((s32 *) *var_v0, *var_s1);
+    arg0->misc = Gfx_SeekVideo((s32 *) *var_v0, *var_s1);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80038F00", func_80039B14);
+INCLUDE_ASM("asm/nonmatchings/game/80038F00", Gool_OpSeekVideo);
 #endif
 
 #ifdef NON_MATCHING
@@ -572,7 +572,7 @@ static inline s32 *Operand(GoolObject *o, s32 idx, u32 v) {
     return r;
 }
 
-void func_80039C08(GoolObject *arg0, u32 arg1) {
+void Gool_OpShowVideoFrame(GoolObject *arg0, u32 arg1) {
     s32 *src;
     s32 *dst;
     s32 *sp;
@@ -596,8 +596,8 @@ void func_80039C08(GoolObject *arg0, u32 arg1) {
     addr = sp[-2];
     dstVal = *dst;
     srcVal = *src;
-    func_80027600((void *)addr, base + ((u32)packed >> 8) * 4, dstVal, srcVal);
+    Gfx_ShowVideoFrame((void *)addr, base + ((u32)packed >> 8) * 4, dstVal, srcVal);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80038F00", func_80039C08);
+INCLUDE_ASM("asm/nonmatchings/game/80038F00", Gool_OpShowVideoFrame);
 #endif
