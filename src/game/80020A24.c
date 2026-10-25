@@ -65,7 +65,7 @@ extern s32 g_SceneFlags;
 extern s32 D_80062ADC;
 extern s32 D_80062AE0;
 extern s32 D_80062AE4;
-extern s32 D_8006CB94;
+extern s32 g_FrameFlags;
 extern s32 D_8006CC38;
 extern s32 D_8006CC3C;
 extern void *D_8006CC48;
@@ -203,7 +203,7 @@ void Gfx_SetupScene(void) {
                 D_80062A6C = D_80062A74[0];
                 D_80062A6E = D_80062A74[1];
                 D_80062A70 = D_80062A78;
-                if (D_8006CB94 & GLOBAL_FLAG_10000000) {
+                if (g_FrameFlags & GLOBAL_FLAG_10000000) {
                     D_80062A74[0] = D_80062A74[0] - D_8006CCC4;
                     D_80062A74[1] = D_80062A74[1] - D_8006CCC8;
                     D_80062A78 -= D_8006CCCC;
@@ -213,7 +213,7 @@ void Gfx_SetupScene(void) {
                     D_80062A78 -= p16[2];
                 }
             }
-            if (D_8006CB94 & GLOBAL_FLAG_10000000) {
+            if (g_FrameFlags & GLOBAL_FLAG_10000000) {
                 D_80062A90 = D_8006CCD0;
             } else {
                 D_80062A90 = p16[3];
@@ -359,7 +359,7 @@ void Gfx_SetupScene(void) {
         D_80062A34 = func_80043D84;
         D_80062A38 = func_80043EA0;
     }
-    if (D_8006CB94 & GLOBAL_FLAG_1000000) {
+    if (g_FrameFlags & GLOBAL_FLAG_1000000) {
         frame[6] = Nsf_NameToEid(D_8005F1FC);
         D_80062A28 = func_80045C18;
         D_80062A2C = func_80045D88;

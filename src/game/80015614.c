@@ -21,7 +21,7 @@ extern s32 g_UseCd;
 extern s32 D_8005F3DC;
 extern s32 D_8006015C;
 extern char D_80062D84[];
-extern s32 D_800675AC;
+extern s32 g_DisplayHold;
 extern s32 D_8006CD2C;
 
 void CdInit(void);
@@ -57,7 +57,7 @@ void Sys_Init(void) {
     }
     Gfx_Init();
     Rand_ResetSeedAlt();
-    D_800675AC = 0;
+    g_DisplayHold = 0;
     q = &D_8006015C;
     i = FILL_WORDS - 1;
     do {

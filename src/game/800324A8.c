@@ -356,7 +356,7 @@ block_11:
 extern s32 D_8005F2E0;
 extern s16 D_8005F2E8;
 extern s32 D_8005FC84;
-extern s32 D_8006CB94;
+extern s32 g_FrameFlags;
 extern s32 D_8006CD2C;
 void SpuSetReverbVoice(s32, s32);
 void SpuSetVoiceAttr(s32 *);
@@ -379,7 +379,7 @@ s32 Snd_PlaySound(GoolObject *arg0, s32 arg1, s32 arg2) {
     if (g_SfxVolume == 0) {
         return 0;
     }
-    if (!(D_8006CB94 & CTRL_REQUIRED) && !(arg0->state_flags & OBJ_FLAGS_REQUIRED)) {
+    if (!(g_FrameFlags & CTRL_REQUIRED) && !(arg0->state_flags & OBJ_FLAGS_REQUIRED)) {
         return 0;
     }
     voice = Snd_AllocVoice();
@@ -551,7 +551,7 @@ s32 Snd_SetSoundParam(s32 arg0, s32 arg1, s32 *arg2, GoolObject *arg3) {
     volatile s32 peek[3];
     volatile Unk80032F18Raw4 *rawp;
 
-    if (!(D_8006CB94 & GATE_FLAG_ACTIVE) && !(arg3->state_flags & OBJ_FLAG_ACTIVE)) {
+    if (!(g_FrameFlags & GATE_FLAG_ACTIVE) && !(arg3->state_flags & OBJ_FLAG_ACTIVE)) {
         return 0;
     }
     slot = D_8005F304;

@@ -45,8 +45,8 @@ extern s32 D_80060984;
 extern s32 *D_80067598;
 extern u8 *D_8006759C;
 extern u8 g_EntityFlags[];
-extern s32 D_8006CB80;
-extern s32 D_8006CB94;
+extern s32 g_NextFrameFlags;
+extern s32 g_FrameFlags;
 extern s32 D_8006CB98;
 extern s32 D_8006CBB4;
 extern s32 D_8006CBC0;
@@ -73,8 +73,8 @@ s32 func_8001F9C4(void) {
         D_8005F1F8 = 0;
         return RETURN_CODE;
     }
-    D_8006CB80 = GPU_CMD_TERMINATOR;
-    D_8006CB94 = GPU_CMD_TERMINATOR;
+    g_NextFrameFlags = GPU_CMD_TERMINATOR;
+    g_FrameFlags = GPU_CMD_TERMINATOR;
     D_8005F3B0 = 0;
     D_8005F3B4 = 0;
     slot = D_8006CD7C;

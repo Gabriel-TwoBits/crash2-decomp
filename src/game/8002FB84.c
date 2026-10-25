@@ -133,7 +133,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8002FB84", Input_StartPlayback);
 
 #ifdef NON_MATCHING
 extern s32 g_DemoBlock;
-extern s32 D_800675AC;
+extern s32 g_DisplayHold;
 extern s32 D_8006CB20;
 
 void Input_LoadDemo(s32 *arg0) {
@@ -142,7 +142,7 @@ void Input_LoadDemo(s32 *arg0) {
     s32 *new_var;
     s32 *temp_v0;
 
-    D_800675AC = 0;
+    g_DisplayHold = 0;
     temp_v0 = Nsf_OpenEntry(arg0, 1, 1);
     do { new_var2 = 0x6396347F; new_var = arg0; } while (0);
     *new_var = new_var2;

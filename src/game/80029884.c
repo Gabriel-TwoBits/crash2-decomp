@@ -147,7 +147,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_80029884);
 
 extern u8 *g_Player;
 extern s32 g_SceneFlags;
-extern s32 D_8006CB94;
+extern s32 g_FrameFlags;
 
 
 /* Division of |v| by a constant through its reciprocal multiplier, as the original does. */
@@ -182,7 +182,7 @@ void func_80029D0C(GoolObject *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     len = 0;
     nx = 0;
     nz = 0;
-    if ((D_8006CB94 & FLAG_COLLIDE_ON) && (g_SceneFlags & MODE_STEP) &&
+    if ((g_FrameFlags & FLAG_COLLIDE_ON) && (g_SceneFlags & MODE_STEP) &&
         (!(g_SceneFlags & MODE_SLIDE) || (arg0->state_flags & OBJ_FLAG_SOLID))) {
         if ((g_SceneFlags & MODE_ALT) && (((GoolObject *)g_Player)->state_flags & OBJ_FLAG_SOLID)) {
             step = STEP_ALT;

@@ -23,7 +23,7 @@ extern s32 g_CameraProgress;
 extern u32 g_CameraPathKind;
 extern s32 g_SceneFlags;
 extern s32 D_80069948;
-extern s32 D_8006CB94[];
+extern s32 g_FrameFlags[];
 extern s32 D_8006CBB4;
 
 s32 Cam_Update(void) {
@@ -40,7 +40,7 @@ s32 Cam_Update(void) {
     if (g_Player == 0) {
         return 0;
     }
-    p = D_8006CB94;
+    p = g_FrameFlags;
     if (!(*p & 2)) {
         return 0;
     }

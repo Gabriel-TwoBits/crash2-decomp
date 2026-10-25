@@ -652,7 +652,7 @@ extern s32 D_800608D0;
 extern s32 D_80060944;
 extern GfxFrame *g_BuildBuffer;
 extern s32 D_8006CB78;
-extern s32 D_8006CB80;
+extern s32 g_NextFrameFlags;
 extern s32 D_8006CC60;
 void SetGeomScreen(s32);
 
@@ -764,7 +764,7 @@ void Sys_LoadCheckpoint(u8 *arg0) {
     D_80060944 = 0;
     D_8006CB78 = 0;
     D_8005F3B4 = 0;
-    D_8006CB80 = INIT_ARG_FLAGS;
+    g_NextFrameFlags = INIT_ARG_FLAGS;
     if (!isSpecial) {
         D_8006CB84 += STEP_AMOUNT;
         if (*(s32 *)(arg0 + 0x34) != 0) {

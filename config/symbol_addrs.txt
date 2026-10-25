@@ -1764,3 +1764,12 @@ Nsf_LookupEidBounded = 0x80014B90; // type:func
 
 // Obj_Update calls it for each object after func_8001BFDC: velocity, damping and the path's motion scaled by the shown frame's time (GfxFrame.shown_ticks), which only it, its helpers and Gool_InitScratchpad read (Crash2Recomp's notes: every reader of the frame tick count is physics)
 Obj_UpdatePhysics = 0x8001D63C; // type:func
+
+// NsfLevel's word at 0x24: while it is not 0, Gfx_EndFrame neither turns the frame buffers over nor starts DrawOTag, and takes 1 off it when positive. tools/run_game.py's demo schedule shows it in retail's RAM: 2 when a level changes (game frame 4,599, Sys_MainLoop's store before Nsf_CloseLevel), 1 at 4,600, 0 from 4,602, and -1 from the demo's pick (Input_PickDemo) until the demo starts (game frames 1,826 and 3,719, Input_LoadDemo's 0 after); with Gfx_EndFrame ignoring it, the displays differ from those frames on (4,600 and 4,601 only after the level change)
+g_DisplayHold = 0x800675AC;
+
+// GOOL global 4 (g_GoolGlobals + 0x10): Gfx_EndFrame copies it into g_FrameFlags at each game frame's end; tools/run_game.py's demo schedule shows the GOOL code's values in retail's RAM, 0x2C01FFFE at the title, 0x0C01FFFF in the demos' levels, 0x0C81FFFF on the frame that picks a demo, none of them written by the C but 0x0C01FFFF
+g_NextFrameFlags = 0x8006CB80;
+
+// GOOL global 9 (g_GoolGlobals + 0x24), the game frame's switches: Gfx_EndFrame copies g_NextFrameFlags into it at each frame's end and its bits select the frame's work (0x1000 the textures' clock, 0x2000 the background band, 0x400000 the fade kept at its end, 0x200000 the memory card's screens with root counter 2 stopped), the pads' and the collision's too; tools/run_game.py's demo schedule shows the title's 0x2C01FFFE and the levels' 0x0C01FFFF a frame after g_NextFrameFlags
+g_FrameFlags = 0x8006CB94;

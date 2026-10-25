@@ -88,8 +88,8 @@ extern s32 *D_8005F374;
 extern u8 *g_DemoBlock;
 extern s32 *g_CurrentZone;
 extern GfxFrame *g_DisplayBuffer;
-extern s32 D_8006CB80;
-extern s32 D_8006CB94;
+extern s32 g_NextFrameFlags;
+extern s32 g_FrameFlags;
 extern s32 D_8006CCA0;
 extern s32 g_PlaybackState;
 extern s32 D_8006CD18;
@@ -209,7 +209,7 @@ void Input_Update(void) {
                     stream_flag = (u32)D_8005F374 >= (u32)(g_DemoBlock + (*(s32 *)g_DemoBlock * STREAM_COUNT_SCALE) + STREAM_END_OFFSET);
                     if (sel != 0) {
                         Gool_SendEvent(0, sel, STREAM_ID, 1, &stream_flag);
-                        D_8006CB80 = STREAM_UNK_VALUE;
+                        g_NextFrameFlags = STREAM_UNK_VALUE;
                         g_PlaybackState = STATE_PLAYBACK_END;
                     } else {
                         g_PlaybackState = 0;
@@ -233,7 +233,7 @@ void Input_Update(void) {
                     || (u32)D_8005F374 >= (u32)(g_DemoBlock + (*(s32 *)g_DemoBlock * STREAM_COUNT_SCALE) + STREAM_END_OFFSET)) {
                     if (D_8006CCA0 != 0) {
                         g_PlaybackState = STATE_PLAYBACK_START;
-                        D_8006CB80 &= FLAGS_80_CLEAR;
+                        g_NextFrameFlags &= FLAGS_80_CLEAR;
                         if (D_8006CD18 == 0) {
                             D_8006CD18 = DEFAULT_D18;
                         } else {
@@ -262,7 +262,7 @@ void Input_Update(void) {
             /* second pad is the only one captured */
         }
 
-        if ((!(D_8006CB94 & PAD_FLAG_ENABLE) && g_Paused == 0)
+        if ((!(g_FrameFlags & PAD_FLAG_ENABLE) && g_Paused == 0)
             || (p->unk_00 != 0 && g_PlaybackState == 0)) {
             p->unk_3C = 0;
             p->unk_40 = DIR_NEUTRAL;
@@ -559,9 +559,9 @@ extern s32 *g_CurrentZone;
 extern s32 D_800608D8;
 extern s32 g_CameraProgress;
 extern GfxFrame *g_DisplayBuffer;
-extern s32 D_800675AC;
-extern s32 D_8006CB80;
-extern s32 D_8006CB94;
+extern s32 g_DisplayHold;
+extern s32 g_NextFrameFlags;
+extern s32 g_FrameFlags;
 extern s32 D_8006CC1C;
 extern s32 D_8006CC94;
 extern s32 g_FrameCount;
@@ -584,7 +584,7 @@ int Gfx_EndFrame(void) {
     FRAME_ENDING();
     if (!FRAME_BETWEEN) {
         g_FrameCount += 1;
-        if ((g_Paused == 0) && (D_8006CB94 & FLAG_COUNT_FRAMES)) {
+        if ((g_Paused == 0) && (g_FrameFlags & FLAG_COUNT_FRAMES)) {
             D_80060944 += 1;
         }
     }
@@ -612,7 +612,7 @@ int Gfx_EndFrame(void) {
             D_8006CD18 = fade + D_8006CD1C;
             Gfx_DrawFade(D_8006CD18 + FADE_BASE);
             if (D_8006CD18 == 0) {
-                if (!(D_8006CB94 & FLAG_NO_CLEAR_FADE)) {
+                if (!(g_FrameFlags & FLAG_NO_CLEAR_FADE)) {
                     D_8006CD18 = FADE_DONE_OUT;
                 }
             }
@@ -620,7 +620,7 @@ int Gfx_EndFrame(void) {
     }
     func_80016C58(D_8006CC94, D_8005F1D4);
     D_8005F1D4 = D_8006CC94;
-    if (D_8006CB94 & FLAG_BAND) {
+    if (g_FrameFlags & FLAG_BAND) {
         mode = BAND_MODE_FULL;
         color = 0;
         y = 0;
@@ -671,7 +671,7 @@ int Gfx_EndFrame(void) {
     if (FRAME_BETWEEN) {
         /* The host shows it, drawn into the buffer being built */
         FRAME_BETWEEN_SHOWN();
-        return D_8006CB94;
+        return g_FrameFlags;
     }
     Snd_Update();
     g_DrawBuffer->end_ticks = g_TimerTicks;
@@ -681,7 +681,7 @@ int Gfx_EndFrame(void) {
     } else {
         D_8006CC1C = FRAME_TIME_DEFAULT;
     }
-    if (D_800675AC == 0) {
+    if (g_DisplayHold == 0) {
         tmp = g_DrawBuffer;
         g_DisplayBuffer = tmp;
         g_DrawBuffer = g_BuildBuffer[0];
@@ -691,7 +691,7 @@ int Gfx_EndFrame(void) {
     if ((u32)(g_TimerTicks - g_DisplayBuffer->start_ticks) < FRAME_TIME_LIMIT) {
         VSync(0);
     }
-    if (D_8006CB94 & FLAG_RCNT_STOP) {
+    if (g_FrameFlags & FLAG_RCNT_STOP) {
         if (D_8005F1D8 == 0) {
             EnterCriticalSection();
             StopRCnt(RCNT_SPEC);
@@ -719,19 +719,19 @@ int Gfx_EndFrame(void) {
     g_DisplayBuffer->disp.screen.x = (s16)D_8006CCDC;
     PutDispEnv(&g_DisplayBuffer->disp);
     PutDrawEnv(&g_DrawBuffer->draw);
-    if (D_800675AC > 0) {
-        D_800675AC -= 1;
+    if (g_DisplayHold > 0) {
+        g_DisplayHold -= 1;
     }
-    if (D_800675AC == 0) {
-        if (D_8006CB94 & FLAG_PRE_DRAW) {
+    if (g_DisplayHold == 0) {
+        if (g_FrameFlags & FLAG_PRE_DRAW) {
             Gfx_CopyVideoFrame();
         }
         DrawOTag(g_DrawBuffer->ot);
     }
     Gfx_ResetFrame(g_BuildBuffer[0]);
-    D_8006CB94 = D_8006CB80;
+    g_FrameFlags = g_NextFrameFlags;
     FRAME_ENDED();
-    return D_8006CB80;
+    return g_NextFrameFlags;
 }
 #else
 INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_EndFrame);
@@ -766,7 +766,7 @@ void Gfx_AddFillRect(s32 arg0, s32 arg1, s16 arg2, s16 arg3, u8 arg4, u8 arg5, u
 
 #ifdef NON_MATCHING
 extern u8 D_8005B500[];
-extern s32 D_8006CB94;
+extern s32 g_FrameFlags;
 s32 GetTPage(s32, s32, s32, s32);
 void SetDrawMode(void *, s32, s32, s32, s32 *);
 void SetPolyF4(void *);
@@ -802,7 +802,7 @@ void Gfx_DrawFade(u32 arg0) {
         SetPolyF4(p);
         SetSemiTrans(p, 1);
         AddPrim(&g_BuildBuffer[0]->ot[GFX_OT_LENGTH - 1], p);
-        SetDrawMode(q, 1, 0, GetTPage(0, (D_8006CB94 & 0x800000) ? 1 : 2, 0, 0) & 0xFFFF, 0);
+        SetDrawMode(q, 1, 0, GetTPage(0, (g_FrameFlags & 0x800000) ? 1 : 2, 0, 0) & 0xFFFF, 0);
         AddPrim(&g_BuildBuffer[0]->ot[GFX_OT_LENGTH - 1], q);
     }
 }

@@ -383,7 +383,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_PopFrame);
 #define FIELD(o, off, T) (*(T *)((u8 *)(o) + (off)))
 #define MODEL_KIND(o) FIELD(FIELD(FIELD(o, OFF_MODEL, u8 *), OFF_MODEL_INFO, u8 *), 4, u32)
 
-extern u32 D_8006CB94;
+extern u32 g_FrameFlags;
 extern s32 g_Paused;
 
 s32 Obj_Update(u8 *obj, s32 flag) {
@@ -404,7 +404,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
     } else {
     }
     D_8006CB60 = (s32)obj;
-    pad = D_8006CB94;
+    pad = g_FrameFlags;
     hit = pad & PAD_ANY;
     if (hit != 0) {
         flags100 = ((u32)OBJ(obj)->state_flags);
@@ -417,13 +417,13 @@ s32 Obj_Update(u8 *obj, s32 flag) {
         } else {
             sel = MODEL_KIND(obj);
             switch (sel) {
-            case 0x100: hit = D_8006CB94 & 0x20; break;
-            case 0x200: hit = D_8006CB94 & 0x100; break;
+            case 0x100: hit = g_FrameFlags & 0x20; break;
+            case 0x200: hit = g_FrameFlags & 0x100; break;
             case 0x300:
             case 0x500:
-            case 0x600: hit = D_8006CB94 & 0x80; break;
+            case 0x600: hit = g_FrameFlags & 0x80; break;
             case 0x400:
-            case 0x900: hit = D_8006CB94 & 0x400; break;
+            case 0x900: hit = g_FrameFlags & 0x400; break;
             default: break;
             }
         }
@@ -478,8 +478,8 @@ s32 Obj_Update(u8 *obj, s32 flag) {
         func_8001AA80((GoolObject *)obj, out);
     }
     if (OBJ(obj)->anim != 0 && OBJ(obj)->unk_120 != 1
-        && !(((u32)OBJ(obj)->status_b) & AC_BIT_SKIP) && (D_8006CB94 & PAD_FIRE)) {
-        pad = D_8006CB94;
+        && !(((u32)OBJ(obj)->status_b) & AC_BIT_SKIP) && (g_FrameFlags & PAD_FIRE)) {
+        pad = g_FrameFlags;
         if (((((u32)OBJ(obj)->status_b) & AC_BIT_ALT) || (((u32)OBJ(obj)->state_flags) & F100_BIT_ALT))
             && (pad & PAD_FORCE2)) {
             hit = 1;
@@ -488,7 +488,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
             hit = 0;
             switch (sel) {
             case 0x100:
-                if (D_8006CB94 & PAD_MODE_A) {
+                if (g_FrameFlags & PAD_MODE_A) {
                     if ((D_80060944 & 1) || g_Paused != 0 || OBJ(obj)->display_mode != 4) {
                         hit = 1;
                     } else {
@@ -496,16 +496,16 @@ s32 Obj_Update(u8 *obj, s32 flag) {
                 } else {
                 }
                 break;
-            case 0x200: hit = D_8006CB94 & 0x200; break;
+            case 0x200: hit = g_FrameFlags & 0x200; break;
             case 0x300:
             case 0x500:
-            case 0x600: hit = D_8006CB94 & 0x40; break;
+            case 0x600: hit = g_FrameFlags & 0x40; break;
             case 0x400:
-            case 0x900: hit = D_8006CB94 & 0x800; break;
+            case 0x900: hit = g_FrameFlags & 0x800; break;
             default: break;
             }
         }
-        if (flag == 0 && !(D_8006CB94 & PAD_HOLD) && !(((u32)OBJ(obj)->state_flags) & F100_BIT_FORCE)) {
+        if (flag == 0 && !(g_FrameFlags & PAD_HOLD) && !(((u32)OBJ(obj)->state_flags) & F100_BIT_FORCE)) {
             hit = 0;
         } else {
         }

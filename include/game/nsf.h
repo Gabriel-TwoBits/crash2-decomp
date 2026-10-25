@@ -115,7 +115,7 @@ typedef struct NsfLevel {
     /* 0x18 */ Nsd *nsd;
     /* 0x1C */ s32 unk_1C;
     /* 0x20 */ s32 nsf_start_sector; /* g_NsfStartSector */
-    /* 0x24 */ s32 unk_24;
+    /* 0x24 */ s32 display_hold; /* g_DisplayHold, a symbol of its own */
     /* 0x28 */ s32 page_slot_count; /* how many page buffers Nsf_OpenLevel could allocate */
     /* 0x2C */ NsfPageSlot page_slots[NSF_LEVEL_PAGE_SLOTS];
     /* 0x3C8 */ s32 unk_3C8; /* NSF_LEVEL_UNK_SLOTS */

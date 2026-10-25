@@ -7,7 +7,7 @@ char D_8005F218[] = "pb??B";
 typedef struct { char c[6]; } S6;
 extern char D_8005F218[];
 extern NsfLevel D_80067588;
-extern s32 D_8006758C, D_800675AC, D_8006CBB4, g_PlaybackState, D_8005F3EC;
+extern s32 D_8006758C, g_DisplayHold, D_8006CBB4, g_PlaybackState, D_8005F3EC;
 void Input_PickDemo(s32 *arg0) {
     char buf[8];
     s32 r = Nsf_CountEntriesOfType(&D_80067588, 0x13);
@@ -24,7 +24,7 @@ void Input_PickDemo(s32 *arg0) {
         buf[2] = Rand_Below(r) + 0x30;
         buf[3] = Nsf_LevelEidChar(D_8006758C);
         *arg0 = Nsf_NameToEid(buf);
-        D_800675AC = -1;
+        g_DisplayHold = -1;
         g_PlaybackState = 3;
     }
 }

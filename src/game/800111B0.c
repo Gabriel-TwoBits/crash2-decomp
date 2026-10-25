@@ -330,7 +330,7 @@ extern GfxFrame *g_BuildBuffer;
 extern NsfLevel D_80067588;
 extern void *D_8006759C;
 extern s32 D_80069944;
-extern s32 D_8006CB94;
+extern s32 g_FrameFlags;
 extern s32 D_8006CB98;
 extern s32 D_8006CBA0;
 extern s32 D_8006CBB4;
@@ -414,7 +414,7 @@ void Sys_MainLoop(s32 arg0) {
                 } else {
                     D_8005F1F4 = 0;
                 }
-                D_80067588.unk_24 = 2;
+                D_80067588.display_hold = 2;
                 Nsf_CloseLevel(&D_80067588);
                 g_Paused = 0;
                 g_EntityQueueCount = 0;
@@ -445,7 +445,7 @@ void Sys_MainLoop(s32 arg0) {
             /* paused */
         }
         Gfx_UpdateView();
-        if ((D_8006CB94 & 1) && (*(s32 *)g_CurrentZone->items[0] != 0)) {
+        if ((g_FrameFlags & 1) && (*(s32 *)g_CurrentZone->items[0] != 0)) {
             SetRotMatrix(g_ViewMatrix);
             list = (s32 *)g_CurrentZone->items[0];
             count = *list;
@@ -474,7 +474,7 @@ void Sys_MainLoop(s32 arg0) {
         } else {
             Gfx_ResetOt((u8 *)g_BuildBuffer->ot, GFX_OT_LENGTH);
         }
-        if (D_8006CB94 & SAVE_FLAGS_MASK) {
+        if (g_FrameFlags & SAVE_FLAGS_MASK) {
             if ((D_80062A90 != 0) && (g_SceneFlags & FLAG_16)) {
                 Gfx_DrawStreaks(D_80062A90, g_BuildBuffer, g_Scene);
             } else {
@@ -494,7 +494,7 @@ void Sys_MainLoop(s32 arg0) {
         Gfx_EndFrame();
         func_80011E90();
     } while (g_Quit == 0);
-    D_8006CB94 = 0;
+    g_FrameFlags = 0;
     Gfx_EndFrame();
     Gfx_EndFrame();
     Nsf_CloseLevel(&D_80067588);
