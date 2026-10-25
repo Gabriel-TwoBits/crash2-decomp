@@ -1590,3 +1590,21 @@ Gfx_CopyVideoFrame = 0x8002706C; // type:func
 
 // func_80027664 calls it on the video it opens into D_80069358: each frame (func_800270C4) expanded from 8-bit indices to 16-bit pixels by the video's palette, then LoadImage at y 0x100 on, one frame's height below the last, with DrawSync after each
 Gfx_LoadVideoFrames = 0x80026EF4; // type:func
+
+// holds "CRASH B." at start, the save's default name; Save_GetSlotName and Save_LoadSlot copy a slot's name (its 0x2A4-byte record's 0xC) into it with strcpy, Save_SetSlotName copies it into the slot's, Save_IsSlotNamed compares them with strcmp
+g_SaveName = 0x8005C500;
+
+// Save_RunCommand's command 18: strcmp of g_SaveName ("CRASH B." by default) with the name of the slot it is given, 1 when equal
+Save_IsSlotNamed = 0x80036598; // type:func
+
+// Save_RunCommand's command 16: strcpy of the slot's name (its record's 0xC in g_SaveState) into g_SaveName, 1 without the card's state
+Save_GetSlotName = 0x80036B68; // type:func
+
+// Save_RunCommand's command 17: strcpy of g_SaveName into the slot's name (its record's 0xC in g_SaveState), then func_80036850, 1 without the card's state
+Save_SetSlotName = 0x80036BD8; // type:func
+
+// Save_RunCommand's command 14: copies the slot's 128 words from its record's 0x60 into D_80069718 and its name into g_SaveName with strcpy
+Save_LoadSlot = 0x80036C40; // type:func
+
+// Save_RunCommand's command 15 calls it on a slot's record in g_SaveState before func_80036850: memset of the record's 0x2A4 bytes, then its defaults
+Save_InitSlot = 0x8003690C; // type:func

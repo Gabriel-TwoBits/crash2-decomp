@@ -1303,14 +1303,14 @@ s32 func_8003653C(void) {
 }
 
 #ifdef NON_MATCHING
-extern char D_8005C500[];
+extern char g_SaveName[];
 
 
-s32 func_80036598(s32 arg0) {
-    return strcmp(D_8005C500, (char *)(arg0 * 0x2A4 + (int)g_SaveState) + 0x700) == 0;
+s32 Save_IsSlotNamed(s32 arg0) {
+    return strcmp(g_SaveName, (char *)(arg0 * 0x2A4 + (int)g_SaveState) + 0x700) == 0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800345C8", func_80036598);
+INCLUDE_ASM("asm/nonmatchings/game/800345C8", Save_IsSlotNamed);
 #endif
 
 #ifdef NON_MATCHING
@@ -1379,20 +1379,20 @@ s32 Save_RunCommand(u32 arg0, s32 arg1) {
     case 13:
         return func_80036AC8(arg1);
     case 14:
-        return func_80036C40(arg1);
+        return Save_LoadSlot(arg1);
     case 15:
         if (g_SaveState != 0) {
-            func_8003690C((char *)g_SaveState + (arg1 * 0x2A4 + 0x6F4));
+            Save_InitSlot((char *)g_SaveState + (arg1 * 0x2A4 + 0x6F4));
             func_80036850();
             return 0;
         }
         return 1;
     case 16:
-        return func_80036B68(arg1);
+        return Save_GetSlotName(arg1);
     case 17:
-        return func_80036BD8(arg1);
+        return Save_SetSlotName(arg1);
     case 18:
-        return func_80036598(arg1);
+        return Save_IsSlotNamed(arg1);
     case 0:
     default:
         return 1;
@@ -1419,7 +1419,7 @@ void func_800368C0(void) {
     offset = 0x6F4;
     do {
         i++;
-        func_8003690C((s8 *)g_SaveState + offset);
+        Save_InitSlot((s8 *)g_SaveState + offset);
         offset += 0x2A4;
     } while (i < 4);
 }
@@ -1449,7 +1449,7 @@ struct Unk8003690C {
     s32 f5C;
 };
 
-void func_8003690C(void *p)
+void Save_InitSlot(void *p)
 {
   struct Unk8003690C *o = p;
   s32 u;
@@ -1568,16 +1568,16 @@ s32 func_80036AC8(s32 arg0) {
     return 0;
 }
 
-extern char D_8005C500[];
+extern char g_SaveName[];
 extern char *D_8006CBCC;
 
-s32 func_80036B68(s32 arg0) {
+s32 Save_GetSlotName(s32 arg0) {
     s32 ret;
     char *src;
     if (g_SaveState != 0) {
         src = (char *)(arg0 * 0x2A4 + (s32)g_SaveState + 0x700);
-        strcpy(D_8005C500, src);
-        D_8006CBCC = D_8005C500;
+        strcpy(g_SaveName, src);
+        D_8006CBCC = g_SaveName;
         ret = 0;
     } else {
         ret = 1;
@@ -1585,11 +1585,11 @@ s32 func_80036B68(s32 arg0) {
     return ret;
 }
 
-s32 func_80036BD8(s32 arg0) {
+s32 Save_SetSlotName(s32 arg0) {
     s32 ret;
 
     if (g_SaveState != 0) {
-        strcpy((char *)(arg0 * 0x2A4 + (s32)g_SaveState + 0x700), D_8005C500);
+        strcpy((char *)(arg0 * 0x2A4 + (s32)g_SaveState + 0x700), g_SaveName);
         func_80036850();
         ret = 0;
     } else {
@@ -1598,7 +1598,7 @@ s32 func_80036BD8(s32 arg0) {
     return ret;
 }
 
-s32 func_80036C40(s32 arg0) {
+s32 Save_LoadSlot(s32 arg0) {
     s32 *src;
     s32 *row;
     s32 *dst;
@@ -1626,8 +1626,8 @@ s32 func_80036C40(s32 arg0) {
         i++;
         row += 2;
     } while (i < 0x40);
-    strcpy(D_8005C500, base + 0xC);
-    D_8006CBCC = D_8005C500;
+    strcpy(g_SaveName, base + 0xC);
+    D_8006CBCC = g_SaveName;
     return 0;
 }
 
