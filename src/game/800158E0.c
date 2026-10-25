@@ -1383,7 +1383,7 @@ extern s32 D_80060914;
 extern s32 D_80060930;
 extern s32 D_80060934;
 extern s32 D_80060938;
-extern s32 *D_8006759C;
+extern s32 *g_LevelHeader;
 extern s32 D_8006CB78;
 extern s32 D_8006CBAC;
 extern s32 D_8006CC04;
@@ -1516,7 +1516,7 @@ void Gfx_UpdateView(void) {
         } else {
             /* result 4: angle kept */
         }
-        if (D_8006759C[STATE_TYPE_OFFSET / 4] == STATE_TYPE_FIXED) {
+        if (g_LevelHeader[STATE_TYPE_OFFSET / 4] == STATE_TYPE_FIXED) {
             D_80060914 = 0;
         } else {
             /* angle kept */

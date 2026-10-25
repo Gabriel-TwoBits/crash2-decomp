@@ -916,12 +916,12 @@ void Obj_FreePool(void) {
     Heap_Free(g_PlayerSlot);
 }
 
-extern void *D_8006759C;
+extern void *g_LevelHeader;
 extern s32 g_GoolGlobals;
 
 s32 func_8001F018(void) {
-    g_GoolGlobals = *(s32 *)((s8 *)D_8006759C + 8) << 8;
-    if (*(s32 *)((s8 *)D_8006759C + 4) == 0) {
+    g_GoolGlobals = *(s32 *)((s8 *)g_LevelHeader + 8) << 8;
+    if (*(s32 *)((s8 *)g_LevelHeader + 4) == 0) {
         return -0xE;
     }
     return -0xFF;
@@ -1179,7 +1179,7 @@ void Ent_SetPermFlag(s32 arg0) {
     u16 *free_slot;
     u16 key;
 
-    key = (arg0 >> KEY_LO_SHIFT) | (*(s32 *)((char *)D_8006759C + 8) << KEY_HI_SHIFT);
+    key = (arg0 >> KEY_LO_SHIFT) | (*(s32 *)((char *)g_LevelHeader + 8) << KEY_HI_SHIFT);
     free_slot = 0;
     p = g_PermFlags;
     if (*(s32 *)(*(char **)(g_CurrentZone + OWNER_OFFSET) + FLAGS_OFFSET) & FLAG_LOCKED) {
@@ -1212,7 +1212,7 @@ void Ent_ClearPermFlag(s32 arg0) {
     u16 *p;
     s32 key;
 
-    key = (arg0 >> KEY_SHIFT_LOW) | (((s32 *)D_8006759C)[2] << KEY_SHIFT_HIGH);
+    key = (arg0 >> KEY_SHIFT_LOW) | (((s32 *)g_LevelHeader)[2] << KEY_SHIFT_HIGH);
     key &= KEY_MASK;
     for (p = g_PermFlags; *p != 0; p++) {
         if (*p == key) {

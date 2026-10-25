@@ -56,7 +56,7 @@ extern s32 D_8006CBB4;
 extern s32 D_8006CC84;
 extern s32 D_8006CD7C;
 extern s32 D_8006CB48;
-extern void *D_8006759C;
+extern void *g_LevelHeader;
 extern s32 D_80067FC8;
 
 void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
@@ -261,9 +261,9 @@ void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         }
     }
     D_80067FC8 = 0;
-    if (g_Player == 0 && FIELD(D_8006759C, s32, OBJ_DATA) != SAVE_MAGIC) {
+    if (g_Player == 0 && FIELD(g_LevelHeader, s32, OBJ_DATA) != SAVE_MAGIC) {
         Obj_Spawn(&D_8006CB48, 0, 0, 0, 0, 1);
-        data = (s32)D_8006759C + D_8006CD7C * 0x18;
+        data = (s32)g_LevelHeader + D_8006CD7C * 0x18;
         FIELD(g_Player, s32, 0x60) = FIELD(data, s32, 0x1E8);
         FIELD(g_Player, s32, 0x64) = FIELD(data, s32, 0x1EC);
         FIELD(g_Player, s32, 0x68) = FIELD(data, s32, 0x1F0);

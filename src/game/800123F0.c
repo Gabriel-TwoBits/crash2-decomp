@@ -1712,10 +1712,10 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
     arg0->buckets = arg0->nsd->buckets;
     arg0->records = arg0->nsd->records;
     /* &nsd->records[nsd->record_count] adds the offset first and changes the code */
-    arg0->unk_14 = (u8 *)nsd + nsd->record_count * sizeof(NsdRecord) + NSD_RECORDS_OFFSET;
+    arg0->header = (NsdLevel *)((u8 *)nsd + nsd->record_count * sizeof(NsdRecord) + NSD_RECORDS_OFFSET);
     nsd = arg0->nsd;
     arg0->nsd = (Nsd *)Heap_Realloc((s32)nsd, nsd->record_count * sizeof(NsdRecord) +
-                                                  (*(s32 *)arg0->unk_14 - 1) * FILE_SIZE_STRIDE + FILE_SIZE_BASE);
+                                                  (arg0->header->spawn_count - 1) * FILE_SIZE_STRIDE + FILE_SIZE_BASE);
     i = 0;
     do {
         p = &arg0->buckets[i];

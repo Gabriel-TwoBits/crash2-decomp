@@ -1773,3 +1773,6 @@ g_NextFrameFlags = 0x8006CB80;
 
 // GOOL global 9 (g_GoolGlobals + 0x24), the game frame's switches: Gfx_EndFrame copies g_NextFrameFlags into it at each frame's end and its bits select the frame's work (0x1000 the textures' clock, 0x2000 the background band, 0x400000 the fade kept at its end, 0x200000 the memory card's screens with root counter 2 stopped), the pads' and the collision's too; tools/run_game.py's demo schedule shows the title's 0x2C01FFFE and the levels' 0x0C01FFFF a frame after g_NextFrameFlags
 g_FrameFlags = 0x8006CB94;
+
+// NsfLevel's word at 0x14 (0x80067588 + 0x14), which Nsf_OpenLevel points past the NSD's records: CrashEdit's NSD layout from there (NsdLevel), checked by the code's use of it: the level's id at 8, the GOOL entries by object type from 0x10 (Obj_Init opens the type's), the spawn points of 24 bytes from 0x1DC (Obj_SpawnEntity's player start at a spawn's 0xC), and Nsf_OpenLevel's NSD size 0x714 + 24 per spawn point past the first, 0x520 + 0x1DC + 24 as CrashEdit's minimum 0x6FC plus one
+g_LevelHeader = 0x8006759C;

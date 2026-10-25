@@ -53,7 +53,7 @@ extern s32 D_8006CBA4;
 extern Unk608CC *volatile g_CurrentZone;
 extern s32 g_LevelRequest;
 extern u8 D_80060958;
-extern u8 *D_8006759C;
+extern u8 *g_LevelHeader;
 extern u8 g_ObjLists;
 extern s32 D_8006CB38;
 extern s32 D_8006CC84;
@@ -194,7 +194,7 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     OBJ(slot)->path_length = Ent_GetPropertyRowLength(obj, ENT_PROP_POSITIONS, 0, ENT_ROW_INDEX) << FIXED_SHIFT;
     func_8001F054((GoolObject *)slot, 0, OBJ(slot)->pos);
     if ((s32)slot == g_Player) {
-        row = D_8006759C + D_8006CD7C * ENTITY_POS_ROW_SIZE;
+        row = g_LevelHeader + D_8006CD7C * ENTITY_POS_ROW_SIZE;
         AT(slot, 0x60, s32) = AT(row, 0x1E8, s32);
         AT(slot, 0x64, s32) = AT(row, 0x1EC, s32);
         AT(slot, 0x68, s32) = AT(row, 0x1F0, s32);
@@ -321,7 +321,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80019098", Obj_Spawn);
 #define ANIM_LAST_EXCL 6
 #define ANIM_EXTRA 0x1D
 
-extern u8 *D_8006759C;
+extern u8 *g_LevelHeader;
 
 #define W(base, off) (((s32 *)(base))[(off) / 4])
 
@@ -382,7 +382,7 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     if (OBJ(arg0)->unk_4 != OBJ_MODE_LOADED) {
         return RESULT_BAD_ENTRY;
     }
-    entry = (s32 *)(D_8006759C + arg1 * 4 + ENTRY_TABLE_OFFSET);
+    entry = (s32 *)(g_LevelHeader + arg1 * 4 + ENTRY_TABLE_OFFSET);
     if (*entry == ENTRY_INVALID || arg1 >= ENTRY_COUNT) {
         return RESULT_BAD_ENTRY;
     }

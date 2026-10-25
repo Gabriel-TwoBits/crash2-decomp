@@ -101,6 +101,31 @@ typedef struct NsfPageSlot {
     /* 0x28 */ s32 unk_28;
 } NsfPageSlot;
 
+/* A spawn point of the level's NSD (CrashEdit's NSDSpawnPoint, 24 bytes): its zone's EID, the camera path in it, and
+   the position Obj_SpawnEntity gives the player there */
+typedef struct NsdSpawn {
+    /* 0x00 */ u32 zone;
+    /* 0x04 */ s32 camera;
+    /* 0x08 */ s32 unk_8;
+    /* 0x0C */ s32 pos[3];
+} NsdSpawn;
+
+/* What follows the NSD's records (CrashEdit's NSD from 0x520 plus the records): the spawn points' count, a word the
+   game uses as its state, the level's id, its entities' count, the GOOL entries' EIDs by object type (Obj_Init opens
+   the type's), and the spawn points */
+#define NSD_GOOL_TYPES 64
+#define NSD_LEVEL_EXTRA_BYTES 0xCC
+
+typedef struct NsdLevel {
+    /* 0x000 */ s32 spawn_count;
+    /* 0x004 */ s32 unk_4;
+    /* 0x008 */ s32 level_id;
+    /* 0x00C */ s32 entity_count;
+    /* 0x010 */ u32 gool_map[NSD_GOOL_TYPES];
+    /* 0x110 */ u8 unk_110[NSD_LEVEL_EXTRA_BYTES];
+    /* 0x1DC */ NsdSpawn spawns[0];
+} NsdLevel;
+
 /* The level's paging state, which Nsf_OpenLevel fills and Nsf_CloseLevel frees; at 0x80067588, its fields also read
    as globals by their own addresses (D_80067590, D_800675A0, g_NsfStartSector, ...) */
 typedef struct NsfLevel {
@@ -111,7 +136,7 @@ typedef struct NsfLevel {
     /* 0x08 */ NsdRecord **buckets; /* nsd->buckets, which Nsf_LookupEid scans */
     /* 0x0C */ NsdRecord *records; /* nsd->records */
     /* 0x10 */ s32 *unk_10; /* nsd->unk_408 */
-    /* 0x14 */ void *unk_14; /* nsd->records + nsd->record_count, what follows the records */
+    /* 0x14 */ NsdLevel *header; /* nsd->records + nsd->record_count, what follows the records; g_LevelHeader */
     /* 0x18 */ Nsd *nsd;
     /* 0x1C */ s32 unk_1C;
     /* 0x20 */ s32 nsf_start_sector; /* g_NsfStartSector */

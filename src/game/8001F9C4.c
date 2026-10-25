@@ -43,7 +43,7 @@ extern s32 D_8006097C;
 extern s32 D_80060980;
 extern s32 D_80060984;
 extern s32 *D_80067598;
-extern u8 *D_8006759C;
+extern u8 *g_LevelHeader;
 extern u8 g_EntityFlags[];
 extern s32 g_NextFrameFlags;
 extern s32 g_FrameFlags;
@@ -69,7 +69,7 @@ s32 func_8001F9C4(void) {
 
     g_PlaybackState = 0;
     if (*D_80067598 == SAVE_MAGIC) {
-        FIELD(D_8006759C, 4) = 0;
+        FIELD(g_LevelHeader, 4) = 0;
         D_8005F1F8 = 0;
         return RETURN_CODE;
     }
@@ -79,11 +79,11 @@ s32 func_8001F9C4(void) {
     D_8005F3B4 = 0;
     slot = D_8006CD7C;
     extra = 0;
-    if (FIELD(D_8006759C, 8) != D_8005F3EC) {
+    if (FIELD(g_LevelHeader, 8) != D_8005F3EC) {
         for (;;) {
         }
     }
-    if (FIELD(D_8006759C, 8) == STATE_MENU) {
+    if (FIELD(g_LevelHeader, 8) == STATE_MENU) {
         if (D_8006CCD8 & 1) {
             slot = SLOT_AFTER_BIT;
         } else {
@@ -159,25 +159,25 @@ s32 func_8001F9C4(void) {
         }
     }
     D_8006CD7C = slot;
-    if (slot >= FIELD(D_8006759C, 0)) {
+    if (slot >= FIELD(g_LevelHeader, 0)) {
         slot = 0;
         D_8006CD7C = 0;
     }
     memset(g_EntityFlags, 0, CLEAR_BYTES);
-    func_8001F858(FIELD(D_8006759C, 8));
+    func_8001F858(FIELD(g_LevelHeader, 8));
     Gfx_ResetView();
     if (D_8005F1F4 == 1) {
         off = slot * ENTRY_STRIDE;
-        FIELD(D_8006759C + off, ENTRY_BASE_OFFSET) = D_8006097C;
+        FIELD(g_LevelHeader + off, ENTRY_BASE_OFFSET) = D_8006097C;
         D_8005F1F4 = 0;
-        FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) = D_80060980;
+        FIELD(g_LevelHeader + off, ENTRY_SEL_OFFSET) = D_80060980;
         extra = D_80060984;
     }
     g_CurrentZone = 0;
     g_CameraPath = 0;
     g_CameraProgress = 0;
     off = slot * ENTRY_STRIDE;
-    obj = (u8 *)Nsf_OpenEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1, 1);
+    obj = (u8 *)Nsf_OpenEntry(g_LevelHeader + off + ENTRY_BASE_OFFSET, 1, 1);
     g_DemoEid = SAVE_MAGIC;
     D_8006094C = 0;
     D_8006094D = 0;
@@ -188,9 +188,9 @@ s32 func_8001F9C4(void) {
         Input_PickDemo(&g_DemoEid);
     }
     Cam_MoveAlongPath((s32)obj,
-                  (s32)((NsfEntry *)obj)->items[FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * ZONE_CAMERA_ITEMS + ((ZoneHeader *)((NsfEntry *)obj)->items[0])->info_count],
+                  (s32)((NsfEntry *)obj)->items[FIELD(g_LevelHeader + off, ENTRY_SEL_OFFSET) * ZONE_CAMERA_ITEMS + ((ZoneHeader *)((NsfEntry *)obj)->items[0])->info_count],
                   extra, 0);
-    Nsf_CloseEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1);
+    Nsf_CloseEntry(g_LevelHeader + off + ENTRY_BASE_OFFSET, 1);
     D_8005F1F8 = 0;
     return RETURN_CODE;
 }

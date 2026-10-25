@@ -411,7 +411,7 @@ extern s32 g_CameraX;
 extern s32 g_CameraY;
 extern s32 g_CameraZ;
 extern s32 D_80060828;
-extern Unk8002433CMode *D_8006759C;
+extern Unk8002433CMode *g_LevelHeader;
 void func_80023B04(Arg80023B04 *arg0, s32 *arg1, s32 *arg2);
 
 s32 func_8002433C(s32 *arg0, s32 *arg1, s32 *a2, s32 *a3, s32 *a4) {
@@ -453,7 +453,7 @@ s32 func_8002433C(s32 *arg0, s32 *arg1, s32 *a2, s32 *a3, s32 *a4) {
             ang2 = 0;
         }
     }
-    if (D_8006759C->mode == MODE_FROZEN) {
+    if (g_LevelHeader->mode == MODE_FROZEN) {
         ang2 = 0;
     }
     if (mode == MODE_NO_ROTATE) {
