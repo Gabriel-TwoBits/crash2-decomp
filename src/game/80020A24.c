@@ -797,7 +797,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80022224);
 
 #ifdef NON_MATCHING
 extern s32 g_CurrentZone[];
-extern s32 *g_LevelHeader;
+extern NsdLevel *g_LevelHeader;
 
 void func_80022314(s32 *arg0, s32 arg1) {
     s32 a[3];
@@ -813,7 +813,7 @@ void func_80022314(s32 *arg0, s32 arg1) {
     a[0] = arg0[0];
     a[1] = arg0[1];
     a[2] = arg0[2];
-    if (g_LevelHeader[2] == 3) {
+    if (g_LevelHeader->level_id == 3) {
         a[0] = (a[0] * 5) >> 3;
     }
     b[0] = g_CurrentZone[0];
@@ -1461,7 +1461,7 @@ void func_800231B0(s32 *arg0) {
         } else {
             /* already within a half turn */
         }
-        mode = g_LevelHeader[2];
+        mode = g_LevelHeader->level_id;
         if ((mode == NO_CLAMP_MODE_A) || (mode == NO_CLAMP_MODE_B)) {
             var_a1 = 0;
             var_v1 = 0;

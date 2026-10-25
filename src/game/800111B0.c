@@ -328,7 +328,7 @@ extern s32 g_SceneFlags;
 extern GfxFrame *g_DrawBuffer;
 extern GfxFrame *g_BuildBuffer;
 extern NsfLevel D_80067588;
-extern void *g_LevelHeader;
+extern NsdLevel *g_LevelHeader;
 extern s32 D_80069944;
 extern s32 g_FrameFlags;
 extern s32 D_8006CB98;
@@ -392,7 +392,7 @@ void Sys_MainLoop(s32 arg0) {
                 Input_LoadDemo(&g_DemoEid);
             }
             if (g_LevelRequest == STATE_NONE) {
-                if ((*(s32 *)((char *)g_LevelHeader + 8) != 2) &&
+                if ((g_LevelHeader->level_id != 2) &&
                     ((D_8006CBB4 == LEVEL_A) || (D_8006CBB4 == LEVEL_B) || (D_8006CBB4 == LEVEL_C))) {
                     printf(D_8005F190);
                     g_LevelRequest = STATE_DEAD;

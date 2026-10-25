@@ -299,13 +299,13 @@ void Sys_InitLevel(void) {
         D_8006CB88 = Obj_Spawn(cb20, 4, 1, 0, 0, 0);
         D_8006CBA8 = Obj_Spawn(cb20, 4, 5, 0, 0, 0);
         D_8006CBE4 = Obj_Spawn(cb20, 4, 0x16, 0, 0, 0);
-        Nsf_OpenEntry(g_LevelHeader[0] + 0x10, 0, 1);
-        Nsf_OpenEntry(g_LevelHeader[0] + 0x24, 0, 1);
-        Nsf_OpenEntry(g_LevelHeader[0] + 0x84, 0, 1);
-        Nsf_OpenEntry(g_LevelHeader[0] + 0x98, 0, 1);
-        Nsf_OpenEntry(g_LevelHeader[0] + 0x1C, 0, 1);
-        Nsf_OpenEntry(g_LevelHeader[0] + 0x20, 0, 1);
-        Nsf_OpenEntry(g_LevelHeader[0] + 0x34, 0, 1);
+        Nsf_OpenEntry(&((NsdLevel *)g_LevelHeader[0])->gool_map[0], 0, 1);
+        Nsf_OpenEntry(&((NsdLevel *)g_LevelHeader[0])->gool_map[5], 0, 1);
+        Nsf_OpenEntry(&((NsdLevel *)g_LevelHeader[0])->gool_map[29], 0, 1);
+        Nsf_OpenEntry(&((NsdLevel *)g_LevelHeader[0])->gool_map[34], 0, 1);
+        Nsf_OpenEntry(&((NsdLevel *)g_LevelHeader[0])->gool_map[3], 0, 1);
+        Nsf_OpenEntry(&((NsdLevel *)g_LevelHeader[0])->gool_map[4], 0, 1);
+        Nsf_OpenEntry(&((NsdLevel *)g_LevelHeader[0])->gool_map[9], 0, 1);
         break;
     }
     }
@@ -479,7 +479,7 @@ void func_8002F228(s32 arg0) {
     D_8006CD68 = 0;
     D_8006CD90 = 0;
     if (arg0 != 0) {
-        new_var2 = (s32 *)g_LevelHeader[0] + 2;
+        new_var2 = &((NsdLevel *)g_LevelHeader[0])->level_id;
         D_8006CD9C = 0;
         if (1) {
             D_8006CDA0 = 0;
@@ -587,7 +587,7 @@ void Sys_SaveCheckpoint(GoolObject *arg0, u8 *arg1, s32 arg2, s32 arg3) {
         blk[5] = 0;
         *(s32 *)(arg1 + 0x24) = g_CurrentZone->eid;
         *(s32 *)(arg1 + 0x2C) = g_CameraProgress;
-        *(s32 *)(arg1 + 0x30) = *(s32 *)(g_LevelHeader[0] + 8);
+        *(s32 *)(arg1 + 0x30) = ((NsdLevel *)g_LevelHeader[0])->level_id;
         *(s32 *)(arg1 + 0x28) = Ent_GetPropertyValue(g_CameraPath, ID_28, 0, 0, 0, CALL_FLAGS, 0);
         if (D_8006CC84 < -1) {
             *(s32 *)(arg1 + 0x38) = NO_ENTRY;
@@ -715,7 +715,7 @@ void Sys_LoadCheckpoint(u8 *arg0) {
     for (i = 0; i < FLAG_TABLE_WORDS; i++) {
         g_EntityFlags[i] &= FLAG_CLEAR_1;
     }
-    func_8001F858(*(s32 *)(g_LevelHeader[0] + 8));
+    func_8001F858(((NsdLevel *)g_LevelHeader[0])->level_id);
     sp18 = *(s32 *)(arg0 + 0x24);
     t0 = Nsf_OpenEntry(&sp18, 1, 1);
     {

@@ -19,7 +19,7 @@ s32 D_8005F204 = 0xF424;
 #define LEVEL_FLOOR_MARGIN 0x19000
 #define NEAR_ABS(a, b, n) ((((a) - (b)) >= 0) ? (((a) - (b)) < (n)) : (((b) - (a)) < (n)))
 
-extern void *g_LevelHeader;
+extern NsdLevel *g_LevelHeader;
 extern s32 D_8006CD48;
 extern s32 D_8005F204;
 extern s32 D_8005F2D0;
@@ -41,7 +41,7 @@ void func_80029884(GoolObject *arg0, s32 arg1, s32 arg2) {
         return;
     }
     *(s32 *)((u8 *)arg0->unk_8 + 0x48) = 0;
-    kind = *(u32 *)((u8 *)g_LevelHeader + 8);
+    kind = g_LevelHeader->level_id;
     if (kind == 0x1D || kind == 0x17 || kind == 0x22 || kind == 0x25) {
         if (arg0->state_flags & SPEED_FLAGS_MASK) {
             speed = SPEED_BOOSTED;
@@ -1213,7 +1213,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002BC38);
 #endif
 
 extern void *g_CurrentZone;
-extern void *g_LevelHeader;
+extern NsdLevel *g_LevelHeader;
 extern s32 D_8006CB64;
 extern s32 D_8006CD48;
 
@@ -1236,7 +1236,7 @@ s32 func_8002BF58(GoolObject *arg0, void *arg1) {
             var_a0 = 1;
             new_var = (s8 *)arg1;
             if ((*(s32 *)((s8 *)*(void **)((s8 *)temp_a1 + 0x10) + 0x29C) & 2) && (arg0->display_mode != 2)) {
-                temp_v1 = *(u32 *)((s8 *)g_LevelHeader + 8);
+                temp_v1 = g_LevelHeader->level_id;
                 sp18 = 0x6400;
                 var_a2 = 0x900;
                 if (temp_v1 != 0x19) {
