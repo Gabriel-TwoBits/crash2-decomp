@@ -15,37 +15,25 @@ s32 D_8005F1F0 = 0x80;
 
 /* Object field offsets. */
 #define OBJ_MATRIX 0x08
-#define OBJ_ANIM 0x0C
-/* links[GOOL_LINK_COLLIDER], scale and target_rot[1] in GoolObject; read at their offsets here */
-#define OBJ_COLLIDER 0x58
+#define OBJ_EXE 0x0C
+/* GoolObject's scale, and the fields whose member moves GCC 2.7.2's code here (vel's, status_a), read at their offsets */
 #define OBJ_POS 0x60
-#define OBJ_ROT_X 0x6C
-#define OBJ_ROT_Y 0x70
-#define OBJ_ROT_Z 0x74
 #define OBJ_SCALE 0x78
 #define OBJ_VEL_X 0x84
 #define OBJ_VEL_Y 0x88
 #define OBJ_VEL_Z 0x8C
-#define OBJ_TURN_RATE 0x90
-#define OBJ_TARGET_YAW 0x94
-#define OBJ_ANGLE_X 0x98
-#define OBJ_FLAGS_A 0xA8
-#define OBJ_FLAGS_B 0xAC
-#define OBJ_GROUND_PTR 0xE8
+#define OBJ_STATUS_A 0xA8
 #define OBJ_FLOOR_Y 0xFC
-#define OBJ_FLAGS_C 0x100
 #define OBJ_SPEED 0x104
-#define OBJ_MODE 0x108
 #define OBJ_LAND_FRAME 0x110
 #define OBJ_LAND_VEL 0x114
-#define OBJ_ALPHA 0x11C
 #define OBJ_ANGLE_X_RATE 0x124
 #define OBJ_TARGET_ANGLE 0x168
 #define OBJ_FRAME_STAMP 0x16C
 #define PARENT_ANGLE 0x94
 #define ANIM_FRAME_PTR 0x10
 
-/* Mask bits of FLAGS_A (offset 0xA8). */
+/* Bits of status_a (offset 0xA8). */
 #define A_GROUNDED 0x1
 #define A_ON_PLATFORM 0x200
 #define A_LOCKED_ROT 0x2000
@@ -200,8 +188,8 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
     s32 keep;
     s32 t;
 
-    flagsA = FIELD(arg0, OBJ_FLAGS_A);
-    parent = FIELD_P(arg0, OBJ_COLLIDER);
+    flagsA = FIELD(arg0, OBJ_STATUS_A);
+    parent = OBJ(arg0)->links[GOOL_LINK_COLLIDER];
     if ((s32)arg0 == g_Player &&
         ((flagsA & A_STUCK) || (OBJ(arg0)->state_flags & C_NO_STEER) ||
          (((u32)(D_8006CB64 - FIELD(arg0, OBJ_FRAME_STAMP)) < FRAME_WINDOW) &&
@@ -210,7 +198,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             D_8005F1EC = D_8005B88C;
             func_8001D2C4((GoolObject *)arg0, (s32 *)D_8005B88C, &D_8005F494);
         } else if (!(OBJ(arg0)->state_flags & C_NO_STEER)) {
-            if (!(FIELD(arg0, OBJ_FLAGS_A) & A_STUCK)) {
+            if (!(FIELD(arg0, OBJ_STATUS_A) & A_STUCK)) {
                 FIELD(arg0, OBJ_VEL_X) = (FIELD(arg0, OBJ_VEL_X) * SPEED_DAMP_NUM) >> SPEED_DAMP_SHIFT;
                 FIELD(arg0, OBJ_VEL_Z) = (FIELD(arg0, OBJ_VEL_Z) * SPEED_DAMP_NUM) >> SPEED_DAMP_SHIFT;
             }
@@ -220,7 +208,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
         } else {
             /* Steering blocked: nothing to do. */
         }
-    } else if ((FIELD(arg0, OBJ_FLAGS_B) & B_STEER) && D_8006CBB4 == STEER_ID) {
+    } else if ((OBJ(arg0)->status_b & B_STEER) && D_8006CBB4 == STEER_ID) {
         params = (s32 *)D_8005B7B0;
         if (OBJ(arg0)->state_flags & C_RUN) {
             if (OBJ(arg0)->state_flags & C_SPIN) {
@@ -236,7 +224,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
                 }
             } else {
                 params = (s32 *)(D_8005B7B0 + PARAMS_WALK);
-                if (FIELD(arg0, OBJ_FLAGS_A) & A_LOCKED_ROT) {
+                if (FIELD(arg0, OBJ_STATUS_A) & A_LOCKED_ROT) {
                     params = (s32 *)((u8 *)params + PARAMS_LOCKED_EXTRA);
                 }
             }
@@ -252,7 +240,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
                 }
             } else {
                 params = (s32 *)D_8005B7D8;
-                if (FIELD(arg0, OBJ_FLAGS_A) & A_LOCKED_ROT) {
+                if (FIELD(arg0, OBJ_STATUS_A) & A_LOCKED_ROT) {
                     params = (s32 *)(D_8005B7D8 + PARAMS_LOCKED_EXTRA);
                 }
             }
@@ -263,10 +251,10 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
         steer = D_8006995C;
         if (D_80069960 != CAM_STOP_MODE) {
             target = (D_80060914 + D_80069958) & ANGLE_MASK;
-            diff = target - FIELD(arg0, OBJ_TARGET_YAW);
+            diff = target - OBJ(arg0)->target_rot[1];
             FIELD(arg0, OBJ_TARGET_ANGLE) = target;
             if (diff < 0) {
-                diff = FIELD(arg0, OBJ_TARGET_YAW) - target;
+                diff = OBJ(arg0)->target_rot[1] - target;
             }
             if (diff > ANGLE_HALF) {
                 diff = ANGLE_FULL - diff;
@@ -278,12 +266,12 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
                 FIELD(arg0, OBJ_SPEED) += ((delta * (cosv >> SIN_STEP_SHIFT)) >> SIN_STEP_SHIFT);
                 if (FIELD(arg0, OBJ_SPEED) <= SPEED_MIN) {
                     if (!(OBJ(arg0)->state_flags & C_SLIDE_BOOST)) {
-                        FIELD(arg0, OBJ_TARGET_YAW) = target;
+                        OBJ(arg0)->target_rot[1] = target;
                     } else {
-                        FIELD(arg0, OBJ_TARGET_YAW) = func_8001E3DC(FIELD(arg0, OBJ_TARGET_YAW), target, params[4], 0);
+                        OBJ(arg0)->target_rot[1] = func_8001E3DC(OBJ(arg0)->target_rot[1], target, params[4], 0);
                     }
                 } else if (diff < ANGLE_NEAR || (OBJ(arg0)->state_flags & C_SLIDE_BOOST)) {
-                    FIELD(arg0, OBJ_TARGET_YAW) = func_8001E3DC(FIELD(arg0, OBJ_TARGET_YAW), target, params[4], 0);
+                    OBJ(arg0)->target_rot[1] = func_8001E3DC(OBJ(arg0)->target_rot[1], target, params[4], 0);
                 } else {
                     n = tick_step();
                     FIELD(arg0, OBJ_SPEED) -= scale_div(params[3] * n);
@@ -293,13 +281,13 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
                 }
             } else if (FIELD(arg0, OBJ_SPEED) <= SPEED_MIN || diff <= ANGLE_QUARTER) {
                 if (OBJ(arg0)->state_flags & C_SLIDE_BOOST) {
-                    FIELD(arg0, OBJ_TARGET_YAW) = func_8001E3DC(FIELD(arg0, OBJ_TARGET_YAW), target, params[4], 0);
+                    OBJ(arg0)->target_rot[1] = func_8001E3DC(OBJ(arg0)->target_rot[1], target, params[4], 0);
                 } else {
-                    FIELD(arg0, OBJ_TARGET_YAW) = target;
+                    OBJ(arg0)->target_rot[1] = target;
                 }
                 n = tick_step();
                 FIELD(arg0, OBJ_SPEED) += scale_div(params[0] * n);
-            } else if ((FIELD(arg0, OBJ_FLAGS_C) & C_SLIDE_BOOST) || (FIELD(arg0, OBJ_FLAGS_A) & A_STUCK)) {
+            } else if ((OBJ(arg0)->state_flags & C_SLIDE_BOOST) || (FIELD(arg0, OBJ_STATUS_A) & A_STUCK)) {
                 n = tick_step();
                 FIELD(arg0, OBJ_SPEED) -= scale_div(params[3] * n);
                 if (FIELD(arg0, OBJ_SPEED) < 0) {
@@ -311,7 +299,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             if (params[1] < FIELD(arg0, OBJ_SPEED)) {
                 FIELD(arg0, OBJ_SPEED) = params[1];
             }
-        } else if ((FIELD(arg0, OBJ_FLAGS_A) & A_STUCK) ||
+        } else if ((FIELD(arg0, OBJ_STATUS_A) & A_STUCK) ||
                    ((OBJ(arg0)->state_flags & C_BLOCK_DEC_MASK) == C_SLIDE_BOOST)) {
             steer = SPEED_MIN;
         } else {
@@ -322,8 +310,8 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             }
         }
         steer = (steer * FIELD(arg0, OBJ_SPEED)) >> FIXED_ONE_SHIFT;
-        FIELD(arg0, OBJ_VEL_X) = ((Math_Sin(FIELD(arg0, OBJ_TARGET_YAW)) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
-        FIELD(arg0, OBJ_VEL_Z) = ((Math_Cos(FIELD(arg0, OBJ_TARGET_YAW)) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
+        FIELD(arg0, OBJ_VEL_X) = ((Math_Sin(OBJ(arg0)->target_rot[1]) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
+        FIELD(arg0, OBJ_VEL_Z) = ((Math_Cos(OBJ(arg0)->target_rot[1]) >> SIN_SHIFT) * steer) >> FIXED_ONE_SHIFT;
     } else {
         /* Not steerable this frame: nothing to do. */
     }
@@ -339,7 +327,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
         } while (i > 0);
         FIELD(FIELD(arg0, OBJ_MATRIX), RING_NEXT) = flagsA;
     }
-    t = FIELD(arg0, OBJ_FLAGS_A);
+    t = FIELD(arg0, OBJ_STATUS_A);
     keep = A_KEEP_HI_AIR;
     if (t & A_GROUNDED) {
         keep = A_KEEP_HI_AIR;
@@ -347,40 +335,40 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             keep = A_KEEP_HI_GROUND;
         }
     }
-    FIELD(arg0, OBJ_FLAGS_A) = t & (keep | A_KEEP_MASK);
-    if (FIELD(arg0, OBJ_FLAGS_B) & B_TURN) {
-        FIELD(arg0, OBJ_ROT_Y) = func_8001E3DC(FIELD(arg0, OBJ_ROT_Y), FIELD(arg0, OBJ_TARGET_YAW), FIELD(arg0, OBJ_TURN_RATE), arg0);
+    FIELD(arg0, OBJ_STATUS_A) = t & (keep | A_KEEP_MASK);
+    if (OBJ(arg0)->status_b & B_TURN) {
+        OBJ(arg0)->rot[1] = func_8001E3DC(OBJ(arg0)->rot[1], OBJ(arg0)->target_rot[1], OBJ(arg0)->target_rot[0], arg0);
     }
-    if (FIELD(arg0, OBJ_FLAGS_B) & B_TURN_SMOOTH) {
-        FIELD(arg0, OBJ_ROT_Y) = func_8001E544(FIELD(arg0, OBJ_ROT_Y), FIELD(arg0, OBJ_TARGET_YAW), FIELD(arg0, OBJ_TURN_RATE), arg0);
+    if (OBJ(arg0)->status_b & B_TURN_SMOOTH) {
+        OBJ(arg0)->rot[1] = func_8001E544(OBJ(arg0)->rot[1], OBJ(arg0)->target_rot[1], OBJ(arg0)->target_rot[0], arg0);
     }
-    if (FIELD(arg0, OBJ_FLAGS_B) & B_TURN_X) {
-        FIELD(arg0, OBJ_ROT_X) = func_8001E3DC(FIELD(arg0, OBJ_ROT_X), FIELD(arg0, OBJ_ANGLE_X), FIELD(arg0, OBJ_ANGLE_X_RATE), 0);
+    if (OBJ(arg0)->status_b & B_TURN_X) {
+        OBJ(arg0)->rot[0] = func_8001E3DC(OBJ(arg0)->rot[0], OBJ(arg0)->target_rot[2], FIELD(arg0, OBJ_ANGLE_X_RATE), 0);
     }
     func_8001A4A4(arg0, (s32 *)((u8 *)arg0 + OBJ_SCALE));
     func_8001AA80((GoolObject *)arg0, arg2);
-    if (*(s32 *)FIELD(FIELD(arg0, OBJ_ANIM), ANIM_FRAME_PTR) != MODE_STOP) {
-        FIELD_P(arg0, OBJ_COLLIDER) = 0;
+    if (*(s32 *)FIELD(FIELD(arg0, OBJ_EXE), ANIM_FRAME_PTR) != MODE_STOP) {
+        OBJ(arg0)->links[GOOL_LINK_COLLIDER] = 0;
     }
-    if (FIELD(arg0, OBJ_FLAGS_B) & B_APPLY_VEL) {
+    if (OBJ(arg0)->status_b & B_APPLY_VEL) {
         sp28[0] = OBJ(arg0)->pos[0];
         sp28[1] = FIELD(arg0, OBJ_POS + 4);
         sp28[2] = FIELD(arg0, OBJ_POS + 8);
         sp18[0] = scale_div(FIELD(arg0, OBJ_VEL_X) * tick_step());
         sp18[1] = scale_div(FIELD(arg0, OBJ_VEL_Y) * tick_step());
         sp18[2] = scale_div(FIELD(arg0, OBJ_VEL_Z) * tick_step());
-        if (FIELD(arg0, OBJ_FLAGS_B) & B_MOVE) {
+        if (OBJ(arg0)->status_b & B_MOVE) {
             OBJ(arg0)->event_received = ALPHA_OPAQUE;
             *SCRATCH_REG = g_GoolOpcodeHandlers;
             func_8002CAB8();
             func_80029884((GoolObject *)arg0, (s32)sp18, (s32)D_80067FE4);
             if (flagsA & A_STUCK) {
-                t = FIELD(arg0, OBJ_FLAGS_A);
+                t = FIELD(arg0, OBJ_STATUS_A);
                 if (!(t & A_GROUNDED) && (flagsA & A_GROUNDED)) {
-                    FIELD(arg0, OBJ_FLAGS_A) = t | A_STUCK;
+                    FIELD(arg0, OBJ_STATUS_A) = t | A_STUCK;
                 }
             }
-            if (FIELD(arg0, OBJ_FLAGS_A) & A_POS_LATCH) {
+            if (FIELD(arg0, OBJ_STATUS_A) & A_POS_LATCH) {
                 D_8006CD54 = OBJ(arg0)->pos[0];
                 D_8006CD58 = FIELD(arg0, OBJ_POS + 4);
                 D_8006CD5C = FIELD(arg0, OBJ_POS + 8);
@@ -391,26 +379,26 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             FIELD(arg0, OBJ_POS + 4) += sp18[1];
             FIELD(arg0, OBJ_POS + 8) += sp18[2];
         }
-        if (FIELD(arg0, OBJ_FLAGS_B) & B_FLOOR_PROBE) {
+        if (OBJ(arg0)->status_b & B_FLOOR_PROBE) {
             func_8001F054((GoolObject *)arg0, 0, sp38);
             FIELD(arg0, OBJ_FLOOR_Y) = sp38[1];
-            if (FIELD(arg0, OBJ_FLAGS_A) & A_ON_PLATFORM) {
+            if (FIELD(arg0, OBJ_STATUS_A) & A_ON_PLATFORM) {
                 OBJ(arg0)->pos[0] = sp28[0];
                 FIELD(arg0, OBJ_POS + 4) = sp28[1];
                 FIELD(arg0, OBJ_POS + 8) = sp28[2];
             }
         }
-        if (FIELD(arg0, OBJ_FLAGS_B) & B_LIMIT_VEL) {
-            FIELD(arg0, OBJ_VEL_X) = clamp_sym(FIELD(arg0, OBJ_VEL_X), FIELD(arg0, OBJ_ANGLE_X));
-            FIELD(arg0, OBJ_VEL_Y) = clamp_sym(FIELD(arg0, OBJ_VEL_Y), FIELD(arg0, OBJ_ANGLE_X));
-            FIELD(arg0, OBJ_VEL_Z) = clamp_sym(FIELD(arg0, OBJ_VEL_Z), FIELD(arg0, OBJ_ANGLE_X));
+        if (OBJ(arg0)->status_b & B_LIMIT_VEL) {
+            FIELD(arg0, OBJ_VEL_X) = clamp_sym(FIELD(arg0, OBJ_VEL_X), OBJ(arg0)->target_rot[2]);
+            FIELD(arg0, OBJ_VEL_Y) = clamp_sym(FIELD(arg0, OBJ_VEL_Y), OBJ(arg0)->target_rot[2]);
+            FIELD(arg0, OBJ_VEL_Z) = clamp_sym(FIELD(arg0, OBJ_VEL_Z), OBJ(arg0)->target_rot[2]);
         }
-        if (FIELD(arg0, OBJ_FLAGS_B) & B_FLOOR) {
+        if (OBJ(arg0)->status_b & B_FLOOR) {
             t = FIELD(arg0, OBJ_FLOOR_Y);
             if (t >= FIELD(arg0, OBJ_POS + 4)) {
                 FIELD(arg0, OBJ_POS + 4) = t;
                 t = FIELD(arg0, OBJ_VEL_Y);
-                FIELD(arg0, OBJ_FLAGS_A) |= A_GROUNDED;
+                FIELD(arg0, OBJ_STATUS_A) |= A_GROUNDED;
                 FIELD(arg0, OBJ_LAND_FRAME) = D_8006CB64;
                 if (t < 0) {
                     FIELD(arg0, OBJ_LAND_VEL) = t;
@@ -419,7 +407,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             }
         }
     }
-    if ((FIELD(arg0, OBJ_FLAGS_B) & B_CARRY) && parent != 0 && (flagsA & A_PARENT_CARRY)) {
+    if ((OBJ(arg0)->status_b & B_CARRY) && parent != 0 && (flagsA & A_PARENT_CARRY)) {
         sp28[0] = OBJ(arg0)->pos[0] - FIELD(arg1, 0);
         sp28[1] = FIELD(arg0, OBJ_POS + 4) - FIELD(arg1, 4);
         sp28[2] = FIELD(arg0, OBJ_POS + 8) - FIELD(arg1, 8);
@@ -437,7 +425,7 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             FIELD(parent, PARENT_ANGLE) += sp48[1];
         }
     }
-    if (FIELD(arg0, OBJ_FLAGS_B) & B_GRAVITY) {
+    if (OBJ(arg0)->status_b & B_GRAVITY) {
         n = tick_step();
         t = FIELD(arg0, OBJ_VEL_Y) - (n * GRAVITY_PER_TICK);
         FIELD(arg0, OBJ_VEL_Y) = t;
@@ -445,9 +433,9 @@ void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
             FIELD(arg0, OBJ_VEL_Y) = FALL_LIMIT;
         }
     }
-    if ((FIELD(arg0, OBJ_FLAGS_B) & B_COLLIDE) &&
+    if ((OBJ(arg0)->status_b & B_COLLIDE) &&
         func_800310EC(arg0, arg0 + OBJ_POS / 4, (s32 *)(g_Player + OBJ_POS), NEAR_DIST, FAR_DIST, NEAR_DIST) == 0) {
-        ground = FIELD_P(arg0, OBJ_GROUND_PTR);
+        ground = OBJ(arg0)->anim;
         if (ground != 0 && *ground == GROUND_TYPE_PLAIN) {
             count = FIELD(FIELD_P(FIELD_P(arg0, OBJ_MATRIX), 0x20), 0xC);
             for (i = 0; i < count; i++) {
