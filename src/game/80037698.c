@@ -53,7 +53,7 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 
 #define FIELD(p, off, type) (*(type *)((u8 *)(p) + (off)))
 #define OBJ(p) ((GoolObject *)(p))
-#define SLOT(obj, arg1) FIELD(obj, (((arg1) >> SLOT_SHIFT) & SLOT_MASK) + OBJ_SLOTS, u8 *)
+#define SLOT(obj, arg1) ((u8 *)OBJ(obj)->links[(((arg1) >> SLOT_SHIFT) & SLOT_MASK) / WORD_BYTES])
 #define PROP(dst) g_EntityFlags[(u32)*(dst) >> VALUE_SHIFT]
 
 extern u32 g_TimerTicks;
@@ -155,12 +155,12 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
         PUSH(v);
         return;
     case 3:
-        PUSH(FIELD(SLOT(obj, arg1), ((u32)*dst >> VALUE_SHIFT) * WORD_BYTES + OBJ_SLOTS, s32));
+        PUSH(((s32 *)OBJ(SLOT(obj, arg1))->links)[(u32)*dst >> VALUE_SHIFT]);
         return;
     case 4:
         sp = OBJ(obj)->sp;
         OBJ(obj)->sp = sp - 1;
-        FIELD(SLOT(obj, arg1), ((u32)*dst >> VALUE_SHIFT) * WORD_BYTES + OBJ_SLOTS, s32) = sp[-1];
+        ((s32 *)OBJ(SLOT(obj, arg1))->links)[(u32)*dst >> VALUE_SHIFT] = sp[-1];
         return;
     case 7:
         if (dst == 0) {
@@ -250,7 +250,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             v = (s32)Zone_FindAt((char *)g_CurrentZone, dst);
         }
         if (v < MIN_VALID) {
-            FIELD(SLOT(obj, arg1), 0x18, s32) = v;
+            OBJ(SLOT(obj, arg1))->zone = (NsfEntry *)v;
         }
         return;
     case 12:
@@ -268,7 +268,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             func_800324A0(*dst);
             return;
         case 4:
-            FIELD(*dst, 0x18, s32) = D_800608D0;
+            OBJ(*dst)->zone = (NsfEntry *)D_800608D0;
             return;
         case 5:
             Snd_FadeOut();
@@ -299,16 +299,16 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             g_TimerTicks = *dst;
             return;
         case 14:
-            FIELD(SLOT(obj, arg1), 0x14, s32) = *dst;
+            OBJ(SLOT(obj, arg1))->state_exe = (void *)*dst;
             return;
         case 15:
-            PUSH(FIELD(*dst, 0x14, s32));
+            PUSH((s32)OBJ(*dst)->state_exe);
             return;
         case 16:
-            FIELD(SLOT(obj, arg1), 0x10, s32) = *dst;
+            OBJ(SLOT(obj, arg1))->unk_10 = (void *)*dst;
             return;
         case 17:
-            PUSH(FIELD(*dst, 0x10, s32));
+            PUSH((s32)OBJ(*dst)->unk_10);
             return;
         case 18:
             sp4C = 1;
