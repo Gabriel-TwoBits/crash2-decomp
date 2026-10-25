@@ -198,7 +198,7 @@ s32 Nsf_PageIn(s32 arg0) {
         slot->unk_14 = entry->unk_14;
         slot->unk_20 = Nsf_LookupEid(slot->unk_18);
         slot->ref_count = entry->ref_count;
-        slot->unk_E = entry->unk_E;
+        slot->load_list_refs = entry->load_list_refs;
         slot->unk_20->entry = (NsfEntry *)slot->unk_1C;
         entry->state = STATE_QUEUED;
         entry->ref_count = 0;
@@ -283,7 +283,7 @@ s32 Nsf_PageOut(NsfPageSlot *arg0) {
     }
     arg0->state = STATE_IDLE;
     arg0->ref_count = 0;
-    arg0->unk_E = 0;
+    arg0->load_list_refs = 0;
     return RESULT_DONE;
 loop:
     idx = arg0->unk_14;
@@ -752,7 +752,7 @@ play_queue:
     slot->unk_14 = s0->unk_14;
     key = s0->unk_18;
     slot->ref_count = 0;
-    slot->unk_E = 0;
+    slot->load_list_refs = 0;
     slot->unk_18 = key;
     SpuSetTransferStartAddr(slot->unk_1C, STATE_PLAYING);
     page = s0->page;
@@ -1004,9 +1004,9 @@ void *func_80013BD8(s32 arg0, s32 arg1, s32 arg2, s8 arg3) {
             p->unk_14 = arg0;
             p->ref_count = arg3;
             if (arg2 & 4) {
-                p->unk_E = arg3;
+                p->load_list_refs = arg3;
             } else {
-                p->unk_E = 0;
+                p->load_list_refs = 0;
             }
             do {
                 p->unk_18 = arg1;
@@ -1062,7 +1062,7 @@ NsfPageSlot *func_80013C98(NsfPageSlot *arg0, s32 arg1, s32 arg2, s32 *arg3, s32
             src->state = 1;
             dst->ref_count = src->ref_count;
             src->ref_count = 0;
-            dst->unk_E = src->unk_E;
+            dst->load_list_refs = src->load_list_refs;
             dst->unk_28 = src->unk_28;
             dst->unk_24 = first;
             dst->unk_1C = *arg3;
@@ -1100,19 +1100,19 @@ void Nsf_DropPageRef(NsfPageSlot *arg0) {
 }
 
 void func_80013E7C(NsfPageSlot *arg0) {
-    s8 t = arg0->unk_E;
+    s8 t = arg0->load_list_refs;
     if (t != 0) {
-        arg0->unk_E = t - 1;
+        arg0->load_list_refs = t - 1;
         Nsf_DropPageRef(arg0);
     }
 }
 
 void Nsf_DropLoadListRefs(NsfPageSlot *arg0) {
-    s8 d = arg0->unk_E;
+    s8 d = arg0->load_list_refs;
 
     if (d != 0) {
         arg0->ref_count = arg0->ref_count - d;
-        arg0->unk_E = 0;
+        arg0->load_list_refs = 0;
         if (arg0->ref_count <= 0 && arg0->unk_6 == 0) {
             Nsf_FreePageSlot(arg0);
             *D_80067FB0 -= 1;
@@ -1123,7 +1123,7 @@ void Nsf_DropLoadListRefs(NsfPageSlot *arg0) {
 void Nsf_FreePageSlot(NsfPageSlot *arg0) {
     arg0->state = 1;
     arg0->ref_count = 0;
-    arg0->unk_E = 0;
+    arg0->load_list_refs = 0;
     D_80067FC4[arg0->unk_14 >> 1] = -0x12;
 }
 
@@ -1143,7 +1143,7 @@ u8 *func_80013F5C(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         return (u8 *)entry;
     } else {
         if (arg2 & FLAG_ADJUST_E) {
-            entry->unk_E += arg3;
+            entry->load_list_refs += arg3;
         }
         entry->unk_18 = arg1;
         entry->ref_count += arg3;
@@ -1804,14 +1804,14 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
                     D_80062D80[i].v = *(s32 *)ent;
                     D_80062D8C[i].v = (s32 *)ent;
                     slot->ref_count = 0;
-                    slot->unk_E = 0;
+                    slot->load_list_refs = 0;
                     D_80067FC4[D_80062D80[i].v >> 1] = (s32)slot;
                     *(s32 *)ent = slot->unk_1C;
                     continue;
                 }
                 D_80062D70[i].state = SLOT_NO_BUFFER_TRY;
                 slot->ref_count = 0;
-                slot->unk_E = 0;
+                slot->load_list_refs = 0;
                 continue;
             }
         }
