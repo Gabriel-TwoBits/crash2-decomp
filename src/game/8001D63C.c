@@ -177,7 +177,7 @@ static inline s32 clamp_sym(s32 v, s32 lim) {
     }
 }
 
-void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
+void Obj_UpdatePhysics(void *obj, s32 *arg1, s32 *arg2) {
     s32 *arg0 = obj;
     s32 sp18[3];
     s32 sp28[3];
@@ -458,7 +458,7 @@ void func_8001D63C(void *obj, s32 *arg1, s32 *arg2) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001D63C", func_8001D63C);
+INCLUDE_ASM("asm/nonmatchings/game/8001D63C", Obj_UpdatePhysics);
 #endif
 
 extern GfxFrame *g_DisplayBuffer;

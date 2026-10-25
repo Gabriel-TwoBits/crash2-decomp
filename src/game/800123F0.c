@@ -1570,7 +1570,7 @@ NsdRecord *Nsf_LookupEid(u32 eid) {
 
 extern s32 D_80067594;
 
-s32 func_80014B90(s32 arg0, s32 arg1) {
+s32 Nsf_LookupEidBounded(s32 arg0, s32 arg1) {
     NsdRecord *p;
     s32 count;
     s32 base;
@@ -1592,7 +1592,7 @@ s32 func_80014B90(s32 arg0, s32 arg1) {
     return NOT_FOUND;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800123F0", func_80014B90);
+INCLUDE_ASM("asm/nonmatchings/game/800123F0", Nsf_LookupEidBounded);
 #endif
 
 s32 func_80014C08(void) {
@@ -1798,7 +1798,7 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
         if ((u32)i >= SLOT_QUAD_SPLIT && (u32)(i - SLOT_QUAD_SPLIT) >= SLOT_QUAD_SPLIT) {
             mapped = SLOT_ACTIVE_STATE;
             if ((u32)((u16)slot->state - SLOT_BUFFER) < 2) {
-                ent = func_80014B90(D_80062D84[i].v, hi);
+                ent = Nsf_LookupEidBounded(D_80062D84[i].v, hi);
                 if (ent < NO_ENTRY_LIMIT) {
                     D_80062D70[i].state = SLOT_BUFFER;
                     D_80062D80[i].v = *(s32 *)ent;

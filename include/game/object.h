@@ -6,7 +6,7 @@
 
 /* The game object: what the GOOL interpreter's operands (Gool_ResolveRef, Gool_OpSetAudio) and the object code read.
    Each field has the width and signedness the code reads it with. The size isn't known: the code reads up to 0x16C
-   (func_8001D63C), and Obj_InitPool sets up a pool of 0x60 entries 0x23C bytes apart, linked through 0x44, 0x48 and
+   (Obj_UpdatePhysics), and Obj_InitPool sets up a pool of 0x60 entries 0x23C bytes apart, linked through 0x44, 0x48 and
    0x4C as objects are.
 
    0x40 to 0xBB are also read as words by index, the interpreter's registers: ((s32 *)obj->links)[index], the index

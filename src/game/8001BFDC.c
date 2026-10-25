@@ -476,7 +476,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
             } else {
             }
             ((s32 (*)(void *, s32))func_8001BFDC)(obj, flag);
-            func_8001D63C(obj, vec, out);
+            Obj_UpdatePhysics(obj, vec, out);
             FIELD(obj, OFF_FLAGS_A8, u32) &= ~A8_BIT_CLEAR;
         }
     } else {

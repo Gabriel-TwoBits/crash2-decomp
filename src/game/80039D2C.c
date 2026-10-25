@@ -7470,7 +7470,7 @@ RETAIL_ADDRESS(D_8003AE3C, 0x8003AE3C)
 RETAIL_ADDRESS(D_8003AE48, 0x8003AE48)
 
 /* Every run follows Gool_InitScratchpad's pointing the scratchpad's word GOOL_TABLE_ADDRESS at the opcode table's copy
- * (Obj_UpdateAll, func_8001D63C) or Obj_UpdateAll's and func_8002E884's at the table */
+ * (Obj_UpdateAll, Obj_UpdatePhysics) or Obj_UpdateAll's and func_8002E884's at the table */
 #define GOOL_TABLE_ADDRESS 0x1F80005C
 EQUIV_TABLE(Gool_Interpret, GOOL_TABLE_ADDRESS, g_GoolOpcodeHandlers)
 

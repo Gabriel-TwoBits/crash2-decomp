@@ -715,7 +715,7 @@ int Gfx_EndFrame(void) {
     g_DrawBuffer->start_ticks = g_TimerTicks;
     ExitCriticalSection();
     /* Raw: through the member GCC 2.7.2 reads D_8006CCDC before the store */
-    *(s32 *)((u8 *)g_DisplayBuffer + GFX_FRAME_SHOWN_TICKS) = func_80016F04(g_DrawBuffer->start_ticks - g_DisplayBuffer->start_ticks);
+    *(s32 *)((u8 *)g_DisplayBuffer + GFX_FRAME_SHOWN_TICKS) = Gfx_RoundShownTicks(g_DrawBuffer->start_ticks - g_DisplayBuffer->start_ticks);
     g_DisplayBuffer->disp.screen.x = (s16)D_8006CCDC;
     PutDispEnv(&g_DisplayBuffer->disp);
     PutDrawEnv(&g_DrawBuffer->draw);
@@ -894,7 +894,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80016C58);
 void func_80016EFC(void) {
 }
 
-s32 func_80016F04(s32 arg0) {
+s32 Gfx_RoundShownTicks(s32 arg0) {
     if (arg0 < 0) {
         goto L22;
     }
@@ -1328,7 +1328,7 @@ typedef struct Unk80017AF8 {
     s32 x, y, z;
 } Unk80017AF8;
 
-void func_80017AF8(Unk80017AF8 *dst, Unk80017AF8 *src) {
+void Gfx_SetWorldView(Unk80017AF8 *dst, Unk80017AF8 *src) {
     dst->a = src->a;
     dst->b = src->b;
     dst->c = src->c;
@@ -1449,7 +1449,7 @@ void Gfx_UpdateView(void) {
     trans[1] = g_CameraY >> FIXED_SHIFT;
     trans[2] = g_CameraZ >> FIXED_SHIFT;
     TransMatrix(view, trans);
-    func_80017AF8((Unk80017AF8 *)(base - CAMERA_COPY_OFFSET), view);
+    Gfx_SetWorldView((Unk80017AF8 *)(base - CAMERA_COPY_OFFSET), view);
 
     src = (s32 *)(base - CAMERA_COPY_OFFSET);
     dst = &D_80060794;
@@ -1479,7 +1479,7 @@ void Gfx_UpdateView(void) {
         D_800607B4.g = 0;
         D_800607B4.h = s;
         D_800607B4.i = c;
-        func_80017AF8(&D_800607B4 + 1, &D_800607B4);
+        Gfx_SetWorldView(&D_800607B4 + 1, &D_800607B4);
     } else {
         src = (s32 *)(base - CAMERA_MATRIX_OFFSET);
         dst = (s32 *)(base - PREV_MATRIX_OFFSET);

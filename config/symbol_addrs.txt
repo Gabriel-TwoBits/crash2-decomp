@@ -1752,3 +1752,15 @@ g_Scene = 0x80062A18;
 
 // the scene's flags, Gfx_SetupScene's copy of the camera entity's property 0x185 (CrashEdit's CrashHacks fog, darkness and water scripts set its bits), which selects the scene's other properties and modes
 g_SceneFlags = 0x80062AD8;
+
+// rounds a frame's measured g_TimerTicks to whole vertical blanks of 17 ticks (under 19 to 17, under 36 to 34, under 53 to 51, longer as it is); Gfx_EndFrame stores it as the shown frame's shown_ticks, Crash2Recomp's notes call it the frame time's quantizer
+Gfx_RoundShownTicks = 0x80016F04; // type:func
+
+// copies the view's matrix and translation for the world's drawing, the matrix's second row times -5/8 (the frame's aspect) and its third negated; Gfx_UpdateView calls it, Crash2Recomp's notes describe the same copy to 0x80060774 for the world draw
+Gfx_SetWorldView = 0x80017AF8; // type:func
+
+// Nsf_LookupEid's search by an EID's bucket that stops at the NSD's record count, NOT_FOUND then; Nsf_OpenLevel calls it on the texture slots' EIDs (0x80062D84), Crash2Recomp's notes call it the game's bounded lookup
+Nsf_LookupEidBounded = 0x80014B90; // type:func
+
+// Obj_Update calls it for each object after func_8001BFDC: velocity, damping and the path's motion scaled by the shown frame's time (GfxFrame.shown_ticks), which only it, its helpers and Gool_InitScratchpad read (Crash2Recomp's notes: every reader of the frame tick count is physics)
+Obj_UpdatePhysics = 0x8001D63C; // type:func
