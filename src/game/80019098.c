@@ -329,7 +329,6 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     s32 *parent;
     s32 *entry;
     void *res;
-    s32 *table;
     u16 frame;
     s32 i;
 
@@ -397,12 +396,11 @@ s32 Obj_Init(s32 *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     OBJ(arg0)->links[GOOL_LINK_COLLIDER] = 0;
     OBJ(arg0)->links[GOOL_LINK_CREATOR] = 0;
     OBJ(arg0)->links[GOOL_LINK_INTERRUPTER] = 0;
-    table = (s32 *)OBJ(arg0)->exe;
     OBJ(arg0)->subtype = arg2;
     OBJ(arg0)->anim = 0;
     OBJ(arg0)->unk_D0 = 0;
     OBJ(arg0)->links[GOOL_LINK_PLAYER] = (struct GoolObject *)g_PlayerSlot[0];
-    frame = *(u16 *)(W(table, 0x1C) + (W((s32 *)W(table, 0x10), 0x10) + OBJ(arg0)->subtype) * 2);
+    frame = ((u16 *)OBJ(arg0)->exe->items[GOOL_ITEM_STATE_MAP])[*(s32 *)(OBJ(arg0)->exe->items[GOOL_ITEM_HEADER] + 0x10) + OBJ(arg0)->subtype];
     if (frame == FRAME_NONE) {
         return RESULT_NO_FRAME;
     }

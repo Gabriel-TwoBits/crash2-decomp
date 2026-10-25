@@ -182,8 +182,6 @@ typedef struct Unk8001C340Entry {
 #define OFFSET_NONE 0x3FFF
 #define OFFSET_MASK 0x3FFF
 #define OFFSET_FROM_OWN_BASE 0x4000
-#define BLOCK_BASE_OFFSET 0x14
-#define STACK_BASE_OFFSET 0x40
 #define FLAG_BLOCKED 0x10000000
 #define FLAGS_STARTED 0x20020
 #define ARG_MASK 0xFFFF
@@ -211,17 +209,17 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
         return RESULT_BAD_ENTRY;
     }
     OBJ(arg0)->state = arg1;
-    entry = (Unk8001C340Entry *)(*(char **)(*(char **)((char *)arg0 + 0xC) + 0x20) + arg1 * ENTRY_STRIDE);
+    entry = (Unk8001C340Entry *)(OBJ(arg0)->exe->items[GOOL_ITEM_STATES] + arg1 * ENTRY_STRIDE);
     OBJ(arg0)->block_flags = entry->unk_4;
-    own = Nsf_OpenEntry(*(char **)(*(char **)((char *)arg0 + 0x10) + 0x18) + entry->unk_8 * 4, 1, 0);
+    own = Nsf_OpenEntry(((NsfEntry *)OBJ(arg0)->unk_10)->items[GOOL_ITEM_POOL] + entry->unk_8 * 4, 1, 0);
     OBJ(arg0)->state_exe = own;
 
     word = entry->unk_E;
     if ((word & 0xFFFF) != OFFSET_NONE) {
         if (word & OFFSET_FROM_OWN_BASE) {
-            r = *(s32 *)(own + BLOCK_BASE_OFFSET);
+            r = (s32)((NsfEntry *)own)->items[GOOL_ITEM_CODE];
         } else {
-            r = *(s32 *)(FIELD(char *, 0xC) + BLOCK_BASE_OFFSET);
+            r = (s32)OBJ(arg0)->exe->items[GOOL_ITEM_CODE];
         }
         r += (word & OFFSET_MASK) * 4;
     } else {
@@ -232,11 +230,11 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     word = entry->unk_A;
     if ((word & 0xFFFF) != OFFSET_NONE) {
         if (word & OFFSET_FROM_OWN_BASE) {
-            base = FIELD(char *, 0x14);
+            base = OBJ(arg0)->state_exe;
         } else {
-            base = FIELD(char *, 0xC);
+            base = (char *)OBJ(arg0)->exe;
         }
-        r = *(s32 *)(base + BLOCK_BASE_OFFSET) + (word & OFFSET_MASK) * 4;
+        r = (s32)((NsfEntry *)base)->items[GOOL_ITEM_CODE] + (word & OFFSET_MASK) * 4;
     } else {
         r = 0;
     }
@@ -245,19 +243,19 @@ s32 Gool_ChangeState(void *arg0, s32 arg1, s32 arg2, s32 *arg3) {
     word = entry->unk_C;
     if ((word & 0xFFFF) != OFFSET_NONE) {
         if (word & OFFSET_FROM_OWN_BASE) {
-            base = FIELD(char *, 0x14);
+            base = OBJ(arg0)->state_exe;
         } else {
-            base = FIELD(char *, 0xC);
+            base = (char *)OBJ(arg0)->exe;
         }
-        r = *(s32 *)(base + BLOCK_BASE_OFFSET) + (word & OFFSET_MASK) * 4;
+        r = (s32)((NsfEntry *)base)->items[GOOL_ITEM_CODE] + (word & OFFSET_MASK) * 4;
     } else {
         r = 0;
     }
     OBJ(arg0)->trans_pc = r;
 
     OBJ(arg0)->unk_D0 = 0;
-    FIELD(char *, 0xC4) = (char *)arg0 + STACK_BASE_OFFSET;
-    FIELD(char *, 0xBC) = (char *)arg0 + STACK_BASE_OFFSET + (*(s32 *)(*(char **)(*(char **)((char *)arg0 + 0xC) + 0x10) + 0xC)) * 4;
+    OBJ(arg0)->fp = (u8 *)OBJ(arg0)->links;
+    OBJ(arg0)->sp = (s32 *)OBJ(arg0)->links + *(s32 *)(OBJ(arg0)->exe->items[GOOL_ITEM_HEADER] + 0xC);
     OBJ(arg0)->status_a |= FLAGS_STARTED;
     OBJ(arg0)->state_flags = entry->unk_0;
     for (i = 0; i < arg2; i++) {

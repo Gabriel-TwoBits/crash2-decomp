@@ -26,6 +26,16 @@ enum GoolLink {
     GOOL_LINK_COUNT = 8
 };
 
+/* A GOOL entry's items (CrashEdit's GOOLEntry): its header (24 bytes; at 0xC the stack's start, in words from 0x40,
+   which Gool_ChangeState gives the object), its code, its constant pool, the map from subtypes to states, the states'
+   16-byte descriptors and its animations */
+#define GOOL_ITEM_HEADER 0
+#define GOOL_ITEM_CODE 1
+#define GOOL_ITEM_POOL 2
+#define GOOL_ITEM_STATE_MAP 3
+#define GOOL_ITEM_STATES 4
+#define GOOL_ITEM_ANIMATIONS 5
+
 typedef struct GoolObject {
     /* 0x00 */ s32 unk_0;
     /* 0x04 */ s32 unk_4;

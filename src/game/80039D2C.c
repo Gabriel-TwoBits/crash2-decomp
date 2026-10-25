@@ -6687,10 +6687,6 @@ typedef struct {
 #define GOOL_TEMP_A 0x1C
 #define GOOL_TEMP_B 0x18
 
-/* A GOOL entry's items: its code and its constant pool, and its animations */
-#define GOOL_ITEM_CODE 1
-#define GOOL_ITEM_POOL 2
-#define GOOL_ITEM_ANIMATIONS 5
 
 /* A code address an instruction holds: bits 0 to 13 the word's index in the code of the object's entry (bit 14 set:
  * its state's), GOOL_NO_CODE none */
