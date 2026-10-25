@@ -939,8 +939,14 @@ Steps, in order:
   change is kept when `ninja` keeps the retail SHA-1 and `ninja nonmatching` the equivalent executable byte for byte
   (or, where the bytes change, `tools/equiv.py` agrees); the 33 files still compile for 32-bit x86. Done: the objects'
   physics (`Obj_UpdatePhysics`), update (`func_8001BFDC`), init (`Obj_Init`), entity spawn and the GOOL operations'
-  linked objects (`80037698.c`) read `GoolObject` by name; offsets whose member moves GCC 2.7.2's code stay, named
-  after the member (`OBJ_VEL_X`, `OBJ_STATUS_A`, `Obj_Kill`'s links).
+  linked objects (`80037698.c`), `Gool_OpVector`, `Gool_OpCollide`, `Obj_CheckNearest` and the collision
+  (`80029884.c`) read `GoolObject` by name, `GOOL_LINK_` naming the links; `DrawPacket` moved to
+  `include/game/gfx.h`, which `Gfx_QueueObject` fills by its members and `GfxFrame.object_queue` points to. Offsets
+  whose member moves GCC 2.7.2's code stay, named after the member (`OBJ_VEL_X`, `OBJ_STATUS_A`, `Obj_Kill`'s links,
+  the packet list's head links); so do `GoolObject`'s words still `unk_`, under the files' own names. Raw accesses in
+  the equivalent C (`*(T *)(p + offset)`, `p[offset / 4]` and the files' offset macros): 603 in 58 functions before,
+  509 after. Next: the zone's and the level's headers (`g_CurrentZone`'s first item, `D_8006759C`), the videos'
+  state, the camera's path records, each as a shared type once its fields' evidence is in hand.
 - **R7, the C made portable (done)**: what a host's compiler makes of the C, what is left for a host, and the
   macros the port redefines (section 6, "The macros").
 
