@@ -39,7 +39,7 @@ typedef struct NsfEntry {
     /* 0x08 */ s32 type; /* what Nsf_EntryType returns for a loaded entry, Nsf_EidType's numbering otherwise */
     /* 0x0C */ s32 item_count; /* Nsf_RelocatePage's bound over items */
     /* item_count + 1 offsets from the entry, pointers once Nsf_RelocatePage ran; an item ends where the next starts
-       (func_800123BC) */
+       (Nsf_ItemSize) */
     /* 0x10 */ u8 *items[0];
 } NsfEntry;
 

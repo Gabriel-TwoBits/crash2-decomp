@@ -35,7 +35,7 @@ s32 Nsf_EidType(s32 arg0) {
     }
 }
 
-u8 func_800120EC(s32 arg0) {
+u8 Nsf_LevelEidChar(s32 arg0) {
     return g_EidAlphabet[arg0];
 }
 
@@ -159,7 +159,7 @@ s32 func_8001232C(void *arg0) {
 INCLUDE_ASM("asm/nonmatchings/game/80012010", func_8001232C);
 #endif
 
-s32 func_800123BC(NsfEntry *entry, s32 index) {
+s32 Nsf_ItemSize(NsfEntry *entry, s32 index) {
     s32 r;
 
     if (entry->item_count == 0) {

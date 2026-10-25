@@ -771,7 +771,7 @@ play_queue:
                 }
             }
             if (i < count) {
-                a1 = func_800123BC(ent, 0);
+                a1 = Nsf_ItemSize(ent, 0);
                 SpuWrite(s0->page->entries[i]->items[0], a1);
             }
         }
@@ -956,7 +956,7 @@ tail:
 }
 
 
-void func_80013A54(s32 arg0, s32 arg1) {
+void Nsf_ReserveTextureSlot(s32 arg0, s32 arg1) {
     if (arg1 != 0) {
         Nsf_ReleaseTextureSlot(arg0);
         D_80062D70[arg0].state = 0x1E;
@@ -1775,7 +1775,7 @@ s32 Nsf_OpenLevel(NsfLevel *arg0, s32 arg1) {
         i++;
         e++;
     } while (i < arg0->unk_3C8);
-    printf(D_80010110, num, func_800120EC(arg1) & 0xFF);
+    printf(D_80010110, num, Nsf_LevelEidChar(arg1) & 0xFF);
     i = 0;
     do {
         NsfPageSlot *slot = &D_80062D6C[i];

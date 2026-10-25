@@ -22,7 +22,7 @@ void Input_PickDemo(s32 *arg0) {
         }
     } else {
         buf[2] = Rand_Below(r) + 0x30;
-        buf[3] = func_800120EC(D_8006758C);
+        buf[3] = Nsf_LevelEidChar(D_8006758C);
         *arg0 = Nsf_NameToEid(buf);
         D_800675AC = -1;
         g_PlaybackState = 3;

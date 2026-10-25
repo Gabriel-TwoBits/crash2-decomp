@@ -49,7 +49,7 @@ void func_8002E884(s32 *arg0, s32 *arg1, s32 arg2, s32 arg3) {
         name[i] = D_8005F208[i];
     }
     memset(&name[NAME_PAD_OFFSET], 0, NAME_PAD_LEN);
-    name[NAME_TAG_OFFSET] = func_800120EC(D_8006758C);
+    name[NAME_TAG_OFFSET] = Nsf_LevelEidChar(D_8006758C);
     key[0] = Nsf_NameToEid(name);
     map = *(s32 **)((char *)Nsf_OpenEntry(key, 1, 0) + MAP_DATA_OFFSET);
     cells = (s32 *)((char *)map + MAP_CELLS_OFFSET);

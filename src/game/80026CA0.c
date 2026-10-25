@@ -99,10 +99,10 @@ void Gfx_LoadVideoFrames(s32 *arg0) {
     u32 *dst;
     u32 p;
 
-    func_80013A54(8, 1);
-    func_80013A54(9, 1);
-    func_80013A54(0xC, 1);
-    func_80013A54(0xD, 1);
+    Nsf_ReserveTextureSlot(8, 1);
+    Nsf_ReserveTextureSlot(9, 1);
+    Nsf_ReserveTextureSlot(0xC, 1);
+    Nsf_ReserveTextureSlot(0xD, 1);
     w = arg0[6];
     h = arg0[7];
     area = w * h;
@@ -578,10 +578,10 @@ void func_800278F8(s32 arg0) {
     if (*(s32 *)(arg0 + 0xC) != 1) {
         Nsf_CloseEntry((void *)(arg0 + 0x4C), 1);
         if (*(s32 *)(arg0 + 0x24) != 0) {
-            func_80013A54(8, 0);
-            func_80013A54(9, 0);
-            func_80013A54(0xC, 0);
-            func_80013A54(0xD, 0);
+            Nsf_ReserveTextureSlot(8, 0);
+            Nsf_ReserveTextureSlot(9, 0);
+            Nsf_ReserveTextureSlot(0xC, 0);
+            Nsf_ReserveTextureSlot(0xD, 0);
             D_80069358 = 0;
         }
         func_80027980(arg0);

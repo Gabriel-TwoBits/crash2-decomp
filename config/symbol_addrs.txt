@@ -1689,3 +1689,12 @@ Nsf_MarkPagesInUse = 0x80014638; // type:func
 
 // Nsf_DropLoadListRefs on every taken, referenced page slot whose page the bitmap Nsf_MarkPagesInUse made doesn't hold; Sys_LoadCheckpoint calls it with the continue point's bitmap
 Nsf_DropUnmarkedPages = 0x80014790; // type:func
+
+// returns g_EidAlphabet[level], the character a level's entry names carry; Input_PickDemo puts it into the demo's name before Nsf_NameToEid
+Nsf_LevelEidChar = 0x800120EC; // type:func
+
+// an entry's item's size, the next item's offset less its own (CrashEdit's entry layout: the item offsets after the count), 0 for an entry without items
+Nsf_ItemSize = 0x800123BC; // type:func
+
+// with its flag set, Nsf_ReleaseTextureSlot on a texture page slot (of those at 0x80062D70) and state 0x1E, which keeps it out of use; without, back to free (1) from 0x1E; Gfx_LoadVideoFrames reserves slots 8, 9, 12 and 13 before loading a video's frames into VRAM
+Nsf_ReserveTextureSlot = 0x80013A54; // type:func
