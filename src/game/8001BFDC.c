@@ -543,10 +543,10 @@ typedef struct Unk8001CC10Tab {
 } Unk8001CC10Tab;
 
 /* GoolObject.exe's items, as this function reads them */
-#define BANK_TAB(o) ((Unk8001CC10Tab *)(o)->exe->items[0])
-#define BANK_CODE(o) ((s32 *)(o)->exe->items[1])
-#define BANK_INDEX(o) ((u16 *)(o)->exe->items[3])
-#define BANK_FLAGS(o) ((s32 *)(o)->exe->items[4])
+#define BANK_TAB(o) ((Unk8001CC10Tab *)(o)->exe->items[GOOL_ITEM_HEADER])
+#define BANK_CODE(o) ((s32 *)(o)->exe->items[GOOL_ITEM_CODE])
+#define BANK_INDEX(o) ((u16 *)(o)->exe->items[GOOL_ITEM_STATE_MAP])
+#define BANK_FLAGS(o) ((s32 *)(o)->exe->items[GOOL_ITEM_STATES])
 
 s32 Gool_SendEvent(s32 arg0, s32 arg1, s32 id, s32 n, void *arg4) {
 #define self ((GoolObject *)arg0)

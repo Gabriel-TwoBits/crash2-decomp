@@ -203,10 +203,10 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
             Sys_SaveCheckpoint((GoolObject *)slot, &D_80060958, 1, 0);
         }
     }
-    if (AT(OBJ(slot)->exe->items[0], 4, s32) == MODEL_ID_SPECIAL) {
+    if (AT(OBJ(slot)->exe->items[GOOL_ITEM_HEADER], 4, s32) == MODEL_ID_SPECIAL) {
         Obj_SetParent(slot, &D_8006CB38);
     }
-    if (AT(OBJ(slot)->exe->items[0], 0, s32) == KIND_CHAIN) {
+    if (AT(OBJ(slot)->exe->items[GOOL_ITEM_HEADER], 0, s32) == KIND_CHAIN) {
         if (entry == PTR_NONE || (AT(entry, 4, s32) & PARAMS_NO_CHAIN) == 0) {
             /* A chain's links, in the words GoolObject calls vel */
             if (prev != PTR_NONE) {

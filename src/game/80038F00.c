@@ -82,7 +82,7 @@ s32 Gool_OpGoToState(GoolObject *arg0, u32 arg1, s32 arg2) {
     }
     mask = arg0->block_flags;
     state = arg0->display_mode;
-    flags = *(s32 *)(arg0->exe->items[4] + (arg1 & 0x3FF) * 16);
+    flags = *(s32 *)(arg0->exe->items[GOOL_ITEM_STATES] + (arg1 & 0x3FF) * 16);
     if ((u32)(state - 3) >= 2U) {
         hit = mask & flags;
         if (state == 2) {
@@ -114,7 +114,7 @@ s32 Gool_OpPlayAnim(GoolObject *arg0, u32 arg1, s32 arg2) {
     s32 *p;
     s32 t;
 
-    q = arg0->exe->items[5];
+    q = arg0->exe->items[GOOL_ITEM_ANIMATIONS];
     p = arg0->sp;
     arg0->anim_frame = (arg1 & 0x7F) << 8;
     arg0->sp = p + 1;

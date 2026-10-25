@@ -391,7 +391,7 @@ typedef struct {
     s32 unk4;
 } Unk8002A554_C10;
 
-#define KIND(obj) (((Unk8002A554_C10 *)(obj)->exe->items[0])->unk4)
+#define KIND(obj) (((Unk8002A554_C10 *)(obj)->exe->items[GOOL_ITEM_HEADER])->unk4)
 
 typedef struct {
     s32 unk0;

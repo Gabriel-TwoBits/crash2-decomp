@@ -15,7 +15,7 @@ typedef struct { s32 pad0[1]; s32 kind; } UnkQ;
 typedef struct { GoolObject *e; s32 f4; s32 f8; s32 kind; s32 count; void *f14; } UnkB;
 
 /* The kind in the first item of GoolObject.exe, as this function reads it */
-#define KIND(obj) (((UnkQ *)(obj)->exe->items[0])->kind)
+#define KIND(obj) (((UnkQ *)(obj)->exe->items[GOOL_ITEM_HEADER])->kind)
 
 s32 func_8001CEDC(GoolObject *a, UnkB *b) {
     s32 *v;
@@ -166,7 +166,7 @@ s32 func_8001D22C(void *arg0, u16 arg1, s32 arg2, s32 *arg3) {
         arg3++;
     }
     Gool_PushFrame(base, arg2, ARG_ALL_BITS);
-    base->pc = (s32)base->exe->items[1] + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
+    base->pc = (s32)base->exe->items[GOOL_ITEM_CODE] + (arg1 & INDEX_MASK) * BYTES_PER_ENTRY;
     return Gool_Interpret(arg0, MODE_THREE, 0);
 }
 #else

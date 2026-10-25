@@ -962,7 +962,7 @@ void Gfx_DrawObjectText(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 ar
         if (off == 0) {
             off = *(s32 *)(base + 8);
         }
-        arg2 = (s32)arg0->exe->items[5] + off * 4;
+        arg2 = (s32)arg0->exe->items[GOOL_ITEM_ANIMATIONS] + off * 4;
         mem = Nsf_OpenEntry((void *)(arg2 + 4), 1, 0);
         q = arg0->sp;
         sprintf(buf, arg1, q[-2], q[-3], q[-4], arg0->sp[-5]);
