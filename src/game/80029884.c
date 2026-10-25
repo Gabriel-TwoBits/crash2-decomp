@@ -766,6 +766,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002A8D0);
 #ifdef NON_MATCHING
 #define B164_FLD(p, off) (*(s32 *)((u8 *)(p) + (off)))
 #define B164_PTR(p, off) (*(void **)((u8 *)(p) + (off)))
+#define B164_OBJ(p) ((GoolObject *)(p))
 #define B164_NO_HIT ((s32)0xC4653601)
 #define B164_BOX 0x1020
 #define B164_OUT 0x1008
@@ -812,7 +813,7 @@ void func_8002B164(void *arg0, s32 *arg1, s32 *arg2, void *arg3, s32 *arg4) {
     flags = B164_FLAGS_INIT;
     B164_FLD(arg3, 0x102C) = arg2[0] + B164_HALF_EXTENT;
     y = arg2[1];
-    if (!(B164_FLD(arg0, 0x100) & B164_FIXED_BASE_FLAG)) {
+    if (!(B164_OBJ(arg0)->state_flags & B164_FIXED_BASE_FLAG)) {
         v = y + B164_FLD(B164_PTR(arg0, 8), B164_HEIGHT_OFFSET);
     } else {
         v = y + B164_FIXED_HEIGHT;
@@ -826,7 +827,7 @@ void func_8002B164(void *arg0, s32 *arg1, s32 *arg2, void *arg3, s32 *arg4) {
     func_8002A3B0(arg0, arg1, arg2, arg3, 8, (s32)sp18);
     hitB = sp18[1];
     hitA = sp18[2];
-    if (B164_FLD(arg0, 0x100) & B164_SKIP_FLAG) {
+    if (B164_OBJ(arg0)->state_flags & B164_SKIP_FLAG) {
         hitB = B164_NO_HIT;
         hitA = B164_NO_HIT;
     }
@@ -846,13 +847,13 @@ void func_8002B164(void *arg0, s32 *arg1, s32 *arg2, void *arg3, s32 *arg4) {
     } else if (hitA == B164_NO_HIT || res >= hitA) {
         hitA = res;
         B164_FLD(arg3, 0x1048) = hitA;
-        p = B164_PTR(arg0, 0x58);
+        p = B164_OBJ(arg0)->links[GOOL_LINK_COLLIDER];
         flags = B164_FLAGS_INIT & B164_FLAGS_DROP_BIT18;
         if (p != 0) {
             if (B164_FLD(p, 0xAC) & B164_PARENT_FLAG) {
                 extra = B164_EXTRA_RANGE;
             }
-            if ((u32)(B164_FLD(arg0, 0xDC) - B164_FLD(arg0, 0x110)) >= B164_TIME_WINDOW) {
+            if ((u32)(((s32)B164_OBJ(arg0)->frame_time) - B164_FLD(arg0, 0x110)) >= B164_TIME_WINDOW) {
                 flags = B164_FLAGS_BASE;
             }
         }
@@ -860,9 +861,9 @@ void func_8002B164(void *arg0, s32 *arg1, s32 *arg2, void *arg3, s32 *arg4) {
     } else {
         /* res is below hitA: nothing changes, flags stay at their initial value */
     }
-    if ((hitA == B164_NO_HIT && hitB == hitA) || B164_FLD(arg0, 0x88) > 0) {
-        if (B164_FLD(arg0, 0x88) > 0) {
-            B164_FLD(arg0, 0xA8) &= B164_CLEAR_MASK;
+    if ((hitA == B164_NO_HIT && hitB == hitA) || B164_OBJ(arg0)->vel[1] > 0) {
+        if (B164_OBJ(arg0)->vel[1] > 0) {
+            B164_OBJ(arg0)->status_a &= B164_CLEAR_MASK;
         }
         B164_FLD(arg3, 0x1038) = 0;
     } else {
@@ -874,9 +875,9 @@ void func_8002B164(void *arg0, s32 *arg1, s32 *arg2, void *arg3, s32 *arg4) {
         B164_FLD(arg3, 0x1038) = base;
         w = base + 1;
         if (hitA == B164_NO_HIT) {
-            limit = B164_FLD(arg0, 0x64);
+            limit = B164_OBJ(arg0)->pos[1];
         } else {
-            limit = B164_FLD(arg0, 0x64) + D_8005F204 + extra;
+            limit = B164_OBJ(arg0)->pos[1] + D_8005F204 + extra;
         }
         *arg4 = limit;
         if (limit < w) {
@@ -896,7 +897,7 @@ void func_8002B164(void *arg0, s32 *arg1, s32 *arg2, void *arg3, s32 *arg4) {
             }
             box[1] = w;
         }
-        if (!(B164_FLD(arg0, 0x100) & B164_FIXED_BASE_FLAG)) {
+        if (!(B164_OBJ(arg0)->state_flags & B164_FIXED_BASE_FLAG)) {
             v = w + B164_FLD(B164_PTR(arg0, 8), B164_HEIGHT_OFFSET);
         } else {
             v = w + B164_FIXED_HEIGHT;
@@ -907,10 +908,10 @@ void func_8002B164(void *arg0, s32 *arg1, s32 *arg2, void *arg3, s32 *arg4) {
             func_80030F58(box, (s32 *)((u8 *)arg3 + B164_OUT)) == 0) {
             func_80029538((s32)arg2, (s32)arg0, (s32)arg3);
         }
-        y = B164_FLD(arg0, 0x88);
+        y = B164_OBJ(arg0)->vel[1];
         if (y < 0 && (flags & B164_FLAG_LOW)) {
             B164_FLD(arg0, 0x114) = y;
-            B164_FLD(arg0, 0x88) = 0;
+            B164_OBJ(arg0)->vel[1] = 0;
         }
         B164_FLD(arg0, 0xA8) |= flags;
         B164_FLD(arg0, 0x110) = D_8006CB64;
@@ -1144,12 +1145,12 @@ void func_8002BC38(void *arg0, s32 *arg1, s32 *arg2, void *arg3) {
     void *sub;
 
     flag = 0;
-    if (F(arg0, 0xA8) & 0x100000) {
+    if (OBJ(arg0)->status_a & 0x100000) {
         sub = SUB(arg0);
         if ((F(sub, 0x4C) & 0x100000) && (F(sub, 0x50) & 0x100000) && (F(sub, 0x54) & 0x100000)
             && (F(sub, 0x58) & 0x100000) && (F(sub, 0x5C) & 0x100000) && (F(sub, 0x60) & 0x100000)
             && (F(sub, 0x64) & 0x100000) && (F(sub, 0x68) & 0x100000)) {
-            a = F(arg0, 0x100) & 0x40000000;
+            a = OBJ(arg0)->state_flags & 0x40000000;
             flag = a == 0;
         }
     }
@@ -1163,16 +1164,16 @@ void func_8002BC38(void *arg0, s32 *arg1, s32 *arg2, void *arg3) {
         goto fail;
     }
     b = arg2[1];
-    if (!(F(arg0, 0x100) & 0x40000000)) {
+    if (!(OBJ(arg0)->state_flags & 0x40000000)) {
         if (ret - 1 >= b + F(SUB(arg0), 0x40)) {
             goto fail;
         }
     } else if (ret - 1 >= b + 0x29900) {
         goto fail;
     }
-    if (!(F(arg0, 0xA8) & 1)) {
-        y = ret - ((F(arg0, 0x100) & 0x40000000) ? 0x29900 : F(SUB(arg0), 0x40)) - 1;
-        if (F(arg0, 0x100) & 0x40) {
+    if (!(OBJ(arg0)->status_a & 1)) {
+        y = ret - ((OBJ(arg0)->state_flags & 0x40000000) ? 0x29900 : F(SUB(arg0), 0x40)) - 1;
+        if (OBJ(arg0)->state_flags & 0x40) {
             if (arg2[1] < y) {
                 y = arg2[1];
             }
@@ -1189,14 +1190,14 @@ void func_8002BC38(void *arg0, s32 *arg1, s32 *arg2, void *arg3) {
             }
             arg2[1] = y;
         }
-        F(arg0, 0xA8) |= 0x80;
-        if (F(arg0, 0x88) > 0) {
-            F(arg0, 0x88) = 0;
+        OBJ(arg0)->status_a |= 0x80;
+        if (OBJ(arg0)->vel[1] > 0) {
+            OBJ(arg0)->vel[1] = 0;
         }
         return;
     }
 fail:
-    if (F(arg0, 0x100) & 0x40) {
+    if (OBJ(arg0)->state_flags & 0x40) {
         if (ret == 0xC4653601) {
             arg2[1] = arg1[1];
         } else {
@@ -1362,7 +1363,7 @@ s32 *func_8002C324(void *arg0, s32 arg1, s32 arg2) {
     u8 *flagp;
 
     if (idx == -2) {
-        flagp = (u8 *)F(obj, 0xE8);
+        flagp = OBJ(obj)->anim;
         if (flagp != 0 && *flagp == 1) {
             idx = 0;
         }
@@ -2146,12 +2147,12 @@ void func_8002D6E4(s32 *arg0, s32 *arg1, void *arg2, void *arg3, s32 arg4) {
     originX = arg0[0];
     originZ = arg0[2];
     if (!(FIELD(FIELD(g_CurrentZone, void *, 0x10), s32, 0x29C) & FLAG_PLAYER_NO_CHECK)) {
-        checkSelf = (FIELD(arg2, s32, 0x100) & FLAG_SELF_SKIP) == 0;
+        checkSelf = (OBJ(arg2)->state_flags & FLAG_SELF_SKIP) == 0;
     }
     if (D_8006CB6C.n == 0) {
         return;
     }
-    selfObj = FIELD(arg2, s32, 0x58);
+    selfObj = ((s32)OBJ(arg2)->links[GOOL_LINK_COLLIDER]);
     row = Cell(arg1[2] - originZ) + BUCKET_BIAS;
     bit = Cell(arg1[0] - originX) + BUCKET_BIAS;
     if (bit < BUCKET_COUNT && row < BUCKET_COUNT) {
@@ -2210,10 +2211,10 @@ void func_8002D6E4(s32 *arg0, s32 *arg1, void *arg2, void *arg3, s32 arg4) {
         }
         if (((s32)obj != selfObj || arg4 == 0 || wide[1] < fp[4]) && func_80030EC0(wide, fp) != 0) {
             if (checkSelf != 0 && (OBJ(obj)->status_b & FLAG_B)
-                && ((((!(FIELD(arg2, s32, 0x100) & FLAG_A) && FIELD(arg2, s32, 0x108) != KIND_5)
+                && ((((!(OBJ(arg2)->state_flags & FLAG_A) && OBJ(arg2)->display_mode != KIND_5)
                       || ((SHAPE(obj)[1] != KIND_300 || (OBJ(obj)->block_flags & MASK_1012))
                           && !(OBJ(obj)->state_flags & FLAG_C)))
-                     && !(FIELD(arg2, s32, 0x100) & FLAG_B))
+                     && !(OBJ(arg2)->state_flags & FLAG_B))
                     || (OBJ(obj)->state_flags & FLAG_B))
                 && !(OBJ(obj)->status_a & FLAG_4000)
                 && (SHAPE(obj)[0] != KIND_E || wide[1] < fp[1])) {
@@ -2495,7 +2496,6 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_8002DFA8);
 #define FLAG_RETRY 0x8000
 #define CTX_FLAGS_OFFSET 0x29C
 #define OBJ_NO_SEARCH 0x10000000
-#define STATE_PTR_OFFSET 0x58
 #define STATE_KIND_VALUE 0x22
 #define EMPTY_SLOT -1
 
@@ -2504,7 +2504,7 @@ extern u8 D_80067FE4[];
 
 /* Nonzero when arg5's state object holds the special kind. */
 static s32 has_special_state(void *obj) {
-    void *state = FIELD(obj, void *, STATE_PTR_OFFSET);
+    void *state = OBJ(obj)->links[GOOL_LINK_COLLIDER];
 
     if (state == 0) {
         return 0;
