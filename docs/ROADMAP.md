@@ -945,8 +945,11 @@ Steps, in order:
   whose member moves GCC 2.7.2's code stay, named after the member (`OBJ_VEL_X`, `OBJ_STATUS_A`, `Obj_Kill`'s links,
   the packet list's head links); so do `GoolObject`'s words still `unk_`, under the files' own names. Raw accesses in
   the equivalent C (`*(T *)(p + offset)`, `p[offset / 4]` and the files' offset macros): 603 in 58 functions before,
-  509 after. Next: the zone's and the level's headers (`g_CurrentZone`'s first item, `D_8006759C`), the videos'
-  state, the camera's path records, each as a shared type once its fields' evidence is in hand.
+  502 after. The zone's header, its entry's first item, is `ZoneHeader` (`include/game/zone.h`, CrashEdit's
+  ZoneEntry: the worlds, the counts of info, camera and entity items that follow in that order, the linked zones and
+  their flags 8 words on), which the zones' searches, the entity spawn and the camera paths' indexing read. Next: the
+  level's header (`D_8006759C`), the videos' state, the camera's path records, each as a shared type once its fields'
+  evidence is in hand.
 - **R7, the C made portable (done)**: what a host's compiler makes of the C, what is left for a host, and the
   macros the port redefines (section 6, "The macros").
 
