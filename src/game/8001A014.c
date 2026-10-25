@@ -399,6 +399,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001AA80);
 /* Field of type T at byte offset OFF of the object P points to. */
 #define FLD(T, P, OFF) (*(T *)((u8 *)(P) + (OFF)))
 #define OBJ(p) ((GoolObject *)(p))
+#define PKT(p) ((DrawPacket *)(p))
 
 #define PACKET_LIST_SLACK 0xC8
 #define PACKET_LIST_LIMIT 0x1771
@@ -482,15 +483,15 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         } else {
             /* explicit table index */
         }
-        FLD(s32, prim, 0x14) = FLD(s32, arg0, 8);
+        PKT(prim)->matrix = (u32 *)(FLD(s32, arg0, 8));
         FLD(s32, prim, 4) = FLD(s32, arg1, 0);
-        FLD(s32, prim, 8) = D_8005B75C[idx];
+        PKT(prim)->prepare = (DrawStep)D_8005B75C[idx];
         FLD(u8 *, prim, 0x10) = arg0;
-        FLD(u8 *, prim, 0x1C) = data + (frame * 0x10 + 8);
-        FLD(s32, prim, 0xC) = D_8005B708[idx];
+        PKT(prim)->kind.sprite.record = (u32 *)(data + (frame * 0x10 + 8));
+        PKT(prim)->draw = (DrawStep)D_8005B708[idx];
         if (FLD(s16, hdr, 6) != 0) {
-            FLD(s32, prim, 0x28) = (FLD(s16, hdr, 0x1A) << 0x14) | (FLD(s16, hdr, 0x1C) << 0xC) |
-                                   (FLD(s16, hdr, 0x1E) * 0x10);
+            PKT(prim)->kind.sprite.far_colour = (u32)((FLD(s16, hdr, 0x1A) << 0x14) | (FLD(s16, hdr, 0x1C) << 0xC) |
+                                   (FLD(s16, hdr, 0x1E) * 0x10));
             FLD(s32, prim, 0x20) = FLD(s16, hdr, 6);
         } else {
             FLD(s32, prim, 0x20) = 0;
@@ -531,7 +532,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         g_BuildBuffer->next_queue_packet = prim + 0x30;
         FLD(s32, prim, 0) = (s32)g_BuildBuffer->object_queue;
         g_BuildBuffer->object_queue = prim;
-        FLD(s32, prim, 0x14) = FLD(s32, arg0, 8);
+        PKT(prim)->matrix = (u32 *)(FLD(s32, arg0, 8));
         FLD(s32, prim, 4) = FLD(s32, arg1, 0);
         FLD(s32, prim, 8) = D_8005B770;
         FLD(u8 *, prim, 0x10) = arg0;
@@ -539,7 +540,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         FLD(s32, prim, 0x20) = 0;
         FLD(s32, prim, 0x24) = arg1_4;
         FLD(u32, prim, 0x2C) = frame;
-        FLD(s32, prim, 0xC) = D_8005B71C;
+        PKT(prim)->draw = (DrawStep)D_8005B71C;
         return;
     } else if (kind == KIND_ONE) {
         u8 *obj = FLD(u8 *, arg0, 8);
@@ -558,22 +559,22 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         obj = FLD(u8 *, arg0, 8);
         mode = FLD(u8, arg0, 0x121);
         model = FLD(u8 *, obj, 0x28);
-        FLD(u8 *, prim, 0x14) = obj;
+        PKT(prim)->matrix = (u32 *)obj;
         FLD(s32, prim, 4) = FLD(s32, arg1, 0);
         v = FLD(s32, arg0, 0xA0);
         FLD(u8 *, prim, 0x10) = arg0;
-        FLD(s32, prim, 0x50) = v;
+        PKT(prim)->offset_y = (s32)v;
         hdr = arg0 + 0x20;
         flags = OBJ(arg0)->status_b;
         if (flags & 0x100000) {
-            FLD(s32, prim, 0x18) = FLD(s32, arg0, 0xE4);
+            PKT(prim)->clock = (u32)(FLD(s32, arg0, 0xE4));
         } else {
-            FLD(s32, prim, 0x18) = D_80060944;
+            PKT(prim)->clock = (u32)D_80060944;
         }
         if (OBJ(arg0)->status_b & 0x40000) {
-            FLD(void *, prim, 0x1C) = (void *)func_80041E50;
+            PKT(prim)->kind.model.visible = (DrawTest)func_80041E50;
         } else {
-            FLD(void *, prim, 0x1C) = (void *)func_80041D14;
+            PKT(prim)->kind.model.visible = (DrawTest)func_80041D14;
         }
         if (mode == 0) {
             mode = D_80062ACC;
@@ -581,8 +582,8 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
             /* explicit mode */
         }
         sub = FLD(u8, arg0, 0x122);
-        FLD(s32, prim, 0x20) = D_8005B6D0[sub];
-        FLD(s32, prim, 0x24) = D_8005B6EC[sub];
+        PKT(prim)->kind.model.far_setup = (DrawStep)D_8005B6D0[sub];
+        PKT(prim)->kind.model.shade = (DrawStep)D_8005B6EC[sub];
         if ((s32)sub < 6 && (s32)sub >= 4) {
             s16 px = FLD(s16, arg0, 0x2E);
             s16 py = FLD(s16, arg0, 0x30);
@@ -607,8 +608,8 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
             } else {
                 /* sub 4: vector used as is */
             }
-            FLD(s32, prim, 0x50) = (py << 0x10) | (px & 0xFFFF);
-            FLD(s32, prim, 0x54) = pz;
+            PKT(prim)->offset_y = (s32)((py << 0x10) | (px & 0xFFFF));
+            PKT(prim)->level = (s32)pz;
             which = FLD(u8, arg0, 0x120);
             if (which == 0xA || which == 0xF) {
                 s32 ex = (g_CameraX - OBJ(arg0)->pos[0]) >> 8;
@@ -654,13 +655,13 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
                 dy = (sy << DIR_SHIFT) / len;
                 dz = (dz << DIR_SHIFT) / len;
             }
-            FLD(s32, prim, 0x58) = (dy << 0x10) | (dx & 0xFFFF);
-            FLD(s32, prim, 0x5C) = dz;
+            PKT(prim)->colour_shift = (u32)((dy << 0x10) | (dx & 0xFFFF));
+            PKT(prim)->colour_mask = (u32)dz;
         } else {
             /* not a vector sub-kind */
         }
-        FLD(s32, prim, 0x48) = FLD(s32, arg0, 0x118) + D_80062AD0;
-        FLD(s32, prim, 0x4C) = FLD(s32, arg0, 0x118) + D_80062AD4;
+        PKT(prim)->far_depths[0] = (u32)(FLD(s32, arg0, 0x118) + D_80062AD0);
+        PKT(prim)->far_depths[1] = (u32)(FLD(s32, arg0, 0x118) + D_80062AD4);
         switch (mode) {
         case MODE_SLOPE:
             if ((s32)arg0 == g_Player) {
@@ -672,55 +673,55 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
                     mode = 1;
                 } else {
                     s32 t = (D_8006CCE4 - y) << 5;
-                    FLD(s32, prim, 0x50) = t;
-                    FLD(s32, prim, 0x50) = t / FLD(s32, FLD(u8 *, FLD(u8 *, FLD(u8 *, arg0, 8), 0x28), 0x10), 4);
+                    PKT(prim)->offset_y = (s32)t;
+                    PKT(prim)->offset_y = (s32)(t / FLD(s32, FLD(u8 *, FLD(u8 *, FLD(u8 *, arg0, 8), 0x28), 0x10), 4));
                 }
             } else {
                 s32 t = (FLD(s32, arg0, 0xFC) - OBJ(arg0)->pos[1]) << 5;
-                FLD(s32, prim, 0x50) = t;
-                FLD(s32, prim, 0x50) = t / FLD(s32, FLD(u8 *, FLD(u8 *, FLD(u8 *, arg0, 8), 0x28), 0x10), 4);
-                FLD(s32, prim, 0x4C) = FLD(s32, arg0, 0x118) - 0xC8;
+                PKT(prim)->offset_y = (s32)t;
+                PKT(prim)->offset_y = (s32)(t / FLD(s32, FLD(u8 *, FLD(u8 *, FLD(u8 *, arg0, 8), 0x28), 0x10), 4));
+                PKT(prim)->far_depths[1] = (u32)(FLD(s32, arg0, 0x118) - 0xC8);
             }
             break;
         case MODE_A:
         case MODE_B:
         case MODE_C:
             if (OBJ(arg0)->status_b < 0) {
-                FLD(s32, prim, 0x54) = FLD(s32, arg0, 0x9C) * 0x10;
-                FLD(s32, prim, 0x58) = FLD(s32, arg0, 0xA0);
-                FLD(s32, prim, 0x5C) = FLD(s32, arg0, 0xA4);
+                PKT(prim)->level = (s32)(FLD(s32, arg0, 0x9C) * 0x10);
+                PKT(prim)->colour_shift = (u32)(FLD(s32, arg0, 0xA0));
+                PKT(prim)->colour_mask = (u32)(FLD(s32, arg0, 0xA4));
             } else {
                 FLD(s32, prim, 0x54) = D_80062A3C;
                 FLD(s32, prim, 0x58) = D_80062A40;
-                FLD(s32, prim, 0x5C) = D_80062A44;
+                PKT(prim)->colour_mask = (u32)D_80062A44;
             }
             break;
         default:
             break;
         }
         if (lo == hi) {
-            FLD(s32, prim, 8) = D_8005B75C[mode];
+            PKT(prim)->prepare = (DrawStep)D_8005B75C[mode];
             v = D_8005B708[mode];
-            FLD(s32, prim, 0x28) = hi;
+            PKT(prim)->kind.model.frames[0] = (u32 *)hi;
         } else {
-            FLD(s32, prim, 8) = D_8005B760[mode];
+            PKT(prim)->prepare = (DrawStep)D_8005B760[mode];
             v = D_8005B70C[mode];
-            FLD(s32, prim, 0x28) = lo;
-            FLD(s32, prim, 0x2C) = hi;
+            PKT(prim)->kind.model.frames[0] = (u32 *)lo;
+            PKT(prim)->kind.model.frames[1] = (u32 *)hi;
         }
-        FLD(s32, prim, 0xC) = v;
-        FLD(s32, prim, 0x30) = FLD(s32, model, 0x14);
-        FLD(s32, prim, 0x34) = FLD(s32, model, 0x18);
-        FLD(s32, prim, 0x38) = FLD(s32, model, 0x1C);
-        FLD(s32, prim, 0x3C) = FLD(s32, model, 0x20);
+        PKT(prim)->draw = (DrawStep)v;
+        PKT(prim)->strips = (u32 *)(FLD(s32, model, 0x14));
+        PKT(prim)->colours = (u32 *)(FLD(s32, model, 0x18));
+        PKT(prim)->textures = (u8 *)(FLD(s32, model, 0x1C));
+        PKT(prim)->animations = (u32 *)(FLD(s32, model, 0x20));
         if (FLD(s32, model, 0xC) < 6) {
-            FLD(s32, prim, 0x60) = 0;
+            PKT(prim)->widths = 0;
         } else {
-            FLD(s32, prim, 0x60) = FLD(s32, model, 0x24);
+            PKT(prim)->widths = (u32 *)(FLD(s32, model, 0x24));
         }
         if (FLD(s16, hdr, 6) != 0) {
-            FLD(s32, prim, 0x44) = (FLD(s16, hdr, 0x1A) << 0x14) | (FLD(s16, hdr, 0x1C) << 0xC) |
-                                   (FLD(s16, hdr, 0x1E) * 0x10);
+            PKT(prim)->model_far_colour = (u32)((FLD(s16, hdr, 0x1A) << 0x14) | (FLD(s16, hdr, 0x1C) << 0xC) |
+                                   (FLD(s16, hdr, 0x1E) * 0x10));
             FLD(s32, prim, 0x40) = FLD(s16, hdr, 6);
         } else {
             FLD(s32, prim, 0x40) = 0;
