@@ -1731,3 +1731,12 @@ Gool_OpShowVideoFrame = 0x80039C08; // type:func
 
 // the handler of GOOL's opcode 72: Cam_QueueMessage of its two operands
 Gool_OpCameraMessage = 0x80038E14; // type:func
+
+// moves the frame being built's primitives cursor (GfxFrame.next_primitive, where Gfx_AddFillRect takes its fill) on by the bytes given; no caller in the executable
+Gfx_SkipPrimitives = 0x800163E8; // type:func
+
+// returns the address of the frame being built's primitives cursor (GfxFrame.next_primitive); no caller in the executable
+Gfx_GetPrimitiveCursor = 0x80016408; // type:func
+
+// takes the bytes given from the frame being built's packet buffer (GfxFrame.next_queue_packet) and links them at the head of its object queue, as Gfx_QueueObject does inline; no caller in the executable
+Gfx_AllocObjectPacket = 0x80016418; // type:func

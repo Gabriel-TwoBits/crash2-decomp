@@ -487,7 +487,7 @@ void Gfx_ResetFrame(GfxFrame *frame) {
 
 extern GfxFrame *g_BuildBuffer[];
 
-void func_800163E8(s32 arg0) {
+void Gfx_SkipPrimitives(s32 arg0) {
     s32 sum;
 
     sum = (s32)g_BuildBuffer[0]->next_primitive + arg0;
@@ -499,11 +499,11 @@ void func_800163E8(s32 arg0) {
     }
 }
 
-s32 *func_80016408(void) {
+s32 *Gfx_GetPrimitiveCursor(void) {
     return (s32 *)&g_BuildBuffer[0]->next_primitive;
 }
 
-void *func_80016418(s32 arg0) {
+void *Gfx_AllocObjectPacket(s32 arg0) {
     void **temp;
 
     temp = (void **)g_BuildBuffer[0]->next_queue_packet;
