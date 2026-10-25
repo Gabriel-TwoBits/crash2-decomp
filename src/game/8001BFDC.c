@@ -364,11 +364,6 @@ INCLUDE_ASM("asm/nonmatchings/game/8001BFDC", Gool_PopFrame);
 #define OFF_MODEL_INFO 0x10
 #define OFF_VEC_A 0x60
 #define OFF_VEC_B 0x6C
-#define OFF_FLAGS_A8 0xA8
-#define OFF_FLAGS_AC 0xAC
-#define OFF_STACK_TOP 0xBC
-#define OFF_FIELD_E8 0xE8
-#define OFF_FLAGS_100 0x100
 
 #define AC_BIT_COUNTDOWN 0x10000000
 #define AC_BIT_COPY_VEC 0x10
@@ -412,12 +407,12 @@ s32 Obj_Update(u8 *obj, s32 flag) {
     pad = D_8006CB94;
     hit = pad & PAD_ANY;
     if (hit != 0) {
-        flags100 = FIELD(obj, OFF_FLAGS_100, u32);
+        flags100 = ((u32)OBJ(obj)->state_flags);
         if (flags100 & F100_BIT_FORCE) {
             flag = 1;
         } else {
         }
-        if (((FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_ALT) || (flags100 & F100_BIT_ALT)) && (pad & PAD_FORCE)) {
+        if (((((u32)OBJ(obj)->status_b) & AC_BIT_ALT) || (flags100 & F100_BIT_ALT)) && (pad & PAD_FORCE)) {
             hit = 1;
         } else {
             sel = MODEL_KIND(obj);
@@ -435,17 +430,17 @@ s32 Obj_Update(u8 *obj, s32 flag) {
     } else {
     }
     if (flag != 0 && hit != 0 && !FRAME_BETWEEN) {
-        if ((FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_COUNTDOWN) && OBJ(obj)->unk_E4 != 0) {
+        if ((((u32)OBJ(obj)->status_b) & AC_BIT_COUNTDOWN) && OBJ(obj)->unk_E4 != 0) {
             s32 n = OBJ(obj)->unk_E4 - 1;
             OBJ(obj)->unk_E4 = n;
             if (n == 0) {
-                FIELD(obj, OFF_FLAGS_AC, u32) &= ~AC_BIT_COUNTDOWN;
+                OBJ(obj)->status_b &= ~AC_BIT_COUNTDOWN;
             } else {
             }
             func_8001AA80((GoolObject *)obj, out);
         } else {
             OBJ(obj)->frame_time = D_8006CB64;
-            if (FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_COPY_VEC) {
+            if (((u32)OBJ(obj)->status_b) & AC_BIT_COPY_VEC) {
                 vec[0] = OBJ(obj)->pos[0];
                 vec[1] = FIELD(obj, OFF_VEC_A + 4, s32);
                 vec[2] = FIELD(obj, OFF_VEC_A + 8, s32);
@@ -464,10 +459,10 @@ s32 Obj_Update(u8 *obj, s32 flag) {
                 }
             } else {
             }
-            top = FIELD(obj, OFF_STACK_TOP, u32);
+            top = (u32)OBJ(obj)->sp;
             sel = *(u32 *)(top - 4);
             if (D_8006CB64 - (sel & MASK_LOW24) >= (sel >> SHIFT_HIGH8)) {
-                FIELD(obj, OFF_STACK_TOP, u32) = top - 4;
+                OBJ(obj)->sp = (s32 *)(top - 4);
                 r = Gool_Interpret(obj, 4, 0);
                 if (r >= RESULT_ERROR_LIMIT) {
                     return r;
@@ -477,15 +472,15 @@ s32 Obj_Update(u8 *obj, s32 flag) {
             }
             ((s32 (*)(void *, s32))func_8001BFDC)(obj, flag);
             Obj_UpdatePhysics(obj, vec, out);
-            FIELD(obj, OFF_FLAGS_A8, u32) &= ~A8_BIT_CLEAR;
+            OBJ(obj)->status_a &= ~A8_BIT_CLEAR;
         }
     } else {
         func_8001AA80((GoolObject *)obj, out);
     }
-    if (FIELD(obj, OFF_FIELD_E8, s32) != 0 && OBJ(obj)->unk_120 != 1
-        && !(FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_SKIP) && (D_8006CB94 & PAD_FIRE)) {
+    if (OBJ(obj)->anim != 0 && OBJ(obj)->unk_120 != 1
+        && !(((u32)OBJ(obj)->status_b) & AC_BIT_SKIP) && (D_8006CB94 & PAD_FIRE)) {
         pad = D_8006CB94;
-        if (((FIELD(obj, OFF_FLAGS_AC, u32) & AC_BIT_ALT) || (FIELD(obj, OFF_FLAGS_100, u32) & F100_BIT_ALT))
+        if (((((u32)OBJ(obj)->status_b) & AC_BIT_ALT) || (((u32)OBJ(obj)->state_flags) & F100_BIT_ALT))
             && (pad & PAD_FORCE2)) {
             hit = 1;
         } else {
@@ -510,7 +505,7 @@ s32 Obj_Update(u8 *obj, s32 flag) {
             default: break;
             }
         }
-        if (flag == 0 && !(D_8006CB94 & PAD_HOLD) && !(FIELD(obj, OFF_FLAGS_100, u32) & F100_BIT_FORCE)) {
+        if (flag == 0 && !(D_8006CB94 & PAD_HOLD) && !(((u32)OBJ(obj)->state_flags) & F100_BIT_FORCE)) {
             hit = 0;
         } else {
         }
