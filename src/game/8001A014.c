@@ -463,7 +463,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         u32 flags;
         s32 idx;
         s32 sel;
-        u8 *hdr;
+        s16 *colors;
 
         func_80018474(data + (frame * 0x10 + 8) + 4, data + 4);
         prim = g_BuildBuffer->next_queue_packet;
@@ -471,7 +471,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         FLD(s32, prim, 0) = (s32)g_BuildBuffer->object_queue;
         g_BuildBuffer->object_queue = prim;
         flags = FLD(u32, arg0, 0x120);
-        hdr = arg0 + 0x20;
+        colors = OBJ(arg0)->colors;
         idx = (flags >> 8) & 0xFF;
         sel = flags & 0xFF;
         if (idx == 0) {
@@ -484,19 +484,19 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
             /* explicit table index */
         }
         PKT(prim)->matrix = (u32 *)(FLD(s32, arg0, 8));
-        FLD(s32, prim, 4) = FLD(s32, arg1, 0);
+        PKT(prim)->place = (DrawStep)(FLD(s32, arg1, 0));
         PKT(prim)->prepare = (DrawStep)D_8005B75C[idx];
-        FLD(u8 *, prim, 0x10) = arg0;
+        PKT(prim)->object = (u8 *)arg0;
         PKT(prim)->kind.sprite.record = (u32 *)(data + (frame * 0x10 + 8));
         PKT(prim)->draw = (DrawStep)D_8005B708[idx];
-        if (FLD(s16, hdr, 6) != 0) {
-            PKT(prim)->kind.sprite.far_colour = (u32)((FLD(s16, hdr, 0x1A) << 0x14) | (FLD(s16, hdr, 0x1C) << 0xC) |
-                                   (FLD(s16, hdr, 0x1E) * 0x10));
-            FLD(s32, prim, 0x20) = FLD(s16, hdr, 6);
+        if (colors[3] != 0) {
+            PKT(prim)->kind.sprite.far_colour = (u32)((colors[13] << 0x14) | (colors[14] << 0xC) |
+                                   (colors[15] * 0x10));
+            FLD(s32, prim, 0x20) = colors[3];
         } else {
             FLD(s32, prim, 0x20) = 0;
         }
-        FLD(s32, prim, 0x24) = arg1_4;
+        PKT(prim)->kind.sprite.size_shift = arg1_4;
         return;
     } else if (kind == KIND_FOUR) {
         s32 dir = 1;
@@ -547,7 +547,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         s32 lo = FLD(s32, obj, 0x20);
         s32 hi = FLD(s32, obj, 0x24);
         u8 *model;
-        u8 *hdr;
+        s16 *colors;
         s32 mode;
         u8 sub;
         s32 flags;
@@ -560,11 +560,11 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         mode = FLD(u8, arg0, 0x121);
         model = FLD(u8 *, obj, 0x28);
         PKT(prim)->matrix = (u32 *)obj;
-        FLD(s32, prim, 4) = FLD(s32, arg1, 0);
+        PKT(prim)->place = (DrawStep)(FLD(s32, arg1, 0));
         v = FLD(s32, arg0, 0xA0);
-        FLD(u8 *, prim, 0x10) = arg0;
+        PKT(prim)->object = (u8 *)arg0;
         PKT(prim)->offset_y = (s32)v;
-        hdr = arg0 + 0x20;
+        colors = OBJ(arg0)->colors;
         flags = OBJ(arg0)->status_b;
         if (flags & 0x100000) {
             PKT(prim)->clock = (u32)(FLD(s32, arg0, 0xE4));
@@ -585,9 +585,9 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         PKT(prim)->kind.model.far_setup = (DrawStep)D_8005B6D0[sub];
         PKT(prim)->kind.model.shade = (DrawStep)D_8005B6EC[sub];
         if ((s32)sub < 6 && (s32)sub >= 4) {
-            s16 px = FLD(s16, arg0, 0x2E);
-            s16 py = FLD(s16, arg0, 0x30);
-            s16 pz = FLD(s16, arg0, 0x32);
+            s16 px = OBJ(arg0)->colors[7];
+            s16 py = OBJ(arg0)->colors[8];
+            s16 pz = OBJ(arg0)->colors[9];
             s32 dx;
             s32 dy;
             s32 dz;
@@ -719,10 +719,10 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         } else {
             PKT(prim)->widths = (u32 *)(FLD(s32, model, 0x24));
         }
-        if (FLD(s16, hdr, 6) != 0) {
-            PKT(prim)->model_far_colour = (u32)((FLD(s16, hdr, 0x1A) << 0x14) | (FLD(s16, hdr, 0x1C) << 0xC) |
-                                   (FLD(s16, hdr, 0x1E) * 0x10));
-            FLD(s32, prim, 0x40) = FLD(s16, hdr, 6);
+        if (colors[3] != 0) {
+            PKT(prim)->model_far_colour = (u32)((colors[13] << 0x14) | (colors[14] << 0xC) |
+                                   (colors[15] * 0x10));
+            FLD(s32, prim, 0x40) = colors[3];
         } else {
             FLD(s32, prim, 0x40) = 0;
         }
