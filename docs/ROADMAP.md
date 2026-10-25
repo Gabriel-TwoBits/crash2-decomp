@@ -947,9 +947,16 @@ Steps, in order:
   the equivalent C (`*(T *)(p + offset)`, `p[offset / 4]` and the files' offset macros): 603 in 58 functions before,
   502 after. The zone's header, its entry's first item, is `ZoneHeader` (`include/game/zone.h`, CrashEdit's
   ZoneEntry: the worlds, the counts of info, camera and entity items that follow in that order, the linked zones and
-  their flags 8 words on), which the zones' searches, the entity spawn and the camera paths' indexing read. Next: the
-  level's header (`D_8006759C`), the videos' state, the camera's path records, each as a shared type once its fields'
-  evidence is in hand.
+  their flags 8 words on), which the zones' searches, the entity spawn and the camera paths' indexing read. The
+  level's header, what follows the NSD's records, is `NsdLevel` (`g_LevelHeader`, `NsfLevel.header`; CrashEdit's NSD:
+  the spawn points' count, the level's id at 8, the GOOL entries by object type from 0x10, the spawn points of 24
+  bytes from 0x1DC, which Nsf_OpenLevel's NSD size, 0x714 plus 24 per spawn point past the first, confirms). The GOOL
+  entries' items have names (`GOOL_ITEM_HEADER` to `GOOL_ITEM_ANIMATIONS`, CrashEdit's GOOLEntry), through which
+  `Gool_ChangeState` and `Obj_Init` find a state; the nearest-object search's query is `ObjNearestQuery`, shared by
+  `Gool_OpMisc` and `Obj_CheckNearest`; `Gfx_QueueObject` reads the object's colours by name. 443 raw accesses left
+  in 55 functions; most of the rest are `GoolObject`'s `unk_` words under the files' own names, the collision's
+  workspace (0x1020 on) and the object's block at `unk_8` (frames at 0x20 and 0x24, model at 0x28), whose fields
+  have no evidence yet, and accesses whose member moves GCC 2.7.2's code (`func_8001F9C4`'s spawn point).
 - **R7, the C made portable (done)**: what a host's compiler makes of the C, what is left for a host, and the
   macros the port redefines (section 6, "The macros").
 
