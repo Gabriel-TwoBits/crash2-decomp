@@ -188,7 +188,7 @@ s32 func_8001F9C4(void) {
         Input_PickDemo(&g_DemoEid);
     }
     Cam_MoveAlongPath((s32)obj,
-                  FIELD(obj, (FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * 3 + FIELD((u8 *)FIELD(obj, 0x10), 0x184)) * 4 + 0x10),
+                  (s32)((NsfEntry *)obj)->items[FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * ZONE_CAMERA_ITEMS + ((ZoneHeader *)((NsfEntry *)obj)->items[0])->info_count],
                   extra, 0);
     Nsf_CloseEntry(D_8006759C + off + ENTRY_BASE_OFFSET, 1);
     D_8005F1F8 = 0;

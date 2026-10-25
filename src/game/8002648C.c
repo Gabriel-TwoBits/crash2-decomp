@@ -164,7 +164,7 @@ s32 func_800267C4(Buf *out, s32 argAddr) {
         if (mask & bit) {
             e = list + 1;
             obj = Nsf_OpenEntry((u8 *)arg->obj[4] + (e[1] * ENTRY_BYTES + SLOT_TABLE_OFFSET), 1, 0);
-            b = ((s32 *)((u8 *)obj + ((e[0] * 3 + ((s32 *)obj[4])[0x184 / 4]) * 4)))[4];
+            b = (s32)((NsfEntry *)obj)->items[e[0] * ZONE_CAMERA_ITEMS + ((ZoneHeader *)obj[4])->info_count];
             cur->a = (s32)obj;
             cur->b = b;
             if (*list == 1) {

@@ -719,7 +719,7 @@ void Sys_LoadCheckpoint(u8 *arg0) {
     sp18 = *(s32 *)(arg0 + 0x24);
     t0 = Nsf_OpenEntry(&sp18, 1, 1);
     {
-        s32 a1 = *(s32 *)(t0 + (*(s32 *)(arg0 + 0x28) * 3 + *(s32 *)(*(u8 **)(t0 + 0x10) + 0x184)) * 4 + 0x10);
+        s32 a1 = (s32)((NsfEntry *)t0)->items[*(s32 *)(arg0 + 0x28) * ZONE_CAMERA_ITEMS + ((ZoneHeader *)((NsfEntry *)t0)->items[0])->info_count];
         s32 kind;
         if (isSpecial) {
             kind = SCREEN_CALL_KIND_SPECIAL;
