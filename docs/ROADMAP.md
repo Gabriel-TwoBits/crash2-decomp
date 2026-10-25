@@ -934,7 +934,7 @@ Steps, in order:
   `Obj_Update` calls for each object (`Gfx_QueueObject`). `func_80045218`, the dots, changes no frame of new-game or
   demo emptied, and the game stops at game frame 4 without `func_8001AA80` (an object's matrix by the table at
   0x8005B650): both keep their addresses. 214 of 638 game functions named.
-- **R8, the equivalent C made readable (in progress).** The C under `NON_MATCHING` written for its reader: fields by
+- **R8, the equivalent C made readable (paused).** The C under `NON_MATCHING` written for its reader: fields by
   their names where it read offsets, the shared types where it had local ones, starting with what the port uses. A
   change is kept when `ninja` keeps the retail SHA-1 and `ninja nonmatching` the equivalent executable byte for byte
   (or, where the bytes change, `tools/equiv.py` agrees); the 33 files still compile for 32-bit x86. Done: the objects'
@@ -956,7 +956,9 @@ Steps, in order:
   `Gool_OpMisc` and `Obj_CheckNearest`; `Gfx_QueueObject` reads the object's colours by name. 443 raw accesses left
   in 55 functions; most of the rest are `GoolObject`'s `unk_` words under the files' own names, the collision's
   workspace (0x1020 on) and the object's block at `unk_8` (frames at 0x20 and 0x24, model at 0x28), whose fields
-  have no evidence yet, and accesses whose member moves GCC 2.7.2's code (`func_8001F9C4`'s spawn point).
+  have no evidence yet, and accesses whose member moves GCC 2.7.2's code (`func_8001F9C4`'s spawn point). Paused
+  there: those fields need evidence before they take names (a run of `tools/run_game.py` or a reference), and the
+  accesses that move the code stay raw unless `tools/equiv.py` judges the change.
 - **R7, the C made portable (done)**: what a host's compiler makes of the C, what is left for a host, and the
   macros the port redefines (section 6, "The macros").
 
