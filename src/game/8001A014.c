@@ -398,6 +398,7 @@ INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001AA80);
 #ifdef NON_MATCHING
 /* Field of type T at byte offset OFF of the object P points to. */
 #define FLD(T, P, OFF) (*(T *)((u8 *)(P) + (OFF)))
+#define OBJ(p) ((GoolObject *)(p))
 
 #define PACKET_LIST_SLACK 0xC8
 #define PACKET_LIST_LIMIT 0x1771
@@ -444,8 +445,8 @@ extern s32 D_8005B770;
 void Gfx_QueueObject(u8 *arg0, void *arg1) {
     GfxFrame *list = g_BuildBuffer;
     u8 *prim = list->next_queue_packet;
-    u8 *data = FLD(u8 *, arg0, 0xE8);
-    u32 frame = FLD(u32, arg0, 0xEC) >> 8;
+    u8 *data = OBJ(arg0)->anim;
+    u32 frame = OBJ(arg0)->anim_frame >> 8;
     u8 kind;
     s32 i;
     s32 n;
@@ -498,7 +499,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         return;
     } else if (kind == KIND_FOUR) {
         s32 dir = 1;
-        s32 f = FLD(s32, arg0, 0xAC);
+        s32 f = OBJ(arg0)->status_b;
         if (f & 0x200000) {
             dir = -1;
         } else {
@@ -563,13 +564,13 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         FLD(u8 *, prim, 0x10) = arg0;
         FLD(s32, prim, 0x50) = v;
         hdr = arg0 + 0x20;
-        flags = FLD(s32, arg0, 0xAC);
+        flags = OBJ(arg0)->status_b;
         if (flags & 0x100000) {
             FLD(s32, prim, 0x18) = FLD(s32, arg0, 0xE4);
         } else {
             FLD(s32, prim, 0x18) = D_80060944;
         }
-        if (FLD(s32, arg0, 0xAC) & 0x40000) {
+        if (OBJ(arg0)->status_b & 0x40000) {
             FLD(void *, prim, 0x1C) = (void *)func_80041E50;
         } else {
             FLD(void *, prim, 0x1C) = (void *)func_80041D14;
@@ -610,9 +611,9 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
             FLD(s32, prim, 0x54) = pz;
             which = FLD(u8, arg0, 0x120);
             if (which == 0xA || which == 0xF) {
-                s32 ex = (g_CameraX - FLD(s32, arg0, 0x60)) >> 8;
-                s32 ey = (g_CameraY - FLD(s32, arg0, 0x64)) >> 8;
-                s32 ez = (g_CameraZ - FLD(s32, arg0, 0x68)) >> 8;
+                s32 ex = (g_CameraX - OBJ(arg0)->pos[0]) >> 8;
+                s32 ey = (g_CameraY - OBJ(arg0)->pos[1]) >> 8;
+                s32 ez = (g_CameraZ - OBJ(arg0)->pos[2]) >> 8;
                 s32 sq = (ex * ex) + (ey * ey) + (ez * ez);
                 if (sq == 0) {
                     dx = 0;
@@ -666,7 +667,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
                 s32 floor;
                 s32 y;
                 if (!(D_80062AD8 & 0x1000) || (FLD(s32, FLD(u8 *, g_CurrentZone, 0x10), 0x29C) & 0x800) ||
-                    (y = FLD(s32, arg0, 0x64), floor = D_8006CCE4 - 0x3200, (y < floor)) ||
+                    (y = OBJ(arg0)->pos[1], floor = D_8006CCE4 - 0x3200, (y < floor)) ||
                     (FLD(s32, arg0, 0x13C) < floor)) {
                     mode = 1;
                 } else {
@@ -675,7 +676,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
                     FLD(s32, prim, 0x50) = t / FLD(s32, FLD(u8 *, FLD(u8 *, FLD(u8 *, arg0, 8), 0x28), 0x10), 4);
                 }
             } else {
-                s32 t = (FLD(s32, arg0, 0xFC) - FLD(s32, arg0, 0x64)) << 5;
+                s32 t = (FLD(s32, arg0, 0xFC) - OBJ(arg0)->pos[1]) << 5;
                 FLD(s32, prim, 0x50) = t;
                 FLD(s32, prim, 0x50) = t / FLD(s32, FLD(u8 *, FLD(u8 *, FLD(u8 *, arg0, 8), 0x28), 0x10), 4);
                 FLD(s32, prim, 0x4C) = FLD(s32, arg0, 0x118) - 0xC8;
@@ -684,7 +685,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         case MODE_A:
         case MODE_B:
         case MODE_C:
-            if (FLD(s32, arg0, 0xAC) < 0) {
+            if (OBJ(arg0)->status_b < 0) {
                 FLD(s32, prim, 0x54) = FLD(s32, arg0, 0x9C) * 0x10;
                 FLD(s32, prim, 0x58) = FLD(s32, arg0, 0xA0);
                 FLD(s32, prim, 0x5C) = FLD(s32, arg0, 0xA4);
@@ -725,7 +726,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
             FLD(s32, prim, 0x40) = 0;
         }
         v = FLD(s32, prim, 0x40);
-        if (FLD(s32, arg0, 0x78) < 0) {
+        if (OBJ(arg0)->scale[0] < 0) {
             v |= FLAG_NEG_SIGN;
         } else {
             /* sign flag stays clear */
@@ -808,7 +809,7 @@ s32 func_8001B83C(void *arg0, char *arg1, s32 arg2, s32 arg3, void *arg4, s32 ar
     max_x = 0;
     has_bounds = 0;
     if (arg6 != 0) {
-        has_bounds = FIELD(arg0, s32, 0xAC) & BOUNDS_FLAG;
+        has_bounds = OBJ(arg0)->status_b & BOUNDS_FLAG;
         if (has_bounds != 0) {
             bounds[0] = BOUNDS_INIT;
             bounds[1] = BOUNDS_INIT;
