@@ -185,7 +185,7 @@ s32 func_8001F9C4(void) {
     D_8006094F = 0;
     D_80060954 = g_TimerTicks;
     if (D_8006CBB4 == MODE_600) {
-        func_8002FE58(&g_DemoEid);
+        Input_PickDemo(&g_DemoEid);
     }
     Cam_MoveAlongPath((s32)obj,
                   FIELD(obj, (FIELD(D_8006759C + off, ENTRY_SEL_OFFSET) * 3 + FIELD((u8 *)FIELD(obj, 0x10), 0x184)) * 4 + 0x10),

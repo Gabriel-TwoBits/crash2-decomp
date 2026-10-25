@@ -1608,3 +1608,12 @@ Save_LoadSlot = 0x80036C40; // type:func
 
 // Save_RunCommand's command 15 calls it on a slot's record in g_SaveState before func_80036850: memset of the record's 0x2A4 bytes, then its defaults
 Save_InitSlot = 0x8003690C; // type:func
+
+// names a demo from "pb??B": the third character '0' plus Rand_Below of the level's count of type-19 (PBAK) entries, the fourth the level's EID character (func_800120EC), turned into an EID with Nsf_NameToEid; then g_PlaybackState 3; with no PBAK entry, the EID none
+Input_PickDemo = 0x8002FE58; // type:func
+
+// LoadImage (mode 1) or StoreImage (else) of an animation frame's palette and image, at the rectangles func_80017380 gives (modes 2 and 1), through an aligned buffer when the data isn't; Save_WriteFile reads the save's icons from VRAM with it into the "SC" header
+Gfx_TransferAnimFrame = 0x800176DC; // type:func
+
+// the VRAM rectangle of an animation's frame (arg2 >> 8, kinds 2 and 5): mode 1 its texture's bounds from its corners, mode 2 its palette; Gfx_TransferAnimFrame passes both to LoadImage and StoreImage
+Gfx_GetAnimFrameRect = 0x80017380; // type:func

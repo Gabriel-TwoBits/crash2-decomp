@@ -789,9 +789,9 @@ void Save_WriteFile(s32 arg0) {
     header[3] = 1;
     sprintf(header + 4, g_SaveTitle);
     Save_TitleToShiftJis((s8 *)header + 4, HEADER_TITLE_BYTES);
-    func_800176DC(2, D_8006CCB4, 0, (u8 *)header + HEADER_ICON_OFFSET, (u8 *)icons[0], 0);
-    func_800176DC(2, D_8006CCB4, 0, 0, (u8 *)icons[1], 0);
-    func_800176DC(2, D_8006CCB4, 0x100, 0, (u8 *)icons[2], 0);
+    Gfx_TransferAnimFrame(2, D_8006CCB4, 0, (u8 *)header + HEADER_ICON_OFFSET, (u8 *)icons[0], 0);
+    Gfx_TransferAnimFrame(2, D_8006CCB4, 0, 0, (u8 *)icons[1], 0);
+    Gfx_TransferAnimFrame(2, D_8006CCB4, 0x100, 0, (u8 *)icons[2], 0);
 
     tries = 0;
     do {

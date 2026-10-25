@@ -104,7 +104,7 @@ typedef struct NsfPageSlot {
    as globals by their own addresses (D_80067590, D_800675A0, g_NsfStartSector, ...) */
 typedef struct NsfLevel {
     /* 0x00 */ s32 is_open; /* Nsf_OpenLevel does nothing while it is set, Nsf_CloseLevel nothing unless it is 1 */
-    /* The number Nsf_FileName formats into the file names, g_LevelFiles' index, and the EID character func_8002FE58
+    /* The number Nsf_FileName formats into the file names, g_LevelFiles' index, and the EID character Input_PickDemo
        names entries with (g_EidAlphabet[level]) */
     /* 0x04 */ s32 level;
     /* 0x08 */ NsdRecord **buckets; /* nsd->buckets, which Nsf_LookupEid scans */

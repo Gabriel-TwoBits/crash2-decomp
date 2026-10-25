@@ -1062,7 +1062,7 @@ void Gfx_ModelPageIn(s32 a0) {
 #define MODE_BOUNDS 1
 #define MODE_VRAM 2
 
-void func_80017380(s32 mode, u8 *base, s32 arg2, u16 *out) {
+void Gfx_GetAnimFrameRect(s32 mode, u8 *base, s32 arg2, u16 *out) {
     u32 flags;
     s32 sub;
     s32 minx, miny, maxx, maxy;
@@ -1075,7 +1075,7 @@ void func_80017380(s32 mode, u8 *base, s32 arg2, u16 *out) {
     } else if (base[0] == TYPE_B) {
         p = base + (arg2 >> 8) * STRIDE_B + OFFSET_B;
     } else {
-        CALLER_LEFT(func_80017380);
+        CALLER_LEFT(Gfx_GetAnimFrameRect);
         CALLER_LEFT_VALUE(p, base + OFFSET_A);
     }
     func_80018474(p + 4, base + 4);
@@ -1134,7 +1134,7 @@ void func_80017380(s32 mode, u8 *base, s32 arg2, u16 *out) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80017380);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_GetAnimFrameRect);
 #endif
 
 #ifdef NON_MATCHING
@@ -1204,7 +1204,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800175D8);
 #ifdef NON_MATCHING
 typedef struct { s16 x, y, w, h; } Rect;
 
-s32 func_800176DC(s32 mode, s32 a1, s32 a2, u8 *i3, u8 *i4, s32 flag) {
+s32 Gfx_TransferAnimFrame(s32 mode, s32 a1, s32 a2, u8 *i3, u8 *i4, s32 flag) {
     Rect r;
     char buf[0x110];
     u8 *tmp = (u8 *)((s32)&buf[15] & ~0xF);
@@ -1213,7 +1213,7 @@ s32 func_800176DC(s32 mode, s32 a1, s32 a2, u8 *i3, u8 *i4, s32 flag) {
     s32 n;
 
     if (i3 != 0) {
-        func_80017380(2, a1, a2, &r);
+        Gfx_GetAnimFrameRect(2, a1, a2, &r);
         if (mode == 1) {
             if ((s32)i3 & 0xF) {
                 flag = 0;
@@ -1239,7 +1239,7 @@ s32 func_800176DC(s32 mode, s32 a1, s32 a2, u8 *i3, u8 *i4, s32 flag) {
         }
     }
     if (i4 != 0) {
-        func_80017380(1, a1, a2, &r);
+        Gfx_GetAnimFrameRect(1, a1, a2, &r);
         if (mode == 1) {
             if ((s32)i4 & 0xF) {
                 flag = 0;
@@ -1267,7 +1267,7 @@ s32 func_800176DC(s32 mode, s32 a1, s32 a2, u8 *i3, u8 *i4, s32 flag) {
     return flag;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800176DC);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_TransferAnimFrame);
 #endif
 
 void SetColorMatrix(void *);

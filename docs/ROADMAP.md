@@ -870,7 +870,10 @@ Steps, in order:
   and by the string "CRASH B.", the save's default name (`g_SaveName`), the memory card's slot commands that read and
   write it (`Save_IsSlotNamed`, `Save_GetSlotName`, `Save_SetSlotName`, `Save_LoadSlot`, `Save_InitSlot`). The object
   and text drawers (`8001A014.c`) read the object's named fields through `GoolObject`; the matrix at 0x84 stays at its
-  offsets. `tools/progress.py`: 233 of 638 game functions and 64 of 1,075 data symbols named.
+  offsets. Then, by the string "pb??B" and the PBAK entries' type, the demo's random pick (`Input_PickDemo`), and by
+  `LoadImage` and `StoreImage`, an animation frame's transfer to and from VRAM (`Gfx_TransferAnimFrame`, with which
+  `Save_WriteFile` reads the save's icons) and the rectangles it takes (`Gfx_GetAnimFrameRect`). `tools/progress.py`:
+  236 of 638 game functions and 64 of 1,075 data symbols named.
 - **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
   docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
   same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy
