@@ -863,6 +863,14 @@ Steps, in order:
   (`SpuWrite` from `SpuRead`: it calls `_spu_Fw`, and the game writes its sound pages with it). The game's libspu and
   libsnd are thus later than the rest of its 4.0 SDK. Left: 37 functions without such a match, among them the 8 to 11
   word wrappers that several objects share.
+  A ninth batch, by the SDK calls the eighth named: the sequences' setup (`Snd_InitSequence`, a record's volumes to
+  `SsSepSetVol` for each sequence `Snd_LoadSequence` opened) and switch (`Snd_UpdateSequence`: the zone's sequence,
+  the playing one faded out with `SsSepSetDecrescendo` first); the video's frames, expanded by their palette and loaded
+  with `LoadImage` (`Gfx_LoadVideoFrames`), and copied with `MoveImage` into the drawn frame (`Gfx_CopyVideoFrame`);
+  and by the string "CRASH B.", the save's default name (`g_SaveName`), the memory card's slot commands that read and
+  write it (`Save_IsSlotNamed`, `Save_GetSlotName`, `Save_SetSlotName`, `Save_LoadSlot`, `Save_InitSlot`). The object
+  and text drawers (`8001A014.c`) read the object's named fields through `GoolObject`; the matrix at 0x84 stays at its
+  offsets. `tools/progress.py`: 233 of 638 game functions and 64 of 1,075 data symbols named.
 - **R6, the handwritten code's names (in progress).** The Crash 1 decomp's catalog (docs/REFERENCES.md, its
   docs/names.md, after c1's psx/r3000a.c) describes the same engine's handwritten routines, and where one here has the
   same layout and the code does the same, it gives the name (grade C, with the callers' same use): the memory copy
