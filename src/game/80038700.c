@@ -18,9 +18,6 @@
 #define OP_DST_SHIFT 15
 #define OBJ_FLAG_BIT 1
 #define OBJ_OFS_PARENT 0x8
-#define OBJ_OFS_CTX 0x18
-#define OBJ_OFS_OTHER 0x44
-#define OBJ_OFS_RESULT 0xD4
 #define OBJ_OFS_STACK 0xBC
 #define OBJ_OFS_HALF 0x40
 #define CTX_OFS_INNER 0x10
@@ -30,6 +27,7 @@ extern s32 g_Player;
 extern s32 g_CurrentZone;
 
 #define W(base, ofs) (*(s32 *)((u8 *)(base) + (ofs)))
+#define OBJ(p) ((GoolObject *)(p))
 
 /* Destination of the secondary vector result. */
 static inline s32 *dest_slot(s32 obj, u32 op) {
@@ -37,7 +35,7 @@ static inline s32 *dest_slot(s32 obj, u32 op) {
 
     if ((op & OP_DEST_GROUP_MASK) == OP_DEST_IMM_GROUP) {
         if (d == OP_DEST_PUSH) {
-            s32 *p = (s32 *)W(obj, OBJ_OFS_STACK);
+            s32 *p = OBJ(obj)->sp;
             W(obj, OBJ_OFS_STACK) = (s32)(p + 1);
             return p;
         } else {
@@ -65,28 +63,28 @@ void Gool_OpCollide(s32 arg0, u32 arg1) {
     mode = (arg1 >> OP_MODE_SHIFT) & REG_MASK;
     switch (mode) {
     case 0:
-        a[0] = W(arg0, 0x60);
-        a[1] = W(arg0, 0x64);
-        a[2] = W(arg0, 0x68);
+        a[0] = OBJ(arg0)->pos[0];
+        a[1] = OBJ(arg0)->pos[1];
+        a[2] = OBJ(arg0)->pos[2];
         b[0] = src2[0];
         b[1] = src2[1];
         b[2] = src2[2];
         a[1] = a[1] + W(W(arg0, OBJ_OFS_PARENT), OBJ_OFS_HALF) / 2;
-        W(arg0, OBJ_OFS_RESULT) = (s32)func_80028750(a, b, a[1]);
+        OBJ(arg0)->misc = (s32)func_80028750(a, b, a[1]);
         out = a;
         dst = b;
         break;
     case 1:
-        a[0] = W(arg0, 0x60);
-        a[1] = W(arg0, 0x64);
-        a[2] = W(arg0, 0x68);
-        b[0] = W(arg0, 0x60);
-        b[1] = W(arg0, 0x64);
-        b[2] = W(arg0, 0x68);
-        if (arg0 == g_Player || W(arg0, OBJ_OFS_OTHER) == g_Player) {
+        a[0] = OBJ(arg0)->pos[0];
+        a[1] = OBJ(arg0)->pos[1];
+        a[2] = OBJ(arg0)->pos[2];
+        b[0] = OBJ(arg0)->pos[0];
+        b[1] = OBJ(arg0)->pos[1];
+        b[2] = OBJ(arg0)->pos[2];
+        if (arg0 == g_Player || ((s32)OBJ(arg0)->links[GOOL_LINK_PARENT]) == g_Player) {
             func_80028C48(arg0, a, g_Player);
         }
-        W(arg0, OBJ_OFS_RESULT) = (s32)func_80028A28((void *)arg0, b);
+        OBJ(arg0)->misc = (s32)func_80028A28((void *)arg0, b);
         out = b;
         dst = &b[4];
         break;
@@ -95,10 +93,10 @@ void Gool_OpCollide(s32 arg0, u32 arg1) {
     case 4:
     case 5:
         flag = (mode == 5 || mode == 3);
-        c[0] = W(arg0, 0x60);
-        c[1] = W(arg0, 0x64);
-        c[2] = W(arg0, 0x68);
-        ctx = W(arg0, OBJ_OFS_CTX);
+        c[0] = OBJ(arg0)->pos[0];
+        c[1] = OBJ(arg0)->pos[1];
+        c[2] = OBJ(arg0)->pos[2];
+        ctx = ((s32)OBJ(arg0)->zone);
         if (ctx == 0) {
             ctx = g_CurrentZone;
         }

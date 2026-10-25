@@ -2138,7 +2138,7 @@ s32 Obj_CheckNearest(void *arg0, void *arg1) {
         if (t == 0xFF) {
             s0 = 0xFE;
         } else {
-            tbl = F(arg0, void *, 0xC);
+            tbl = OBJ(arg0)->exe;
             s0 = *(u16 *)(F(tbl, u8 *, 0x1C) + (t >> 8) * 2);
             if (s0 == 0xFF) {
                 if (t == 0x300) {
@@ -2178,7 +2178,7 @@ s32 Obj_CheckNearest(void *arg0, void *arg1) {
             }
             if (F(arg1, s32, 0x10) == 0xF00) {
                 sp10 = 0x100;
-                F(arg0, void *, 0x5C) = F(arg1, void *, 4);
+                OBJ(arg0)->links[GOOL_LINK_INTERRUPTER] = F(arg1, void *, 4);
                 func_8001D22C(arg0, (u16)s0, 1, &sp10);
                 if (F(F(arg1, void *, 4), s32, 0xD8) == 0) {
                     return 0;
