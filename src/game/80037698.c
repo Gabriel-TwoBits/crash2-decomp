@@ -389,8 +389,6 @@ INCLUDE_ASM("asm/nonmatchings/game/80037698", Gool_OpMisc);
 #define REG_FILE_OFFSET 0x60
 #define REG_SIZE 0xC
 #define SLOT_ARRAY_OFFSET 0x40
-#define STACK_PTR_OFFSET 0xBC
-#define STACK_SLOT_BYTES 4
 #define SLOT_SELECT_MASK 0x1FF
 #define FIELD_OP_MASK 0xFFF
 #define OPERAND_KIND_MASK 0xE00
@@ -447,8 +445,8 @@ void Gool_OpVector(GoolObject *obj, u32 arg1) {
 
     if ((arg1 & OPERAND_KIND_MASK) == OPERAND_KIND_SLOT) {
         if ((arg1 & FIELD_OP_MASK) == OPERAND_POP) {
-            src = (s32 *)(F(o, STACK_PTR_OFFSET, u8 *) - STACK_SLOT_BYTES);
-            F(o, STACK_PTR_OFFSET, s32 *) = src;
+            src = OBJ(o)->sp - 1;
+            OBJ(o)->sp = src;
         } else {
             src = (s32 *)(o + (arg1 & SLOT_SELECT_MASK) * 4 + SLOT_ARRAY_OFFSET);
         }
@@ -458,7 +456,7 @@ void Gool_OpVector(GoolObject *obj, u32 arg1) {
 
     switch (op) {
     case OP_CALL_F054:
-        if (src != 0 && F(o, 0xF0, s32) != 0) {
+        if (src != 0 && OBJ(o)->entity != 0) {
             sp18[0] = dst[0];
             sp18[1] = dst[1];
             sp18[2] = dst[2];
@@ -470,21 +468,21 @@ void Gool_OpVector(GoolObject *obj, u32 arg1) {
         }
         return;
     case OP_SCALE_TRIG:
-        dst[0] = ((Math_Sin(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
+        dst[0] = ((Math_Sin(OBJ(o)->target_rot[1] & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
         if ((u32)(F(o, 0x120, u8) - OP_STATE_FIRST) >= OP_STATE_COUNT) {
-            dst[2] = ((Math_Cos(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
+            dst[2] = ((Math_Cos(OBJ(o)->target_rot[1] & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
         } else {
-            dst[1] = ((Math_Cos(F(o, 0x94, s32) & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
+            dst[1] = ((Math_Cos(OBJ(o)->target_rot[1] & FIELD_OP_MASK) >> SIN_COS_SHIFT) * src[0]) >> FIXED_SHIFT;
         }
         F(o, 0x104, s32) = src[0];
         return;
     case OP_BLEND_A:
     case OP_BLEND_B:
         sp28[2] = src[0];
-        F(o, STACK_PTR_OFFSET, u8 *) -= STACK_SLOT_BYTES;
-        sp28[1] = F(F(o, STACK_PTR_OFFSET, u8 *), 0, s32);
-        F(o, STACK_PTR_OFFSET, u8 *) -= STACK_SLOT_BYTES;
-        sp28[0] = F(F(o, STACK_PTR_OFFSET, u8 *), 0, s32);
+        OBJ(o)->sp--;
+        sp28[1] = *OBJ(o)->sp;
+        OBJ(o)->sp--;
+        sp28[0] = *OBJ(o)->sp;
         if (op == OP_BLEND_A) {
             a2p = (s32 *)(o + OFFSET_REG_A);
             a3p = (s32 *)(o + OFFSET_REG_B);
@@ -496,8 +494,8 @@ void Gool_OpVector(GoolObject *obj, u32 arg1) {
         return;
     case OP_ANIM_A:
     case OP_ANIM_B:
-        other = F(o, ((arg1 >> 19) & 0x1C) + SLOT_ARRAY_OFFSET, u8 *);
-        if (F(other, 0xE8, u8 *) != 0 && *F(other, 0xE8, u8 *) == 1) {
+        other = (u8 *)OBJ(o)->links[((arg1 >> 19) & 0x1C) / 4];
+        if (OBJ(other)->anim != 0 && *OBJ(other)->anim == 1) {
             anim = F(F(other, 8, u8 *), 0x20, u8 *);
             anim2 = F(F(other, 8, u8 *), 0x24, u8 *);
             entry = anim + F(anim, 0xC, s32) * ANIM_FRAME_BYTES + ANIM_HEADER_BYTES + ((u32)src[0] >> FIXED_SHIFT) * VERTEX_BYTES;
