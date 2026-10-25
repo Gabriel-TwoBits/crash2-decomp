@@ -90,8 +90,8 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     }
     prev = PTR_NONE;
     /* For any other type the retail code uses whatever the caller left in $s2. */
-    if (AT(arg0, 8, s32) == OBJ_TYPE_ENTITY) {
-        e = AT(arg0, 0x10, u8 *);
+    if (((NsfEntry *)arg0)->type == OBJ_TYPE_ENTITY) {
+        e = ((NsfEntry *)arg0)->items[0];
         obj = AT(arg0, 0x10 + (arg1 + AT(e, 0x184, s32) + AT(e, 0x188, s32)) * 4, s32);
     } else {
         CALLER_LEFT(Obj_SpawnEntity);
@@ -184,15 +184,15 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     idx = PROP(obj, ENT_PROP_ID);
     PROP(obj, ENT_PROP_ID);
     g_EntityFlags[idx] |= SLOT_FLAG_USED;
-    slot[0xB8 / 4] = PROP(obj, ENT_PROP_ID) << FIXED_SHIFT;
-    if (AT(arg0, 8, s32) == OBJ_TYPE_PLAYER) {
+    OBJ(slot)->entity_id = PROP(obj, ENT_PROP_ID) << FIXED_SHIFT;
+    if (((NsfEntry *)arg0)->type == OBJ_TYPE_PLAYER) {
         arg0 = (void *)g_CurrentZone;
     }
-    AT(slot, 0x18, void *) = arg0;
+    OBJ(slot)->zone = arg0;
     memset(slot + 0x20 / 4, 0, CLEAR_SIZE);
-    AT(slot, 0xF0, s32) = obj;
+    OBJ(slot)->entity = (void *)obj;
     OBJ(slot)->path_length = Ent_GetPropertyRowLength(obj, ENT_PROP_POSITIONS, 0, ENT_ROW_INDEX) << FIXED_SHIFT;
-    func_8001F054((GoolObject *)slot, 0, slot + 0x60 / 4);
+    func_8001F054((GoolObject *)slot, 0, OBJ(slot)->pos);
     if ((s32)slot == g_Player) {
         row = D_8006759C + D_8006CD7C * ENTITY_POS_ROW_SIZE;
         AT(slot, 0x60, s32) = AT(row, 0x1E8, s32);
@@ -203,11 +203,12 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
             Sys_SaveCheckpoint((GoolObject *)slot, &D_80060958, 1, 0);
         }
     }
-    if (AT(AT(AT(slot, 0xC, u8 *), 0x10, u8 *), 4, s32) == MODEL_ID_SPECIAL) {
+    if (AT(OBJ(slot)->exe->items[0], 4, s32) == MODEL_ID_SPECIAL) {
         Obj_SetParent(slot, &D_8006CB38);
     }
-    if (AT(AT(AT(slot, 0xC, u8 *), 0x10, u8 *), 0, s32) == KIND_CHAIN) {
+    if (AT(OBJ(slot)->exe->items[0], 0, s32) == KIND_CHAIN) {
         if (entry == PTR_NONE || (AT(entry, 4, s32) & PARAMS_NO_CHAIN) == 0) {
+            /* A chain's links, in the words GoolObject calls vel */
             if (prev != PTR_NONE) {
                 AT(slot, 0x84, s32 *) = prev;
                 AT(slot, 0x88, s32) = 0;
@@ -216,7 +217,7 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
                 AT(slot, 0x84, s32 *) = PTR_NONE;
                 AT(slot, 0x88, s32) = 0;
             }
-            AT(slot, 0x64, s32) = AT(slot, 0x64, s32) + CHAIN_STEP - D_8006CDF4;
+            OBJ(slot)->pos[1] = OBJ(slot)->pos[1] + CHAIN_STEP - D_8006CDF4;
         } else {
             /* chain link suppressed by the params */
         }
