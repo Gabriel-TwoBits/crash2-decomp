@@ -7,6 +7,7 @@
 #include "game/nsf.h"
 #include "game/object.h"
 #include "game/world.h"
+#include "game/zone.h"
 
 /* What the game's functions return when they succeed; their errors are other negative values (-0x12, -0x10) */
 #define SUCCESS -0xFF

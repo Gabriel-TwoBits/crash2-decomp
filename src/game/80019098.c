@@ -92,7 +92,7 @@ s32 Obj_SpawnEntity(void *arg0, u8 arg1) {
     /* For any other type the retail code uses whatever the caller left in $s2. */
     if (((NsfEntry *)arg0)->type == OBJ_TYPE_ENTITY) {
         e = ((NsfEntry *)arg0)->items[0];
-        obj = AT(arg0, 0x10 + (arg1 + AT(e, 0x184, s32) + AT(e, 0x188, s32)) * 4, s32);
+        obj = (s32)((NsfEntry *)arg0)->items[arg1 + ((ZoneHeader *)e)->info_count + ((ZoneHeader *)e)->camera_count];
     } else {
         CALLER_LEFT(Obj_SpawnEntity);
         CALLER_LEFT_VALUE(obj, 0);

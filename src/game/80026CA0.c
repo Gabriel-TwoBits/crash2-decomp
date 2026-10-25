@@ -1146,19 +1146,19 @@ void *func_80028A28(void *unused, s32 *arg) {
     p = *(char **)(g_CurrentZone + 0x10);
     while (1) {
         i = 0;
-        if (*(s32 *)(p + 0x190) > 0) {
+        if (((ZoneHeader *)p)->zone_count > 0) {
             do {
-                if (*(s32 *)(p + 0x1B4 + i * 4) & 4) {
-                    ent = Nsf_OpenEntry(p + 0x194 + i * 4, 1, 0);
+                if (((ZoneHeader *)p)->zone_flags[i] & 4) {
+                    ent = Nsf_OpenEntry(&((ZoneHeader *)p)->zones[i], 1, 0);
                     if (func_80030D74(ent, arg) != 0) {
                         res = func_8003DA00(ent[5], arg, 9);
                         break;
                     }
                 }
                 i++;
-            } while (i < *(s32 *)(p + 0x190));
+            } while (i < ((ZoneHeader *)p)->zone_count);
         }
-        if (i == *(s32 *)(p + 0x190)) {
+        if (i == ((ZoneHeader *)p)->zone_count) {
             res = 0;
             break;
         } else if (res != 0) {
@@ -1268,9 +1268,9 @@ void func_80028C48(s32 unit, s32 *arg, s32 arg2) {
                     }
                 }
                 i++;
-            } while (i < *(s32 *)(p + 0x190));
+            } while (i < ((ZoneHeader *)p)->zone_count);
         }
-        if (i == *(s32 *)(p + 0x190)) {
+        if (i == ((ZoneHeader *)p)->zone_count) {
             res = 0;
             break;
         } else if (res != 0) {
