@@ -510,7 +510,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
         } else {
             /* keep */
         }
-        func_8001BD84((GoolObject *)arg0, (char *)data, frame, (s32)g_BuildBuffer->ot, dir);
+        Gfx_DrawObjectText((GoolObject *)arg0, (char *)data, frame, (s32)g_BuildBuffer->ot, dir);
         return;
     } else if (kind == KIND_FIVE) {
         u8 *src = data + (frame * FLD(s32, data, 8) * 0x18 + 0xC);
@@ -781,7 +781,7 @@ static s32 read_token(u8 **p, u8 *buf) {
     return atoi(buf, n);
 }
 
-s32 func_8001B83C(void *arg0, char *arg1, s32 arg2, s32 arg3, void *arg4, s32 arg5, s32 arg6) {
+s32 Gfx_DrawText(void *arg0, char *arg1, s32 arg2, s32 arg3, void *arg4, s32 arg5, s32 arg6) {
     s32 pos[POS_COUNT];
     s32 bounds[BOUNDS_COUNT];
     u8 buf_s[OPT_BUF_SIZE];
@@ -907,7 +907,7 @@ s32 func_8001B83C(void *arg0, char *arg1, s32 arg2, s32 arg3, void *arg4, s32 ar
                     }
                 }
                 func_80018474(glyph + 4, font + 4);
-                func_800186D8(arg0, glyph, FIELD(arg0, s32, 0x118), arg4, pos, arg6, flag_c);
+                Gfx_DrawGlyph(arg0, glyph, FIELD(arg0, s32, 0x118), arg4, pos, arg6, flag_c);
             }
             pos[POS_X] += FIELD(glyph, s16, 0x10) << arg5;
         }
@@ -919,19 +919,19 @@ done:
         bounds[0] -= BOUNDS_MARGIN;
         bounds[3] += BOUNDS_MARGIN;
         func_80018474(font + 0x84, font + 4);
-        func_8001856C((s32)(font + 0x80), FIELD(arg0, s32, 0x118) - BOUNDS_BASELINE, arg4, bounds, arg6);
+        Gfx_DrawTextBox((s32)(font + 0x80), FIELD(arg0, s32, 0x118) - BOUNDS_BASELINE, arg4, bounds, arg6);
     }
     return max_x;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001B83C);
+INCLUDE_ASM("asm/nonmatchings/game/8001A014", Gfx_DrawText);
 #endif
 
 #ifdef NON_MATCHING
 extern char D_8006083C[];
 extern s32 D_80060884;
 
-void func_8001BD84(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
+void Gfx_DrawObjectText(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
     char buf[200];
     s32 i;
     s32 t;
@@ -982,17 +982,17 @@ void func_8001BD84(GoolObject *arg0, char *arg1, s32 arg2, s32 arg3, s32 arg4) {
         }
         neg = 0;
         if (arg4 <= 0) {
-            neg = func_8001B83C(arg0, arg1, 0, arg2, mem, cnt, 0);
+            neg = Gfx_DrawText(arg0, arg1, 0, arg2, mem, cnt, 0);
             neg = -neg;
             if (arg4 == 0) {
                 neg = neg / 2;
             }
         }
-        func_8001B83C(arg0, arg1, neg, arg2, mem, cnt, arg3);
+        Gfx_DrawText(arg0, arg1, neg, arg2, mem, cnt, arg3);
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/8001A014", func_8001BD84);
+INCLUDE_ASM("asm/nonmatchings/game/8001A014", Gfx_DrawObjectText);
 #endif
 
 typedef struct {

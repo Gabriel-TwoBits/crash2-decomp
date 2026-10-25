@@ -42,7 +42,7 @@ typedef struct GoolObject {
     /* 0x18 */ NsfEntry *zone;
     /* 0x1C */ s32 state; /* the state's index, Gool_ChangeState */
     /* CrashEdit's object colours (ObjectColors2): mod1 to mod3, modfinal, then a red, green and blue per vertex for 3
-       and a final one; func_800186D8 scales a glyph's corners by the second group, GOOL's COLR and COLW reach them */
+       and a final one; Gfx_DrawGlyph scales a glyph's corners by the second group, GOOL's COLR and COLW reach them */
     /* 0x20 */ s16 colors[0x10];
     /* Indexed by 3 bits (Gool_ResolveRef), GoolLink */
     /* 0x40 */ struct GoolObject *links[GOOL_LINK_COUNT];

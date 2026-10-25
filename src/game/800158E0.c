@@ -1703,7 +1703,7 @@ typedef struct PolyFT4 {
     /* 0x26 */ u16 pad3;
 } PolyFT4;
 
-/* A box's corners, as func_8001B83C keeps a string's bounds: x, y, z of one, then of the other */
+/* A box's corners, as Gfx_DrawText keeps a string's bounds: x, y, z of one, then of the other */
 #define BOX_X0 0
 #define BOX_Y0 1
 #define BOX_X1 3
@@ -1721,7 +1721,7 @@ typedef struct PolyFT4 {
 
 /* A box's quad in front of the camera, textured from a glyph, sorted into the ordering table by its depth; nothing when
    the GTE flags an error projecting the first three corners */
-void func_8001856C(s32 arg0, s32 depth, void *arg2, s32 *box, s32 arg4) {
+void Gfx_DrawTextBox(s32 arg0, s32 depth, void *arg2, s32 *box, s32 arg4) {
     GlyphTexture *texture = (GlyphTexture *)arg0;
     u32 *ot = (u32 *)arg4;
     PolyFT4 *quad;
@@ -1782,7 +1782,7 @@ void func_8001856C(s32 arg0, s32 depth, void *arg2, s32 *box, s32 arg4) {
     GTE_STORE_DATA(GTE_SXY2, quad->xy3);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_8001856C);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_DrawTextBox);
 #endif
 
 #ifdef NON_MATCHING
@@ -1819,7 +1819,7 @@ typedef struct PolyGT4 {
 
 /* A box's quad in front of the camera, textured from a glyph, shaded per vertex by the object when shade is set, sorted
    into the ordering table by its depth; nothing when the GTE flags an error projecting the first three corners */
-void func_800186D8(void *arg0, void *arg1, s32 depth, void *arg3, s32 *box, s32 arg5, s32 shade) {
+void Gfx_DrawGlyph(void *arg0, void *arg1, s32 depth, void *arg3, s32 *box, s32 arg5, s32 shade) {
     GoolObject *obj = arg0;
     GlyphTexture *glyph = (GlyphTexture *)arg1;
     u32 *ot = (u32 *)arg5;
@@ -1902,7 +1902,7 @@ void func_800186D8(void *arg0, void *arg1, s32 depth, void *arg3, s32 *box, s32 
     GTE_STORE_DATA(GTE_SXY2, quad->xy3);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_800186D8);
+INCLUDE_ASM("asm/nonmatchings/game/800158E0", Gfx_DrawGlyph);
 #endif
 
 s32 Gool_PageIn(void) {

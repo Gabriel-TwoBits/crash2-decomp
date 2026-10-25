@@ -1662,3 +1662,18 @@ Save_SetState = 0x800360CC; // type:func
 
 // with 15 files on the card (its 15 blocks) and none the game's (Save_IsGameFile), sets the flags' 0x40; Save_ReadFileHeader calls it
 Save_CheckCardFull = 0x80035E7C; // type:func
+
+// SpuSetKey(0, 1 << the voice's number) turns its SPU voice off, its active flag (8) cleared and its sound's page reference dropped (Nsf_DropPageRef); Snd_Update calls it on the voices of g_SndVoices that end
+Snd_StopVoice = 0x80033448; // type:func
+
+// walks a string, taking "~" commands with numbers read by atoi (palette 'p', ...) and drawing each character's glyph from the font with func_800186D8; returns the width, which func_8001BD84 measures first (no drawing) to align the text right or centred
+Gfx_DrawText = 0x8001B83C; // type:func
+
+// an object whose animation is a font (Gfx_QueueObject's kind 4): sprintf of its frame's string with the object's top four stack words, trailing spaces cut, then Gfx_DrawText, measured first to align it
+Gfx_DrawObjectText = 0x8001BD84; // type:func
+
+// Gfx_DrawText's one call per character: a textured quad from the glyph's corners in front of the camera, shaded by the object's colours when asked, linked into the ordering table at the depth given
+Gfx_DrawGlyph = 0x800186D8; // type:func
+
+// Gfx_DrawText calls it once the text is drawn, with the bounds it gathered over the glyphs and the font's glyph at 0x80: a textured quad over that box in front of the camera, linked into the ordering table behind the text
+Gfx_DrawTextBox = 0x8001856C; // type:func

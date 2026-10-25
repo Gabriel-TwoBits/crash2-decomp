@@ -698,7 +698,7 @@ INCLUDE_ASM("asm/nonmatchings/game/800324A8", Snd_SetSoundParam);
 
 void Nsf_DropPageRef(void *arg0);
 
-void func_80033448(void *arg0) {
+void Snd_StopVoice(void *arg0) {
     do { SpuSetKey(0, 1 << ((u16 *)arg0)[3]); } while (0);
     ((s32 *)arg0)[1] &= ~8;
     if (((void **)arg0)[6] != 0) {
@@ -980,7 +980,7 @@ after:
                 *status = 1;
                 goto after;
             } else {
-                func_80033448(e);
+                Snd_StopVoice(e);
                 goto tail;
             }
         }
@@ -1042,7 +1042,7 @@ after:
         }
 tail:
         if ((e->flags & EF_STOP) || (busy == 0 && (e->flags & EF_STOP_IDLE))) {
-            func_80033448(e);
+            Snd_StopVoice(e);
         }
     }
 }
