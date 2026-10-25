@@ -12,7 +12,7 @@ extern s32 g_CameraY;
 extern s32 g_CameraZ;
 extern s32 D_800608DC;
 extern s32 g_CameraProgress;
-extern void *D_80062A18;
+extern void *g_Scene;
 extern void *D_80062A1C;
 extern void *D_80062A20;
 extern void *D_80062A24;
@@ -61,7 +61,7 @@ extern s32 D_80062AC8;
 extern s32 D_80062ACC;
 extern s32 D_80062AD0;
 extern s32 D_80062AD4;
-extern s32 D_80062AD8;
+extern s32 g_SceneFlags;
 extern s32 D_80062ADC;
 extern s32 D_80062AE0;
 extern s32 D_80062AE4;
@@ -85,7 +85,7 @@ extern u32 D_8006CDB0;
 extern s32 D_8006CDC4;
 extern void func_8003DD0C(void);
 
-/* Offsets from D_80062A18 (which holds &g_CameraX) to the other table pointers. */
+/* Offsets from g_Scene (which holds &g_CameraX) to the other table pointers. */
 #define TABLE_A_OFFSET (-0x21F4)
 #define TABLE_B_OFFSET (-0x20F4)
 #define TABLE_C_OFFSET (-0x22A4)
@@ -133,17 +133,17 @@ extern void func_8003DD0C(void);
 #define GLOBAL_FLAG_10000000 0x10000000
 #define GLOBAL_FLAG_1000000 0x01000000
 
-void func_80020A24(void) {
+void Gfx_SetupScene(void) {
     s32 frame[FRAME_WORDS];
     s16 *p16;
     s32 *p;
     s32 *entry;
     s32 v;
 
-    D_80062A18 = (u8 *)&D_80062A18 + TABLE_ORIGIN_OFFSET;
-    D_80062A1C = (u8 *)&D_80062A18 + TABLE_A_OFFSET;
-    D_80062A20 = (u8 *)&D_80062A18 + TABLE_B_OFFSET;
-    D_80062A24 = (u8 *)&D_80062A18 + TABLE_C_OFFSET;
+    g_Scene = (u8 *)&g_Scene + TABLE_ORIGIN_OFFSET;
+    D_80062A1C = (u8 *)&g_Scene + TABLE_A_OFFSET;
+    D_80062A20 = (u8 *)&g_Scene + TABLE_B_OFFSET;
+    D_80062A24 = (u8 *)&g_Scene + TABLE_C_OFFSET;
     D_80062ACC = 1;
     D_80062AE0 = 4;
     D_80062AE4 = 3;
@@ -154,15 +154,15 @@ void func_80020A24(void) {
     D_80062AA8 = FIXED_UNPACK(FIELD_S32(g_Player, OBJ_Z) - g_CameraZ);
     p = (s32 *)Ent_GetProperty(D_800608DC, 0x185, g_CameraProgress, 0, 0, 0, 0, 0, 0);
     if (p != 0) {
-        D_80062AD8 = *p;
+        g_SceneFlags = *p;
     } else {
-        D_80062AD8 = 0;
+        g_SceneFlags = 0;
     }
-    D_8006CD4C = D_80062AD8;
+    D_8006CD4C = g_SceneFlags;
     /* a0 still holds the scene pointer at this call in retail; the callee ignores it. */
-    ((void (*)(s32))func_80011E24)(D_800608DC);
+    ((void (*)(s32))Gfx_SetDefaultSceneMode)(D_800608DC);
     entry = 0;
-    if (D_80062AD8 & SCENE_FLAG_ENTRY) {
+    if (g_SceneFlags & SCENE_FLAG_ENTRY) {
         entry = (s32 *)Ent_GetProperty(D_800608DC, 0x186, g_CameraProgress, 0, 0, 0, 0, 0, 0);
     }
     if (entry != 0) {
@@ -179,13 +179,13 @@ void func_80020A24(void) {
         D_80062AD4 = 0;
     }
     D_8006CD48 = v;
-    if (D_80062AD8 & SCENE_FLAG_1000) {
+    if (g_SceneFlags & SCENE_FLAG_1000) {
         p = (s32 *)Ent_GetProperty(D_800608DC, 0x297, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         D_80062AD0 = p[1];
         D_80062AD4 = p[2];
         D_8006CCE4 = p[0];
     }
-    if (D_80062AD8 & SCENE_FLAG_400000) {
+    if (g_SceneFlags & SCENE_FLAG_400000) {
         p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x2AA, g_CameraProgress, 0, 0, 3, &frame[0], 0, 0);
         if (p16 != 0) {
             D_80062AA0 = p16[0];
@@ -196,7 +196,7 @@ void func_80020A24(void) {
     } else {
         D_80062AA0 = 0;
     }
-    if (D_80062AD8 & SCENE_FLAG_10) {
+    if (g_SceneFlags & SCENE_FLAG_10) {
         p16 = (s16 *)Ent_GetProperty(D_800608DC, 0x1B5, g_CameraProgress, 0, 0, 3, &frame[2], 0, 0);
         if (p16 != 0) {
             if (g_Paused == 0) {
@@ -231,7 +231,7 @@ void func_80020A24(void) {
     } else {
         D_80062A90 = 0;
     }
-    if (D_80062AD8 & (SCENE_FLAG_4 | SCENE_FLAG_800000)) {
+    if (g_SceneFlags & (SCENE_FLAG_4 | SCENE_FLAG_800000)) {
         Ent_GetProperty(D_800608DC, 0x1B7, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         D_80062A28 = func_80044A70;
         D_80062A2C = func_80042420;
@@ -257,14 +257,14 @@ void func_80020A24(void) {
         }
         D_80062A5C = v;
     }
-    if (D_80062AD8 & SCENE_FLAG_200) {
+    if (g_SceneFlags & SCENE_FLAG_200) {
         D_80062A28 = func_80043B5C;
         D_80062A2C = func_80043B74;
         D_80062A30 = func_80043C48;
         D_80062A34 = func_80043C2C;
         D_80062A38 = func_80043D34;
     }
-    if (D_80062AD8 & SCENE_FLAG_100) {
+    if (g_SceneFlags & SCENE_FLAG_100) {
         D_80062A28 = func_80042C70;
         D_80062A2C = func_80042420;
         D_80062A30 = func_80042698;
@@ -291,7 +291,7 @@ void func_80020A24(void) {
         }
         D_80062A5C = v;
     }
-    if (D_80062AD8 & SCENE_FLAG_8000) {
+    if (g_SceneFlags & SCENE_FLAG_8000) {
         D_80062A28 = func_80044980;
         D_80062A2C = func_80042420;
         D_80062A30 = func_800426A0;
@@ -300,7 +300,7 @@ void func_80020A24(void) {
         D_80062AC0 = D_8006CD90 << SCALE_SHIFT;
         D_80062AC4 = D_8006CD94;
     }
-    if (D_80062AD8 & SCENE_FLAG_8) {
+    if (g_SceneFlags & SCENE_FLAG_8) {
         p = (s32 *)Ent_GetProperty(D_800608DC, 0x1B8, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062A48 = p[0];
@@ -313,7 +313,7 @@ void func_80020A24(void) {
         D_80062A38 = func_80042C2C;
         D_80062AC0 = D_8006CD90;
     }
-    if (D_80062AD8 & SCENE_FLAG_20) {
+    if (g_SceneFlags & SCENE_FLAG_20) {
         p = (s32 *)Ent_GetProperty(D_800608DC, 0x1DE, g_CameraProgress, 0, 0, 0, 0, 0, 0);
         if (p != 0) {
             D_80062AB4 = p[0];
@@ -328,7 +328,7 @@ void func_80020A24(void) {
         D_80062AE4 = 8;
         D_80062AE0 = 0xC;
     }
-    if (D_80062AD8 & SCENE_FLAG_200000) {
+    if (g_SceneFlags & SCENE_FLAG_200000) {
         if (D_8006CDC4 != 0) {
             D_80062A28 = func_8004599C;
             D_80062A2C = func_80042420;
@@ -352,7 +352,7 @@ void func_80020A24(void) {
             D_80062AE0 = 0xC;
         }
     }
-    if (D_80062AD8 & SCENE_FLAG_40) {
+    if (g_SceneFlags & SCENE_FLAG_40) {
         D_80062A28 = func_80043D54;
         D_80062A2C = func_80042420;
         D_80062A30 = func_800426A0;
@@ -373,7 +373,7 @@ void func_80020A24(void) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/game/80020A24", func_80020A24);
+INCLUDE_ASM("asm/nonmatchings/game/80020A24", Gfx_SetupScene);
 #endif
 
 #ifdef NON_MATCHING

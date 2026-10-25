@@ -21,7 +21,7 @@ extern char *g_CurrentZone;
 extern s32 g_CameraPath;
 extern s32 g_CameraProgress;
 extern u32 g_CameraPathKind;
-extern s32 D_80062AD8;
+extern s32 g_SceneFlags;
 extern s32 D_80069948;
 extern s32 D_8006CB94[];
 extern s32 D_8006CBB4;
@@ -32,7 +32,7 @@ s32 Cam_Update(void) {
     s32 *s0;
     s32 *p;
 
-    if ((D_80062AD8 & 0x400) && (D_80069948 & 0xE0)) {
+    if ((g_SceneFlags & 0x400) && (D_80069948 & 0xE0)) {
         sp18 = 0x8000;
         Cam_QueueMessage(0, &sp18);
         Gool_BroadcastEvent(0, 0x4300, 0, 0, 0);
@@ -54,7 +54,7 @@ s32 Cam_Update(void) {
     func_80025D18(s0, p);
     func_800237F8();
     Cam_ProcessMessages();
-    D_8006CBB4 = ((D_80062AD8 & 0x400) == 0) << 8;
+    D_8006CBB4 = ((g_SceneFlags & 0x400) == 0) << 8;
     if (g_CameraMode != 5) {
         switch (g_CameraMode) {
         case 6:

@@ -1403,7 +1403,7 @@ void Gfx_UpdateView(void) {
     u8 *light;
     s32 s, c, t, i, a;
 
-    func_80020A24();
+    Gfx_SetupScene();
     s = Math_Sin(-g_CameraAngleZ);
     c = Math_Cos(-g_CameraAngleZ);
     view->a = c;
@@ -1618,12 +1618,12 @@ INCLUDE_ASM("asm/nonmatchings/game/800158E0", func_80018294);
 
 extern s32 D_8005F390;
 extern s32 D_80060944;
-extern s32 D_80062A18;
+extern s32 g_Scene;
 
 void Gfx_DrawWorlds(s32, GfxFrame *, void *, s32);
 
 void func_80018434(void) {
-    Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer[0], &D_80062A18, D_80060944);
+    Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer[0], &g_Scene, D_80060944);
 }
 
 #ifdef NON_MATCHING

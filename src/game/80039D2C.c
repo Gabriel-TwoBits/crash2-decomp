@@ -1576,7 +1576,7 @@ void Gfx_DecodeSortListForward(void *delta, u16 *from, u16 *to) {
 #define MODE_TAG_LENGTH 0x02000000
 #define MODE_WORDS 3
 
-/* D_80062A18's scene: the view matrix (its translation at 0x14, as a MATRIX), the streaks' VXY pair and z from the
+/* g_Scene's scene: the view matrix (its translation at 0x14, as a MATRIX), the streaks' VXY pair and z from the
  * view's last position and from the current one, both lines' colours (the first with its code), the closing mode's
  * word, the box's y offset and the streaks' slot in the ordering table */
 typedef struct {
@@ -1612,11 +1612,11 @@ static u32 streak_random(u32 *low, u32 *high) {
 }
 
 /* The most streaks a scene asks for: its camera's property 0x1B5, interpolated, is D_80062A90's only source
- * (func_80020A24), its fourth value 1 to 1,500 on the disc (docs/TARGET.md) */
+ * (Gfx_SetupScene), its fourth value 1 to 1,500 on the disc (docs/TARGET.md) */
 #define STREAKS_MIN 1
 #define STREAKS_MAX 1500
 
-/* Its one caller (Sys_MainLoop) passes D_80062A90, the frame being built and D_80062A18 */
+/* Its one caller (Sys_MainLoop) passes D_80062A90, the frame being built and g_Scene */
 EQUIV_SCRATCH(Gfx_DrawStreaks, SAVE_AREA, SAVE_AREA_BYTES)
 EQUIV_RANGE(Gfx_DrawStreaks, 0, STREAKS_MIN, STREAKS_MAX)
 EQUIV_NONNULL(Gfx_DrawStreaks, 1)
@@ -1735,7 +1735,7 @@ void Gfx_DrawStreaks(s32 count, void *frame, void *scene) {
 #define TILE_1_WORDS 3
 #define DOTS_MODE 0xE1000A60
 
-/* D_80062A18's scene as func_80045218 reads it: the dots' y offset, shift and slot in the ordering table */
+/* g_Scene's scene as func_80045218 reads it: the dots' y offset, shift and slot in the ordering table */
 typedef struct {
     u8 unk_00[0x7C];
     s32 y_offset;
@@ -1744,7 +1744,7 @@ typedef struct {
 } DotScene;
 
 /* The most dots a scene asks for: its camera's property 0x2AA, interpolated, is D_80062AA0's only source
- * (func_80020A24), its first value 1,000 on the disc (docs/TARGET.md) */
+ * (Gfx_SetupScene), its first value 1,000 on the disc (docs/TARGET.md) */
 #define DOTS_MIN 1
 #define DOTS_MAX 1000
 
@@ -1763,7 +1763,7 @@ static s32 dot_coordinate(s32 value) {
     }
 }
 
-/* Its one caller (Sys_MainLoop) passes D_80062AA0, the frame being built and D_80062A18 */
+/* Its one caller (Sys_MainLoop) passes D_80062AA0, the frame being built and g_Scene */
 EQUIV_SCRATCH(func_80045218, SAVE_AREA, SAVE_AREA_BYTES)
 EQUIV_RANGE(func_80045218, 0, DOTS_MIN, DOTS_MAX)
 EQUIV_NONNULL(func_80045218, 1)
@@ -3712,12 +3712,12 @@ void func_80045F40(WorldPass *pass) {
 typedef char check_world_scene[(sizeof(WorldScene) == WORLD_SCENE_BYTES) ? 1 : -1];
 typedef char check_frame[((u32)&((GfxFrame *)0)->ot[OT_SLOTS] == FRAME_BYTES) ? 1 : -1];
 
-/* Every caller (Sys_MainLoop, func_80018434) passes the zone's sort list, the frame being built, D_80062A18 and
+/* Every caller (Sys_MainLoop, func_80018434) passes the zone's sort list, the frame being built, g_Scene and
  * D_80060944, the textures' clock: a heap buffer of Gfx_AllocSortLists's, one of Gfx_AllocFrameBuffers's and a global,
  * apart. A sort list holds 1 to SORT_LIST_ENTRIES entries: the disc's whole lists hold 1 to 1,026 but one of 0
  * (S2/S0000022.NSF, an SLST's last item, 4 bytes after an empty delta), which the retail code can't draw (it reads on
  * below the list); the deltas build into Gfx_AllocSortLists's buffers. The scene's five words from 0x10 are one of the
- * 10 modes func_80011E24 and func_80020A24 store. The default mode's setup is func_8003DD0C, an empty function: a call
+ * 10 modes Gfx_SetDefaultSceneMode and Gfx_SetupScene store. The default mode's setup is func_8003DD0C, an empty function: a call
  * to it leaves $v1, the scratchpad's base the retail code keeps across it. The group's parts go with it; the other
  * functions between them (the object renderers' routines and their helpers) stay, never reached */
 EQUIV_SCRATCH(Gfx_DrawWorlds, SAVE_AREA, SAVE_AREA_BYTES)
@@ -4749,7 +4749,7 @@ void func_8004380C(DrawPass *pass) {
     scratch->next = primitive;
 }
 
-/* Sys_MainLoop passes the frame's packet list, the frame and D_80062A18. The retail code keeps its caller's $sp and
+/* Sys_MainLoop passes the frame's packet list, the frame and g_Scene. The retail code keeps its caller's $sp and
  * its steps' return addresses in the scratchpad, which the C doesn't */
 #define DRAW_SAVED_SP_BYTES 4
 #define DRAW_SAVED_RA 0x1F800064

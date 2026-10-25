@@ -1740,3 +1740,15 @@ Gfx_GetPrimitiveCursor = 0x80016408; // type:func
 
 // takes the bytes given from the frame being built's packet buffer (GfxFrame.next_queue_packet) and links them at the head of its object queue, as Gfx_QueueObject does inline; no caller in the executable
 Gfx_AllocObjectPacket = 0x80016418; // type:func
+
+// Gfx_UpdateView calls it each frame: fills the world renderer's scene (g_Scene, which Gfx_DrawWorlds and Gfx_DrawObjects take) from the camera entity's properties at the camera's progress, starting with 0x185, the scene's flags (CrashEdit's CrashHacks fog, darkness and water scripts set its bits), which select the others (0x186, 0x297, 0x2AA, 0x1B5 to 0x1B8, 0x1DE) and the mode's entries
+Gfx_SetupScene = 0x80020A24; // type:func
+
+// stores the default mode's GTE routines (func_80042420 and its entry points) as the scene's projector and drawer entries at 0x80062A2C to 0x80062A38, which the world renderer calls; Gfx_SetupScene calls it after reading the scene's flags
+Gfx_SetDefaultSceneMode = 0x80011E24; // type:func
+
+// the world renderer's scene: Sys_MainLoop and func_80018434 pass it to Gfx_DrawWorlds, Gfx_DrawObjects and Gfx_DrawStreaks as their third argument (WorldScene in include/game/world.h); Gfx_SetupScene fills it each frame
+g_Scene = 0x80062A18;
+
+// the scene's flags, Gfx_SetupScene's copy of the camera entity's property 0x185 (CrashEdit's CrashHacks fog, darkness and water scripts set its bits), which selects the scene's other properties and modes
+g_SceneFlags = 0x80062AD8;

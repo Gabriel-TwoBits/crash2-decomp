@@ -321,10 +321,10 @@ extern NsfEntry *g_CurrentZone;
 extern s32 D_80060944;
 extern char D_80060958[];
 extern s32 D_80060988;
-extern char D_80062A18[];
+extern char g_Scene[];
 extern s32 D_80062A90;
 extern s32 D_80062AA0;
-extern s32 D_80062AD8;
+extern s32 g_SceneFlags;
 extern GfxFrame *g_DrawBuffer;
 extern GfxFrame *g_BuildBuffer;
 extern NsfLevel D_80067588;
@@ -470,18 +470,18 @@ void Sys_MainLoop(s32 arg0) {
                 /* empty list */
             }
             func_8002FB84(0);
-            D_8006CCB8 = Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer, D_80062A18, D_80060944);
+            D_8006CCB8 = Gfx_DrawWorlds(WORLD_SORT_LIST(D_8005F390), g_BuildBuffer, g_Scene, D_80060944);
         } else {
             Gfx_ResetOt((u8 *)g_BuildBuffer->ot, GFX_OT_LENGTH);
         }
         if (D_8006CB94 & SAVE_FLAGS_MASK) {
-            if ((D_80062A90 != 0) && (D_80062AD8 & FLAG_16)) {
-                Gfx_DrawStreaks(D_80062A90, g_BuildBuffer, D_80062A18);
+            if ((D_80062A90 != 0) && (g_SceneFlags & FLAG_16)) {
+                Gfx_DrawStreaks(D_80062A90, g_BuildBuffer, g_Scene);
             } else {
                 /* skipped */
             }
-            if ((D_80062AA0 != 0) && (D_80062AD8 & FLAG_400000)) {
-                func_80045218(D_80062AA0, g_BuildBuffer, D_80062A18);
+            if ((D_80062AA0 != 0) && (g_SceneFlags & FLAG_400000)) {
+                func_80045218(D_80062AA0, g_BuildBuffer, g_Scene);
             } else {
                 /* skipped */
             }
@@ -490,7 +490,7 @@ void Sys_MainLoop(s32 arg0) {
         }
         Obj_UpdateAll((void *)(g_Paused == 0));
         func_80011E88();
-        Gfx_DrawObjects(g_BuildBuffer->object_queue, g_BuildBuffer, D_80062A18);
+        Gfx_DrawObjects(g_BuildBuffer->object_queue, g_BuildBuffer, g_Scene);
         Gfx_EndFrame();
         func_80011E90();
     } while (g_Quit == 0);

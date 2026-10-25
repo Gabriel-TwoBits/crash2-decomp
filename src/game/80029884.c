@@ -146,7 +146,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_80029884);
 #define AXES 3
 
 extern u8 *g_Player;
-extern s32 D_80062AD8;
+extern s32 g_SceneFlags;
 extern s32 D_8006CB94;
 
 
@@ -182,16 +182,16 @@ void func_80029D0C(GoolObject *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
     len = 0;
     nx = 0;
     nz = 0;
-    if ((D_8006CB94 & FLAG_COLLIDE_ON) && (D_80062AD8 & MODE_STEP) &&
-        (!(D_80062AD8 & MODE_SLIDE) || (arg0->state_flags & OBJ_FLAG_SOLID))) {
-        if ((D_80062AD8 & MODE_ALT) && (((GoolObject *)g_Player)->state_flags & OBJ_FLAG_SOLID)) {
+    if ((D_8006CB94 & FLAG_COLLIDE_ON) && (g_SceneFlags & MODE_STEP) &&
+        (!(g_SceneFlags & MODE_SLIDE) || (arg0->state_flags & OBJ_FLAG_SOLID))) {
+        if ((g_SceneFlags & MODE_ALT) && (((GoolObject *)g_Player)->state_flags & OBJ_FLAG_SOLID)) {
             step = STEP_ALT;
-        } else if (D_80062AD8 & MODE_SLIDE) {
+        } else if (g_SceneFlags & MODE_SLIDE) {
             step = STEP_SLIDE;
         } else {
             step = STEP_DEFAULT;
         }
-        if (D_80062AD8 & MODE_BOUNCE) {
+        if (g_SceneFlags & MODE_BOUNCE) {
             s32 a = arg3[0] >> FIXED_SHIFT;
             s32 b = arg3[2] >> FIXED_SHIFT;
             len = func_80041A78(a * a + b * b);
@@ -201,8 +201,8 @@ void func_80029D0C(GoolObject *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
             nx = arg3[0] / len;
             nz = arg3[2] / len;
         }
-        func_8002E884(arg2, arg3, D_80062AD8 & MODE_SLIDE, step);
-        if (D_80062AD8 & MODE_BOUNCE) {
+        func_8002E884(arg2, arg3, g_SceneFlags & MODE_SLIDE, step);
+        if (g_SceneFlags & MODE_BOUNCE) {
             s32 x = arg3[0];
             dot = (((x >> FIXED_SHIFT) * nx) + ((arg3[2] >> FIXED_SHIFT) * nz)) >> FIXED_SHIFT;
             if (dot < 0) {
@@ -214,7 +214,7 @@ void func_80029D0C(GoolObject *arg0, s32 arg1, s32 *arg2, s32 *arg3) {
                 v[0] = nx * t;
                 p[2] = arg2[2] + arg3[2];
                 v[2] = nz * t;
-                func_8002E884(p, v, D_80062AD8 & MODE_SLIDE, step);
+                func_8002E884(p, v, g_SceneFlags & MODE_SLIDE, step);
                 arg3[0] = (p[0] + v[0]) - arg2[0];
                 arg3[2] = (p[2] + v[2]) - arg2[2];
             }
@@ -259,7 +259,7 @@ INCLUDE_ASM("asm/nonmatchings/game/80029884", func_80029D0C);
 #endif
 
 #ifdef NON_MATCHING
-extern s32 D_80062AD8;
+extern s32 g_SceneFlags;
 
 s32 func_8002A1B8(GoolObject *p, s32 arg1) {
     s32 a3;
@@ -315,7 +315,7 @@ s32 func_8002A1B8(GoolObject *p, s32 arg1) {
     } else if (a3 == 5) {
         return 1;
     } else if (a3 == 3) {
-        if (!(D_80062AD8 & 0x200)) {
+        if (!(g_SceneFlags & 0x200)) {
             return 1;
         }
         r = 1;
@@ -1483,7 +1483,7 @@ s32 *func_8002C324(void *arg0, s32 arg1, s32 arg2) {
         v = pos[2] + ext[3];
     }
     box[7] = v;
-    if ((D_80062AD8 & FLAG_OFFSET_ON) && (F(g_Player, 0x100) & OBJ_FLAG_SHIFT)) {
+    if ((g_SceneFlags & FLAG_OFFSET_ON) && (F(g_Player, 0x100) & OBJ_FLAG_SHIFT)) {
         box[2] += SHIFT_NEG;
         box[4] += SHIFT_NEG;
         box[5] += SHIFT_POS;

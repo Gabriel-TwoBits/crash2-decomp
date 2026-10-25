@@ -11,7 +11,7 @@ extern void *D_80062A30;
 extern void *D_80062A34;
 extern void *D_80062A38;
 
-void func_80011E24(void) {
+void Gfx_SetDefaultSceneMode(void) {
     if (D_8005F17C == 0) {
         D_80062A2C = &func_80042420;
         D_80062A30 = &func_800426A0;

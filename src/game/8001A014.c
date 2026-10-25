@@ -431,7 +431,7 @@ extern s32 D_80062A44;
 extern s32 D_80062ACC;
 extern s32 D_80062AD0;
 extern s32 D_80062AD4;
-extern s32 D_80062AD8;
+extern s32 g_SceneFlags;
 extern s32 D_80062ADC;
 extern s32 D_8005B6D0[];
 extern s32 D_8005B6EC[];
@@ -666,7 +666,7 @@ void Gfx_QueueObject(u8 *arg0, void *arg1) {
             if ((s32)arg0 == g_Player) {
                 s32 floor;
                 s32 y;
-                if (!(D_80062AD8 & 0x1000) || (FLD(s32, FLD(u8 *, g_CurrentZone, 0x10), 0x29C) & 0x800) ||
+                if (!(g_SceneFlags & 0x1000) || (FLD(s32, FLD(u8 *, g_CurrentZone, 0x10), 0x29C) & 0x800) ||
                     (y = OBJ(arg0)->pos[1], floor = D_8006CCE4 - 0x3200, (y < floor)) ||
                     (FLD(s32, arg0, 0x13C) < floor)) {
                     mode = 1;

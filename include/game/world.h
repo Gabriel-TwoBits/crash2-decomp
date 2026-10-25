@@ -56,7 +56,7 @@ typedef struct WorldPass {
 
 typedef void (*WorldStep)(WorldPass *);
 
-/* D_80062A18 as the world renderer reads it: the camera's position (24.8) and matrix (its rotation's five words and
+/* g_Scene as the world renderer reads it: the camera's position (24.8) and matrix (its rotation's five words and
    position, which the object renderers copy), the mode's five entries (its setup, triangle and quad projectors,
    triangle and quad drawers), and what the modes take: the sway's clock shift and size (D_80062A48, D_80062A4C, the
    camera's property 0x1B8), the lamps' far colour (D_80062A50), the fog's depth or the lamps' colour (D_80062A54), two
