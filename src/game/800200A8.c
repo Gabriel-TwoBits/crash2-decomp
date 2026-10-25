@@ -20,12 +20,9 @@ void func_80020998(S *arg0, s32 arg1);
 
 #define OBJ_DATA 0x10
 #define DATA_COUNT 0x190
-#define DATA_ENTRIES 0x194
-#define DATA_FLAGS 0x1B4
 #define DATA_FLAG_ACTIVE 0x10
 #define DATA_SUB 0x280
 #define DATA_FLAG_OFF 0x27C
-#define ENTRY_STRIDE 4
 
 #define SEGMENT_SHIFT 8
 #define SCREEN_MODE_PENDING 0x600
@@ -95,11 +92,11 @@ void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
             if (g_CurrentZone != 0) {
                 keepScreen = arg3 & ARG_KEEP_SCREEN;
                 if (!(arg3 & ARG_SKIP_PREPASS)) {
-                    data = FIELD(g_CurrentZone, s32, OBJ_DATA);
+                    data = (s32)((NsfEntry *)g_CurrentZone)->items[0];
                     D_800608D0 = arg0;
                     for (i = 0; i < FIELD(data, s32, DATA_COUNT); i++) {
-                        if (FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) {
-                            sub = data + DATA_ENTRIES + i * ENTRY_STRIDE;
+                        if (((ZoneHeader *)data)->zone_flags[i] & DATA_FLAG_ACTIVE) {
+                            sub = (s32)&((ZoneHeader *)data)->zones[i];
                             if (Nsf_CloseEntry((void *)sub, 0) != 0) {
                                 entry = Nsf_OpenEntry((void *)sub, 1, 0);
                                 if (Zone_IsLinked(arg0, (s32 *)entry) == 0) {
@@ -141,7 +138,7 @@ void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         D_80060918[1] = g_CameraAngleX[1];
         D_80060918[2] = g_CameraAngleX[2];
 
-        if (*FIELD(arg0, s32 *, OBJ_DATA) != 0 && (flags & FLAG_ANY_RELOAD)) {
+        if (((ZoneHeader *)((NsfEntry *)arg0)->items[0])->world_count != 0 && (flags & FLAG_ANY_RELOAD)) {
             list = (s32 *)Nsf_OpenEntry(Ent_GetProperty(arg1, ENT_PROP_SLST, 0, 0, 0, 2, 0, 0, 0), 1, 1);
             steps = seg - g_CameraNode;
             dist = steps;
@@ -198,7 +195,7 @@ void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 
         if (flags & FLAG_ANY_RELOAD) {
             if (flags & FLAG_OBJECT) {
-                data = FIELD(arg0, s32, OBJ_DATA);
+                data = (s32)((NsfEntry *)arg0)->items[0];
                 if (D_8006CBB4 == SCREEN_MODE_PENDING && !(arg3 & ARG_KEEP_SCREEN)) {
                     keepScreen = 0;
                 }
@@ -213,11 +210,11 @@ void Cam_MoveAlongPath(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
                 if (keepScreen != 0) {
                     func_80012DC0();
                 }
-                for (i = 0; i < FIELD(data, s32, DATA_COUNT); i++) {
-                    sub = data + DATA_ENTRIES + i * ENTRY_STRIDE;
-                    if ((FIELD(data, s32, DATA_FLAGS + i * ENTRY_STRIDE) & DATA_FLAG_ACTIVE) && Nsf_CloseEntry((void *)sub, 0) != 0) {
+                for (i = 0; i < ((ZoneHeader *)data)->zone_count; i++) {
+                    sub = (s32)&((ZoneHeader *)data)->zones[i];
+                    if ((((ZoneHeader *)data)->zone_flags[i] & DATA_FLAG_ACTIVE) && Nsf_CloseEntry((void *)sub, 0) != 0) {
                         entry = Nsf_OpenEntry((void *)sub, 1, 0);
-                        if (!(FIELD(FIELD(entry, s32, OBJ_DATA), s32, DATA_FLAG_OFF) & 1)) {
+                        if (!(FIELD((s32)((NsfEntry *)entry)->items[0], s32, DATA_FLAG_OFF) & 1)) {
                             func_8001FFCC(entry);
                         }
                     }
