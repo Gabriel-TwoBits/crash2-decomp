@@ -44,12 +44,6 @@ INCLUDE_RODATA("asm/nonmatchings/game/80037698", D_80010804);
 #define REC_OFFSET_WORDS 2
 #define ADDR_NONE (-2)
 #define VEC_STRIDE_WORDS 4
-#define QUERY_WORDS 5
-#define QUERY_KIND 0
-#define QUERY_SLOT 1
-#define QUERY_RESULT 2
-#define QUERY_BEST 3
-#define QUERY_VALUE 4
 
 #define FIELD(p, off, type) (*(type *)((u8 *)(p) + (off)))
 #define OBJ(p) ((GoolObject *)(p))
@@ -86,7 +80,7 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
     s32 sp48;
     s32 sp4C;
     s32 sp50[3];
-    s32 query[QUERY_WORDS];
+    ObjNearestQuery query;
     s16 *list;
     u32 *flags;
     u8 *slot;
@@ -348,16 +342,16 @@ void Gool_OpMisc(u8 *obj, u32 arg1) {
             return;
         }
     case 13:
-        query[QUERY_KIND] = (arg1 >> ARG_SHIFT) & ARG_MASK;
-        query[QUERY_BEST] = MISSING_SENTINEL;
-        query[QUERY_RESULT] = 0;
-        query[QUERY_SLOT] = (s32)SLOT(obj, arg1);
-        query[QUERY_VALUE] = *dst;
-        Obj_Find(D_8006CB38, (void *)Obj_CheckNearest, query);
+        query.categories = (arg1 >> ARG_SHIFT) & ARG_MASK;
+        query.distance = MISSING_SENTINEL;
+        query.nearest = 0;
+        query.from = (GoolObject *)SLOT(obj, arg1);
+        query.event = *dst;
+        Obj_Find(D_8006CB38, (void *)Obj_CheckNearest, &query);
         if ((arg1 >> ARG_SHIFT) & SCRIPT_HANDLE_FLAGS) {
-            Obj_Find(D_8006CB38 - ENTRY_STRIDE, (void *)Obj_CheckNearest, query);
+            Obj_Find(D_8006CB38 - ENTRY_STRIDE, (void *)Obj_CheckNearest, &query);
         }
-        PUSH(query[QUERY_RESULT]);
+        PUSH((s32)query.nearest);
         return;
     case 14:
         v = (s32)SLOT(obj, arg1);

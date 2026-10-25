@@ -2111,6 +2111,7 @@ void *Obj_HasId(GoolObject *arg0, s32 arg1) {
 
 #ifdef NON_MATCHING
 #define F(p, T, off) (*(T *)((u8 *)(p) + (off)))
+#define QUERY(p) ((ObjNearestQuery *)(p))
 #define OBJ(p) ((GoolObject *)(p))
 
 
@@ -2125,21 +2126,21 @@ s32 Obj_CheckNearest(void *arg0, void *arg1) {
     s32 s0;
     void *tbl;
 
-    if (arg0 == F(arg1, void *, 4)) {
+    if (arg0 == QUERY(arg1)->from) {
         return 0;
     }
-    sh = F(F(F(arg0, void *, 0xC), void *, 0x10), s32, 4) >> 8;
-    if (!((1 << sh) & F(arg1, u32, 0))) {
+    sh = *(s32 *)(OBJ(arg0)->exe->items[GOOL_ITEM_HEADER] + 4) >> 8;
+    if (!((1 << sh) & QUERY(arg1)->categories)) {
         return 0;
     }
-    d = Math_ApproxDistance((s32 *)((u8 *)arg0 + 0x60), (s32 *)((u8 *)F(arg1, void *, 4) + 0x60));
-    if (d < F(arg1, s32, 0xC)) {
-        t = F(arg1, s32, 0x10);
+    d = Math_ApproxDistance(OBJ(arg0)->pos, QUERY(arg1)->from->pos);
+    if (d < QUERY(arg1)->distance) {
+        t = QUERY(arg1)->event;
         if (t == 0xFF) {
             s0 = 0xFE;
         } else {
             tbl = OBJ(arg0)->exe;
-            s0 = *(u16 *)(F(tbl, u8 *, 0x1C) + (t >> 8) * 2);
+            s0 = ((u16 *)((NsfEntry *)tbl)->items[GOOL_ITEM_STATE_MAP])[t >> 8];
             if (s0 == 0xFF) {
                 if (t == 0x300) {
                     st = OBJ(arg0)->display_mode;
@@ -2149,11 +2150,11 @@ s32 Obj_CheckNearest(void *arg0, void *arg1) {
                         goto cmp;
                     }
                 }
-                if (F(arg1, s32, 0x10) == 0xA00 && !(OBJ(arg0)->state_flags & 0x800)) {
+                if (QUERY(arg1)->event == 0xA00 && !(OBJ(arg0)->state_flags & 0x800)) {
                     s0 = 0xFE;
                     goto cmp;
                 }
-                if (F(arg1, s32, 0x10) != 0x1D00) {
+                if (QUERY(arg1)->event != 0x1D00) {
                     return 0;
                 }
                 if (OBJ(arg0)->state_flags & 0x02000000) {
@@ -2165,7 +2166,7 @@ s32 Obj_CheckNearest(void *arg0, void *arg1) {
             if (!(s0 & 0x8000)) {
                 m = OBJ(arg0)->block_flags;
                 st = OBJ(arg0)->display_mode;
-                t = *(s32 *)(F(tbl, u8 *, 0x20) + s0 * 16);
+                t = *(s32 *)(((NsfEntry *)tbl)->items[GOOL_ITEM_STATES] + s0 * 16);
                 if ((u32)(st - 3) < 2 || st == 2) {
                     m |= 0x1002;
                 }
@@ -2176,19 +2177,19 @@ s32 Obj_CheckNearest(void *arg0, void *arg1) {
                     goto cmp;
                 }
             }
-            if (F(arg1, s32, 0x10) == 0xF00) {
+            if (QUERY(arg1)->event == 0xF00) {
                 sp10 = 0x100;
                 OBJ(arg0)->links[GOOL_LINK_INTERRUPTER] = F(arg1, void *, 4);
                 func_8001D22C(arg0, (u16)s0, 1, &sp10);
-                if (F(F(arg1, void *, 4), s32, 0xD8) == 0) {
+                if (QUERY(arg1)->from->unk_D8 == 0) {
                     return 0;
                 }
             }
         }
 cmp:
         if (s0 != 0xFF) {
-            F(arg1, void *, 8) = arg0;
-            F(arg1, s32, 0xC) = d;
+            QUERY(arg1)->nearest = arg0;
+            QUERY(arg1)->distance = d;
         }
     }
     return 0;

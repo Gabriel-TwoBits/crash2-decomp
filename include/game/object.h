@@ -110,4 +110,15 @@ typedef struct GoolObject {
     /* 0x16C */ s32 unk_16C;
 } GoolObject;
 
+/* What Gool_OpMisc's kind 13, the nearest object (CrashEdit's MISC), hands Obj_CheckNearest for each
+   object: the categories wanted (a bit for the GOOL header's category >> 8), the object asking, the nearest found so
+   far and its distance, and the event it must accept */
+typedef struct ObjNearestQuery {
+    /* 0x00 */ u32 categories;
+    /* 0x04 */ GoolObject *from;
+    /* 0x08 */ GoolObject *nearest;
+    /* 0x0C */ s32 distance;
+    /* 0x10 */ s32 event;
+} ObjNearestQuery;
+
 #endif /* GAME_OBJECT_H */
